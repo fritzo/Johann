@@ -1,0 +1,79 @@
+
+Data structures for lattices. \label{sec:skj/lattices}
+  ###<
+    !import skj/types skj/logic skj/enum.
+  ###>
+
+  Algebraic properties. 
+
+    ###<
+      unit_law := (idx -> Sym_bin_op idx -> bool) (
+          \bot,join.
+          forall_idx \i.
+          eq_idx i (join bot i)
+      ).
+      idem_law := (Sym_bin_op idx -> bool) (
+          \join.
+          forall_idx \i.
+          eq_idx i (join i i)
+      ).
+      assoc_law := (Sym_bin_op idx -> bool) (
+          \join.
+          forall_idx \i.
+          forall_idx \j.
+          forall_idx \k.
+          eq_idx (join i (join j k))
+                 (join (join i j) k)
+      ).
+
+      absorb_law := (Sym_bin_op idx -> Sym_bin_op idx -> bool) (
+          \meet,join.
+          forall idx \i.
+          forall idx \j.
+          eq_idx j (meet i (join i j))
+      ).
+
+      distrib_law := (Sym_bin_op idx -> Sym_bin_op idx -> bool) (
+          \meet,(bot,join).
+          and (
+              #nullary
+              forall_idx \i.
+              eq_idx (meet i bot) bot
+          ) (
+              #binary
+              forall_idx \i.
+              forall_idx \j.
+              forall_idx \k.
+              eq_idx (meet i (join j k)) (join (meet i j) (meet i k))
+          )
+      ).
+    ###>
+
+  Order theories. 
+    
+    Finitary (bounded) _semilattices_ have signature #(bot,join)#
+    ###<
+      semilattice := P_where (Prod idx (Sym_bin_fun idx)) (
+          \(bot,join).
+          assert (unit_law bot join).
+          assert (idem_law join).
+          assert (assoc_law join)
+      ).
+    ###>
+
+    Finitary (bounded) _lattices_ have signature #((bot,join),(top,meet))#
+    ###<
+      lattice := P_where (W Prod semilattice) (
+          \((bot,join),(top,meet)).
+          #XXX should nullary distributivity be enforced?
+          assert (absorb_law meet join).
+          assert (absorb_law join meet)
+      ).
+
+      disrib_latt := P_where lattice (
+          \((top,meet),(bot,join)).
+          assert (distrib_law meet (bot,join)).
+          assert (distrib_law join (top,meet))
+      ). 
+    ###>
+

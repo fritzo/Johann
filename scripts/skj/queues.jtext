@@ -1,0 +1,40 @@
+
+Queues. \label{sec:skj/queues}
+  ###<
+    !import skj/lists.
+  ###>
+
+  ###<
+    Queue := (V->V) (/\a. W Prod. List a).
+    queue := Queue any.
+
+    Empty_queue := (/\a:V. Queue a) (\-. (empty_list, empty_list)).
+    empty_queue := Empty_queue any.
+
+    Enqueue := (/\a:V. a -> Endo(Queue a)) (
+        \-,x,(f,b).
+        (f, push_list a b)
+    ).
+    enqueue := Enqueue any.
+  ###>
+  Dequeueing is implemented in amortized "usually" constant time
+  ###<
+    Queue_case := (/\a:V. q := Queue a. q -> Maybe(Prod a q)) (
+        \-,(f,b).
+        case_list f
+        (
+            case_list (reverse_list b)
+            none
+            \x,f'. some (x,f', empty_list)
+        ) (
+            \x,f'. some (x,f',b)
+        )
+    ).
+    queue_case := Queue_case any.
+
+    Dequeue := (/\a:V. Queue a -> Prod a (Queue a)) (
+        \-,q. queue_case q error success
+    ).
+    dequeue := Dequeue any.
+  ###>
+

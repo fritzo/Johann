@@ -1,0 +1,150 @@
+
+Fitting a basis to a corpus of expressions. \label{sec:algorithms/fitting}
+
+  Comment: TODO INSERT notes/optimization_formulations.text (2007:05:07-10)
+
+  Johann enumerates a finite chunk of an infinite structure,
+  by randomly adding simple terms to the database.
+  Building this chunk has quadratic space complexity and cubic time
+  complexity in the number of obs or equivalence classes.
+  Thus it is very important that Johann has a "correct" notion of simplicity or
+  complexity ---that the weighted combinatory basis
+  reflects our interest in the infinite structure.
+
+  This section describes a basis fitting algorithm that Johann uses to
+  statistically fit the probabilistic basis to a corpus of "interesting" terms,
+  eg, the expressions appearing in this thesis.
+  We basically fit a bag-of-words-modulo-equality model
+  to maximize the likelihood of the corpus,
+  or minimize KL-divergence between the corpus and the model.
+  This local weight optimization procedure is similar to the standard
+  bag-of-words model, but can use Johann's equational database to
+  balance multiple possible parses of a given expression.
+  We also describe a basis extension procedure
+  that search the database for possible obs to add to the basis.
+
+  Local optimization. 
+
+    ###l ast sum
+    We begin with the standard bag-of-words model over an algebraic signature.
+    Let
+    ###[
+      L = {app@P_app, S@P_S, K@P_K, ...}
+    ###]
+    be a probabilistic basis (a probabilistic context-free grammar Jelinek92)
+    generating a probabilistic language
+    ###[
+      L^ast={S@P_S, K@P_K, S S @ P_app P_S P_S, S K @ P_app P_S P_K, ...}
+    ###]
+    and let #C# be a corpus of expressions, a probability distribution over the
+    support of #L^ast#.
+    Note that not all such languages have finite entropy;
+    the infinite entropy-languages are meaningless,
+    and not accessible by gradient descent methods (Amari87, Amari93).
+    Figure: The parameter space of a weighted basis.
+      \includegraphics[width=95mm]{algorithms/SKJ_space.eps}
+
+    The Kullback-Leibler divergence from #C# to #L^ast# is
+    Latex Only: 
+      \[
+        H(C|L^*) = \sum_x C(x) \log \frac{C(x)}{L^*(x)}
+      \]
+    Html Only: 
+      ###a
+                                    C(x)
+        H(C|L^*) = Sum x. C(x) log ------
+                                   L^*(x)
+      ###a
+    We now solve the local optimization problem
+    Latex Only: 
+      \begin{center}
+      \begin{tabular}{r l}
+        \textbf{Given:}       & a corpus #C# and initial basis #S# \\
+        \textbf{Vary:}        & weights #P_app,P_S,P_K,...# of the basis #S# \\
+        \textbf{To Minimize:} & #H(C|L^ast)# \\
+        \textbf{Subject To:}  & #S# being a probability distribution,\\
+                              & i.e. #0 <= P_i <= 1# and #Sum_i P_i = 1#.
+      \end{tabular}
+      \end{center}
+    Html Only: 
+      ###a
+              Given: a corpus C and initial basis S
+               Vary: weights P_app,P_S,P_K,... of the basis S
+        To Minimize: H(C|L^*)
+         Subject To: S being a probability distribution,
+                     i.e.  0 <= P_i <= 1  and  Sum_i P_i = 1.
+      ###a
+
+    Next under an equational theory #~#, we perform the same optimization,
+    with #C# and #L^ast# probability distributions over _equivalence_classes_
+    of expressions modulo #~#.
+    Thus the sum in #H(C|L^ast)# now ranges over equivalence classes.
+
+    In practice we use a conjugate gradient optimization solver,
+    that iteratively selects a conjugate gradient descent direction,
+    and then line-searches in the chosen subspace.
+    Each gradient computation and each objective function evaluation
+    further requires iteration, as both complexity and relevance are defined as
+    fixedpoints of propagation equations.
+    When solution approaches a boundary,
+    ie, some atom is given extremely low weight,
+    that atom is removed from the basis,
+    and optimization continues with the reduced basis
+    (as done in active set methods).
+    We have also experimented with using the natural information metric
+    to compute the conjugate direction (Amari98),
+    but had problems with non-convergence and NaNs near boundaries.
+
+  Extending the basis. 
+
+    Thus far, we have shown how to locally optimize a basis with given support.
+    This naturally leads to a naive algorithm to extend the support with
+    additional atoms:
+    ###a
+      For each ob in database support:
+          add ob to basis;  locally optimize;
+          if cost decreased then keep ob else remove
+    ###a
+    However this naive algorithm has two problems:
+    (1) it is too slow to iterate through all #~10k# obs; and more importantly
+    (2) the optimal result would be complete overfitting,
+      ie, defining #Basis=Corpus#, #P_app=0#,
+      and never generating new ideas or parses of existing obs.
+    Our solutions are (1) to locally estimate how important an ob _would_be_
+    if added to the basis, and (2) to manually split the large terms in the
+    corpus into polynomials in #P_app# and their subterms below some complexity
+    threshold.
+
+    To estimate the improvement any one ob #x# would have in extending the
+    basis,
+    we compute the partial derivative of cost WRT basis weight of an ob #x#
+    \[
+      R(x) = \left.
+             \frac{\partial H(C|(\delta #x#+(1-\delta)L)^*)}
+                  {\partial\delta}
+             \right|_{\delta=0}
+    \]
+    It turns out that we have already computed this quantity under the name of
+    "relevance" of an ob #x# to a corpus #C#.
+    Thus to extend the basis, we can search among the best few
+    (eg $|L|$ or $\log(O)$) extension candidates,
+    then locally optimize, as in the naive case.
+
+    To deal with overfitting, we split the corpus (a weighted set of obs)
+    into an ob polynomial in #P_app#,
+    so that each ob has complexity below some threshhold.
+    For example we might split up
+    ###(
+      S S S S S + S S S &|-> P_app + S S S S + S + S S S S
+                        &|-> 2 P_app + 2(S S S) + S
+    ###)
+    Because this splitting puts #P_app# into the objective function,
+    a global extremum cannot completely fit the corpus,
+    as it must give #P_app# some positive value.
+
+    Comment: TODO discuss floating point accuracy
+
+  
+  ###u S
+  ###k S
+

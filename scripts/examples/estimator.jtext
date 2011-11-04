@@ -1,0 +1,86 @@
+
+A Stochastic Estimator. \label{sec:examples/estimator}
+  ###<
+    !import skrj/types.
+  ###>
+
+  XXX all types are wrong
+
+  an indexed monad of probability
+  ###<
+    Random := (type->type) (\a. <\x:a. <x>>). #XXX: this must allow for Bot
+    Sgtn := (/\a:type. random a) (\a:type. \x:a. <x>). ## = (B.C I)*type
+    Lift := (/\a:type, b:type. (a -> Random b) -> (Random a -> Random b)) (
+        \a:type, b:type.
+        \f:a->(Random b).
+        \p:Random a. p<f>
+    ).
+    Sample := (/\a:type. Random a -> a) (\a:type. \p:Random a. p a).
+    Infer := (/\a:type. (a -> prob) ->  Random a -> Random a) (
+        \a:type.
+        \cond:a->prob.
+        \prior:Random a.
+        Y \try_again. prior. \x:a. Sample a cond x <x> try_again
+    ).
+  ###>
+  with maximal points
+  ###<
+    random := Random any.   ## = V <\x.<x>>
+    sgtn   := Sgtn any.     ## = \x.<x>
+    lift   := Lift any any. ## = \f.<<f>>
+    sample := Sample any.   ## = <I>
+    infer  := Infer any.    #this is still overcomplicated
+  ###>
+
+  XXX LATER --------------------------------------
+
+  non-parametric versions
+  ###<
+    random := Random any.
+    sgtn   := Sgtn any. ## = C I
+    lift := (\f. (random any -> random any) <\a. <f a>>).
+    infer := (
+        \cond:any->(random bool). #conditional probability function
+        \prior:random any.
+        Y \try_again. prior. \x. sample cond x <x> try_again
+    ).
+    unknown_any := random any (
+        Y \t. R<t t>. R(R<S><K>). R<R><V>  #for example
+    ).
+    restrict_to := (\dom:type. lift dom).
+  ###>
+
+  A Partially Observable Random Process. (HMM)
+    note the explicit polymorphism on observation type
+    ###<
+      process := (type->type) (
+          \obs:type.
+          Y \proc. Prod (random obs) (random proc)
+      ).
+      init_proc := (
+          \obs:type.
+          restrict_to (process obs) unknown_any #Solomonoff prior
+      ).
+      read_proc := (
+          \obs:type.
+          (process obs) -> obs.
+          sample * <[1/2]>
+      ).
+      next_proc := (
+          \obs:type.
+          (process obs) -> (process obs)
+          sample * <[2/2]>
+      ).
+      observe_proc1 := ( #for exact observations
+          \obs:type.
+          \delta:obs->obs->bool. #observations must be distinguishable
+          \y:obs.
+          infer(lift (delta y)*(read_proc obs)) #condition on equality
+      ).
+      observe_proc2 := ( #for partial observations
+          \obs:type.
+          \cond:obs->(random bool). #given an explicit condition
+          infer sample*(lift cond*(read_proc obs))
+      ).
+    ###>
+

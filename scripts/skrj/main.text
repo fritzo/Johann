@@ -1,0 +1,94 @@
+
+Untyped lambda-calculus for convex sets of probability distributions. (SKRJ)
+  \label{sec:skrj}
+
+  In this chapter we examine a lambda-calculus SKRJ with uncertainty,
+  represented as convex sets of probability distributions (CSPDs),
+  or lower-sets of probability valuations.
+  Our design goal for this language is a definability of simple types theorem,
+  in the manner of \ref{sec:skj/simple}.
+  At the time of the writing this thesis we have not achieved this goal;
+  however, the attempt has shed light on the simpler language SKJ,
+  in two respects.
+
+  First,
+  join has traditionally been interpreted as nondeterminism or concurrency
+  (Dezani00,Dezani02);
+  however concurrency distributes over randomness,
+  preventing definable types-as-closures.
+  Our solution is to instead let randomness distributes over join,
+  naturally leading to convex sets of probability distributions.
+  In this semantics,
+  join is seen to model _ambiguity_ or indeterminacy rather than concurrency.
+
+  Second,
+  just as the #Simple# type constructor in SKJ allows ambiguous
+  inhabitants, any possible constructor definable in SKRJ would allow fuzzy
+  inhabitants (where fuzzy means ambiguously random, as in CSPDs).
+  In SKJ we were able
+  to filter these out with _disambiguation_ tricks (in \ref{sec:skj/types}),
+  but these tricks generally fail in SKRJ.
+  Forced to accommodate the fuzzy inhabitants
+  of a possible #Simple# type constructor,
+  we develop a sampling monad for arbitrary simple types
+  (similar to Pfenning05).
+  Although the monadic types are more difficult to hack with,
+  they obey better categorical properties
+  than our easier-to-work-with types from \ref{sec:skj/types}.
+
+  Our motivation for working with probabilistic languages
+  comes from research in Bayesian networks and their generalizations.
+  Koller et al Koller97 describe
+  methods for learning parameters of stochastic programs.
+  Pfenning et al Pfenning05 implement a probabilistic
+  language $\lambda_O$ by extending OCaml with a monadic probability type.
+  Although this language does not admit a types-as-closures interpretation
+  in SKRJ, their probability monad can be interpreted unchanged
+  to represent convex sets of probability distributions.
+
+  Semantics of probabilistic programs has a long history,
+  beginning in the early 1980s.
+  Kozen Kozen81 describes a linear probabilistic semantics, but his stochastic
+  programs cannot take random generators as parameters.
+  That is, pmfs can only be input via their _parameters_.
+  Plotikin Plotkin82 and Plotkin and Jones Jones89a develop a
+  probabilistic powerdomain as a domain-theoretic model of ambiguity.
+  Jones analyses the interaction of probability and non-determinism in her
+  thesis Jones89.
+  Heckmann Heckmann94 develops the probabilistic powerdomain in terms of
+  Vickers' information systems.
+  Edalat Edalat95 develops domain theory for stochastic processes.
+  Jung Jung98 discusses problems relating the probabilistic powerdomain and
+  function space operators.
+  Desharnais and Jagadeesan Desharnais04 discuss metric structure on
+  probabilistic spaces, where equality is too fine for many practical
+  purposes.
+
+  Convex sets of probability distributions (CSPDs), or credal sets,
+  are widely studied in the literature on imprecise probabilities,
+  for example in the bi-annual
+  International Symposium on Imprecise Probability: Theory and Applications
+  (ISIPTA).
+  Doan et al Doan98 provide geometric foundations for CSPDs.
+  Cano and Moral Cano99 survey belief propagation algorithms for CSPDs.
+
+  Takeout: Convex sets of probability valuations. \label{sec:skrj:convex}
+
+    Let us work in AL, algebraic lattices which are also lattices.
+    Def: The function space A->B is the AL of Scott-continuous functions
+      #f:A->B#, i.e., satisfying for #X(=A#, #\/x in X. f x = f(\/X)#.
+    Def: The probability valuation space #Mu(A)# of an AL #A# is the space of
+      functions #p:A->[0,1]# satisfying
+      ###[
+        p(Bot) = 1                        #strict
+        x[=y ==> p(x)=>p(y)               #antitone
+        p(\/X) = inf x in X. p(x)         #Scott-continuous
+        p(x) + p(y) = p(J x y) + p(M x y) #additivity XXX correct?
+      ###]
+      Note: These are just the Scott-continuous strict functions to the unit
+        interval ordered reverse of usual.
+
+  ###r ../axioms/random
+  ###r simple types
+  ####r stats
+

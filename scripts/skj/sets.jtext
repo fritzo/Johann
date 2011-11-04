@@ -1,0 +1,29 @@
+
+Sets as binary search trees. \label{sec:skj/sets}
+  ###<
+    !import skj/nats.
+  ###>
+
+  ###<
+    Emptyset := <F,Bot>.
+    nonempty := <K>.
+  ###>
+
+  element-wise operations
+  ###<
+    set_insert := (\s,e.Y(\i.  ???)).
+    set_remove := (\s,e.Y(\i.  ???)).
+  ###>
+
+  binary operations
+  ###<
+    set_union := ???.
+    set_intersect := ???.
+    set_minus := ???.
+  ###>
+
+  iteration
+  ###<
+    set_size := ???.
+  ###>
+

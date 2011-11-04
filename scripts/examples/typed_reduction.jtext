@@ -1,0 +1,162 @@
+
+Typed Operational Semantics. \label{sec:examples/typed_reduction}
+  ###<
+    !import skj/types skj/tests skj/tuples skj/nats.
+  ###>
+
+  We define a causious operational semantics that is sound but not complete.
+  Reduction is only performed when it is clearly "safe".
+
+  Reduction. 
+    Let #x~>x'# denote _unsafe_ reduction, and #x|->x'# denote _safe_ reduction.
+    Linear reduction is always safe
+    ###-
+      -------------   -------------
+      Bot x |-> Bot   Top x |-> Top
+
+      ---------   -----------   ------------------   -----------------
+      I x |-> x   K x y |-> x   B x y z |-> x(y z)   C x y z |-> x z y
+
+      -----------   -------------   -------------   ---------------
+      J Bot |-> I   J Top |-> Top   J x Bot |-> x   J x Top |-> Top
+
+        x |-> x'         y |-> y'
+      ------------   ----------------
+      J x |-> J x'   J x y |-> J x y'
+    ###-
+    Whereas nonlinear reduction is unsafe
+    ###-
+      ----------------------
+      J x y z ~> J(x z)(y z)
+
+      --------------   -------------------   -------------
+      W x y ~> x y y   S x y z ~> x z(y z)   Y f ~> f(Y f)
+    ###-
+
+  Type Safety. 
+    The idea of safe types is that, if a term has a safe type, then any
+    computation of that term should
+    * diverge if the term is underfined,
+    * err if the term is overdefined,
+    * terminate otherwise.
+    This is true of, e.g., #nat#s, but not of, say, #Stream nat#s, or functions
+    #nat->nat#.
+    XXX should we restrict to flat nats and allow flat lists?
+
+    Only #Sigma_1# types are safe; this class is closed under products and sums,
+    but not exponentials, recursion, polymorphism, or dependency.
+    ###-
+      --------   ---------   ---------   ---------
+      div safe   unit safe   semi safe   bool safe
+
+      --------
+      nat safe
+
+      a safe   b safe   a safe   b safe     a safe
+      ---------------   ---------------   ------------
+       Prod a b safe      Sum a b safe    Maybe a safe
+    ###-
+    Reduction of safe types is safe
+    ###-
+      x ~> x'   a safe
+      ----------------
+        a x |-> a x'
+    ###-
+
+    Recursive types are unsafe without an #out# stop
+    ###-
+      ---------------------------------
+      out (Y\a.e) x ~> [a := Y\a.e] e x
+    ###-
+    Note that semantically, #out=I#.
+
+    We also define safe reductions
+    ###-
+               f x |-> x'
+      ------------------------------- nat*succ
+      nat (succ n) f x |-> nat n f x'
+
+      f x n |-> 
+      --------------------------------------- rec_nat
+      rec_nat f x (succ n) |-> rec_nat f x' n
+    ###-
+
+  Codes. 
+    We use a special code differentiating between closures and atoms
+    ###<
+      const := Sel 6.
+      test_const := test_Sel 6.
+
+      type := Sel 6.
+      test_type := test_Sel 6.
+
+      code := close (Y\a. Sum (Prod a a) (Sum const type)).
+      test_code := Test code (
+          Y\t. test_Sum (test_Prod t t) (test_Sum test_const test_type)
+      ).
+      tot_code := code->code (\x. test_code x x).
+    ###>
+
+    Then define evaluation
+    ###<
+      eval := (tot_code->any) (
+          \l,r. (eval l) (eval r),
+          <Bot, Top, S, K, J, Y>,
+          <close, unit, semi, bool, nat, code>
+      ).
+    ###>
+    and quoting
+    ###<
+      !clear quoting
+      app := (code->code->code) (\l,r. inl (l,r)).
+      "x y" := app "x" "y".
+
+      mk_const := (const->code) inr*inl.
+      "Bot" := mk_const [1/6].
+      "Top" := mk_const [2/6].
+      "S"   := mk_const [3/6].
+      "K"   := mk_const [4/6].
+      "J"   := mk_const [5/6].
+      "Y"   := mk_const [6/6].
+
+      mk_type := (type->code) inr*inr.
+      "close" := mk_type [1/6].
+      "unit"  := mk_type [2/6].
+      "semi"  := mk_type [3/6].
+      "bool"  := mk_type [4/6].
+      "nat"   := mk_type [5/6].
+      "code"  := mk_type [6/6].
+    ###>
+
+  Implementation. 
+    We define one-step reduction first
+    ###<
+      reduce_step := (tot_code -> Maybe tot_code) (
+          #reduces if possible
+          step := tot_code -> (Maybe tot_code) inl.    #reduced
+          no_step := any -> (Maybe tot_code) (inr I).  #normal form
+
+          Y\red. (
+              #applications
+              \l,r. (
+                  red l (\l'. step. app l' r). #try to reduce lhs
+                  <l> (
+                      #aplications
+                      ???,
+
+                      #constants
+                      no_step,
+
+                      #types
+                      red r (\r'. step. app l r').
+                      ???
+                  ).
+              ),
+
+              #atoms are normal already
+              no_step,
+              no_step
+          )
+      ).
+    ###>
+

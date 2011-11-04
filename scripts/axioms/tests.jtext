@@ -1,0 +1,31 @@
+
+Axioms for a few simple tests. \label{sec:axioms/tests}
+  ###<
+    !read skj/tests.
+  ###>
+
+  The test intersection operator. 
+
+    The test intersection operator is
+    ###[
+      P_test = (test->test->test) (\t,t',x. and_semi (t x) (t' x)).
+    ###]
+    The following axiom shemata will be enforced for the atom #P_test#
+    ###-
+      check p =] check q   probe p [= probe q
+      ---------------------------------------
+                 test p <:: test q
+    ###-
+    where the subtest relation #<::# is defined as
+    ###[
+      p<::q <==> p = P_test q p
+    ###]
+
+    We also assume the ACI axioms, as mentioned in \ref{sec:skj/logic}
+    ###<
+        !assume P_test p p = test p.                         #idempotence
+        !assume P_test p q = P_test q p.                     #commutativity
+        !assume P_test p(P_test q r) = P_test(P_test p q)r.  #associativity
+    ###>
+
+

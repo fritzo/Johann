@@ -1,0 +1,52 @@
+#!/usr/bin/python
+
+from pylab import *
+import sys
+
+def plot_stats (fname):
+  print "plotting file %s" % fname
+  #truncate data
+  data = load(fname)
+  obs = data[::-1,1] #reversed
+  tot = len(obs)
+  start = tot - argmin(obs > 0) # - 1
+  print "starting at line %i of %i" % (start, tot)
+  data = data[start:,:]
+
+  #get fields
+  age = data[:,0]
+  obs = data[:,1];  log_obs = log(1+obs)
+  eqns= data[:,2];  log_eqns = log(1+eqns)
+  pos = data[:,3];  log_pos = log(1+pos)
+  neg = data[:,4];  log_neg = log(1+neg)
+  
+  #plot logs
+  def plot_series (val, color, name=None):
+    plot(age, log(1+val), color = color)
+    if name:
+      text(age[-1], log(1+val[-1])-1, "%i %s" % (val[-1], name), ha="right")
+  plot_series(obs,  "k", "obs")
+  plot_series(obs**2,  "k")
+  plot_series(eqns, "g", "eqns")
+  plot_series(pos,  "r", "pos")
+  plot_series(neg,  "b", "neg")
+
+  #fancy-dancy
+  title("database stats (%s)" % fname)
+  xlabel("age = number of obs pruned")
+  ylabel("log(-)")
+  show()
+
+  if False:
+    efrac = eqns / obs**2
+    plot(obs, efrac, color = 'g')
+    show()
+
+if __name__ == "__main__":
+  args = sys.argv[1:]
+  if (args):
+    for arg in sys.argv[1:]:
+      plot_stats(arg)
+  else:
+    plot_stats("/home/fritz/johann/stats/cs_stats.log")
+

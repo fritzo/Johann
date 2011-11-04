@@ -1,0 +1,27 @@
+
+General Trees. \label{sec:skj/trees}
+  ###<
+    !import skj/tests.
+  ###>
+
+  We parametrize leaf-labelled trees by their branching functor
+  ###<
+    Tree := ((V->V)->V->V) (\b,l. Y\a. Sum l (b a)).
+    tree := ((V->V)->V) (\b. Y\a. Sum any (b a)).
+    !check (/\b:V. (tree b = Tree b any)).
+  ###>
+  Note: lists are (isomorphic to) particular types of trees
+  Note: See (Girard89 sec. 11.5.4 for similar constructions in system F).
+
+  ###<
+    Leaf := (/\a. a -> Tree _ a) (\-. inl).
+    Branch := (???).
+  ###>
+
+  For example binary trees branch with #pair#
+  ###<
+    Tree_2 := (V->V) (Tree. W Prod).
+    tree_2 := V (tree. W Prod).
+  ###>
+  omega-branching trees can be either trees of sequences or streams.
+

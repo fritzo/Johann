@@ -1,0 +1,222 @@
+
+Comment: copied from notes/proof/auto_conjecturing.text
+Automated Conjecturing. \label{sec:algorithms/conjecturing}
+
+  In this section we develop theory whereby Johann can query a user
+  for _important_ but _difficult_ problems that seem to be _plausible_.
+  We call this procedure _automated_conjecturing_ because Johann will guess
+  what's true based on evidence, before a proof or disproof is known.
+  Our theory starts by restricting the type of conjectures/assumptions
+  that may be made to positive order relations #x[=y#.
+  We then suggest a method to numerically quantify the evidence supporting
+  conjectures, so that Johann can pose ranked conjectures to the user.
+  Finally we demonstrate some theoretical limitations on
+  what exactly can be conjectured in this way.
+
+  Sensible Assumptions. 
+
+    We attempt with Johann's theory to approach the #Pi02#-complete theory H*,
+    but this cannot be done with finite or even r.e. axioms or axiom schemata.
+    Thus as we prove properties of more complicated programs,
+    we must continually make new assumptions.
+    What assumptions should we make?
+    Can we statistically quantify this?
+
+    Let us start with the most basic statements #x[=y#.
+    At any time, some of these will be unproven,
+    and some of those will be unprovable even in principle.
+    It is consistent to assume such an unprovable statement either way,
+    but we will restrict to positive assumptions #x[=y#,
+    and let negative statements #u![=v# follow from the single axiom #T![=_#
+    from \ref{sec:axioms/order}.
+    Among positive assumptions, we restrict even further:
+    Def: a statement #x[=y# is _sensible_ iff #y# converges whenever #x# does, 
+      ###[
+        /\f. f x![=_ ==> f y![=_
+      ###]
+      and write in that case #x[=y sensible#.
+    Note: Sensibility is derived from Hyland's and Wadsworth's H* axiom
+      ###-
+        /\C[ ]. C[x] conv ==> C[y] conv
+        --------------------------------- Hstar
+                    x [= y
+      ###-
+      where #C[ ]# ranges over contexts, and #conv# is an r.e. predicate
+      (see Barendregt84).
+      In our simpler combinatory setting, variable binding may be ignored,
+      so #C[ ]# may be restricted to combinators (even traces).
+      Also, for symmetry, we use both left and right monotony axioms.
+    Here sensibility is #Pi02#; the outer-most quantifier is universal.
+    Thus we can accumulate evidence in favor of #x[=y# by enumerating contexts
+    #f# in which it is known that #fx conv==>fy conv#.
+    Indeed this suggests a way to approach H* from #eta#:
+    ###d T \mathcal{T}
+    Thm: by making only simple, sensible assumptions, we arrive after
+      #omega# steps at #Hstar#.
+    Pf: Consider a chain #T(-)# of such theories, with limit #T(omega)#
+      ###[
+        eta = T(0) (= T(1) (= ... (= T(i) (= ... (= T(omega) ?= Hstar
+      ###]
+      Since #T(0)# is sensible, and each step #T(i+1)-T(i)# is sensible, each
+      #T(i)# is sensible, and hence their limit #T(omega)# is sensible.
+      Since #Hstar# is the unique #[=#-complete sensible theory, it suffices
+      to show that #T(i)# is #[=#-complete; thus consider any statement #x[=y#.
+      If #eta|-x[=y# then we are done.
+      If #x![=y# then #x[=y# is non-sense, and will not be assumed.
+      Otherwise, let #n > |x|+|y|# be a bound on the syntactic complexity of
+      #xy#.
+      Then after assuming the simplest #exp(n)#sensible statements, we must
+      have assumed #x[=y#.
+      []
+    The proof requires all assumptions to be sensible, but sensibility is
+    undecidable in general.
+    Thus it would be more satisfying to prove a statement of probable
+    approximate correctness (PAC, Valiant84),
+    where correct means complete and consistent:
+    Conjecture: For any #delta,epsilon in (0,1)#, we can enumerate sufficiently
+      much evidence to randomly generate a simple apparently sensible theory
+      #T# such that
+      (i)  averaging over #T#: #P(T sensible) > 1-delta#
+      (ii) for each #T#, averaging over #x,y#: #P(T answers x?[=y) > 1-epsilon#
+    ###u T
+    However, even if provable, it likely cannot be proved constructively:
+    given an amount of evidence #E#, we may be able to make random assumptions
+    until #1-epsilon# of all queries are known to be provable.
+    Furthermore, it is likely to be uncomputable how much evidence
+    #E(epsilon,delta)# is necessary to achieve given bounds #epsilon,delta#:
+    Conjecture: The evidence function
+      ###[
+        E'(m,n) = ceil( -log(1 - E(exp(-m),exp(-n))) )
+      ###]
+      is not recursively bounded.
+
+  Propagating evidence. 
+
+    We now describe Johann's algorithm for generating conjectures.
+    Despite the severe limitations on the possibility of generating
+    _true_ conjectures, we have had considerable practical success generating
+    _useful_ conjectures, some of which were proven true by other means,
+    and some of which were false but led to insight as to what axioms could
+    improve Johann's reasoning ability.
+
+    We generate conjectures by propagating evidence for questions #x?[=y#,
+    and then collecting the best few conjectures,
+    typically $10^2$ out of $10^7$ total.
+    Evidence acclumulates
+    through four probabilistic inference rules for plausibility,
+    the inverses of the monotonicity and transitivity rules of for order.
+    ###-
+      f term   f x[=f y plaus      f x[=g x plaus   x term
+      ----------------------- mu   ----------------------- nu
+             x[=y plaus                   f[=g plaus
+
+      x[=y true   y term   y[=z plaus       x[=y plaus   y term   y[=z true
+      ------------------------------- tau   ------------------------------- tau'
+                 x[=z plaus                           x[=z plaus
+    ###-
+    Now given a database of facts #u[=v# and #u![=v#,
+    a complexity pmf #P(x)# on terms, and rule weights \\
+    #P_mu+P_nu+2 P_tau=1#, we iteratively propagate evidence #P(u[=v)#
+    to find a fixedpoint of the contraction equation
+    ###k if then else
+    ###d Sum {\sum\limits}
+    ###(
+      P(u[=v) = &if u[=v then 1 else
+                &if u![=v then 0 else
+              ( &P_mu Sum_(f) P(f) P(f u[=x v)
+              + &P_nu Sum_(x) P(u x[=v x) P(x)
+              + &P_tau Sum_(y) if u[=y then P(y) P(y[=v) else 0
+              + &P_tau Sum_(y) P(u[=y) P(y) if y[=v then 1 else 0 )
+    ###)
+    Note that normalization ensures #P(u[=v) in [0,1]#.
+
+    Each propagation iteration takes time cubic in database size,
+    since we need to examine each unproved questions #u?[=v#
+    (roughly $0.05\cdot O^2\sim 5\cdot 10^6$ for $O=10^4$ obs),
+    and for each question, sum over all $f$'s, $x$'s, and $y$'s above.
+    Because the #tau# rule is significantly slower than either of the #mu,nu#
+    rules, we often leave it out by setting #P_tau=0#.
+
+  Takeout: Theoretical limits of automated conjecturing. 
+
+    TODO update this section
+    Lusin04 describes the lattice #Lambda# of lambda theories,
+    for example proving
+    Thm: (Lusin and Salibra ?)
+      (a) #Lambda# is $2^{\aleph_0}$-wide.
+      (b) #Lambda# is $2^{\aleph_0}$-broad.
+      (c) #Lambda# is $2^{\aleph_0}$-high.
+      (d) properties (a),(b),(c) hold locally as well.
+
+    Kelly95 relates the complexity of theories
+    with the complexity of their predictions,
+    demonstrating that theories with very high predictive complexity
+    can have very low learning complexity (or implicit complexity).
+    For example:
+    Thm: (Kelly and Schulte) There is a #Pi02# hypothesis #H#
+      (hence refutable in the limit) whose predictions are #Pi11#-complete.
+    We prove a similar theorem related to our framework in the strength of #LL'#
+    theorem below.
+    Moreover, they show that among LATER
+
+    ###s TT0
+    Def: A class of theories #_TT# is _refutable_with_certainty_ iff there is a 
+      computable consistency assertion #:_TT->div#.
+      A class of theories is _refutable_in_the_limit_ iff there is a computable
+      series of consistency tests #:_TT->(Stream semi)#.
+    Lem: (Gold and Putnam)
+      (a) refutable with certianty = #Pi01#.
+      (b) refutable in the limit = #Pi02#.
+    Def: A _theory_ is a finite set of equations extending #TT0:=beta+eta#
+      in one of the languages SKJ, SKRJ, or SKJO.
+
+    Learning theories refutable with certainty. 
+
+      Def: (entailment) A theory #TT# _entails_ another theory #TT'#, written
+        #TT|-TT'#, iff each generating equation of #TT'# can be proved from
+        #TT#.
+      Lem: Entailment is a partial order.
+      Def: (strong entailment) Define #TT|=TT'# iff for every #TT''#, if
+        #TT''|-TT# then also #TT''|-TT'#.
+      Lem: (strong = weak) #TT|=TT'# iff #TT|-T#.
+      Pf: LATER
+      Def: (weak lattice) Let #LL# be the lattice of theories modulo entailment.
+      Thm: (complexity of #LL#)
+        (a) #LL# is a #Sigma01# complete join-semilattice.
+        (b) Consistency in #LL# is #Pi01#-complete
+          (and hence refutable with certainty).
+        (c) Entailment in #LL# is #Sigma01#-complete.
+      Pf: LATER
+
+    Learning theories refutable in the limit. 
+
+      Def: (sensible) A theory is _sensible_ iff for any terms #M,N#,
+        if #TT|-M[=N# and #TT0|-T[=M# then #TT0|-N[=T#.
+      Lem: Sensibility is #Pi02#-complete.
+      Def: (strong entailment) Let #SS,SS'# be sensible theories.
+        The #SS# strongly entails #SS'#, written #SS|=SS'#,
+        iff for every sensible #SS''#, if #SS''|=SS# then also #SS''|-SS#.
+      Lem: Strong entailment is a parital order.
+
+      Now restricting attention to the langauge SKJO...
+      Def: Let #LL'# be the lattice of theories identifying all non-sensible
+        theories,
+        and modulo strong entailment on the remaining sensible theories.
+      Thm: (strength of #LL'#)
+        (a) #LL'# is a #Pi11#-complete join semilattice.
+        (b) Consistency in #LL'# is #Pi02#-complete
+          (and hence refutable in the limit).
+        (c) Entailment in #LL'# (ie strong entailment) is #Pi11#-complete.
+      Pf: LATER
+
+    Completeness of SKJO. 
+
+      Now we show that SKJO is has maximal logical strength among learnable
+      theories, i.e. theories refutable in the limit.
+      Thm: Let #TT0# be a #Sigma01# theory,
+        #con# be a #Pi02# consistency predicate,
+        #LL'# be the lattice of #con#sistent #Sigma01# extensions of #LL#,
+        modulo strong entailment.
+        Then strong entailment in #LL'# is #Pi11#.
+      Pf: LATER
+

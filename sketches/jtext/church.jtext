@@ -1,0 +1,64 @@
+
+#church numeral: #(a->a)->(a->a)#
+div := type<Top>.
+repair := <S B,K>.          # = <\n,f.f*(n f), \f,x.x>
+fill := (\n,f,x,y.n
+    (\x',y,_.f(\y.x' y Top)y)   #fill #f#
+    (\y,_.x y)                  #fill #x#
+    y Top
+).
+push := (\n,f,x,y.n
+    (\x',_,y.f(\y.x' Top y)y)   #push #f#
+    (\_,y.x y)                  #push #x#
+    Top y
+).
+fill' := (\n,f,x,y.n
+    (\x',y,d.div d|f(\y.x' y Bot)y) #fill #f#
+    (\y,d.div d|x y)                #fill #x#
+    y Bot
+).
+push' := (\n,f,x,y.n
+    (\x',d,y.div d|f(\y.x' Bot y)y) #push #f#
+    (\d,y.div d|x y)                #push #x#
+    Bot y
+).
+div_nat := div*<I,Bot>.
+pull := (\n,f,x,y,z.n       #weak
+    <<\x.f(x F)y z, f(x F)>>
+    <<x y z,x>>
+    K
+).
+# #nat := fill_nat & fill_nat' & push_nat & push_nat' & repair_nat & div_nat.
+
+ex1 := (\f,x.f x Bot).
+#apply #push#
+#[
+    push (\f,x.f x Bot)
+        = \f,x,y.(\x',_,y.f(\y.x' Top y)y)(\_,y.x y)Bot Top y
+        = \f,x,y.(\x',_.f(x' Top))(\_.x)Bot Top y
+        = \f,x,y.(\x'.f(x' Top))(\_.x)Top y
+        = \f,x,y.(f((\_.x)Top))Top y
+        = \f,x,y.f x Top y
+        = \f,x.f x Top
+#]
+#then #push'#
+#[
+    push' (\f,x.f x Top)
+        = \f,x,y.(\x',d,y.div d|f(\y.x' Bot y)y)(\y,d.div d|x y)Top Bot y
+        = \f,x,y.(\x',d,y.div d|f(x' Bot)y)(\y,d.div d|x y)Top Bot y
+        = \f,x,y.(\x',y.div Top|f(x' Bot)y)(\y,d.div d|x y)Bot y
+        = \f,x,y.(\x',y.Top|f(x' Bot)y)(\y,d.div d|x y)Bot y
+        = \f,x,y.(\x',y.Top)(\y,d.div d|x y)Bot y
+        = \f,x,y.Top(\y,d.div d|x y)Bot y
+        = Top
+#]
+ex2 := (\f,x.f.\_.x.f Bot Bot).
+#apply push
+#[
+     (\f,x.f.\_.x.f Bot Bot)
+#]
+##ex3 := (\f,x,u.f x f).
+##(\f,x,u.f x f u).
+##(\f,x.x f).
+##(\f,x,u.x f).
+

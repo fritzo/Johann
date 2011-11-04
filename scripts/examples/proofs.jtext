@@ -1,0 +1,761 @@
+
+Proving properties of reduction in SKJ. \label{sec:examples/proofs}
+  ###<
+    !import skj/terms.
+  ###>
+  ###u R
+
+  Comment: TODO
+    * fix proofs
+    * add tests for each type and #!check# all #Pi02# proofs.
+
+  Comment: How-To Questions: 
+    * use extensionality?
+    * track terms?
+    * normalize proofs?
+
+  This section is a case study illustrating the use of join in proving theorems,
+  under the Curry-Howard interpretation of theorems as closure,test pairs.
+  The main tool being illustrated is the use of _proof_sketching_,
+  a form of type-inference whereby a theorem-as-closure
+  can raise a proof sketch without indices to a total proof with indices.
+
+  To see how type inference works,
+  consider a simple theorem "#K K S J J->>K J J#",
+  which follows from the proof sketch
+  "follows from transitivity:
+  apply the #K# rule to the LHS, then the #K# rule again"
+  A more thorough proof would mention the intermediate terms
+  ###n
+    1.  K K S ->> K           #by #K# rule
+    2.  K K S J ->> K J       #by left-monotonicity: 1
+    3.  K K S J J ->> K J J   #by left-monotonicity: 2
+    4.  K J J ->> J           #by #K# rule
+    5.  K K S J J ->> J       #by transitivity: 3 then 4
+  ###n
+  Let us abbreviate terms using quotation marks for a moment,
+  so that #"K K S" = ap(ap _K _K)_S#.
+  Formally, we want to prove a theorem
+  ###[
+    thm := Red "K K S J J" "J".
+  ###]
+  with a proof sketch
+  ###[
+    pf := trans_r (lhs_r (lhs_r K_r)) K_r.
+  ###]
+  Now the join operation allows the theorem-as-closure to raise the proof to
+  ###[
+    thm pf = Trans_r "K K S J J" "J"
+                (Lhs_r "K K S J" "K J" "J"
+                    (Lhs "K K S" "K" "J"
+                        K_r "K" "S"         ) )
+                (K_r "J" "J")
+  ###]
+  (we will not use this quotation mark notation again).
+
+  Takeout: Normal reduction. 
+
+    ###s J1 J2
+    First normalize transivity.
+    ###-
+      ------------------ assoc
+      (r;s);t ==> r;(s;t)
+    ###-
+    Implemented via the large-step rules
+    ###-
+      ux ==> ux'   xy ==> xy'   (ux';xy);yv ==> uv
+      --------------------------------------------
+                 (ux;xy);yv ==> uv
+
+      uy ==> uy'   yv ==> yv'
+      ----------------------- uy not trans
+         uy;yv ==> uy';yv'
+
+        fg ==> fg'       xy ==> xy'
+      --------------   --------------
+      L fg ==> L fg'   R xy ==> R xy'
+    ###-
+    ###<
+      Red_t := (/\u,v. Sub. Red u v) (
+          ok := _.
+          Y\Red.  red := Red _ _.
+          \-,-,-. (
+              \-, ux:Red_t, xv:Red_t.
+              <ux> (error, ok).
+      ).
+
+      Normalize__trans := (/\u,v. Idem. Red u v) (
+          Y\Norm.  norm := Norm _ _.
+          \u,v,uv. <uv> (
+              \(y,uy,yv). <uy> (
+                  \(x,ux,xy).
+                  norm. trans (norm ux). trans (norm xy). yv,
+                  \-. trans (norm uy) (norm yv)
+              ),
+              (\fg. lhs (norm fg), \xy. rhs (norm xy)),
+              \-. uv
+          )
+      ).
+      norm_t := Normalize_trans _ _.
+    ###>
+    The rest of the rules all have both left- and right- associative forms.
+
+    Next normalize left-right reduction.
+    ###-
+      ----------------- lhs  ----------------- rhs   ------------------ lex
+      L r;L s ==> L(r;s)      R r;R s ==> R(r;s)       R x;L f ==> L f;R x
+    ###-
+    Implemented via the large-step rules
+    ###-
+      ux ==> ux'   xv ==> xv'
+      -------------------- ???
+        ux;xv ==> ux';xv'
+    ###-
+    ###<
+      Normalize_lr := (/\u,v. Endo. Red_t u v) (
+          Y\norm. \u,v. (
+              \(x,ux,xv).  ux := norm ux.  xv := norm xv.
+              <ux> (
+                  \-. trans ???
+              ), ???
+          );
+          norm_t
+      ).
+      norm_lr := (norm_t; Normalize_lr _ _).
+    ###>
+
+    Finally delay evaluation of arguments (head reduction).
+    ###-
+      --------------------   ------------------ 
+      L.L.R x;S ==> S;L.L x   L.R y;S ==> S;R.L y
+
+      ---------------------- cut-elim
+      R z;S ==> S;L.R z;R.R z
+
+      --------------   ---------- weaken
+      L.R x;K ==> K;x   R y;K ==> K
+
+      ----------------   ------------   --------------   --------------   
+      L.R x;J1 ==> J1;x   R y;J1 ==> J1   L.R x;J2 ==> J2   R y;J2 ==> J2;y
+    ###-
+    ###<
+      Normalize := (/\u,v. Idem. Red u v) (
+          Y\n.
+          \u,v,uv. <uv> (
+              \(-,uy,yv). <uy> (
+                  \(-,ux,xy). n (trans ux. trans xy. yv),
+                  \-. trans
+              ),
+              WORKING.
+              ???
+          )
+      ).
+      normalize := Normalize _ _.
+    ###>
+
+  Reduction theorems for derived terms. 
+
+    From the reduction axioms for #S,K,J,T# in \ref{sec:skj/terms},
+    we can derive reduction theorems for other defined combinators,
+    eg, #I,B,C,W,Y#.
+
+    The identity #I = S K K# reduces via #I x->>x#.
+    ###<
+      _I := ap (ap _S _K) _K.
+      I_R := (
+          /\x. Red (ap _I x) x
+      ) ( \-.
+          trans_r S_r.  ##S K K x ->> K x(K x)
+          K_r           ##        ->> x
+      ).
+      I_r := I_R _.
+    ###>
+    Right projection #F = K I# reduces via #F x y->>y#.
+    ###<
+      _F := ap _K _I.
+      F__R1 := (
+          /\x. Red (ap _F x) _I
+      ) ( \-.
+          K_r     ##K I x ->> I
+      ).
+      F_e1 := F__R1 _.
+      F_R := (
+          /\x,y. Red (ap(ap _F x)y) y
+      ) ( \-,-.
+          trans_r (lhs_r F_e1). ##K I x y ->> I y
+          I_r                   ##        ->> y
+      ).
+      F_r := F_R _ _.
+    ###>
+    Composition #B = S(K S)K# reduces via #B x y z->>x(y z)#.
+    ###<
+      _B := ap (ap _S (ap _K _S)) _K.
+      compose := (term->term->term) (\f,g. ap (ap _B f) g).
+
+      B_R := (
+          /\x,y,z. Red (ap(ap(ap _B x)y)z) (ap x(ap y z))
+      ) ( \-,-,-.
+          trans_r (2 lhs_r.
+              trans_r S_r.  ##B x ->> K S x(K x)
+              lhs_r K_r     ##    ->> S(K x)
+          ).
+          trans_r S_r.      ##B x y z ->> K x z(y z)
+          lhs_r K_r         ##        ->> x(y z)
+      ).
+      B_r := B_R _ _ _.
+    ###>
+    Transposition #C = S(B B S)(K K)# reduces via #C x y z->>x z y#.
+    ###<
+      _C := ap (ap _S (ap (ap _B _B) _S)) (ap _K _K).
+      transpose := ap _C.
+
+      C_R := (
+          /\x,y,z. Red (ap(ap(ap _C)x)y)z) (ap(ap x z)y)
+      ) (
+          \-,-,-.
+          trans_r (lhs_r.
+              trans_r (lhs_r.
+                  trans_r S_r.          ##C x ->> B B S x(K K x)
+                  trans_r (lhs_r B_r).  ##    ->> B(S x)(K K x)
+                  rhs_r K_r             ##    ->> B(S x)K
+              ).
+              B_r                       ##C x y ->> S x(K y)
+          ).
+          trans_r S_r.                  ##C x y z ->> x z(K y z)
+          rhs_r K_r                     ##        ->> x z y
+      )
+      C_r := C_R _ _ _.
+    ###>
+    The diagonal #W = C S I# reduces via #W x y->>x y y#.
+    ###<
+      _W := ap (ap _C _S) _I.
+      W_R := (
+          /\x,y. Red (ap(ap _W x)y) (ap(ap x y)y)
+      ) (
+          \-,-.
+          trans_r (lhs_r C_r).  ##W x y ->> S x I y
+          trans_r S_r.          ##      ->> x y(I y)
+          rhs_r I_r             ##      ->> x y y
+      ).
+      W_r := W_R _ _.
+    ###>
+    Turing's fixed-point combinator #Y = B(S I)(W I)(B(S I)(W I))#
+    satisfies the fixed-point equation \\
+    #Y f->>f(Y f)#.
+    (note that this is more often denoted #Theta#).
+    ###<
+      _Y := W ap (ap(ap _B(ap _S _I))(ap _W _I)).
+      rec := ap _Y.
+
+      Y_R := (
+          /\f. Red (ap _Y f) (ap f(ap _Y f))
+      ) ( \-.
+          trans_r (lhs_r.
+              trans_r B_r.          ##Y ->> S I(W I(B(S I)(W I)))
+              rhs_r.                ##  ->> S I(I(B(S I)(W I))(B(S I)(W I)))
+              trans_r (lhs_r W_r).  ##  ->> S I(B(S I)(W I)(B(S I)(W I)))
+              I_r
+          ).
+          trans_r S_r.              ##Y f ->> I f(Y f)
+          lhs_r I_r                 ##    ->> f(Y f)
+      ).
+      Y_r := Y_R _.
+    ###>
+    A bottom element #_=Y K# is constant #_ x->>_#.
+    ###<
+      _Bot := rec _K.
+      Bot_r := (/\x. Red (ap _Bot x) _Bot) (\-. trans_r (lhs_r Y_r) K_r).
+      bot_r := Bot_r Bot.
+    ###>
+    Althought we added a top element to the basis in \ref{sec:skj/terms},
+    a top element #T=Y J# with the same reduction rule #T x->>x#
+    is now definable.
+    ###<
+      _T' := rec _J.
+      Top_r' := (/\x. Red (ap _T' x) _T') (\-. trans_r (lhs_r Y_r) J_r1).
+      top_r' := Top_r _.
+      Top_e := (/\x. Red (ap _T' x) x) (\-. trans_r (lhs_r Y_r) J_r2).
+      top_e := Top_e _.
+    ###>
+    The probe #div = Y(J F(C C T))# can reduce in either of the two ways:
+    #div x->>div x T# or #div x->>x#.
+    ###<
+      _div := rec (join _F. 2 (ap _C) _T).
+      probe := ap _div.
+
+      Div_1 := (
+          /\x. Red (probe x) x
+      ) ( \-.
+          trans_r (lhs_r.
+              trans_r Y_r.  ##div ->> J F(C C T)div
+              lhs_r J_r1.   ##    ->> F div
+          ).
+          F_r               ##div x ->> x
+      ).
+      div_1 := Div_1 _.
+
+      Div_2 := (
+          /\x. Red (probe x) (ap(probe x)_T)
+      ) ( \-.
+          trans_r (lhs_r.
+              trans_r Y_r.          ##div ->> J F(C C T)div
+              trans_r (lhs_r J_r2). ##    ->> C C T div
+              c_r                   ##    ->> C div Top
+          ).
+          C_r                       ##div x ->> div x Top
+      ).
+      div_2 := Div_2 _.
+    ###>
+
+  Takeout: Coded lambda Calculus. 
+    lambda terms.
+    ###d la \lambda
+    ###<
+      expr := V (Y\a. Or (Prod a a). Or term nat).
+      purify := (expr->term) (
+          Y\p. (\(x,y). _ap(p x)(p y), I, T)
+      ).
+
+      #intro forms
+      _ap := (expr->expr->expr) (\x,y. inl (x,y)).
+      ob := (term->expr) (inr*inl).
+      mk_var := (nat->expr) (2 inr)
+
+      var := Sub expr (T,T,_).
+      varnum := ((nat->any)->var->any) (\f. (T,T,f)).
+      free_in := (var->expr->bool) (
+          varnum \n.
+          Y\fi. (\(x,y). or(fi x)(fi y), F, eq_nat n)
+      ).
+
+      #bracket abstraction for #I,K,B,C,S,eta#
+      _la := (var->expr->expr) (
+          \v. Y\abs. \e.
+          not (free_in v e) (_ap(ob _K)e).          ##\v.e = K e
+          <e> (
+              \(l,r).
+              not (free_in v l) (
+                  <r> (
+                      \-. _ap(_ap(ob _B)l)(abs r),  ##\v.l r = B l(\x.r)
+                      error,
+                      \-. l                         ##\v.l v = l
+                  )
+              ).
+              not (free_in v r) (
+                  _ap(_ap(ob _C)(abs l))r           ##\v.l r = C(\v.l)r
+              ).
+              _ap(_ap(ob _S)(abs l))(abs r),        ##\v.l r = C(\v.l)r
+              error,
+              ob _I
+          ).
+      ).
+      _f := var 0.
+      _g := var 1.
+      _x := var 2.
+      _y := var 3.
+      _z := var 4.
+    ###>
+    For example
+    ###<
+      Phi := term (
+          purify.
+          _la _f. _la _x. _la _y. _la _z. _ap(_ap _f(_ap _x _z))(_ap _y _z)
+      ).
+    ###>
+
+  Convergence proofs. 
+
+    Convergence proofs (see \ref{sec:skj/terms:conv}) generally take the form of
+    feeding some term some number of #T#'s as arguments,
+    and then showing the result reduces to #T#.
+    ###<
+      feed := (/\x:term,n:nat. Red (n(c ap _T)x) _T -> Conv x) (
+          \-,n. n next; done
+      ).
+      feed := feed _.
+    ###>
+    For example
+    ###<
+      top_c := Conv _T (feed 1. t_r). ##t t ->> t
+      k_c := Conv _K (feed 2. k_r).   ##k t t ->> t
+      j_c := Conv _J (feed 2. j_1).   ##j t t ->> t
+      i_c := Conv _I (feed 1. i_r).   ##i t ->> t
+
+      ##w t t ->> t t t ->> t t ->> t
+      w_c := Conv _W (feed 2. trans_r w_r. trans_r (lhs t_r). t_r).
+
+      ##b t t t ->> t(t t) ->> t
+      b_c := Conv _B (feed 3. trans_r b_r. t_r).
+
+      ##c t t t ->> t t t ->> t t ->> t
+      c_c := Conv _C (feed 3. trans_r c_r. trans_r (lhs t_r). t_r).
+
+      ##s t t t ->> t t(t t) ->> t(t t) ->> t
+      s_c := Conv _S (feed 3. trans_r s_r. trans_r (lhs t_r). t_r).
+    ###>
+    We can also prove the handy lemmas:
+    reduction respects converence
+    ###<
+      resp_c := (
+          /\x:term,y:term. Red x y -> Conv y -> Conv x
+      ) (
+          y\r. \x,y,xy. (
+              trans_r xy; done,                     ##x ->> y!
+              r (ap x _T) (ap y _T) (lhs xy); next  ##x t ->> y t!
+          )
+      ).
+      resp_c := resp_c _ _.
+    ###>
+    and pushing (#x |-> x T#) preserves convergence
+    ###<
+      Another := (
+          /\x:term. Conv x -> Conv (ap x _T)
+      ) (
+          y\a. \x. (
+              trans_r t_r; done,
+              a (ap x _T); next
+          )
+      ).
+      another := Another _.
+    ###>
+
+  Proofs for information ordering. 
+
+    Scott's information order is defined by the principle
+    ###-
+      /\c:context. Conv(c x) ==>  Conv(c y)
+      ------------------------------------- Hstar
+                    x [= y
+    ###-
+    To encode proofs of information ordering, we thus need a notion of context.
+    ###<
+      context := V (
+          Y\c. Or (Prod c c). Maybe term
+      ).
+      ap_c := (context->context->context) (\c1,c2. inl (c1,c2)).
+      id_c := context (inr none).
+      term_c := (term->context) (2 inr).
+
+      compose_c := (context->context->context) (
+          \c. Y\comp. (\(c1,c2). ap_c (comp c1) (comp c2), c, term_c)
+      ).
+
+      at := (context->term->term) (
+          \x. Y\e. (\(c1,c2). ap (e c1) (e c2), x, I)
+      ).
+    ###>
+    The type of information ordering proof is thus
+    ###<
+      Ord := (term->term->V) (
+          \x,y. /\c. (Conv. at c y) -> (Conv. at c x)
+      ).
+
+      Resp := (
+          /\x,y. If (Red x y). Ord x y
+      ) ( \-,-,xy.
+          \-,cy_c.
+          resp_c (rhs xy) cy_c  ##c x ->> c y!
+      ).
+      resp := Resp _ _.
+    ###>
+
+    Finally we can show that terms and information ordering proofs between them
+    form a monadic category (ie whose skeleton is a poset).
+    ###<
+      Refl := (
+          /\x. Ord x x
+      ) ( \-.
+          \-,x_c.
+          x_c
+      ).
+      refl := Refl _.
+
+      Trans := (
+          /\x,y,z. If (Ord x y). If (Ord y z). Ord x z
+      ) ( \-,-,-,xy,yz.
+          \c,z_c.
+          xy c. yz c. z_c
+      ).
+      trans := Trans _ _ _.
+    ###>
+    Comment: TODO: prove these
+    We leave to the reader the proofs of motonicity.
+    ###[
+      Rhs : (/\f,x,y. If (Ord x y). Ord (ap f x) (ap f y))
+      Lhs : (/\f,g,x. If (Ord f g). Ord (ap f x) (ap g x))
+    ###]
+  Takeout: WORKING
+    XXX these need to be updated: what is #pop_c#?
+    ###<
+      B_steps := 4.
+      Rhs := (
+          /\f,x,y. If (Ord x y). Ord (ap f x) (ap f y)
+      ) ( \-,-,-,xy.
+          \c.
+          resp_c b_e;         ##c(f y)! ==> B c f y!
+          xy (ap(ap _B c)f);  ##        ==> B c f x!
+          normalize;
+          B_steps another     ##        ==> c(f x)!
+      ).
+      rhs := Rhs _ _ _.
+
+      Lhs := (
+          /\f,g,x. If (Ord f g). Ord (ap f x) (ap g x)
+      ) ( \-,-,-,fg.
+          \c.
+          resp_c ???;   ##c(f x)! ==> c(C I x f
+          fg (ap (ap _B c) (ap(ap _C _I)x)).
+          resp_c ().
+          fg c'
+      ).
+      lhs := Lhs
+    ###>
+  Takeout: 
+    Extensionality.
+    ###<
+      Ext := (
+          /\x,y.
+          If (/\z. Ord (ap x z) (ap y z)).
+          Ord x y
+      ) ( \x,y,xy.
+          \c.
+          WORKING.
+          #Idea:
+          # given a reduction of #div(c x)=]Top#,
+          # consider each copy of #x# applied to an argument #z#.
+          # One-by one, use #xy z# to replace each of these in context c'
+          #   with a reduction of div(c') ->> Top
+          ???
+      ).
+      ext := Ext _ _.
+    ###>
+
+  Takeout: Semilattice structure. 
+    ###<
+      Top' := (
+          /\x. Ord _T x
+      ) ( \-.
+          ???
+      ).
+
+      Bot' := (
+          /\x. Ord x _Bot
+      ) ( \-.
+          ???
+      ).
+
+      J_E1 := (/\x,y. Ord (join x y) x) (\-,-. resp J_r1).
+      J_E2 := (/\x,y. Ord (join x y) x) (\-,-. resp J_r2).
+      J_1 := J_E1 _ _.
+      J_2 := J_E2 _ _.
+    ###>
+    ###<
+      On_rhs := (
+          /\a:V,f,g,x. ((Red f g) -> a) -> (Red (ap f x) (ap g x)) -> a) (
+      ) ( \-,-,-,-,op.
+          Y\rec. (
+              \(u,r1,r2).
+              WORKING.
+              ???,
+              lhs_r*op,
+              rhs_r,
+              
+          )
+      ).
+      on_rhs := 
+      J_Intro := (
+          /\w,x,y. (Ord w x)->(Ord w y)->(Ord w (join x y))
+      ) ( \w,x,y,wx,wy.
+          \c.
+          normalize;
+          #replace #J_r1# with #wx#, #J_r2# with #wy#
+          Y\rec. ( #case of #div(c(x|y)) ->> Top
+              error,    #div
+              \(-,du,uT). trans_r (rec du) (XXX rec uT), 
+              \fg. lhs_r fg.
+                  ???
+              ),
+              ...,
+              wx,
+              wy,
+              ???
+          ); ???
+      ).
+      J_i := J_Intro _ _ _.
+    ###>
+    Equivalence.
+    ###<
+      Equiv := (/\x,y. And (Ord x y) (Ord y x)).
+
+      Refl_q := (/\x. Equiv x x) (\x. (refl, refl)).
+      Sym_q := (/\x,y. Equiv x y -> Equiv y x) (\-,-,(xy,yx). (yx,xy)).
+      Trans_q := (
+          /\x,y,z. Equiv x y -> Equiv y z -> Equiv x z
+      ) ( \-,-,-,(xy,yx),(yz,zy).
+          (trans_r' xy yz, trans_r' zy yx)
+      ).
+    ###>
+    Properties of join.
+    ###<
+      J_idem := (/\x. Equiv (join x x) x) (\-. (J_1, J_i refl refl)).
+
+      J_omega := (/\x. Equiv (rec(ap _J x)) x) (
+          ???
+      ).
+
+      J_comm := (/\x,y. Equiv (join x y) (join y x)) (
+          \-,-. (J_i J_2 J_1, J_i J_2 J_1)
+      ).
+
+      J_assoc := (/\x,y,z. Equiv (join(join x y)z) (join x(join y z)) (
+          \-,-,-. (
+              J_i (trans J_1 J_1)
+                  (J_i (trans J_1 J_2) J_2),
+              J_i (J_i J_1 (trans_r J_2 J_1))
+                  (trans J_2 J_1)
+          )
+      ).
+
+      J_linear := (/\x,y,z. Equiv (ap(join x y)z) (join(ap x y)(ap x z)) (
+          ???
+      ).
+
+      J_linear2 := (/\x,y. Equiv (ap _B(join x y)) (join(ap _B x)(ap _B y)) (
+          ???
+      ).
+    ###>
+    Concurrency.
+    ###<
+      Join_1 := (/\u,v,x. Red x x' -> Red (join u x) (join v x)) (
+          \-,-,-,uv.  J_i (trans_r J_1 uv) J_2
+      ).
+      Join_2 := (/\u,x,y. Red x y -> Red (join u x) (join u y)) (
+          \-,-,-,xy.  J_i J_1 (trans_r J_2 xy)
+      ).
+
+      join_1 := Join_1 _ _ _.
+      join_2 := Join_2 _ _ _.
+    ###>
+    Top axioms, #T=Y(\t.S|K|t t)#
+    ###<
+      Top_syntax := (
+          Equiv _T (rec. _la _x. _ap(ob.ap _J(join _S _K))(W _ap _x))
+      ) (???).
+      Top_ogre := (Equiv _T rec(ap _B(ap _J _I)_K)) (???).
+    ###>
+
+  Takeout: Types as closures. 
+    Scott's universal closure #V = Y(J(K F)(S B))#.
+    ###<
+      _V := rec (join (ap _K _F) (ap _S _B)).
+      close := ap _V.
+
+      V_R0 := (
+          Red _V (join _F(ap(ap _S _B)_V))
+      ) (
+          trans_r Y_r.        ##V ->> J(K F)(S B)V
+          trans_r J_r.        ##  ->> J(K F V)(S B V)
+          lhs_r. rhs_r. K_r   ##  ->> J F(S B V)
+      ).
+      V_r0 := V_R0.
+
+      V_R := (
+          /\a. Red (close a) (join _I(ap(ap _B a)(close a))
+      ) ( \-.
+          trans_r V_r0.   ##V a ->> J F(S B V)a
+          trans_r J_r.    ##    ->> J(F a)(S B V a)
+          rhs_r S_r       ##    ->> J I(B a(V a))
+      ).
+      V_r := V_R _.
+
+      V_R2 := (
+          /\a. Red (close a) (ap(ap _B a)(ap _V a))
+      ) ( \-.
+          trans_r V_r.  ##V a ->> J I(B a(V a))
+          J_r2          ##    ->> B a(V a)
+      ).
+      V_r2 := V_R2 _.
+
+      V_E := (
+          /\a. Red (close a) _I
+      ) ( \-.
+          trans_r V_r.  ##V a ->> J I(B a(V a))
+          J_r1          ##    ->> I
+      ).
+      V_e := V_E _.
+    ###>
+    Question: Can we prove the following properties
+      ###(
+        V &->> I
+        B V V &= V
+        V x &->> I          #yes, see above
+        B(V x)(V x) &= V x
+      ###)
+      up to some bounded depth of eta expansion?
+    ###<
+      Closed := (term->V) (\a. Ord a (close a)).
+      OfType := (term->term->V) (\x,a. Ord x (ap a x)).
+      ##T# inhabits every closure
+      Top_t := (
+          Forall_term a. 
+      ) (
+      ).
+    ###>
+    Closures #a# obey the monad axiom #I [= a =] a*a#.
+    ###<
+      Monad := (term->V) (\a. And (Ord a. ap(ap _B a)a). Ord a _I).
+    ###>
+    #V# is a closure
+    Question: How to normalize reductions so they can be used with #ext#?
+    ###<
+      V_monad0 := Monad _V (
+          ext (???).          ##I a conv ==> V a conv
+          ext (???).          ##I a x conv ==> V a x conv
+          resp.
+          trans_r (lhs_r.
+              trans_r V_r2.   ##V a ->> B a(V a)
+              rhs_r V_e       ##    ->> B a I
+          ).
+          trans_r B_r.        ##V a x ->> a(I x)
+          rhs_r I_r           ##      ->> a x
+          ,
+          ???
+      ).
+    ###>
+    If #a:V# then #a# is a closure
+    ###<
+      V_monad1 := (
+          /\a. If (OfType a _V). Monad a
+      ) ( \a,aV.
+          (   trans_r' aV.    ##a =] V a
+              resp.
+              V_e             ##  ->> I
+          ,
+              trans_r' aV.          ##a =] V a
+              ext (???).            ##V a x...
+              resp.
+              trans_r (lhs_r.
+                  trans_r V_r2.     ##V a x ->> B a(V a)x
+                  trans_r (rhs_r.
+                      trans_r V_r2. ##      ->> B a(B a(V a))x
+                      rhs_r V_e     ##      ->> B a(B a I)x
+                  )
+              ).
+              trans_r B_r.          ##      ->> a(B a I x)
+              rhs_r (
+                  trans_r B_r.      ##      ->> a(a(I x))
+                  rhs_r I_r         ##      ->> a(a(x))
+              )
+          )
+      ).
+    ###>
+    If #a# is a closure then #a:V#
+    ###<
+      ???
+    ###>
+    Note also
+    ###<
+      church := (nat->term) (ap(ap _S _B), _K).
+      V_even := (Equiv _V (ap(church 2)_V)) (???).
+    ###>
+

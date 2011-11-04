@@ -1,0 +1,153 @@
+
+Axioms for a few simple types. \label{sec:axioms/types}
+  ###<
+    !read axioms/close axioms/power.
+  ###>
+
+  Comment: TODO Add rules for #prod#, #sum#, #maybe#, #sset#.
+
+  The Divergence type. \label{sec:axioms/types:div}
+    The type #div# of divergent computations is inhabited by only #{_,T}#
+    ###<
+      !wo R. !define div := V <T>.
+      !w R. !define div := P <T> (\x. (I|x)x).
+      !check _ : div.
+      !check I !: div.
+    ###>
+    In SKRJ, we also have the interval #[_,T]=inhab(pdiv)# of
+    randomly convergent computations.
+    ###<
+      !w R. pdiv := V <T>.
+      !w R. !check div <: pdiv.
+    ###>
+    Thm: #inhab(div) = {_,T}#
+    Pf: By definition of solvability in #Hstarc#.
+    Cor: #M# converges iff #M!=_# iff #div M!=T#.
+    The following inference rules are enforced:
+    ###-
+       x ![= _       x _ = _
+      ---------      --------
+      div x = T      div [= x
+    ###-
+    The latter holds since #div# is the largest strict function.
+    Note: This is the first appearance of a disjunctive axiom,
+      i.e., #x[=_# _or_ #T[=div x#,
+      and thus the first axiom sensitive to language extension.
+
+    Thm: 
+      ###<
+        !wo R. !assume div = V K.
+        !w R. !assume pdiv = V K.
+        !w R. !assume div = P K (\x. (I|x)x).
+      ###>
+    Pf: #_# is fixed by #K#, so let #q:div# be any convergent term,
+      say solvable by #q _M = T#.
+      Then #q _ =] K q _ = q#, so #q# can't be crashed.
+
+    Thm: 
+      In both SKJ and SKRJ,
+      ###<
+        !check div <: V B.
+        !check div <: V C.
+        !check div <: V W.
+        !check div <: V S.
+        !check div <: V S'.
+        !check div <: V Phi.
+        !check div <: V Psi.
+      ###>
+      moreover in SKRJ,
+      ###<
+        !w R. !check pdiv <: V B.
+        !w R. !check pdiv <: V C.
+        !w R. !check pdiv <: V W.
+        !w R. !check pdiv <: V S.
+        !w R. !check pdiv <: V S'.
+        !w R. !check pdiv <: V Phi.
+        !w R. !check pdiv <: V Psi.
+      ###>
+    Pf: #div# has inhabitants #_,T#,
+      each of which is fixed by each of #B,C,W,S,S',Phi,Psi#.
+      The extension to #pdiv# follows from linearity of #R# WRT the combinators
+      considered, e.g.
+      ###[
+        B(_+T) = (B _)+(B T) = _+T
+      ###]
+      []
+
+  The Unit type. \label{sec:axioms/types:unit}
+    The type #unit# inhabited by #{I,T}#  will be defined in section
+    \ref{sec:skj/types}.  The following axiom shemata are enforced
+    ###-
+       x ![= I      x I [= I
+      ----------    ---------
+      unit x = T    unit [= x
+    ###-
+    The latter holds since #unit# is the largest function#:I|->I#.
+
+  The Sierpinski type. \label{sec:axioms/types:semi}
+    The type #semi# inhabited by #{_,I,T}# will be defined in section
+    \ref{sec:skj/types}.  The following inference rules are enforced
+    ###-
+       x ![= _       x ![= I     x _ = _   x I [= I
+      -----------   ----------   ------------------
+      semi x =] I   semi x = T       semi [= x
+    ###-
+    The test intersection operator #P_test# will be defined later in section
+    \ref{sec:skj/tests}.
+    The following axiom shemata will be enforced for the atom #P_test#
+    ###-
+      check p =] check q   probe p [= probe q
+      ---------------------------------------
+                 test p <:: test q
+    ###-
+    where the subtest relation #<::# is defined as
+    ###[
+      p<::q <==> p = P_test q p
+    ###]
+
+  Miscellaneous types. \label{sec:axioms/types:misc}
+    We use the following lemma often.
+    Lem: #x:V t <==> t x[=x#.
+    Pf: 
+      * (#==>#)
+        ###(
+          x &= V t x
+            &= x|t x|2 t x|...
+            &= x|t x
+        ###)
+        whence #t x[=x#.
+      * (#<==#)
+        ###(
+          V t x &= x|(V t)*t x    #algebraic characterization of #V#
+                &[= x|V t x
+                &= x              #since #V# is the least such closure
+        ###)
+
+    The type of symmetric binary functions.
+    Thm: 
+      ###<
+        !assume V C = C|I.
+      ###>
+    Pf: #C*C=I#, so expanding, #V C=I|C|C*C*(V C)=I|C|V C=I|C#.
+
+    Upper sets.
+    Thm: 
+      ###<
+        !assume J : I->V.
+      ###>
+    Pf: Idemopotence and closure are inherited from #J#:
+      ###[
+        J a x =] x              #whence #  J a =] I
+        J a(J a x) = J(J a a)x  #by associativity of #J#
+            = J a x             #by idempotence of #J#
+      ###]
+
+    Thm: 
+      ###<
+        !check V Delta : V W.
+      ###>
+    Pf: Suppose #Delta x[=x#.  Then
+      ###[
+        W(V Delta)x = V Delta x x = x x [= x [= V Delta x
+      ###]
+

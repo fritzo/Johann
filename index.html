@@ -1,0 +1,133 @@
+<html>
+<head>
+    <title>Johann 0.8 System</title>
+    <link rel="shortcut icon" type="image/vnd.microsoft.icon" href="html/favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="html/main.css" />
+</head>
+<body>
+
+<div id="navigator">
+<a href="html/index.html"
+   title="main documentation page" class="main">Johann</a> -
+<a href="html/doc/help/full.html"
+   title="help with johann commands">help</a> -
+<a href="html/doc/index.html"
+   title="library documentation">library</a> -
+<a href="stats/stats.html"
+   title="database statistics">stats</a> -
+<a href="http://obermeyer.svnrepository.com/svn/johann/"
+   title="subversion repository (external)" target="_blank">[svn</a> -
+<a href="http://obermeyer.svnrepository.com/johann/trac.cgi"
+   title="trac project management center (external)" target="_blank">trac</a> -
+<a href="http://askjohann.org"
+   title="project page (external)" target="_blank">web]</a>
+<hr />
+</div>
+
+<div class=left>
+
+<h1>Getting started</h1>
+
+<p>
+To read Johann's documentation, first build the documentation by running
+<table class=commandline><tr><td><code>
+&gt; make html
+</code></td></tr></table>
+and go to the <a href="html/index.html">main documentation page</a>.
+</p>
+
+<p>
+To build the Johann program and a default database of facts,
+first edit the first few lines of <a href="cpp/makefile">cpp/makefile</a>
+to select your target system,
+and then run
+<table class=commandline><tr><td><code>
+&gt; make johann<br>
+&gt; make default
+</code></td></tr></table>
+this will enter the Johann console
+and begin building the database <tt>default</tt>.
+After a while (1 minute -- 1 hour depending on your patience),
+type
+<table class=commandline><tr><td><code>
+(J) !save
+</code></td></tr></table>
+and exit the Johann console by hitting <tt>CTRL+D</tt> or typing
+<table class=commandline><tr><td><code>
+(J) exit
+</code></td></tr></table>
+You now have a default database (located as <tt>data/default.*</tt>)
+</p>
+
+<h1>Running Johann</h1>
+
+<p>
+To start the Johann console, run
+<table class=commandline><tr><td><code>
+&gt; bin/johann
+</code></td></tr></table>
+from the topmost directory.
+You can type
+<table class=commandline><tr><td><code>
+(J) help
+</code></td></tr></table>
+for help on commands, or read the
+<a href="html/doc/help/full.html"
+   title="help with johann commands">help page</a>.
+</p>
+
+<p>
+To update the database <a href="stats/stats.html">statistics page</a>
+in the Johann console, type
+<table class=commandline><tr><td><code>
+(J) !stats
+</code></td></tr></table>
+</p>
+
+<p>
+To view database maps, first build the <tt>jmapper</tt> map viewier with
+<table class=commandline><tr><td><code>
+&gt; make jmapper
+</code></td></tr></table>
+Then in the johann console, load your database by typing, e.g.,
+<table class=commandline><tr><td><code>
+(J) !load my_database
+</code></td></tr></table>
+and save a map file (to <tt>stats/default.map</tt>) by typing
+<table class=commandline><tr><td><code>
+(J) !map
+</code></td></tr></table>
+Finally you can run
+<table class=commandline><tr><td><code>
+&gt; bin/jmapper
+</code></td></tr></table>
+</p>
+
+<h1>Writing jtext scripts</h1>
+
+<p>
+You can add <tt>.jtext</tt> scripts in <a href="scripts/user/">scripts/user/</a>.
+Then in Johann you can, e.g., import <tt>user/example.jtext</tt> by typing
+<table class=commandline><tr><td><code>
+(J) !import user/example.
+</code></td></tr></table>
+See the scripts in <tt>scripts/*</tt> for examples of notation.
+</p>
+
+<h1>Reporting problems</h1>
+
+<p>
+If you find problems installing or running Johann
+(or better, want to suggest solutions to these problems),
+please email <a href="mailto://fho@andrew.cmu.edu">the author</a>.
+</p>
+
+</div>
+
+<div id="copyright">
+<hr />
+copyright &copy; 2007-2009 <a href="http://www.math.cmu.edu/~fho/index.html" target="_blank">fritz obermeyer</a>
+</div>
+
+</body>
+</html>

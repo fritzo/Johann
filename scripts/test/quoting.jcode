@@ -1,0 +1,30 @@
+
+!set loudly
+!load skjo
+
+!assert x:a |- a:V.
+!assert x:a |- x:a.
+!assert x::a |- a:any->semi.
+!assert x::a |- a x=I
+
+!assert {x} |- {x}:code.
+!assert {x} |- {x}::test_code.
+
+!assert {x:a} |- {x}:code.
+!assert {x:a} |- {a}:code.
+!assert {x:a} |- test_code {x} = I.
+!assert {x:a} |- test_code {a} = I.
+!assert {x:a} |- a:V.
+!assert {x:a} |- x:a.
+
+!assert (\{x}. x) = eval.
+!assert (\{x}. {x}) = code.
+!assert (\{x}. {{x}}) = quote.
+
+!assert {a} |- (\{x:a}. x) = Eval {a}.
+!assert {a} |- (\{x:a}. {x}) = Code {a}.
+!assert {a} |- (\{x:a}. {{x}}) = Quote {a}.
+
+!assert {x=y} = if_eq {x} {y}.
+!assert {x[=y} = if_less {x} {y}.
+

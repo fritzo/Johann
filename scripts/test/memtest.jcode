@@ -1,0 +1,7 @@
+
+!read build/skj.
+#!load typed
+#!set size = 1200
+#!start thinking
+!listen
+

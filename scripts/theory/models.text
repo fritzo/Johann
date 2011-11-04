@@ -1,0 +1,90 @@
+
+A Filter Model. 
+
+  XXX see (thesis/combinatory_models.text) for now
+
+  In the category of applicative posets #APOS#, we construct a filter model $D$
+  for concurrent combinatory algebra, 
+  Within the model we construct a strict chain
+  \[
+    \SK \subsetneq \SKJ \subsetneq \SKJO \subsetneq D
+  \]
+  of submodels, each of which is a copoint in \APOS, i.e., each of whose
+  theories is Hilbert-Post complete WRT the language $(App,#[=#)$.
+
+  We treat the information ordering #[=# as the elemtary relation and equality
+  as derived; i.e., we will work with posets rather than equivalence relations.
+  A theory will be called _Hilbert-Post_complete_ if it is a copoint in
+  the lattice of extensions of a fixed initial theory.
+
+  We finally give syntactic caracterizations (\ref{thm:chzn}, etc. XXX) of the
+  information order reation #[=#, with applications to automated conjecturing.
+
+  The Model $D$. 
+    We model concurrent combinatory algebra by solving the recursive domain
+    equation $D\cong\Plower[D\to D]$ in the category of lattices.
+
+    Def: The closure with image the two point domain #{Bot,Top}# is denoted
+      #invalid#:
+      ###[
+        invalid M = (if M=Bot then Bot else Top)
+      ###]
+
+  The Theory Hstar. 
+    Thm: \label{thm:SK-strength} \SK is $\Sigma^0_1$-complete.
+    Pf: XXX
+
+    Thm: \label{thm:HSK-strength} \HSTAR\SK is $\Pi^0_2$-complete.
+    Pf: XXX
+
+  The Theory Hstarc. 
+    Thm: (Characterization theorem) \label{thm:chzn}
+      For every pair of combinators #M,N in <S,K,J>#, the following  are
+      equivalent
+      (a) #M [= N#
+      (b) #/\C in <S,K,J>. C M=Bot <== C N=Bot#
+      (c) #/\C in <S,K,J>. C M=Top ==> C N=Top#
+      (d) #/\C in <S,K,J>. invalid(C M) = invalid(C M)#
+    Pf: 
+      (a) #==># (b),(c),(d) is trivial.
+      (b) #<==># (d) is by definition of #invalid#.
+      (b) #==># (a) XXX.
+      (c) #==># (a) XXX.
+
+    Cor: If #M [!= N# then there is a combinator #C# such that #C M=Top# and
+      #C N=Bot#.
+    Pf: Apply part (d) of the previous theorem.
+
+    Thm: (Hilbert-Post Completeness) \label{thm:hp}
+      If $\HSTAR\SKJ \nvdash #M[=N#$
+      then $\HSTAR\SKJ, #M[=N# \vdash #Top[=Bot#$.
+    Pf: ???
+
+    Thm: \label{thm:HSKJ-strength} \HSTAR\SKJ is $\Pi^0_2$-complete.
+    Pf: XXX
+
+  The Oracular Theory Hstaro. 
+    For higher mathematics we need to extend the language \SKJ by an oracle.
+    As we wish to preserve the algebraic properties of concurrent combinatory
+    algebra, we add an oracle in the form of an all-knowing book, in a
+    particular encoding.
+    The basic question we want to look up in this book is, given terms #M,N#,
+    whether #M[=N#.
+    If these answered whenever possible, and the book can reference itself, any
+    $\Delta^0_\omega$ question can be anwered (Theorem \ref{thm:SKJO-strength}).
+    The difficult question concerning such an oracle is in _what_language_ it
+    should be written, i.e., what coding should be used to code parallel
+    combinators (and the book's title).
+    This is particularly important as Johann tries to be relatively
+    basis-independant, and the complexity of "typical" questions should vary
+    as the language, and notion of "typical" term, vary.
+
+    Def: A _numeral_system_ is a c.e. set for which a discriminator exists.
+
+    LATER
+
+    Thm: \label{thm:HSKJO-strength} \HSTAR\SKJO is $\Delta^0_\omega$-complete.
+
+    Thm: \label{thm:SKJO-strength} \SKJO is $\Delta^0_\omega$-complete.
+    Pf: XXX
+

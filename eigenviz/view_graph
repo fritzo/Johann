@@ -1,0 +1,4 @@
+#!/bin/sh
+
+make_map $1 temp.map && view_map temp.map && rm temp.map
+

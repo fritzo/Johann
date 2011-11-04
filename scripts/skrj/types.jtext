@@ -1,0 +1,431 @@
+
+Monadic types as closures. \label{sec:skrj/types}
+  ###<
+    !import skrj/simple.
+  ###>
+
+  In this section we define a monadic type #Fuzzy# for CSPDs,
+  and define compatible basic types and type constructors.
+  Our main tool is the #Simple# type constructor defined in
+  \ref{sec:skj/simple}.
+  However, unlike our treatment in \ref{sec:skj/types},
+  we will not be able to use disambiguation tricks to prevent, eg #K|F:bool#.
+
+  Comment: see notes/types.text (2008:03:17-24) (N6) for origin
+
+  Design Goals: 
+    * Define a monadic type #Fuzzy#, and
+    * extend as types from \ref{sec:skj/types} as to be compatible with #Fuzzy#.
+
+  Monadic types. 
+
+    The Kleisli triple presentation of a monad (Wadler90, Moggi91)
+    is a functor #Fuzzy,Map# together
+    with a pair of natural transformations #Exactly,Lift#:
+    ###(
+        Fuzzy &: V->V
+          Map &: /\a:V,b:V. (a -> b) -> Fuzzy a -> Fuzzy b
+      Exactly &: /\a:V. a -> Fuzzy a
+         Lift &: /\a:V,b:V. (a -> Fuzzy b) -> Fuzzy a -> Fuzzy b
+    ###)
+    Specializing to SKRJ, #Exactly# is the identity,
+    and #Lift=Map# basically sample points from CSPDs.
+    The main discovery of this section is that we can implement #Lift#
+    for the standard Church-style booleans, naturals, etc.,
+    by using a continuation passing transform.
+
+    Our #Fuzzy# types will be the same as the previous SKJ types-as-closures
+    in \ref{sec:skj/types},
+    only we will not disambiguate (so eg #K|F:bool# here).
+    #Lift# is not definable uniformly over types; however
+    we will attempt to define it uniformly for type constructors
+    (eg define #Lift_(a+b)# in terms of #Lift_a# and #Lift_b#).
+    ###<
+      Test := (V->V) (\a. a->semi).                         #a type of tests
+      Lift := (\a:V. P (Endo (a->any)) (Above \f,-. f _)).  #a type of lifters
+      testable := (\/a:V. Test a).
+      fuzzy := (\/a:V. Prod (Test a) (Lift a)).
+    ###>
+    It will be helpful in constructing types to ensure that
+    #lift f=]\-. f _#, i.e.,
+    lifting is at least as informative as blinding #f|->\-. f _#
+    (however blinding can safely be ignored in the lifting theorem below).
+
+    To reason about the behavior of lifted functions by
+    their action on unambiguous things,
+    we will sample them at various points.
+    The sampling process should distribute over CSPDs as follows:
+    For this we need
+    Theorem Schema: (sampling) Let #a# be a "nice" testable type,
+      and #f:a->any# be a strict co-strict function, i.e., #f _=_# and #f T=T#.
+      Then lifted functions distribute over CSPDs,
+      i.e., letting #f':=Lift_a f# and #x,y:a#,
+      ###[
+        f'(x|y) = f' x|f' y
+        f'(x+y) = f' x+f' y
+      ###]
+      and lifting perserves the identity
+      ###[
+        /\x:a::test_a. lift_a I x = x
+      ###]
+    Proof Schema: We will typically implement lifting functions
+      by performing a continuation passing transform,
+      so that #lift_a f# is a trace #<M1,...,Mn>#.
+      Distributivity of #lift_a f# then follows from distributivity of
+      right-application over joins and mixtures:
+      ###(
+        lift_a f (x|y) &= <M1,...,Mn> (x|y)
+                       &= (x|y) M1 ... Mn
+                       &= x M1 ... Mn | y M1 ... Mn       #by distributivity
+                       &= <M1,...,Mn> x | <M1,...,Mn> y
+                       &= lift_a f x | lift_a f y
+      ###)
+      and similarly for mixtures #x+y#.
+      Preservation of identity will depend on the implementations.
+      []
+    We would like to formally verify such theorems in Johann by
+    eliminating universal quantifiers over fuzzy types #a# and functions #f#.
+    We can eliminate the quantifier over #f# using the test for #a#,
+    but we cannot eliminate the quantifier over fuzzy types #a#,
+    since the closure #fuzzy# fails to ensure the important property
+    ###[
+      /\x:a. test_a x=T ==> x=T
+    ###]
+    Thus we uniformize all three equations for verification,
+    parametrized by fuzzy type:
+    ###<
+      sampling_thm_J := (fuzzy -> prod) (
+          \(a, test_a, lift_a), w,f,x,y.
+          f' := lift_a (\x. test_a x. f x).
+          w (f'(x|y)) (f' x|f' y)
+      ).
+      sampling_thm_R := (fuzzy -> prod) (
+          \(a, test_a, lift_a), w,f,x,y.
+          f' := lift_a (\x. test_a x. f x).
+          w (f'(x+y)) (f' x+f' y)
+      ).
+      sampling_thm_I := (fuzzy -> prod) (
+          \(a, test_a, lift_a), w,x:a::test_a.
+          (x, lift_a I x)
+      ).
+    ###>
+    To verify the theorems a specific type #fuzzy_a#,
+    we show that the equations are symmetric under swapping
+    ###<
+      swap := (prod->prod) (\(x,y). (y,x)).
+    ###>
+    as in
+    ###[
+      !check sampling_thm_J fuzzy_a : swap.
+      !check sampling_thm_R fuzzy_a : swap.
+      !check sampling_thm_I fuzzy_a : swap.
+    ###]
+
+  Fuzzy atomic types. 
+
+    Let's begin by define sampling functions for types #nil,unit,bool#,
+    using their fuzzy forms.
+    ###<
+      nil := (Simple \a,a'. a').
+      unit := (Simple \a,a'. a->a' | <I>).
+      bool := (Simple \a,a'. a->a->a' | <K,F>).
+
+      test_nil := Test nil <>.
+      test_unit := Test unit <I>.
+      test_bool := Test bool <I,I>.
+
+      lift_nil := Lift nil (\f. <>).
+      lift_unit := Lift unit (\f. <f I>).
+      lift_bool := Lift bool (\f. <f K,f F>).
+
+      fuzzy_nil := fuzzy (nil, test_nil, lift_nil).
+      fuzzy_unit := fuzzy (unit, test_unit, lift_unit).
+      fuzzy_bool := fuzzy (bool, test_bool, lift_bool).
+    ###>
+    Thm: (sampling #nil#, #unit#, and #bool#)
+      ###<
+        !check sampling_thm_J fuzzy_nil : swap.
+        !check sampling_thm_R fuzzy_nil : swap.
+        !check sampling_thm_I fuzzy_nil : swap.
+
+        !check sampling_thm_J fuzzy_unit : swap.
+        !check sampling_thm_R fuzzy_unit : swap.
+        !check sampling_thm_I fuzzy_unit : swap.
+
+        !check sampling_thm_J fuzzy_bool : swap.
+        !check sampling_thm_R fuzzy_bool : swap.
+        !check sampling_thm_I fuzzy_bool : swap.
+      ###>
+    Pf: Left as exercise for Johann. []
+
+    Naturals are a bit trickier: we need to pay special attention
+    to partial naturals like #succ(succ _)#.
+    We define a type and a test
+    ###<
+      nat := V (
+          Y\a. Simple \b,b'. (b'->b)->b->b'
+                           | <\n:a,f:a->a,x:a. f(n f x), \-,x:a. x>
+      ).
+      test_nat := Test nat <K I,I>.
+    ###>
+    with intro forms
+    ###<
+      zero := (\-,x. x).
+      succ := (\n:nat,f,x. f(n f x)|n f(f x)).
+    ###>
+    Note that #succ# joins over two ways to increment.
+    Now to lift
+    ###<
+      lift_nat := Lift nat (Y\l. <\n,f. f _ | l f*succ n,  \f. f zero>).
+    ###>
+    Finally we package these together as a fuzzy type.
+    ###<
+      fuzzy_nat := fuzzy (nat, test_nat, lift_nat).
+    ###>
+    Thm: (sampling #nat#)
+      ###<
+        !check sampling_thm_J fuzzy_nat : swap.
+        !check sampling_thm_R fuzzy_nat : swap.
+        !check sampling_thm_I fuzzy_nat : swap.
+      ###>
+    Pf: Left as exercise for Johann. []
+
+  Fuzzy covariant type constructors. 
+
+    We define products, sums,
+    and successor types as in \ref{sec:skj/types}
+    and tests as in \ref{sec:skj/tests}.
+    ###<
+      Prod := (V->V->V) (\a,b. Simple \c,c'. (a->b->c)->c').
+      Sum := (V->V->V) (\a,b. Simple \c,c'. (a->c)->(b->c)->c').
+      Maybe := (V->V) (\a. Simple \c,c'. c->(a->c)->c').
+
+      test_Prod := (/\(a,-):testable, (b,-):testable. Test. Prod a b) (
+          \(-,ta),(-,tb),(x,y). and_semi (ta x) (tb y)
+      ).
+      test_Sum := (/\(a,-):testable, (b,-):testable. Test. Sum a b) (
+          \(-,ta),(-,tb). <\x. I | ta x, \y. I | tb y>
+      ).
+      test_Maybe := (/\(a,-):testable. Test. Maybe a) (
+          \(-,ta). <I, \x. I | ta x>
+      ).
+    ###>
+    These have intro forms
+    ###<
+      pi1 := (\(x,-). x).    inl := (\x,f,-. f x).    none := (\f,-. f).
+      pi2 := (\(-,y). y).    inr := (\x,-,g. g x).    some := (\x,-,g. g x).
+    ###>
+    and lifters
+    ###<
+      lift_Prod := (/\(a,-):fuzzy,(b,-):fuzzy. Lift. Prod a b) (
+          \(-,-,la),(-,-,lb),f. <la \x. lb \y. f (x,y)>
+      ).
+      lift_Sum := (/\(a,-):fuzzy,(b,-):fuzzy. Lift. Sum a b) (
+          \(-,-,la),(-,-,lb),f. <la f*inl, lb f*inr>
+      ).
+      lift_Maybe := (/\(a,-):fuzzy. Lift. Maybe a) (
+          \(-,-,la),f. <f none, la f*some>
+      ).
+    ###>
+    We package all of this information together as fuzzy types.
+    ###<
+      fuzzy_Prod := (fuzzy -> fuzzy -> fuzzy) (
+          \aa. (a,ta,la) := aa.
+          \bb. (b,tb,lb) := bb.
+          (Prod a b, test_Prod (a,ta) (b,tb), lift_Prod aa bb)
+      ).
+      fuzzy_Sum := (fuzzy -> fuzzy -> fuzzy) (
+          \aa. (a,ta,la) := aa.
+          \bb. (b,tb,lb) := bb.
+          (Sum a b, test_Sum (a,ta) (b,tb), lift_Sum aa bb)
+      ).
+      fuzzy_Maybe := (fuzzy -> fuzzy) (
+          \aa. (a,ta,la) := aa.
+          (Maybe a, test_Maybe (a,ta), lift_Maybe aa)
+      ).
+    ###>
+
+    We cannot verify general sampling theorems for algebraic these types,
+    since the type constructors take arguments
+    whose fuzziness cannot be guaranteed with a closure,
+    and thus cannot be eliminated.
+    Thm: (sampling products, sums, and successors)
+      If sampling works for #a,b:fuzzy#,
+      then it also works for #fuzzy_Prod a b#, for #fuzzy_Sum a b#,
+      and for #fuzzy_Maybe a#.
+    Pf: By distributivity of traces over joins and mixtures. []
+    We can verify some particular cases:
+    ###<
+      !check sampling_thm_J (fuzzy_Prod fuzzy_bool fuzzy_bool) : swap.
+      !check sampling_thm_R (fuzzy_Prod fuzzy_bool fuzzy_bool) : swap.
+      !check sampling_thm_I (fuzzy_Prod fuzzy_bool fuzzy_bool) : swap.
+      
+      !check sampling_thm_J (fuzzy_Sum fuzzy_bool fuzzy_bool) : swap.
+      !check sampling_thm_R (fuzzy_Sum fuzzy_bool fuzzy_bool) : swap.
+      !check sampling_thm_I (fuzzy_Sum fuzzy_bool fuzzy_bool) : swap.
+      
+      !check sampling_thm_J (fuzzy_Maybe fuzzy_bool) : swap.
+      !check sampling_thm_R (fuzzy_Maybe fuzzy_bool) : swap.
+      !check sampling_thm_I (fuzzy_Maybe fuzzy_bool) : swap.
+    ###>
+
+    The coalgebraic numeral type is the fixed points of the successor
+    ###<
+      num := Y Maybe.
+
+      test_num := (Y \t. Test_Maybe (num,t)).
+
+      lift_num := Lift num (\f. <f zero, f*succ>).
+
+      fuzzy_num := fuzzy (num, test_num, lift_num).
+    ###>
+    Thm: (sampling #num#)
+      ###<
+        !check sampling_thm_J fuzzy_num : swap.
+        !check sampling_thm_R fuzzy_num : swap.
+        !check sampling_thm_I fuzzy_num : swap.
+      ###>
+    Pf: By induction, using the sampling theorem for #Maybe# above. []
+
+    Coinductive stream types are fixed points of products
+    ###<
+      Stream := (V->V) (\a. Y (Prod a)).
+      stream := Stream _.
+
+      test_Stream := (/\(a,-):testable. Test a) (
+          \(a,ta). Y \t. Test_Prod (a,ta) (Stream a,t)
+      ).
+
+      lift_Stream := (/\(a,-):fuzzy. Lift. Stream a) (
+          \aa. (a,ta,la) := aa.
+          ts := test_Stream (a,ta).
+          Y\ls. lift_Prod aa (Stream a, ts, ls)
+      ).
+
+      fuzzy_Stream := (fuzzy -> fuzzy) (
+          \aa. (a,ta,la) := aa.
+          (Stream a, test_Stream (a,ta), lift_Stream (a,ta,la))
+      ).
+    ###>
+    Dialogs, e.g. #V (Y\a. Sum a. W Prod a)#, are similarly definable.
+    Thm: (sampling streams) If sampling works for #a:fuzzy#,
+      then it also works for #fuzzy_Stream a#.
+    Pf: By coinduction, using the sampling theorem for #Prod# above. []
+    We can verify some particular cases:
+    ###<
+      !check sampling_thm_J (fuzzy_Stream fuzzy_bool) : swap.
+      !check sampling_thm_R (fuzzy_Stream fuzzy_bool) : swap.
+      !check sampling_thm_I (fuzzy_Stream fuzzy_bool) : swap.
+
+      !check sampling_thm_J (fuzzy_Stream fuzzy_nat) : swap.
+      !check sampling_thm_R (fuzzy_Stream fuzzy_nat) : swap.
+      !check sampling_thm_I (fuzzy_Stream fuzzy_nat) : swap.
+    ###>
+
+  Fuzzy exponentials. 
+
+    ###s x1 xi xn
+
+    We can define fuzzy exponenetials for general types
+    that support case analysis for partial terms.
+    That is, let #(a,test_a,lift_a):fuzzy# be a fuzzy type
+    with inhabitants #{_,x1,...,xn,T}# such that for each #i#, #xi::test_a xi#.
+    Suppose there is an elim form #case_a# implemented as a trace,
+    and satisfying #case_a xi y1 ... yn = yi# for each #i=1,...,n#.
+    Then we can implement fuzzy exponentials from #a# using the test
+    ###[
+      test_(a->b) := Test (a->b) (
+          \f:a->b. test_b (f x1) | ... | test_b (f xn)
+      ).
+    ###]
+    and lifter
+    ###[
+      lift_(a->b) := Lift (a->b) (
+          \f:a->b::test_(a->b), x:a::test_a.  case_a x (f x1) ... (f xn)
+      ).
+    ###]
+
+    Examining some special cases, consider first the domain #bool->unit#,
+    with functions discriminated by response to well-checked arguments #_,K,F#
+    ###a
+            T
+            |
+           K I
+          /   \
+      <I,_>   <_,I>
+          \   /
+            _
+    ###a
+    where we ensure #T# always maps to #T#
+    (and hence ignore #<T,_># and #<_,T>#).
+    ###<
+      b2u := P (bool->unit) (<K,_>|<F,_>).  #ensure toplessness
+      test_b2u := Test b2u (<K>|<F>).
+
+      lift_b2u := Lift b2u (
+          \-,f,p. p _ (f \-. I)
+                | p K ( f <I,_> | p F (f <I,I>) )
+                | p F ( f <_,I> | p K (f <I,I>) )
+      ).
+
+      fuzzy_b2u := fuzzy (b2u, test_b2u, lift_b2u).
+    ###>
+    Thm: (sampling #b2u#) Sampling works for #b2u#:
+      ###<
+        !check sampling_thm_J fuzzy_b2u : swap.
+        !check sampling_thm_R fuzzy_b2u : swap.
+        !check sampling_thm_I fuzzy_b2u : swap.
+      ###>
+    Pf: Left as exercise for Johann. []
+
+    For less trivial codomain, we add branching, as in #bool->bool#
+    ###<
+      b2b := P (bool->bool) (<K,_,_>|<F,_,_>).
+      test_b2b := Test b2b (<K,I,I>|<F,I,I>).
+
+      lift_b2b := Lift b2b (
+          \f,p. p _ (f \-. I)
+              | p K ( f <K,_> | p F (f <K,K>) (f <K,F>) )
+                    ( f <F,_> | p F (f <K,K>) (f <K,F>) )
+              | p F ( f <_,K> | p K (f <K,K>) (f <F,K>) )
+                    ( f <_,F> | p K (f <K,F>) (f <F,F>) )
+      ).
+
+      fuzzy_b2b := fuzzy (b2b, test_b2b, lift_b2b).
+    ###>
+    Thm: (sampling #b2u#)
+      ###<
+        !check sampling_thm_J fuzzy_b2u : swap.
+        !check sampling_thm_R fuzzy_b2u : swap.
+        !check sampling_thm_I fuzzy_b2u : swap.
+      ###>
+    Pf: Left as exercise for Johann. []
+
+    Finally, we consider functions of infinite domains,
+    say #num->semi# (witnessed by semi-streams).
+    We can no longer implement case analysis as traces,
+    but we can recursively sample, as in #lift_Stream# above.
+    ###<
+      n2s := P (num->semi) (Y\c,q. q none _ | c q*some).
+      test_n2s := Test n2s (Y\c,q. q none | c q*some).
+
+      lift_n2s := Lift n2s (
+          Y\l.
+          \f,p. p _ (\-. I)
+              | p none ( f (I,_) | l (\p'. f (I,p')) )
+              | l (\p'. f (_,p')) p*some
+      ).
+
+      fuzzy_n2s := fuzzy (n2s, test_n2s, lift_n2s).
+    ###>
+    Thm: (sampling #n2s#)
+      ###<
+        !check sampling_thm_J fuzzy_n2s : swap.
+        !check sampling_thm_R fuzzy_n2s : swap.
+        !check sampling_thm_I fuzzy_n2s : swap.
+      ###>
+    Pf: Left as exercise for Johann. []
+
+    Question: What data is needed to uniformly define exponentials?
+      Is this data itself uniformly definable, under exponentials?
+

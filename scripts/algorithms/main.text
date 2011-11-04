@@ -1,0 +1,23 @@
+
+Implementation of the Johann system. \label{sec:algorithms}
+
+  This chapter details some aspects of the Johann system.
+  Most of the syntactic algorithms have already been described in \ref{sec:sk}
+  or elsewhere.
+  Now we will focus on Johann's database in \ref{sec:algorithms/saturation}
+  and the AI algorithms behind
+  randomized proofs search in \ref{sec:algorithms/annealing},
+  automated conjecturing in \ref{sec:algorithms/conjecturing}, and 
+  numerical basis optimization in \ref{sec:algorithms/fitting}.
+  These three AI algorithms all make use of statistical calculations
+  on the Johann's database, essentially approximations to Kolmogorov complexity.
+
+  ###u A B C D E F G O P Q U V W Y
+  ####u R
+ 
+  ###r background
+  ###r saturation
+  ###r annealing
+  ###r conjecturing
+  ###r fitting
+

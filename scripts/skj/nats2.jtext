@@ -1,0 +1,83 @@
+
+Goedel Numerals. \label{sec:skj/nats2}
+  ###<
+    !import skj/types skj/tests skj/logic.
+  ###>
+
+  The type of Goedel numerals
+  ###<
+    nat' := type (
+        Y \a. (Simple \b,b'. (a->b'->b)->b->b')
+            | <\n:a,-,f:a->a,x:a.f n.n f x, \-,x:a.x>  #repair from left
+            | <\-,n:a,f:a->a,x:a.f n.n f x, \-,x:a.x>  #repair from right
+            | \q. q Bot (q Top Bot)
+                | q (q Bot Top) Bot
+    ).
+    check_nat' := Check nat' <\n,x. I|n|x, I>.
+    test_nat' := Test nat' <\n,x. n|x, I>.
+  ###>
+  with intro forms
+  ###<
+    zero' := nat' (\f,x.x).
+    succ' := (nat'->nat') (\n,f,x.f n.n f x).
+  ###>
+  Thm: #inhab(nats') = {Top} union {succ'^n z | n in Nats, z in {Bot, zero'}#.
+  Pf: LATER
+  Goedel numerals enjoy built-in case-analysis and recursion,
+  and a predecessor that works on partial numerals (in constant time).
+
+  Constants
+  ###<
+    one' := nat' (\f,x.f x).
+    two' := nat' (\f,x.f.f x).
+    omega' := nat' (\f,x.Y f).
+    !check succ' zero' = one'.
+    !check succ' one' = two'.
+    !check succ' omega' = omega'.
+    !check Y succ' = omega'.
+  ###>
+
+  Two-sided test for zero
+  ###<
+    is_zero' := (nat'->bool) <\-,-.F, K>.
+    nonzero' := not * is_zero'.
+    !check is_zero' zero' = true.
+    !check is_zero'(succ' Bot) = false.
+  ###>
+  One-sided test for infinity
+  ###<
+    if_finite' := (nat'->semi) <\-,w.w, I>.
+    !check if_finite' zero' = success.
+    !check if_finite' x = if_finite' (succ' x).
+    !check if_finite' omega = fail.
+  ###>
+
+  Arithmetic operations
+  ###<
+    prec' := (nat'->nat') <\n,-.n, error>.
+    !check prec' zero' = Top.
+    !check prec' one' = zero'.
+    !check prec' two'  = one'.
+    !check prec' omega' = omega'.
+    !check prec' * succ' = nat'.
+    !check succ' * prec' = nat' & (assert * nonzero').
+
+    add' := Sym_bin_op nat' (\m,n. m succ' n).
+    !check add' zero' = nat'. ##zero# is an additive unit
+    !check add' one' = succ'.
+    !check add' two' = succ' * succ'.
+    !check add' omega' = (\n. check_nat' n omega').
+
+    mul' := Sym_bin_op nat' (\m,n. m (add' n) zero').
+    !check mul' one' = nat'. ##one# is a multiplicative unit
+    !check mul' zero' = (\n. check_nat' n zero').
+    !check mul' one' = nat'.
+    !check mul' omega' x = is_zero' x zero' omega'.
+
+    pow' := Bin_op nat' (\m,n. n (mul' m) one').
+    !check pow' zero' = (\n. check_nat' n zero').
+    !check pow' one' = (\n. if_finite' n one').
+
+    sub' := (\n,m. m prec' n).
+    !check (\n:nat'. sub' n (succ' n)) = (\n. if_finite' n error').
+  ###>

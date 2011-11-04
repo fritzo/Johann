@@ -1,0 +1,102 @@
+
+Axioms for a few simple types. \label{sec:axioms/types}
+  ###<
+    !read skj/types.
+  ###>
+
+  Atomic types. 
+
+    The type #unit# is inhabited by #{I,T}#.
+    ###<
+      !assume ( I,T : unit ).
+      !assume unit x = (unit x)*(unit x) = (unit x)(unit x).
+    ###>
+    Within the domain #unit#, application is the same as composition. 
+    ###<
+      !assume (unit x)(unit y) = (unit x)*(unit y).
+    ###>
+    The following axiom shemata are enforced for #unit#
+    ###-
+       x ![= I      x I [= I
+      ----------    ---------
+      unit x = T    unit [= x
+    ###-
+    The latter holds since #unit# is the largest function#:I|->I#.
+
+    The type #semi# is inhabited by #{_,I,T}#.
+    ###<
+      !assume ( _,I,T : semi ).
+      !assume semi x = (semi x)*(semi x) = (semi x)(semi x)
+                     = (semi x)*(unit x) = (semi x)(unit x).
+    ###>
+    As with #unit#, application is the same as composition. 
+    ###<
+      !assume (semi x)(semi y) = (semi x)*(semi y).
+    ###>
+    The following inference rules are enforced for #semi#
+    ###-
+       x ![= _       x ![= I     x _ = _   x I [= I
+      -----------   ----------   ------------------
+      semi x =] I   semi x = T       semi [= x
+    ###-
+
+    The boolean type #bool# is inhabited by #{_,K,F,T}#.
+    ###<
+      !assume ( _,K,F,T : bool ).
+    ###>
+    We can thus check equations pointwise, eg,
+    ###<
+      !assume bool x = bool x K F
+                     = bool x I I (bool x)
+                     = bool x (bool x) (bool x)
+                     = bool x K _ | bool x _ F.
+    ###>
+
+  Type constructors. 
+
+    We will also add the four most basic type constructors to the basis.
+    ###<
+      !using prod sum maybe sset.
+    ###>
+    The polymorphic versions relate to the simple versions via #P#.
+    ###<
+      !assume Prod a b = P prod ((a->b->any) -> any).
+      !assume Sum a b = P sum ((a->any) -> (b->any) -> any).
+      !assume Maybe a = P maybe (any -> (a->any) -> any).
+      !assume Sset a = P sset ((a->any)->any).
+    ###>
+    Conversely, the simple versions are sketches of the polymorphic versions.
+    ###<
+      !assume prod = Prod _ _.
+      !assume sum = Sum _ _.
+      !assume maybe = Maybe _.
+      !assume sset = Sset _.
+    ###>
+
+    We also characterize typical inhabitants
+    ###<
+      !assume (x,y) : prod.
+      !assume ( _, inl x, inr y : sum ).
+      !assume ( _, none, some x : maybe ).
+    ###>
+    Semisets are inhabited by singletons #<x># and nonempty finitary joins,
+    which we achieve through binary joins #sset x|sset y#.
+    ###<
+      !assume ( <x>, sset x|sset y : sset ).
+    ###>
+
+####  Theorems conjectured by Johann. 
+####
+####    Note that composing pairs of closures results in smaller closures.
+####    For example
+####    Lem: 
+####      ###<
+####        !assume bool*semi = semi*bool = div.
+####        !assume div*unit = bool*unit = T.
+####        !assume unit*div = unit*bool = V*div.
+####      ###>
+####    Pf: consider the action of the closure on the left on the inhabitants of
+####      the closure on the right.
+####      Note that the last maps #_|->I# and everything else to #T#
+####      []
+

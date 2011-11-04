@@ -1,0 +1,46 @@
+#Brief help for Johann 0.9.0:
+# help
+  ? / help / ?brief  #prints this page
+  ?? / ?full         #prints full command list
+  ?syntax            #prints syntax help
+  license            #prints license (GPL3)
+# system
+  exit / quit / CTRL+D   #exits system
+  !save/load <filename>  #saves/loads brain to/from file cores/filename
+  !send                  #sends langauge and equations to server
+  !restart               #restarts the system
+  !stats/params          #prints database statistics/system parameters
+  !win/map               #writes stats page/saves map for jmapper
+# context
+  patt := <expr>.           #adds patterned definition to context
+  !import/read <filenames>  #quickly imports/thoroughly reads script files
+  !write <filename>         #writes theory+context to scripts/user/filename
+  !clear                    #clears context and theory
+  !ls                       #lists defined variables
+# syntax
+  <expr>.                    #prints expression
+  !comb <expr>.              #compile to combinator form
+  !pretty <expr>.            #decompile to pretty form
+  ![nat] reduce <expr>.      #compile ; reduce [nonlin steps]
+  ![nat] sample <expr>.      #compile ; sample [nonlin steps]
+  ![int] expand <expr>.      #compile ; normalize ; subs defs
+  ![int] compress <expr>.    #compile ; normalize ; match defs
+  ![float] simplify <expr>.  #compile ; norm. ; grok [at energy]
+  !express <expr>.           #expresses in terms of basic constants
+  !size <expr>.              #prints size of an expression
+# theory
+  <stmt>.           #prints statement
+  <stmt>?           #prints current truth-value of statement
+  !assume <stmt>.   #assumes (universal closure of) statement
+  !check <stmt>.    #checks (universal closure of) statement
+  !solve <stmt>.    #solves a statement for one free variable
+  !recheck          #reviews axioms and theorems ; rechecks all problems
+  !problems/errors  #prints all unverified/falsified statements
+# thinking
+  !todo                    #shows unfinished definitions
+  !think about context     #thinks about all definitions
+  !think about theory      #thinks about axioms, theorems, and problems
+  !think about everything  #thinks about random terms
+  !start/stop thinking     #starts/stops background process thinking
+  !start/stop resting      #whether I rest when I want to
+  ![nat] think             #thinks for one or more cycles (expand-contract)

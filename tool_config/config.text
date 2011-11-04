@@ -1,0 +1,9 @@
+
+i = sudo apt_get install
+
+i flex bison
+i libpng-dev libglut-dev libbz2-dev libreadline-dev liblapack-dev
+i texlive-latex-extras texlive-math-extras bibtex2html
+i graphviz doxygen python-svn
+i latex-beamer xfig transfig
+

@@ -1,0 +1,70 @@
+
+Recursion Operators. \label{sec:examples/recursion}
+  ###<
+    !import skj/types skj/lists.
+  ###>
+
+  Primitive recursion is simply inhomogenous time evolution of an initial state
+  #x:st# by a sequence of state transformations #fs:Stream (Endo st)#.
+  The result is a time-history of states.
+  ###<
+    prim_rec := (/\st:type. (Stream. Endo st)->st->(Stream st)) (
+        \-.  Y\r.  \(f,fs),x. (x, r fs (f x))
+    ).
+  ###>
+  Fact: If #x# is total and #fs# is total, then #prim_rec fs x# is total.
+
+  Modified bar recursion
+  assesses the cost of partial histories of states #start:List s#,
+  given an assessment function on total histories #cost:(Stream s)->c#, and
+  a time-dependent one-step cost-based decision procedure to advance states
+  #choose:Stream c->s#.
+  It is important for totality that the cost type #c# be a flat domain (a
+  testable type) such as rational numbers.
+  ###<
+    bar_rec := (/\s:type, (c,-):testable.
+        ((Stream s)->c) -> (Stream c->s) -> (List s) -> c
+    ) (
+        \-,-.
+        e := (
+            Y\e,f,(g,gs),xs.
+            f_ := (\x,xs. f (x,xs)).
+            xs (\(x,xs). (x, e (f_ x) gs xs))
+              (g \x. f. e (f_ x) gs none, e (f_ x) gs (some (x,none)))
+        ).
+        \f,gs,xs. f. e f gs xs
+    ).
+  ###>
+  Fact: If #c# is discrete (has no limit points) and #cost#, #choose#, and
+    #start# are total, then #bar_rec cost choose start# is total.
+
+  Modified bar recursion
+  assesses the cost of partial histories of states #start:List s#,
+  given an assessment function on total histories #cost:(Stream s)->c#, and
+  a time-dependent one-step cost-based decision procedure to advance states
+  #choose:((List s)->c)->s#.
+  It is important for totality that the cost type #c# be a flat domain (a
+  testable type) such as rational numbers.
+  ###<
+    List_cat := (/\a:type. Bin_op. List a) (???).
+    list_cat := (Bin_op list) List_cat _.
+
+    bar_extend := (/\s:type, (c,-):testable.
+        ((Stream s)->c) -> (((List s)->c)->s) -> (List s) -> (Stream s)
+    ) (
+        \-,-. Y\e. \cost,choose,state
+        cost_ := (\x,xs. cost (x,xs)).
+        choose_ := (\x,f. choose. \xs. f. some (x,xs)).
+        start (\(x,xs). (x, e (cost_ x) (choose_ x) xs))
+              (choose \x. r (cost_ x) (choose_ x) none, ???)
+    ).
+
+    bar_rec := (/\s:type, (c,-):testable.
+        ((Stream s)->c) -> (((List s)->c)->s) -> (List s) -> c
+    ) (
+        \-,-,cost,choose,state. cost. bar_extend cost choose state
+    ).
+  ###>
+  Fact: If #c# is discrete (has no limit points) and #cost#, #choose#, and
+    #start# are total, then #bar_rec cost choose start# is total.
+

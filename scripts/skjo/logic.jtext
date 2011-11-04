@@ -1,0 +1,298 @@
+
+The logic of SKJ terms. \label{sec:skjo/logic}
+  ###<
+    !import skjo/codes axioms/oracle skj/terms.
+  ###>
+  ###g p
+
+  In this section we develop first-order logic fo SKJ-terms
+  with basic relations for equality and Scott's information ordering.
+  This builds on the boolean and semiboolean propositional logics
+  we developed in \ref{sec:skj/logic}.
+  Now in SKJO, with a #Delta11#-bool-hard oracle in the language,
+  we can even evaluate the truth-value of all such sentences
+  that are meaningful.
+  Footnote: Meaningful in the generalized Popperian sense of Kelly95:
+    predicted by hypotheses that are refutable in the limit.
+  \newpage
+
+  Recall from \ref{sec:skj/tests} that each type of conditional truth value
+  #unit#, #unit|-semi#, #semi#, #semi|-bool#
+  corresponds to a complete complexity class,
+  respectively #Pi01#, #Sigma01#, #Delta02#, #Delta01#.
+  By adding the #Pi11#-complete oracle #O# in the way we did,
+  with truth-values of #semi#,
+  the complexity theorem extends precisely to a hyperarithmetic analog.
+  Thm: The following complexity characterizations hold
+    for local problems in SKJO.
+    Footnote: Recall from \ref{sec:skj/logic} our notation for contexts
+      corresponding to binding of universally quantified variables:
+      ###(
+           (x:a |- f x=g x) &<==> f*a x=g*a x
+          (x::t |- f x=g x) &<==> (t x)(f x)=(t x)(g x)
+        (x:a::t |- f x=g x) &<==> (t*a x)(f*a x)=(t*a x)(f*a x)
+      ###)
+    Html Only: 
+      ###a
+                       Context |- Problem    Complexity
+        --------------------------------------------------------------
+        (a)              x:div |- x=_        Sigma11-complete
+        (b)              x:div |- x=T        Pi11-complete
+        (c)             x:unit |- x=I        Sigma11-complete
+        (d)             x:semi |- x=I        complete for differences
+                                                 between Pi11 problems
+        (e)       x:semi::unit |- x=I        Pi11-complete
+        (f)  x:bool::test_bool |- x=K        Delta11-hard and Pi11
+        --------------------------------------------------------------
+      ###a
+    Latex Only: 
+      \setlength \extrarowheight {0.3em}
+      \begin{center}\large
+      \begin{tabular}{ c @{\hspace{2em}} r @{\;#|-#\;} l @{\hspace{2em}} l }
+           &             Context  & Problem & Complexity                \\
+      \hline
+        (a)&              #x:div# & #x=_#   & #Sigma11#-complete        \\
+        (b)&              #x:div# & #x=T#   & #Pi11#-complete           \\
+        (c)&             #x:unit# & #x=I#   & #Pi11#-complete           \\
+        (d)&             #x:semi# & #x=I#   & complete for differences
+                                              between #Pi11# problems   \\
+        (e)&       #x:semi::unit# & #x=I#   & #Pi11#-complete           \\
+        (f)&  #x:bool::test_bool# & #x=K#   & #Delta11#-hard and #Pi11# \\
+      \bottomrule
+      \end{tabular}
+      \end{center}
+      \setlength \extrarowheight {0em}
+  Note that in contrast to the case of SKJ
+  where #s<::t# was #Pi02#-complete while #x::t# was only #Delta02#,
+  in SKJO the oracle reduces exactly these problems, so that
+  #s<::t <==> O{s}{t}::I#, as in case (c).
+  Pf: We begin with cases  (a) and (c), since they are closest to the
+    definition of #O#.
+    The functions #\x.x|I:div->unit# and #\x.x _:unit->div#
+    provide translations between (a) and (c),
+    so we show hardness for (c) and prove the upper bound for (a)
+    (c) We showed in \ref{sec:axioms/oracle}
+      that #O# is hard for #Pi11# questions, using truth values #{_,I}#.
+    (a) Note that the definition of #O# is #Pi11#,
+      so convergence of SKJO terms can be at most #Pi11#.
+    Now all other cases variously reduce to case (c).
+    (b) This is just the negation of part (a).
+    (d) Suppose #x:semi#.  Then #x=I# iff #unit x=I# and #div x=T#.
+      Conjoining these is a differenc of #Pi11#-complete problems.
+    (e) Suppose #x:semi::unit#.  Then #x in {_,I}#.
+      The function #\x.I|x T:semi->unit# reduces this to part (b).
+      We already showed hardness in \ref{sec:axioms/oracle}.
+    (f) For hardness, suppose #phi# is a #Delta11# statement.
+      Then it and its negation can both be posed as
+      #Pi11# problems to #O#, say as #if_phi,if_not_phi:semi::unit#.
+      Now define #[phi] = if_phi K | if_not_phi F#.
+      Then #[phi]::test_bool# since phi either true or false, but not both..
+
+      For , observe that for #x:bool::test_bool#, we know #x in {K,F}#.
+      Then #x=K# iff \\
+      #div(x _ T)=_#.
+    []
+
+  Basic relations. \label{sec:skjo/logic:relations}
+
+    We can tests for basic equality and ordering between SKJ terms using the
+    proof theory of Hstar demonstrated in \ref{sec:examples/proofs}.
+    First we define the semi-valued testing versions
+    ###<
+      lift_term := (Test term -> Test skj) (\t,x::test_code. code_to_term x t).
+
+      if_conv := (skj -> semi) (lift_term if_conv_term).
+      if_div := (skj -> semi) (
+          lift_term \x. {x}:=quote_term x. O {test_Conv x} {_}
+      ).
+
+      if_less := (skj -> skj -> semi) (
+          conv_at := (skj -> skj -> semi) (\{z},{f}. if_conv {f z}).
+          \{x},{y}. O {conv_at{x}} {conv_at{y}}
+      ).
+      if_equal := P C (skj -> skj -> semi) (
+          \{x},{y}. and_semi (if_less{x}{y}) (if_less{y}{x})
+      ).
+      if_nless := (skj -> skj -> semi) (
+          \{x},{y}.
+          Join_skj \{f}. and_semi (if_conv {f x}) (if_div {f y})
+      ).
+    ###>
+    Next we package (positive,negative) pairs together
+    as boolean valued predicates.
+    ###<
+      conv := (skj -> bool) (
+          \x. if_conv x true | if_div x false
+      ).
+      less := (skj -> skj -> bool) (
+          \x,y. if_less x y true | if_nless x y false
+      ).
+      equal := P C (skj -> skj -> bool) (
+          \x,y. if_equal x y true | if_nless x y false | if_nless y x false
+      ).
+    ###>
+    These relate to the semidecidable versions as expected.
+    ###<
+      !check if_conv x = if (conv x).
+      !check if_div x = if*not (conv x).
+      !check if_less x y = if (less x y).
+      !check if_nless x y = if*not (less x y).
+      !check if_equal x y = if (equal x y).
+      !check equal x y = and (less x y) (less y x).
+    ###>
+    Finally, we give an alternative definition of provable equality,
+    exploiting the fact that #code# is at any time SKJ-definable,
+    hence quoted terms are SKJ-definable,
+    hence quoted terms are separable by a boolean predicate.
+    That is, two terms are provably equal iff their codes are provably equal.
+    ###<
+      !check pr_equal = P C (code -> code -> bool) (\{x},{y}. equal{{x}}{{y}}).
+    ###>
+
+  Quantification. \label{sec:skjo/logic:quantifiers}
+
+    In \ref{sec:skj/logic} we defined logical connectives #and,or# for booleans
+    and #and_semi,or_semi# for semibooleans.
+    In SKJ we can even eliminate semiboolean existential quantifiers
+    over flat domains with a semiset of total terms.
+    For example from #num:V# and #Join_num:Sset num# we can define
+    Footnote: Recall #Test a=a->semi#, and #Pred a=a->bool#.
+    ###<
+      if_exists_num := Test (Test num) (\p. Join_num \n. p n).
+      !check if_exists_num = semi*Join_num.
+    ###>
+    Now in SKJO, the oracle #O# allows us to eliminate also
+    semiboolean universal quantifiers over flat domains with totality tests.
+    For example, given #num:V# and _a_code_ #{test_num}:Code{Test num}#
+    for the totality test we can eliminate quantifiers of _quoted_ tests with
+    ###<
+      if_forall_num := Test*Code{Test num} (\{p}. O{test_num}{\n. p n}).
+      !check if_forall_num =] O{test_semi}.
+    ###>
+    To iterate these universal quantifiers requires a little extra structure,
+    however, since an outer bound variable must be quoted
+    to appear in an inner quantified predicate, eg
+    ###[
+      if_forall_num{\n. if_forall{\m. p m n}}   #error: #n# cannot be quoted!
+    ###]
+    We can work around this in our typical flat domains,
+    by using a quoter #quote_a:a->Code{a}#, as eg
+    ###[
+      if_forall_num{\n. let{n}:=quote_num n. if_forall{\m. p m n}} #well-defined
+    ###]
+    But it would be more convenient to wrap the quoter into the quantifier,
+    so that we could simply bind quoted terms.
+    This motivates an improved definition
+    ###<
+      if_forall_num' := Test*Code{ Test*Code{num} } (
+          \{p}. O{test_num}{\n. p*quote_num n}
+      ).
+    ###>
+    which we can iterate using the easier notation
+    ###[
+      if_forall_num{\{n}. if_forall{\{m}. p m n}}
+    ###]
+
+    ###d ja {\M{\VAR{Join}_\VAR{a}}}
+    Now given any flat domain #a# with
+    a semiset #ja:Sset a# of total terms,
+    a totality test #test_a:Test a#, and
+    a quoter #quote_a:Quoter a#,
+    we can package up an (existential,universal) pair of semiboolean quantifiers
+    to eliminate boolean quantifiers.
+    We will do this uniformly, defining a polymorphic type
+    ###u ja
+    ###<
+      Quantifier := (Code{V} -> V) (\a. Pred*Code{Pred*Code a}).
+    ###>
+    and functions to build semiboolean quantifiers
+    and package them into boolean pairs
+    ###<
+      Exists_ := (
+          /\{a:V}. Sset a -> Code{Test{a}} -> Code{Quoter{a}} -> Quantifier{a}
+      ) (
+          \-,j,{t},{q}.  j if*p*q true  |  O{t}{if*not*p*q} false
+      ).
+      Forall_ := (
+          /\{a:V}. Sset a -> Code{Test{a}} -> Code{Quoter{a}} -> Quantifier{a}
+      ) (
+          \-,j,{t},{q}.  O{t}{if*p*q} true  |  j if*not*p*q false
+      ).
+
+      exists_ := Exists_ _.
+      forall_ := Forall_ _.
+    ###>
+    For example we can define quantifiers over our standard flat domains.
+    Eg: Quantifying over #num#erals.
+      ###<
+        exists_num := Exists_ {num} Join_num {test_num} {quote_num}.
+        forall_num := Forall_ {num} Join_num {test_num} {quote_num}.
+        !check (/\{p:Pred num}. not*forall_num {p} = exists_num {not*p}).
+        !check (/\{p:Pred num}. not*exists_num {p} = forall_num {not*p}).
+      ###>
+      We can use this to state a structure decomposition theorem
+      for total inhabitants
+      ###<
+        !check true = forall_num {\{n}.
+            or (eq_num none n). exists_num {\{n'}. eq_num n. some n'}
+        }.
+      ###>
+    Eg: Quantifying over SKJ terms.
+      ###<
+        forall_term := Forall_ {term} Join_term {test_term} {quote_term}.
+        exists_term := Exists_ {term} Join_term {test_term} {quote_term}.
+        !check (/\{p:Pred term}. not*forall_term {p} = exists_term {not*p}).
+        !check (/\{p:Pred term}. not*exists_term {p} = forall_term {not*p}).
+      ###>
+    Eg: Quantifying over SKJ codes.
+      ###<
+        exists_skj := Exists_ {skj} Join_skj {test_skj} {Q}.
+        forall_skj := Forall_ {skj} Join_skj {test_skj} {Q}.
+        !check (/\{p:Pred skj}. not*forall_skj {p} = exists_skj {not*p}).
+        !check (/\{p:Pred skj}. not*exists_skj {p} = forall_skj {not*p}).
+      ###>
+      As an example application,
+      we can check that SKJ has binary meets,
+      using three levels of binding
+      ###<
+        !check true =
+            forall_skj {\{x}.
+              forall_skj {\{y}.
+                below_xy := (skj -> bool) (\z. and (less z x) (less z y)).
+                exists_skj {\{z}.
+                  and (below_xy x).
+                  forall_skj {\{z'}. impiles (below_xy z') (less z' z) }
+            } } }.
+      ###>
+      and check the equivalence of the #skj# and #term# quantifiers
+      ###<
+        !check forall_term{p*term_to_code*E} = forall_skj{p*E}.
+      ###>
+    Eg: Quantifying over SKJO codes.
+      ###<
+        exists_code := Exists_ {code} Join_code {test_code} {Q}.
+        forall_code := Forall_ {code} Join_code {test_code} {Q}.
+        !check (/\{p:Pred code}. not*forall_code {p} = exists_code {not*p}).
+        !check (/\{p:Pred code}. not*exists_code {p} = forall_code {not*p}).
+      ###>
+    Eg: Quantifying over indexed #Code#s.
+      ###<
+        exists_Code := (/\{a:V}. Quantifier{Code{a}}) (
+            \{a:V}. Exists_ {Code{a}} (Join_Code{a}) {test_code} {Quote{a}}
+        ).
+        forall_Code := (/\{a:V}. Quantifier{Code{a}}) (
+            \{a:V}. Forall_ {Code{a}} (Join_Code{a}) {test_code} {Quote{a}}
+        ).
+        !check (/\{a:V},{p:Pred.Code{a}}.
+            not (forall_Code{a}{p}) = exists_Code{a}{not*p}
+        ).
+        !check (/\{a:V},{p:Pred.Code{a}}.
+            not (exists_Code{a}{p}) = forall_Code{a}{not*p}
+        ).
+      ###>
+
+    In \ref{sec:examples/godels_T} we present an extended example
+    using quantifiers over a variety of flat domains.
+
+  ###u p
+

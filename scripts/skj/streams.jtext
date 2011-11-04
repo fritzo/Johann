@@ -1,0 +1,52 @@
+
+Streams. \label{sec:skj/streams}
+  ###<
+    !import skj/tests.
+  ###>
+
+  The polymorphic type of streams
+  ###<
+    Stream := (V->V) (\a. Y\b. Prod a b).
+    stream := V (Y\a. Prod any a).
+    !check stream = Stream any.
+  ###>
+
+  The standard stream interface consists of #read#, #next#, and #push#.
+  ###<
+    read_stream := Fun_of stream (\(h,-). h).
+    next_stream := Endo stream (\(-,t). t).
+    push_stream := Fun_to stream (\h,t. (h,t)).
+    !check next_stream * (push_stream _) = stream.
+  ###>
+  and their polymorphic variants
+  ###<
+    read_Stream := V (/\a:V. Stream a -> a) (\-,(h,-). h).
+    next_Stream := V (/\a:V. Endo. Stream a) (\-,(-,t). t).
+    push_Stream := V (/\a:V. a->(Endo. Stream a)) (\-,h,t. (h,t)).
+    !check next_stream = next_Stream any.
+    !check read_stream = read_Stream any.
+    !check push_stream = push_Stream any.
+  ###>
+  We may also wish to construct various streams
+  ###<
+    const_stream := Fun_to stream (\x. Y. push_stream x).
+    zip_streams := (stream->stream->stream) (Y\z. \(h,t),s. (h, z s t)).
+    odd_stream := (stream->stream) (Y\e. \(h,(-,t)). (h,e t)).
+    even_stream := (stream->stream) (Y\e. \(-,(h,t)). (h,e t)).
+    unzip_stream := (stream -> W Prod stream) (\s. (odd s, even s)).
+    !check odd_stream * next_stream = next_stream * even_stream.
+    !check even_stream * next_stream = odd_stream.
+    !check odd_stream * (push_stream _) = (push_stream _) * even_stream.
+    !check even_stream * (push_stream _) =  odd_stream.
+    !check unzip_stream (zip_streams x y) = (stream x, stream y).
+    !check (\(x,y).zip_streams x y) * unzip_stream = stream.
+  ###>
+  and their polymorphic variants
+  ###<
+    zip_Streams := (/\a:V,b:V. s:=Stream. s a -> s b -> s (Prod a b)) (
+        \-,-. Y\z. \(h,t),s. (h, z s t)
+    ).
+    !check zip_streams = zip_Streams any.
+    #...
+  ###>
+

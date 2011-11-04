@@ -1,0 +1,403 @@
+
+Implementation of Strong Reduction. \label{sec:examples/reduction}
+  ###<
+    !import skj/types skj/logic.
+  ###>
+
+  Basics. 
+    atomic types
+    ###<
+      nat  := V ???.
+      finite_sel := (nat->V) (\n:nat. ???).
+      ####void := V (finite_sel 0).
+      ####unit := V (finite_sel 1).
+      ####Bool := V (finite_sel 2).
+      Bool := V (\rec,x,y,z.rec(x z)(y z)).
+      ####sel := (\n:nat, m:nat. finite_sel m (n(B K)) ???
+    ###>
+
+    Boolean algebra
+    ###<
+      T := K.
+      F := K I.
+      or  := (Bool->Bool->Bool) (\x,y.x T y).
+      and := (Bool->Bool->Bool) (\x,y.x y F).
+      not := (Bool->Bool) (\x.x F T).
+    ###>
+
+    Type constructs
+    ###<
+      exp := (V->V->V) (\a:V,b:V,f.b*f*a).
+      subtype := (V->V) (\s,t.s*t*s).
+      ###>
+    scott uses pair, fst, snd, diag
+    ###<
+      prod := (V->V->V) (\a,b. \p. <a(p T), b(p F)>).
+      pair := V (\p,x.<p[1/2]x, p[2/2]x>).
+      proj_left  := (pair->I) <T>.
+      proj_right := (pair->I) <F>.
+      triple := V (\p,x.<p[1/3]x, p[2/3]x, p[3/3]>).
+    ###>
+    scott uses inleft, inright, outleft, outright, which, out
+    ###<
+      sum := (V->V->V) (\a,b. \x. <Bool(x T), x T(a,b)(x F)>).
+      inj_left  := (\x. <T,x>).
+      inj_right := (\x. <F,x>).
+      which := <T>.
+      out   := <F>. 
+    ###>
+
+    numerals
+    ###<
+      succ     := (nat->nat) (\n:nat. \f. f(n f)). # = (S B)*nat
+      bot_pred := (nat->nat) (\n:nat. n (\p.<succ(p T),p T>) <0, Bot> F).
+      nat_eq   := (nat->nat->Bool) ??? .
+    ###>
+
+  Terms. 
+    terms
+    ###<
+      var  := nat.
+      atom := finite_sel 5.
+      Term := V (Y.\rec. triple(pair rec rec, atom, var)).
+    ###>
+
+    properties
+    ###<
+      is_app  := (Term->Bool) <2 K T,     K F,     K F>.
+      is_atom := (Term->Bool) <2 K F,     K T,     K F>.
+      is_var  := (Term->Bool) <2 K F,     K F,     K T>.
+      is_I    := (Term->Bool) <2 K F, <T,F,F,F,F>, K F>.
+      is_K    := (Term->Bool) <2 K F, <F,T,F,F,F>, K F>.
+      is_B    := (Term->Bool) <2 K F, <F,F,T,F,F>, K F>.
+      is_C    := (Term->Bool) <2 K F, <F,F,F,T,F>, K F>.
+      is_S    := (Term->Bool) <2 K F, <F,F,F,F,T>, K F>.
+    ###>
+
+    Term construction
+    ###<
+      make_app  := (Term->Term->Term) (\lhs:Term, rhs:Term. <[1/3], <lhs,rhs>>).
+      make_atom := (atom->Term)       (\a:atom.             <[2/3],   a  >).
+      make_var  := (var->Term)        (\v:var.              <[3/3],   v  >).
+      atom_I := Term (make_atom [1/5]).
+      atom_K := Term (make_atom [2/5]).
+      atom_B := Term (make_atom [3/5]).
+      atom_C := Term (make_atom [4/5]).
+      atom_S := Term (make_atom [5/5]).
+    ###>
+
+    types of terms
+    ###<
+      app_term  := subtype Term <make_app, Bot,       Bot     >.
+      atom_term := subtype Term <Bot,      make_atom, Bot     >.
+      var_term  := subtype Term <Bot,      Bot,       make_var>.
+      pure_term := subtype Term <make_app, make_atom, Bot     >.
+    ###>
+
+    Term access
+    ###<
+      get_lhs := (Term->Term) <[1/2], Bot, Bot>.
+      get_rhs := (Term->Term) <[2/2], Bot, Bot>.
+      get_atom:= (Term->nat)  <Bot,   I,   Bot>.
+      get_var := (Term->nat)  <Bot,   Bot, I  >.
+    ###>
+
+    Term comparison
+    ###<
+      equal_atoms := (atom->atom->Bool) (???).
+      equal_vars  := (var->var->Bool) (???).
+      equal_terms := (Term->Term->Bool) (
+          Y.\rec.
+          \s:Term, t:Term.
+          s (
+              t (\a,b,c,d. and(rec a c, rec b d), F, F)
+          ,
+              t (F, equal_atoms, F)
+          ,
+              t (F, F, equal_vars)
+          )
+      ).
+    ###>
+
+    variables
+    ###<
+      is_var_ := (var->Term->Bool) ???.
+      first_var := make_var 0.
+      raise_vars := (Term->Term) (
+          Y.\rec. <
+              \lhs,rhs. make_var(rec lhs, rec rhs),
+              make_atom,
+              make_var * succ
+          >
+      ).
+      lower_vars := (Term->Term) (
+          Y.\rec. <
+              \lhs,rhs. make_var(rec lhs, rec rhs),
+              make_atom,
+              make_var * bot_pred
+          >
+      ).
+    ###>
+
+    abstraction tools
+    ###<
+      is_var := (var->Term->Bool) ???.
+      is_free_in := (var->Term->Bool) (
+          Y.\rec. \t:Term.
+          #this cannot return 'false' for infinitary terms
+          is_app Term (
+              or (rec(get_lhs t), rec(get_rhs t))
+          ,
+              is_var t
+          )
+      ).
+
+      abstract := (var->Term->Term) (
+          \v:var.  Y.\rec.  \t:Term.
+          v_free_in := is_free_in v.
+          not (v_free_in t) (make_app atom_K t).                  # rule #K#
+          not (is_app t) atom_I.                                  # rule #I#
+          lhs := get_lhs t.
+          rhs := get_rhs t.
+          v_free_in lhs (
+              v_free_in rhs (
+                  make_app (make_app atom_S (rec lhs)) (rec rhs)  # rule #S#
+              ,
+                  make_app (make_app atom_C (rec lhs)) rhs        # rule #C#
+              )
+          ,
+              ##v# is free in rhs
+              is_var_ v rhs (
+                  lhs                                             # rule #eta#
+              ,
+                  make_app (make_app atom_B lhs) (rec rhs)        # rule #B#
+              )
+          )
+      ).
+    ###>
+
+  Head-reduction Tools. 
+
+    stack, like a string
+    ###<
+      stack       := (V->V)  (\t.Y.\s. sum(prod t s, Bot)).
+      empty_stack := inj_right Bot.   ##:/\t. stack t
+      stack_push  := (\x, s. inj_left <x,s>).
+      stack_head  := (\s. which s proj_left  Bot).
+      stack_tail  := (\s. which s proj_right Bot).
+      stack_empty := <T,F>*which.
+      stack_size  := (Y.\rec.\s. which s (succ(rec(stack_tail s)), 0)).
+    ###>
+
+    reduction tools
+    ###<
+      head_stack := subtype (stack Term) (
+          \s:stack Term.
+          t := atom_term (stack_head s).
+          s := stack_tail s.
+          stack_push t s
+      ).
+      push_head := (Term -> stack Term -> head_stack) (
+          Y.\rec. \s:stack Term, t:Term.
+          is_app t (
+              s := stack_push (get_rhs t) s.
+              s := rec s (get_rhs t).
+              s
+          ,
+              s := stack_push (get_lhs t) s.
+              s
+          )
+      ).
+      make_head_stack := (Term->head_stack) (\t:Term. push_head t empty_stack).
+    ###>
+
+  Beta Reduction. 
+
+    linear reduction
+    Note: linear reduction always halts, so its reduction is in fact an
+      idempotent operation: let us say a type.
+    ###<
+      reduce_IKBC_beta_step := (head_stack->head_stack) (
+          Y.\rec. \s:head_stack.
+
+          #break stack up
+          stack_empty s s.
+          head := stack_head s.
+          tail := stack_tail s.
+
+          #reduction functions for recursing down arg list
+          reduce_list := (stack Term)->(stack Term) (
+              Y.\rec2. \s:stack Term.
+              stack_empty s s.
+              srack_push (rec (stack_head s), rec2 (stack_tail s))
+          ).
+          reduce_args := (head_stack->head_stack) (
+              \s:head_stack.
+              head := stack_head s.
+              tail := stack_tail s.
+              stack_push head (reduce_list tail)
+          ).
+
+          #check for at least one arg
+          stack_empty tail (reduce_args s).
+          arg1 := stack_head tail.
+          tail := stack_tail tail.
+          is_I head (
+              rec (push_head arg1 tail)
+          ).
+
+          #check for at least two args
+          stack_empty tail (reduce_args s).
+          arg2 := stack_head tail.
+          tail := stack_tail tail.
+          is_K head (
+              rec (push_head arg1 tail)
+          ).
+
+          #check for at least three args
+          stack_empty tail (reduce_args s).
+          arg3 := stack_head tail.
+          tail := stack_tail tail.
+          is_B head (
+              head := make_app arg1 (make_app arg2 arg3).
+              rec (push_head head tail)
+          ).
+          is_C head (
+              head := make_app (make_app arg1 arg3) arg2.
+              rec (push_head head tail)
+          ).
+
+          #otherwise, reduce arguments
+          reduce_args s
+      ).
+      IKBC_beta_NF := V reduce_IKBC_beta_step.
+    ###>
+
+    #S#-reduction
+    ###<
+      reduce_S_beta_step := (IKBC_beta_NF->head_stack) (???).
+    ###>
+
+  Eta-Reduction. 
+    (see reduction.text (2006:02:26) (Q1.N5) for derivation).
+    also see Hindley67
+    ###<
+      reduce_eta_step := (IKBC_beta_NF->IKBC_beta_NF) (
+
+          #abstraction tools
+          app_fresh_var := (\t. make_app (raise_vars t, first_var)).
+          abs_fresh_var := (\t. lower_vars (abstract 0 t).
+          fresh0 := make_var 0.
+          fresh1 := make_var 1.
+
+          Y.\rec. \s:head_stack.
+
+          #break stack up
+          stack_empty s s.
+          head := stack_head s.
+          tail := stack_tail s.
+
+          #reduction functions for recursing down arg list
+          reduce_list := (stack Term -> stack Term) (
+              Y.\rec2. \s:stack Term.
+              stack_empty s s.
+              srack_push (rec (stack_head s), rec2 (stack_tail s))
+          ).
+          reduce_args := (head_stack->head_stack) (
+              \s:head_stack.
+              head := stack_head s.
+              tail := stack_tail s.
+              stack_push head (reduce_list tail)
+          ).
+
+          #check for at least one arg
+          stack_empty tail (                                  #rules (A1),(V1)
+              reduce_args s
+          ).
+          arg1 := stack_head tail.
+          tail := stack_tail tail.
+          is_I head (                                         #rule (I1)
+              rec (push_head arg1 tail)
+          ).    
+
+          #check for at least two args
+          stack_empty tail (
+              #there is exactly one arg
+              #XXX: these rules may do nothing, and so should be all composed
+              is_B head (                                     #rule (B1)
+                  2 abs_fresh_var.
+                  rec.
+                  make_app ( 2 raise_vars arg1,
+                             make_app fresh1 fresh0)
+              ).
+              is_C head (                                     #rule (C1)
+                  2 abs_fresh_var.
+                  rec.
+                  make_app ( make_app(2 raise_vars arg1, fresh0),
+                             fresh1 )
+              ).
+              is_S head (                                     #rule (S1)
+                  before := (
+                      2 abs_fresh_var.
+                      rec.
+                      make_app ( make_app(2 raise_vars arg1, fresh0),
+                                 make_app fresh1 fresh0 )
+                  ).
+                  after := ???.
+                  ???
+              ).
+              reduce_args s                                   #rule (H1)
+          ).
+          arg2 := stack_head tail.
+          tail := stack_tail tail.
+          is_K head (                                         #rule (K2)
+              rec (push_head arg1 tail)
+          ).
+          
+          #check for at least three args
+          stack_empty tail (
+              #there are exactly two args
+              #XXX: these rules may do nothing, and so should be all composed
+              is_B head (                                     #rule (B2)
+                  abs_fresh_var.
+                  rec.
+                  make_app ( raise_vars arg1,
+                             make_app ( raise_vars arg2, fresh0))
+              ).
+              is_C head (                                     #rule (C2)
+                  abs_fresh_var.
+                  rec.
+                  make_app ( make_app( raise_vars arg1, fresh0),
+                             fresh1 )
+              ).
+              is_S head (                                     #rule (S2)
+                  abs_fresh_var.
+                  rec.
+                  make_app ( make_app( raise_vars arg1, fresh0),
+                             make_app( raise_vars arg2, fresh0))
+              ).
+              reduce_args s
+          ).
+          arg3 := stack_head tail.
+          tail := stack_tail tail.
+          is_B head (
+              head := make_app arg1 (make_app arg2 arg3).
+              rec (push_head head tail)
+          ).
+          is_C head (
+              head := make_app (make_app arg1 arg3) arg2.
+              rec (push_head head tail)
+          ).
+          is_S head (
+              head := make_app ( make_app arg1 arg3,
+                                 make_app arg2 arg3 ).
+              rec (push_head head tail)
+          ).
+
+          #otherwise, reduce arguments
+          reduce_args s
+          
+      ).
+      eta_NF := V reduce_eta_step.
+    ###>
+

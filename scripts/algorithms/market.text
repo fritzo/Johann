@@ -1,0 +1,28 @@
+
+A Market for search problems. \label{sec:algorithms/market}
+
+  In section \ref{sec:algorithms/completion} we described inference rules for the
+  distributed search problem.
+  Missing from this abstract rule system is a _strategy_ to decide which
+  inference step(s) to perform next.
+  This section describes an economic strategy for distributing time and space
+  between inference steps.
+
+  We begin by assigning to each problem a _demand_ and an estimated _cost_,
+  both positive real numbers.
+  Our stragety will then be to satisfy the most demand per cost.
+
+  However, rules apply not only to problems but also to reductions and
+  equations; thus we need to define how demand propagates from problems to
+  reductions and equations.
+  XXX TODO
+
+  Flow: 
+    (1) orient and deduce until saturation
+      XXX does this terminate?
+    (2.1) 
+    (2.2) 
+    (2.3) branch a problem
+    (2.4) factor a problem
+    (3) prune and simplify until saturation
+

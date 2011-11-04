@@ -1,0 +1,124 @@
+
+Axioms for divergent terms. (approaching $\mathcal H$)
+    ###<
+      !read axioms/combinators.
+    ###>
+
+    The fixed-point combinator diverges on many arguments
+    ###<
+      !assume _ = Y K = Y S = Y W = Y B = Y C = Y I = Y Y.
+      !assume _ = Y(B K).   #(suggested by Johann)
+    ###>
+
+    Lem: 
+      ###<
+        !assume _ = W W W.
+      ###>
+    Pf: by #_#-reduction: #W W W# head-reduces to itself.
+
+  Theorems conjectured by Johann. 
+    Lem: 
+      ###<
+        !assume _ = Y K*W.
+      ###>
+    Pf: #Y K*W x y -> Y K*W y y#
+
+    Lem: 
+      ###<
+        !assume _ = Y(S C)(K I).
+      ###>
+    Pf: by #eta-_#-reduction: #Y(S C)(K I) x# head-reduces to #Y(S C)(K I)#
+      ###(
+        Y(S C)(K I) x &-> S C(Y(S C))(K I)x
+                      &-> C (K I) (Y(S C)(K I))x
+                      &-> K I x (Y(S C)(K I))
+                      &-> Y(S C)(K I)
+      ###)
+
+    Lem: 
+      ###<
+        !assume _ = W I(W W).
+      ###>
+    Pf: by reduction to super-term:
+      ###(
+        W I(W W) &-> I(W W)(W W)
+                 &-> W W(W W)
+                 &-> W(W W)(W W)
+                 &-> ...
+      ###)
+      whose reduction sequence never terminates.
+
+    Lem: 
+      ###<
+        !assume _ = Y(C I)(Y(C I)).
+      ###>
+    Pf: by reduction loop:
+      ###[
+        Y(C I)(Y(C I))  ->  <Y(C I)>(Y(C I))  ->  Y(C I)(Y(C I))
+      ###]
+
+    Lem: 
+      ###<
+        !assume _ = W Y(C W).
+      ###>
+    Pf: by reduction to super-term:
+      ###(
+        W Y(C W) &-> Y(C W)(C W)            -> C W(Y(C W))(C W)
+                 &-> W(C W)(Y(C W))         -> C W(Y(C W))(Y(C W))
+                 &-> W(Y(C W))(Y(C W))
+                 &-> Y(C W)(Y(C W))(Y(C W))
+                 &-> Y(C W)(Y(C W))(Y(C W))(Y(C W))
+                 &-> Y(C W)(Y(C W))(Y(C W))(Y(C W))(Y(C W))(Y(C W))
+                 &-> ...
+      ###)
+
+    Lem: 
+      ###<
+        !assume _ = Y(S S S).
+      ###>
+    Pf: by reduction to everywhere-infinitely-deep tree
+      ###(
+        Y(S S S) &-> S S S(Y(S S S))
+                 &-> S(Y(S S S))(S(Y(S S S)))
+                 &->> S(S(...)(...))(S(...)(S(...))
+      ###)
+      whence #Y(S S S)x -> Y(S S S)x(Y(S S S) x)#
+
+    Lem: 
+      ###<
+        !assume _ = Y*(C I).
+      ###>
+    Pf: by reduction to sub-term
+      ###(
+        Y*(C I) x &-> Y<x>      -> <x>(Y<x>)
+                  &-> Y<x>x     -> <x>(Y<x>)x
+                  &-> Y<x>x x   -> <x>(Y<x>)x x
+                  &-> Y<x>x x x -> ...
+      ###)
+
+    Lem: 
+      ###<
+        !assume _ = C(Y(C(K C)))B.
+      ###>
+    Pf: #... x -> ...#
+
+  Theorems suggested by solutions to equations. 
+    These were suggested by the fixed point definition of #nil#:
+    ###[
+      x in {T,_}  <==>  K x=x
+    ###]
+    ###<
+      !assume _ = Y(W B K) = Y K*B.
+    ###>
+
+    #####these were suggested by the fixed point definition of #semibool#:
+    #####  x in {I,_,T}  ==>  B x = x
+    ####!assume _ = Y K*S.
+    ####!assume _ = W C(K(W C)).
+    ####!assume _ = Y(S(W W))K.
+    ####!assume _ = Y(W(B(C(K K)))).
+    ####!assume _ = W(S<K>)(W(S<K>)).
+    ####!assume _ = W S Y(C(B B)).
+    ####!assume _ = W S Y(Y(C<B>)).
+    ####!assume _ = W S Y(C(B K)).
+

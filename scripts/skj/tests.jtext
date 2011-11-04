@@ -1,0 +1,309 @@
+
+Tests for totality and correctness. \label{sec:skj/tests}
+  ###<
+    !import skj/logic.
+  ###>
+
+  Comment: TODO discuss Scott's logic of partial terms
+
+  Types as tests. \label{sec:skj/tests:notation}
+
+    Following the interpretation of types-as-closures of
+    \ref{sec:axioms/close:notation},
+    we will pursue an alternate interpretation of types-as-tests,
+    with a similar convenient notation.
+    Moreover, the two interpretations of types cohabit gracefully.
+    Def: (types as tests)
+      ###(
+             (\x::t.x) &= (\x.semi(t x)x)             #tested abstraction
+                  x::t &<==> semi(t x)=I              #passing a test
+           /\x::t. M=N &<==> (\x::t.M)=(\x::t.N)      #universal quantifiers
+                 s<::t &<==> test s=S(test t)(test s) #sub-testing
+        (s::t ==> M~N) &<==> test t s M~test t s N    #tests as hypotheses
+      ###)
+      where in the conclusion #M~N#, the relation #~# is one of #=,[=,=]#.
+    Lem: The following are always true.
+      ###<
+        !check ( /\x::t. x::t ).
+        !check x::t ==> x::t.
+        !check x::t ==> m=m.
+        !check T::I ==> _=T.
+      ###>
+    Pf: Letting #i = test t x# below,
+      ###(
+        /\x::t. x::t &<==> /\x::t. test t x) = I
+                     &<==> (\x::t. test t x) = (\x::t.I)
+                     &<==> (\x.test t x.test t x) = (\x.test t x I)
+                     &<==> (\x. i i) = (\x. i I)
+        (x::t==>x::t) &<==> (x::t==>test t x=I)
+                      &<==> test t x (test t x) = test t x I
+                      &<==> i i = i I
+      ###)
+      In either case, we can we can check #i# pointwise over
+      #inhab(semi)={_,I,T}#:
+      ###[
+        _ _ = _ = _ I
+        I I = I = I I
+        T T = T = T I
+      ###]
+      The last two implications are trivial.
+      []
+    Lem: Subtesting is a preorder.
+      (a) #t<::t#.
+      (b) If #r<::s# and #s<::t# then #r<::t#.
+    Pf: Assume WLOG #r,s,t:test#
+      (a) #t<::t# iff #t=S t t#, which holds pointwise since
+        #I I=I#, #_ _=_#, and #T T=T#.
+      (b) Noting that application and composition are the same for semibooleans
+        ###<
+          !check (semi x)(semi y) = (semi x)*(semi y).
+        ###>
+        we can again look at the pointwise situation.
+        ###(
+                  r x &= (r x)*(s x)        #since #r<::s#
+                      &= (r x)*(s x)*(t x)  #since #s<::t#
+                      &= (r x)*(t x)        #since #r<::t#
+        ###)
+        whence #r<::t#.
+      []
+    However, subtesting is not a partial order, even on test,
+    since antisymmetry fails, eg #_<::T# and #T<::_#.
+    The problem is that tests can fail in two directions (#_# and #T#),
+    but subtesting only ask whether, not how tests fail.
+
+  Atomic tests and checks.
+
+    We define atomic tests for a few tyes
+    ###<
+      test_any := Test any (K I).     #maximal test: everything passes
+      test_nil := Test nil <>.        #minimal test: nothing passes
+      test_div := Test div <>.      
+      test_unit := Test unit <I>.
+      test_semi := Test semi <I>.
+      test_bool := Test bool <I,I>.
+      !check test_any = K I.
+    ###>
+    Note that the subtypes of semi are their own tests:
+    ###<
+      !check test_nil = nil.
+      !check test_div = div.
+      !check test_unit = unit.
+      !check test_semi = semi.
+    ###>
+
+    Checks can now be defined in terms of tests.
+    ###<
+      check_any := test2check test_any.
+      check_nil := test2check test_nil.
+      check_unit := test2check test_unit.
+      check_semi := test2check test_semi.
+      check_bool := test2check test_bool.
+    ###>
+    The subtypes of unit are their own checks:
+    ###<
+      !check check_nil = nil.
+      !check check_unit = unit.
+    ###>
+
+  Compound Tests. 
+    In defining compound tests, we first extend to the categories of testable
+    types and checkable types
+    ###<
+      testable := (\/a:V. test a).
+      checkable := (\/a:V. check a).
+      Testable := (P V -> testable) (\t. \/a:t. test a).
+      Checkable := (P V -> checkable) (\t. \/a:t. check a).
+      !check testable = Testable _.
+      !check checkable = Checkable _.
+    ###>
+    For example we can define
+    ###<
+      tb_unit := <unit, test_unit>.
+      tb_semi := <semi, test_semi>.
+      tb_bool := <bool, test_bool>.
+    ###>
+    Note: Testing exponentials requires enumerating the compact elements of the
+      domain, which is not always easy (or possible).
+      Hence these categories are not closed.
+
+    Now we can define constructors for testables
+    ###<
+      test_prod := <2 K I> * prod.
+      tb_Prod := (testable -> testable -> testable) (
+          \<a,t_a>, <b,t_b>. (
+              Prod a b,
+              \p. and_semi (test_prod p). and_semi (t_a (p K)) (t_b (p F))
+          )
+      ).
+      !check (/\aa:testable,bb:testable.
+          let (-,a) := aa.
+          let (-,b) := bb.
+          let (-,ab) := tb_Prod aa bb.
+          /\x::a, y::b. (x,y) :: ab
+      ).
+
+      tb_Sum := (testable -> testable -> testable) (
+          \<a,t_a>, <b,t_b>. (
+              Sum a b,
+              \p. and_semi (p (K I) (K I)) (p t_a t_b)
+          )
+      ).
+      !check (/\aa:testable,bb:testable.
+          let (-,a) := aa.
+          let (-,b) := bb.
+          let (-,ab) := tb_Sum aa bb.
+          (/\x::a. inl x :: ab) AND (/\y::b. inr y :: ab)
+      ).
+
+      tb_Maybe := (testable -> testable) (
+          \<a,t_a>. (
+              Maybe a,
+              \p. and_semi (p I (K I)) (p I t_a)
+          )
+      ).
+      !check (/\aa:testable.
+          let (-,a) := aa.
+          let (-,ma) := tb_Maybe aa.
+          (/\x::a. some x :: ma) AND (none :: ma)
+      ).
+    ###>
+    and more weakly-typed versions for tests and checks only
+    ###<
+      test_Prod := (test -> test -> Test prod) (
+          \s,t,(x,y). and_semi (s x) (t y)
+      ).
+      test_Sum := (test -> test -> Test sum) (\s,t. (s,t)).
+      test_Maybe := (test -> Test maybe) (\t. (I,t)).
+
+      check_Prod := (check -> check -> Check prod) (\s,t,(x,y). s x | t y).
+      check_Sum := (check -> check -> Check sum) (\s,t. (s,t)).
+      check_Maybe := (check -> Check maybe) (\t. (I,t)).
+    ###>
+
+    Semisets pass a test if at least one element converges, and no diverge.
+    ###<
+      test_sset := Test sset (\x. x (K I)).
+      test_Sset := P_test test_sset (Test sset) (\t. <t>).
+      !check test_sset = test_Sset (K I).
+    ###>
+
+exit
+###<
+  exit #---------------------------------------------------------------------
+###>
+
+  Exponentials. 
+    LATER
+
+    Testing and checking exponentials requires an enumerator over the domain.
+    For checking, this can be a semiset over an uncountable space.
+    ###<
+      check_Endo := V (/\a:V. Sset a -> Check a -> Check(Endo a)) (
+          \a,e,c. \f:a->a.
+          s c*f
+      ).
+      test_Endo := V (/\a:V. (NEList a)->(Test a)->(Test.Endo a)) (
+          \a,e,c.
+          if (empty_string e) Top #(in case #a = nil#)
+          |   \f:a->a. e <c*f, and_semi>
+      ).
+    ###>
+    the latter of which of course fails for infinite lists
+    ###<
+      check_Exp := ???.
+      test_Exp := ???.
+    ###>
+
+    We can now provide a check for the original #Dialog# V
+    ###<
+      check_Dialog := (
+          /\i:V,o:V. Sset i -> Check i -> Check o -> Check(Dialog i o)
+      ) (
+          \i,o,e,t_i,t_o.
+          a := Dialog i o.
+          Y \t_a. check_Prod o (i->a) t_o (check_Exp i a t_i t_a)
+      ).
+    ###>
+
+  Recursive Tests. 
+    Numbers are finite, so we can test via
+    ###<
+      tb_nat := Test nat ( #XXX: this could use recursive notation
+          Y\test_nat.
+          tb_nat := <nat, test_nat>.
+          tb_Sum tb_bool tb_nat
+      ).
+      test_nat := tb_nat F.
+    ###>
+
+    Assuming strings are finite,
+    ###<
+      tb_String := (/\(a,-):testable. Testable (String a)) (
+          \tb_a.
+          Y\test_sa.
+          tb_sa := <String (tb_a K), test_sa>.
+          tb_Sum tb_unit (tb_Prod tb_a tb_sa)
+      ).
+    ###>
+    alternatively, we can check for errors in infinite strings but not test for
+    convergence:
+    ###<
+      cb_String := (/\a:checkable. Checkable (String a)) (
+          \cb_a.
+          Y\check_sa.
+          cb_sa := <String (cb_a K), check_sa>.
+          cb_Sum cb_unit (cb_Prod cb_a cb_sa)
+      ).
+    ###>
+    and similarly for streams and trees
+    ###<
+      cb_Stream := (/\a:checkable. Checkable (Stream a)) (
+          \cb_a.
+          Y \check_sa.
+          cb_sa := <Stream (cb_a K), check_sa>.
+          cb_Prod cb_a cb_sa
+      ).
+      cb_Tree := (2 Endo checkable) (
+          \cb_Branch, cb_leaf.
+          Y \check_tree.
+          Branch := (V -> V) (\a. cb_Branch <a,check_any> K).
+          leaf := cb_leaf K.
+          cb_tree := <Tree Branch leaf, check_tree>.
+          cb_Sum cb_leaf (cb_Branch check_tree)
+      ).
+    ###>
+
+    We will see that exponentials require enumeration over the domain;
+    short of that we can simulate dialogs by trees, essentially encoding the
+    enumerator into the data structure.
+    For example, we can define a boolean dialog as a binary matching,
+    binary-labelled tree
+    ###<
+      dialog_bool := Tree Pair bool.
+      cb_dialog_bool := cb_Tree cb_Pair tb_bool.
+    ###>
+    and a numeral dialog as an #omega#-branching numeral-labelled tree
+    ###<
+      dialog_nat := Tree Stream nat.
+      cb_dialog_nat := cb_Tree cb_Stream tb_nat.
+    ###>
+
+    XXX testing lists?
+
+  Applications. 
+    Very pedantic functions may test their inputs:
+    ###<
+      Pedantic_fun_of := ((\/a:V. Test a) -> V) (
+          \<a,t>, f:a->any, x:a.
+          t x.
+          f x
+      ).
+      !check Pedantic_fun_of a <: Fun_of a.
+      Pedantic_bin_fun_of := ((\/a:V. Test a) -> V) (
+          \<a,t>, f:a->a->any, x:a, y:a.
+          and_semi (t x) (t y).
+          f x
+      ).
+      !check Pedantic_bin_fun_of a <: Bin_fun_of a.
+    ###>
+

@@ -1,0 +1,98 @@
+
+Type-Concrete Categories. \label{sec:skj/categories}
+  ###<
+    !import skj/types.
+  ###>
+  We represent categories concretely.
+  Objects can be any type.
+  ###<
+    object := V.
+  ###>
+  Arrows are pairs #<<domain, codomain>, action>#.
+  ###<
+    Arrow := (V->V) (\obj:object. \/<a:obj, b:obj>. a->b).
+    arrow := (\/<a,b>. a->b).
+    !check arrow = Arrow any.
+  ###>
+  Now categories are just pairs pairs of types for objects and arrows,
+  where the arrow type is a subtype of all arrows
+  ###<
+    category := (\/obj:object. Subtype. Arrow obj).
+    !check category = Sigma object Subtype*Arrow.
+    objects := (\(obj,-):category. obj).
+    arrows := (\(-,ar):category. ar).
+  ###>
+
+  This gives immediate constructions for the full and empty categories
+  ###<
+    Full_category := (\a:object. <a,Arrow a>). ## = Inject object Arrow
+    Empty_category := (\a:object. <a, Top>). ## = Inject object Top
+  ###>
+
+  As usual, we define the maximal category
+  ###<
+    TOP := Full_category any.
+    !check any : object.
+    !check TOP : category.
+  ###>
+
+  In the concrete presentation, the #dom#, #cod#, and #compose# functions are
+  uniform across categories.
+  ###<
+    Dom := (/\<obj,ar>:category. ar->obj) (
+        \c:category.
+        \<<a,->,->:arrows c.
+        a
+    ).
+    Cod := (/\<obj,ar>:category. ar->obj) (
+        \<-,ar>:category.
+        \<<-,b>,->:ar.
+        b
+    ).
+    Compose := (/\<-,ar>:category. ar->ar->ar) (
+        \<-,ar>:category.
+        \<<-,b>,f>:ar, <<a,->,g>:ar.
+        <<a,b>, f*g>
+    ).
+  ###>
+  and their maximal (non-polymorphic) variants
+  ###<
+    dom := (\((a,-),-). a).
+    cod := (\((-,b),-). b).
+    compose := (\((-,b),f), ((a,-),g). ((a,b), f*g)).
+    !check dom = Dom TOP.
+    !check cod = Cod TOP.
+    !check compose = Compose TOP.
+    !check dom (compose f g) = dom g.
+    !check cod (compose f g) = cod f.
+  ###>
+  Also useful is the action
+  ###<
+    Action := (/\<obj,ar>:category, obj->obj & /\f:ar. (dom f)->(cod f)) (
+        \<-,ar>:category.
+        \<-,f>:ar.
+        f
+    ).
+  ###>
+
+  Functors are now simply arrows in the category of categories.
+  ###<
+    functor := Arrow category.
+    CAT := <category, functor>
+    !check CAT : category. #the category of categories
+  ###>
+  indeed the functor category is full
+  ###<
+    !check CAT = Full_cat category.
+  ###>
+
+  One way to view categories #CAT# is as a pullback of monoids #MON# and
+  preorders #PREORD#.
+  Decomposing preorders further into a pullback of posets #POS# and complete
+  graphs #KGRAPH#, we see three orthogonal behaviors.
+  ###<
+    MON := Full_category (V F).
+    POS := category & (\/obj:V. J I). #XXX: is this right?
+    KGRAPH := category & ???.
+  ###>
+

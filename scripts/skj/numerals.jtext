@@ -1,0 +1,58 @@
+
+Coalgebraic numerals. \label{sec:skj/numerals}
+  ###<
+    !import skj/types skj/tests skj/nats.
+  ###>
+
+  The type of coalgebraic numerals is #mu a. 1+a#, or simply
+  ###<
+    !check num = V (Y Maybe).
+    test_num := Test num (Y test_Maybe).
+  ###>
+
+  Thm: #num# is an adequate numeral system.
+  Pf: By definition, we need only the following terms:
+    ###<
+      zero_num := num none.
+      succ_num := (num->num) some.
+      prec_num := (num->num) (error, I).
+      !check num n = prec_num*succ_num n.
+      !check succ_num n = succ_num*prec_num*succ_num n.
+    ###>
+    []
+  Equality is thus bool-decidable
+  ###<
+    eq_num := (num -> bool) (Y\e. ((K, \n. F), \m. (F, \n. e m n))).
+    if_eq_num := (num -> bool) (Y\e. ((I, \n. _), \m. (_, \n. e m n))).
+    !check if_eq_num = if*eq_num.
+  ###>
+
+  As mentioned in \ref{sec:skj/types}, numerals are indices of streams.
+  ###<
+    !check (/\a:V, s:Stream a, n:num. s n:a).
+    !check (/\a:V. (Stream a)*num <: num->a).
+    !check (x,xs) zero_num = x.
+    !check (x,xs) (succ_num n) = xs n.
+  ###>
+  Indeed primitive recursion with numerals and streams is very simple:
+  given an initial state #x# and a sequence of state transitions #fs#,
+  construct the stream of evolving states #Rec_num x fs#.
+  ###<
+    Rec_num := (/\a:V. a -> Stream (a->a) -> Stream a) (
+        \-. Y\r,x,(f,fs). (x, r (f x) fs)
+    ).
+    rec_num := Rec_num _.
+  ###>
+  We will use a similar encoding for recursion in Goedel's T in
+  \ref{sec:examples/godels_T}.
+
+  Numerals are also useful as a uniform type for large finite sets.
+  ###<
+    num_below := (nat -> P num) <\s. (_,s), T>.
+    nat2num := (nat -> num) <some,none>.
+    !check num_below 0 zero_num = T.
+    !check zero_num : num_below 1.
+    !check (/\n::test_nat. (num_below n) (nat2num n) = T).
+    !check (/\n::test_nat. nat2num n : num_below(succ n)).
+  ###>
+

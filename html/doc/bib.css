@@ -1,0 +1,19 @@
+
+
+body {
+	font-family: tahoma, verdana, helvetica, arial, sans-serif;
+    text-align: left;
+    font-size: 60%;
+}
+
+a {
+    color: #686;
+    font-weight: bold;
+    text-decoration: none; 
+}
+
+pre {
+    font-family: fixed, courier, monospace;
+}
+
+

@@ -1,0 +1,65 @@
+
+A stochastic controller. 
+
+  ###<
+    !import skj/types skj/nats.
+  ###>
+
+  data types
+  ###<
+    trialog := Y(\t. Prod (bool->bool->t) bool).
+  ###>
+  trialog interface
+  ###<
+    read := \t:trialog. t F
+    next := \a:bool,b:bool,t:trialog. t T a b
+    assume read : trialog->bool
+    assume read : bool->bool->trialog->trialog
+  ###>
+  objective function
+  ###<
+    asses_type := trialog->trialog->trialog->num->bool.
+    asses := Y(\a:asses_type. \j:trialog,w:trialog,k:trialog,n:num.
+      num_iszero(n)(read k,
+                    a(next(read j, read w, j),
+                      next(read w, read j, w),
+                      next(read w, read j, k),
+                    num_pred n)
+                   )
+                 )
+    assume asses : asses_type
+  ###>
+
+  the rest is measure code, and is not yet handeled
+  ###<
+    #LATER
+    exit
+
+    measure mu                         #complexity measure
+    measure mu_J, mu_W, mu_K : trialog #estimates
+    measire nu_J, nu_W, nu_K : trialog #temporaries
+    measure mu_j : bool                #output
+
+    mu_J := trialog mu
+    mu_W := trialog mu
+    mu_K := trialog mu
+
+    loop from here:
+
+    #choose output and get input data
+    mu_j := ??? #all control influence is through this
+    j_t := choose mu_j
+    input w_t
+    input k_t
+    output j_t
+
+    #update measures
+    nu_J := next j_t, w_t, mu_J
+    nu_W := next w_t, j_t, mu_W
+    nu_K := next w_t, j_t, mu_K
+    mu_J := nu_J
+    mu_W := nu_W
+    mu_K := nu_K
+  ###>
+
+

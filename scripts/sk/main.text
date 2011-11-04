@@ -1,0 +1,64 @@
+
+Equational deduction in untyped lambda-calculus. (SK) \label{sec:sk}
+
+  This chapter introduces untyped lambda-calculus and combinatory algebra (SK)
+  and basic inference rules for reasoning about equality and
+  Scott's information ordering relation (#[=#).
+
+  A major component of this thesis is the Johann system, a piece of software
+  to prove and verify statements about various untyped lambda-calculi.
+  We begin in this chapter by proving very simple statements,
+  equations and order relations between untyped lambda-terms.
+  In later chapters
+  \ref{sec:skj}, \ref{sec:skrj}, \ref{sec:skjo}, and \ref{sec:examples},
+  we progressively extend to more expressive extended untyped lambda-calculi.
+  The extensions allow us to interpret progressively stronger logics
+  into our present equational logic.
+  For example in \ref{sec:axioms/close} and \ref{sec:skj/types}
+  we show how to interpret typed equations or equations with typing contexts
+  into a lambda calculus with join (and types-as-closures).
+  Then in \ref{sec:skj/tests} do the same with a different notion of types
+  (types-as-convergence-tests).
+  Finally in \ref{sec:skjo/logic} we show how to interpret
+  first-order logic and even $L_{\omega_1^{CK},\omega}$
+  into the equational logic of a lambda-calculus extended with an oracle.
+
+  One of the advances of this thesis is the demonstration that
+  combinatory algebra / combinatory logic
+  is not as prohibitively unreadable and combinatorially explosive
+  as is commonly thought.
+  Comment: refs ???
+  Our demonstration consists of two components:
+  * a "decompilation" algorithm to translate combinators back to
+    lambda-let-terms, modulo an extensional theory; and
+  * an generalization of the Todd-Coxeter algorithm
+    from finitely presented groups
+    to finitely generated combinatory algebras.
+  The decompilation algorithm,
+  detailed in \ref{sec:algorithms/expressions:decompiling},
+  is not used in this printed thesis,
+  but is a main tool of the Johann system,
+  translating the system's internal representation to a human-readable form.
+
+  The generalized Todd-Coxeter algorithm
+  (discussed in \ref{sec:algorithms/saturation})
+  is the main component of the Johann system
+  (the remainder being syntactic algorithms,
+  in \ref{sec:algorithms/expressions},
+  and probability and statistics calculations in \ref{sec:algorithms}).
+  The T-C algorithm is essentially a forward-chaining algorithm for
+  proving equations in a finitely generated algebra,
+  and is very similar to Robinson's unification algorithm (Comon99, Baader01).
+
+  Readers interested in verification and implementation aspects of
+  this thesis should read \ref{sec:algorithms/background} and
+  \ref{sec:algorithms/saturation} before continuing.
+  Readers interested only in lambda-calculus and denotational semantics
+  may safely skip the verification related material in this chapter;
+  chapters \ref{sec:skj}, \ref{sec:skrj}, \ref{sec:skjo}, and \ref{sec:examples}
+  make sense even without an understanding of the Johann system.
+
+  ###r ../axioms/order
+  ###r ../axioms/combinators
+  ###r ../axioms/eta
+  ###r ../axioms/diverge

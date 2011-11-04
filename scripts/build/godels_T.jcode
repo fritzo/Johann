@@ -1,0 +1,52 @@
+
+!log Loading database for SKJO...
+!load godels_T skjo
+!set loudly
+!set density = 0.9
+!think about context
+!start resting
+!save godels_T
+
+!log Studying background material...
+!read axioms/types.
+!64 think
+!validate
+!recheck
+!save
+
+!read axioms/tests.
+!64 think
+!validate
+!recheck
+!save
+
+!read skj/nats skj/numerals.
+!64 think
+!validate
+!recheck
+!save
+
+!read skjo/codes.
+!64 think
+!validate
+!recheck
+!save
+
+!read skjo/logic.
+!64 think
+!validate
+!recheck
+!save
+
+!read examples/godels_T.
+!64 think
+!validate
+!recheck
+!save
+
+!log Tidying up...
+!stats
+!params
+!start thinking
+!listen
+

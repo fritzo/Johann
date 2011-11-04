@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cat *.text *.jtext *.jcode */*.text */*.jtext */*.jcode | grep "[^ ().]" -c
+

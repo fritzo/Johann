@@ -1,0 +1,19 @@
+
+Unification, solving equations. \label{sec:sys/unification}
+  
+  The unification problem we consider is
+  Given: a finite set of equations with free variables,
+  Find: a minimal generating set of unifiers for those equations.
+  Here we are considering unification modulo #Hstar#.
+
+  Question: Is that generating set always finite?
+  Answer: No; consider e.g. #x=nat x# with regular but not finite generating
+    set #x = succ^star(zero+Bot) + Y succ#.
+
+  Note: an earlier version of Johann included unknowns in the database.
+    This is essentially an implementation of #Hstar#-unification without
+    branching for disjunction or narrowing for existential quantification.
+  
+  Note: the theory of #J,Bot# is called ACI1 in the literature, for
+    "associative commutative idempotent monoid".
+

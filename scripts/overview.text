@@ -1,0 +1,608 @@
+
+Overview. \label{sec:overview}
+
+  Koan: 
+    If thoughts accumulated onto a structure, \\
+    as atoms accumulate to form a crystal, \\
+    what would that structure look like?
+  Koan: 
+    If we could store general results of mathematics in a table, \\
+    as we remember arithmetic in a multiplication table, \\
+    what would that table look like?
+  Takeout: Question: How far can the Todd-Coxeter algorithm be pushed?
+
+  Motivation and Philosophy. \label{sec:overview:motive}
+
+    Comment: (James Cummings)
+      Pages 7-8 are very murky for me
+
+      I have no idea what you mean by saying that a structure should be
+      "an ontology of formal systems".
+
+      You should qualify the assertion that any formal system can be found
+      in L. It can happen for example that there is a countable formal system
+      in V which completely encodes the structure of L.
+
+      The phrase "say an ontology with classes sets and relations between
+      them the constructive axioms of set theory" is hard for me to parse.
+      More punctuation would probably help.
+
+      I don't know what you mean by "automatically decide all questions whose
+      proofs use formulae ....". These are questions about what? What is a
+      proof of a question?
+
+      You seem to be be building up an r.e. set of terms for elements of L
+      and facts about them??? This is a pretty feeble approximation to the
+      theory of L, even assuming that Th(L) is a legal object [which it
+      surely is not if V =L]
+
+      The last paragraph of 1.1 is also quite baffling. Finite structures
+      are surely the only ones that can be real, and are trivially
+      finitely axiomatisable. A universal structure must surely be infinite??
+      I request clarification of the terms real, formal, structure, grammar,
+      physical representation, universal and dense.
+
+    Suppose we want to reason about the world by drawing analogies with
+    mathematics, with some fixed universal mathematical structure.
+    But we can only understand a finite approximation
+    of this infinite universal formal structure,
+    eg all sets definable with #n# symbols.
+
+    What is the best universal structure to work with?
+    The structure should, like mathematics,
+    be something whose properties are discoverable.
+    It should serve as a repository of scientifically acquired formal knowledge.
+    It should be an ontology of formal systems.
+    There should be no place for uncertainty in the structure itself,
+    only in our finite approximation to it.
+
+    An example of such a structure is Godel's universe of constructible sets L.
+    We can locate within L any other formal system
+    (r.e. theory, model, logic, etc.).
+    We can translate questions about other formal systems to questions about L.
+    More importantly, we can translate knowledge and intuition
+    from various formal systems _via_ L to other formal systems.
+
+    Suppose we built up a finite approximation to L,
+    say an ontology, whose classes are sets and
+    whose relations between classes are the constructive axioms of set theory.
+    When two sets are proved equal, we ensure that they are represented by a
+    single node in the ontology.
+    We could in principle build all sets definable in #<=n# symbols,
+    construct all formulae expressible in #<=m# symbols,
+    and automatically prove all statements whose proofs use formulae bounded in
+    size by #m# (_narrow_ proofs rather than _short_ proofs).
+
+    At any stage in growing such a structure, an approximation of L
+    (imagine this process as crystal growth),
+    we would have sets that are provable equal,
+    but only using wider proofs than we currently admit.
+    Thus as proof width increases, some of the ontology's nodes are merged.
+    We also have candidate expressions using fewer than #n# symbols,
+    but that are not narrowly provably sets
+    (eg when constructing a set using choice,
+    we may not yet have proved the condition for existence).
+    Thus as proof width increases,
+    set candidates are accepted or rejected.
+
+    Since set equality in L
+    Comment: (and let us even assume #V=L#)
+    is undecidable, as set size grows,
+    we find increasingly more pairs of sets whose equality is unprovable,
+    and increasingly more set candidates whose existence is unprovable.
+    Are there general reasoning principles whereby we can accumulate
+    statistical evidence for equations and existence decisions?
+    Is there a physical basis for L?
+
+    Perhaps counting symbols or the number of axioms employed in constructing a
+    set is not the best measure of complexity.
+    We ought really weigh frequently-used axioms less
+    and seldom-used axioms more.
+    And what about variable names?
+    Is a set definable with 2 variables simpler
+    than a set definable only with at least 5?
+
+    How many symbols does it take to represent a typical mathematical entity,
+    say the set of primes, or the real number #pi#?
+    How many sets must we enumerate
+    (uniformly, ie all sets definable with #<=n# symbols for some n)
+    before we come upon the number #pi#?
+    Could a machine automatically enumerate such sets,
+    and accumulate for us mathematical knowledge?
+
+    In this thesis we design a universal structure
+    that serve these goals better,
+    and for which it is easier to answer these questions.
+    The structure should have a simple grammar,
+    so that its physical representation is simple,
+    and so expression complexity is easy to analyze.
+    The structure should be _real_ in the sense that although we can't finitely
+    axiomatize it, we can look in the real world for statistical evidence
+    partially answering questions about it.
+    Footnote: Shapiro (Shapiro97)
+      contrasts such theories, eg numbers, about specific real objects
+      with "algebraic" theories about families of objects, eg group theory.
+      In the former we have set down finitely much axiom information
+      in the endless process of seeking the true theory of an object;
+      in the latter we categorize all extensions of a particular finite theory,
+      eg groups or topological spaces.
+    More practically, we should be able to gain knowledge about the structure
+    using simple efficient reasoning principles,
+    so that the acquisition of this knowledge can be automated.
+    The structure should be _universal_ in the sense that
+    all real formal structures can be found in it.
+    Footnote: Say a structure is _real_ if it can be found in the real world,
+      and is _formal_, if it can be found in many places,
+      with computable transformations among these views.
+    And the structure should be _dense_ in the quantitative sense that
+    common "natural" mathematical structures should have simple representations,
+    so that we can practically construct the smallest #n# expressions
+    and still see many useful objects.
+
+  Summary. \label{sec:overview:summary}
+
+    Untyped lambda-calculus is the backbone of many theoretical and real-world
+    programming languages.
+    One generally starts with pure untyped lambda-calculus and
+    adds things (like numbers, booleans, etc. with reduction rules) and
+    takes things away (like ill-typed terms or non-convergent terms).
+    The advantage of lambda-calculus and functional programming
+    over imperative programming languages is the ease of equational reasoning:
+    we can reason about lambda-terms ---programs--- as we reason about numbers:
+    writing equations, solving equations, examining solution sets, etc.
+
+    This thesis follows the standard path of adding things to pure untyped
+    lambda-calculus, attempting to get as much as possible out of as little
+    extension as possible.
+    Our main theorem (in \ref{sec:skj/simple}) demonstrates that
+    Dana Scott's lambda-calculus of types-as-closures (from Scott76)
+    can be interpreted in lambda-calculus extended with a semilattice operation,
+    the join WRT Scott's information ordering.
+    In that theorem we show that there are lambda-join-definable closures
+    for each simple type, so that we can simulate the simply-typed lambda
+    calculus within the untyped lambda-join-calculus,
+    implementing types as lambda-join-terms.
+
+    By developing a typed lambda-calculus within an untyped system,
+    we can leverage simple equational reasoning principles to address
+    type-conscious verification problems, eg,
+    typechecking, type-restricted equality, and type-restricted convergence.
+    In particular, we adapt the forward-chaining Todd-Coxeter algorithms from
+    computational group theory to the problem of program verification.
+    The first two chapters have been debugged and partially verified
+    with our verification system Johann,
+    described in Chapter \ref{sec:algorithms}.
+
+    All of our reasoning is done in H* =
+    the coarsest equational theory never identifying a divergent term with
+    a normal form =
+    the theory of Dana Scott's Dinfty and Pomega models.
+    The moderate success of our automated reasoning system provides evidence
+    that H* can be of practical significance,
+    despite being logically complicated (#Pi02#-complete)
+    and admitting no operational semantics
+    (you can't run two programs to see if they are the same, modulo H*).
+
+    The lambda-join-calculus admits some convenient programming idioms
+    in addition to definable types-as-closures.
+    For example, we show in \ref{sec:skj/logic}
+    that there are convenient-to-use closures corresponding to problems of
+    various complexity classes,
+    eg, #Pi01#, #Sigma01#, #Pi02#, #Sigma02#, and differences of #Pi02# sets.
+    This is in contrast to pure untyped lambda-calculus,
+    where equational specifications are more difficult to construct.
+    We also demonstrate a style of using closures to perform type-inference,
+    in \ref{sec:skj/types}, \ref{sec:skj/terms},
+    \ref{sec:examples/proofs}, and \ref{sec:examples/godels_T}.
+    Although the join operation admits no new Curry-Howard corresponding types,
+    it does allow simpler proofs, whereby proofs can be "sketched",
+    and then raised to full proofs via a closure, as in type inference.
+
+    After developing and verifying a small library of expressions in
+    lambda-join-calculus, we experiment with two further extensions of
+    lambda-join-calculus.
+    (But we do not fully implement verifiers for these extensions.)
+
+    Figure: 
+      \includegraphics[width=8cm]{extensions.eps}
+      Caption: \label{fig:extensions}
+        From pure untyped lambda-calculus SK,
+        we extend to a nondeterministic lambda-calculus SKJ,
+        stochastic lambda-calculus SKR,
+        a lambda-calculus for convex sets of probability distributions SKRJ,
+        and a lambda-calculus for hyperarithmetic functions SKJO.
+    ####
+
+    The second extension we study adds randomness to lambda-calculus,
+    and then adds join.
+    We attempt but fail to prove that simple types are still definable in this
+    system; however the attempt sheds light on the simpler proof in SKJ,
+    and the nature of join in general.
+    We do prove that the system where randomness distributes over join
+    (ie, #R x(J x y)=J(R x y)(R x z)#)
+    provides a language for convex sets of probability distributions (CSPDs),
+    the natural system arising from interval-valued probabilities.
+    We also prove that there is a monadic type system for CSPDs,
+    following Pfenning's type system #lambda_O# (Pfenning05).
+    We show that, in case the simple-types theorem does hold in SKRJ,
+    the simple types and the CSPD monad combine gracefully.
+
+    Our third extension attempts to capture logically complex
+    statements in the clean verification language of SKJ,
+    by adding a #Pi11#-complete oracle #O#.
+    By carefully limiting what kinds of questions #O# can answer,
+    we are able to extend the problem classes of \ref{sec:skj/logic}
+    to hyperarithmetic analogs in \ref{sec:skjo/logic}.
+    Our main innovation in this extension is a type of Godel-coded SKJO-terms,
+    modulo the theorem-prover's notion of equality
+    ---a sort of provably extensional code type.
+    This code type forms a computational comonad,
+    as studied by Brookes and Geva (Brookes92),
+    and satisfies much better categorical properties than other
+    types of quoted or inert terms.
+    More practically, these coded types allow a nearly 1-1 correspondence
+    between terms and codes for those terms, thus conserving space in our very
+    memory-intensive verification algorithm
+    (though we have not implemented verifier for this fragment).
+
+    Finally, we describe in \ref{sec:algorithms}
+    algorithms for probabilistic proof search and statistical analysis,
+    as part of the Johann reasoning system.
+    The first of these algorithms is a randomized database annealing algorithm,
+    based on the Metropolis-Hastings algorithm.
+    This allows us to randomly acquire knowledge in service of a
+    probabilistically specified motive, such as "simplify this term"
+    or "answer this query" or "prove this assertion".
+    Our main theorem shows _detailed_balance_:
+    that we can achieve a desired steady state distribution over databases
+    by using a pair of easily-computable sampling distributions,
+    one for adding terms to- and one for removing terms from- the database.
+    
+    A second algorithm searches for missing equations in our forward-chaining
+    database.
+    This "automated conjecturing" algorithm was instrumental in developing
+    the axioms in the first chapter
+    (see subsections entitled "Theorems conjectured by Johann").
+    It is tempting to use such an algorithm to automatically add equations to
+    the theory.
+    However, we prove that this is impossible:
+    automated conjecturing can focus attention on interesting questions,
+    but cannot provide probabilistic guesses as to the likelihood of truth.
+
+    The final algorithm tunes the probabilistic basis, or dually, the
+    complexity norm with which we define "simplicity".
+    This nonlinear optimization algorithm allows the verifier to assess
+    which lambda-terms should be considered basic constants,
+    and locally optimizes their weights.
+    The goal of this optimizer is to decrease the complexity of an example
+    corpus ---in our case this thesis.
+    Although the local optimization was crucial in identifying
+    reasonable basis weights for successful proof search,
+    global optimization is provably impossible.
+
+  Future directions. 
+
+    Operational semantics. 
+
+      Although lambda-join-calculus modulo H*
+      proves to be a succinct language for computable mathematics,
+      it fails as a true programming language,
+      as it lacks an operational semantics.
+      By finding a reasonable operational semantics,
+      we would be able to verify not only mathematics, but also programs.
+
+      Already the join operation can be interpreted as concurrency,
+      but this proves difficult in the presence of infinite joins
+      (as in proof search in \ref{sec:skj/terms}).
+      A possibility is fault-tolerant semantics,
+      where joins of threads each compete to find the first total result,
+      and additional results (eg error) are discarded thereafter.
+      This would require hard-coding a few datatypes,
+      and restricting joins to domains with totality tests.
+      In this semantics we essentially take a minimal #Sigma01# fragment from
+      H* (exactly what is needed for type definability) and discard the rest.
+
+    Additional knowledge representations. 
+
+      The Johann reasoning system does not scale well,
+      with the most expensive inference rules
+      requiring quintic time in size of formula to be verified.
+      Although the constant factor for these inference rules is extremely small,
+      it necessarily limits the size of databases we can build.
+      For example,
+      we can currently build databases with $N=8000$ obs overnight,
+      but extending to $N=10000$ obs takes two more days.
+      Indeed it is typically time and not memory that limits the system.
+
+      There are two problems to be addressed here.
+      The first is that, since Johann searches for narrow proofs only within
+      the current database, it takes many annealing steps to
+      acquire proof information.
+      That is, to increase the database size by one ob,
+      while maintaining a specified knowledge density
+      (eg percent of order relations which are decided),
+      Johann must add and remove many obs in the process of proof search.
+
+      The second problem is that about $90\%$ of the theorem-proving time is
+      taken spent enforcing about 8 axiom schemata instances.
+      Of these, the associativity schema (for #B#, #J#, and #P#)
+      is most expensive.
+      In addition to time-cost, associativity is also very space-intensive;
+      eg to prove #x*(y*z)=(x*y)*z# requires 8 obs:
+      #B x, B y, B y z, B x y, B(B x y)#,
+      and either #B x(B y z)# or #B(B x y)z#.
+
+      One possible solution to both of these problems is to add new knowledge
+      representations: tables for both composition and join.
+      Since proofs in this augmented database would be narrower,
+      Johann would not need as many annealing steps to achieve a given density.
+      Moreover, the associativity schemata for #B# and #J#
+      could be re-implemented to use the more appropriate data structures.
+      It is also likely that adding composition to the probabilistic basis
+      (and randomly generating compositions of terms #x*y#)
+      would be more optimal in simplifying the corpus.
+      This is suggested by the empirical observation that the composition atom
+      #B# havs very high weight in the optimized basis found by Johann
+      ---#B# was used twice as often as any other atom.
+
+    An interface for problem-solving. 
+
+      The Johann system is better suited to statistical analyses
+      and term search algorithms than verification tasks.
+      Thus we would like to develop a natural interface to harness
+      this computing power.
+      On example such interface is that of _hole_filling_
+      in a language with partially defined terms.
+      Example: 
+        Say you're defining/constructing a mathematical entity, say a function.
+        You already know
+        * its input- and output- types;
+        * some facts about- and relating- its inputs and outputs, eg
+          * some of its symmetries (preserving transformations) and
+          * some example inputs and outputs; and
+        * a rough idea of how to build it.
+        You sketch out what you know
+        ###[
+          gcd := (
+              P (nat -> nat -> nat)               #input and output types
+                (\g,x,y. g y x)                   #symmetric binary function
+          ) (
+              \x,y.                               #inputs a couple numbers
+              is_zero x 0.
+              is_zero y 0.
+              ???                                 #then what?
+          ).
+          !assert gcd 3 6 = 3.                    #an example input
+          !assert x:nat |- gcd 0 x = 0.           #zero is a special case
+          !assert x:nat |- gcd 1 x = x.           #one is a special case
+          !assert x:nat |- gcd x x = x.           #idempotent
+          !assert gcd x(gcd y z) = gcd(gcd x y)z. #associative
+        ###]
+        But there's still a hole (#???#) in your definition.
+        How could you fill the hole?
+        Could a computer create a short list of completions?
+        Or break the hole into smaller parts?
+        Or fill in some of the hole and ask for help?
+      Johann seems to have just the right information to solve such problems:
+      a large database of terms to search through,
+      basic equational theorem proving to cut down the search space,
+      and very accurate complexity estimates to rank solution candidates.
+
+      If combined with a reasonable operational semantics as above,
+      such a tool for programming-by-menu-selection would be very powerful.
+
+    Practical Solomonoff inference. 
+
+      Historically
+      the first application of Kolmogorov-Solomonoff-Chaitin complexity
+      (even preceding Kolmogorov's publication Kolmogorov65)
+      was Ray Solomonoff's pseudo-algorithm for inferring the program generating
+      a partially-observed infinite binary stream (Solomonoff64, Solomonoff78).
+      The pseudo-algorithm basically runs all possible programs at once,
+      assigning to each a probability exponentially decreasing in its size.
+      However, Solomonoff's work was posed in terms of Turing machines,
+      which, while easy to describe, are theoretically cumbersome to work with.
+
+      An original motivation of the Johann system was to determine how many
+      of the programs in Solomonoff's ensemble could be enumerated.
+      Naturally, programs with similar behavior may be lumped into a single
+      term in the probability distribution;
+      thus the more equations we can enumerate,
+      the smaller the space of programs becomes,
+      and conversely the more _program_behaviors_ we can enumerate
+      within given memory limitations.
+      In fact this was our original motivation to study the theory H*,
+      as it is a maximally-coarse semantics of lambda-calculus.
+
+      As future work, we would like to implement Solomonoff inference
+      (namely the prediction/transduction problem) using Johann.
+      The first research to be done is determine how to parametrize
+      probability distributions over the entire space
+      by the values they take on the finite database support,
+      apply existing theory of extrapolation or kriging.
+
+    Takeout: OLD
+      Having settled on a few universal structures,
+      we next turn in \ref{sec:thesis/complexity}
+      to definitional complexity on the structures.
+      Here we find a more appropriate definition of Kolmogorov complexity
+      to incorporate ambiguity (many expressions denoting one object).
+      We also contrast the definitional complexity among the three structures
+      SKJ, SKRJ, and SKJO.
+
+      In \ref{sec:thesis/info_geom}
+      we refine our definition of algorithmic complixity
+      --defined only up to additive and multiplicitive constants--
+      to a more accurate statistical model.
+      Languages refine to "dialects": grammars annotated with probabilities.
+      We characerize the space of all dialects
+      (an information manifold, a special type of Riemannian manifold).
+      We also develop algorithms to fit a dialect
+      to a corpus of expressions in a language.
+
+      At this point we have a theoretical combinatorial structure,
+      plus a family of probability distributions (dialects) on the structure:
+      we can formalize concepts and quantify their complexity.
+      In the rest of the thesis \ref{sec:thesis/implementation} we implement
+      algorithms to build a finite piece of the universes SKJ, SKRJ, SKJO.
+      We give embeddings of a few common structures into the universes,
+      and develop algorithms to query our finite pieces (databases, say)
+      for facts about the embedded structures.
+      Having written a body of expressions defining the embeddings,
+      we implement the dialect-learning algorithm and apply it to our corpus.
+      
+      Since none of SKJ,SKRJ,SKJO is finitely axiomatizable,
+      we also need statistical interpretations of their theories.
+      In \ref{sec:thesis/conjecturing}
+      we develop automated conjecturing algorithms to extract
+      relevant plausible statements from the finite databases,
+      and use these to extend the theories.
+      
+      Finally in \ref{sec:thesis/implementation:holes},
+      we implement an example application
+      leveraging all the preceeding theory and algorithms.
+      We implement an algorithm to fill in holes in partially defined
+      expressions, given properties the expressions should satisfy.
+
+      As part of the implementation, we develop a library of
+      axiom systems \ref{sec:axioms},
+      definitions
+      \ref{sec:sk},\ref{sec:skj},\ref{sec:skr},\ref{sec:skrj},\ref{sec:skjo},
+      and examples \ref{sec:examples} in a literate programming style.
+      These are included online (where ???) and in the Johann distribution,
+      but are omitted from the pdf version of this thesis,
+      as much material duplicates previous chapters, but in a more formal style.
+
+  Takeout: Outline. \label{sec:overview:outline}
+
+    Theorems: 
+      * definable closures in SKJ
+      * definable monadic types in SKRJ
+      * fixed-point of the Turing "half-jump" / "Curry degrees" in SKJO
+      * embedding of SKRJ into SKJO #TODO find such an embedding
+      * bounds relating Kolmogorov- and ambiguated Kolmogorov- complexity
+      * relation between complexity in SKJ vs SKJO (i.e. explicit vs implicit)
+        #TODO bound how often implicit definition can be simpler than explicit
+      * shape bounds on the tower of Babel (info geom of combinatory algebras)
+
+    Algorithms: 
+      * combinator and lambda-def simplification:
+        * decompilation from combinator to lambda-def terms
+        * computing eta normal and affine-normal forms of combinators
+      * Johann - a forward-chaining database of combinators mod H*
+      * computing complexity and relevance using a database
+      * automated conjecturing using a database
+      * proving equations between lambda-terms using a database
+      * inducing a combinatory basis from a corpus of terms
+      * hole-filling / unification: simplicity-directed branching on holes
+        #TODO implement hole-filling
+
+    Motivating Questions: 
+      Can mathematical elegance/simplicity be formalized?
+      Can it be computed or estimated?
+      If so, we could well-define tasks like:
+      * fill in holes in partially-defined formulas/proofs
+      * correct typos (little errors) in formulas (eg when communicating)
+      Can these tasks be practically automated?
+
+    Motivated Approach: 
+      Work in the smallest Turing-complete language (lambda-calculus).
+      Work in the "tightest" extensional theory (H*).
+      Ensure program specs can describe symmetry (add join, type as symmetry).
+      Ensure specs have unique solutions (types as closures, maximal solutions).
+      Allow implicit definitions (add #Pi11# semicomplete oracle).
+      Treat languages/combinatory bases as probabilistic grammars.
+      Induce language parameters from a corpus.
+      Treat hole-filling as a unification problem with weighted answer-sets.
+
+    Design Decisions: 
+      * magmas are minimally sufficient algebraic structures
+      * combinatory algebras are minimally sufficient among magmas
+      * extensionality works better than intensionality
+      * H* is "tighest" extensional theory in info-geometric sense
+      * collections with ACI1 axioms are required
+      * lambda-calculus with join (satisfying ACI1) is an excellent fit
+      * types-as-closures, type-as-symmetry (where function types are covariant)
+
+    Example: 
+      Say you're defining/constructing a mathematical entity, say a function.
+      You already know
+      * its input- and output- types;
+      * some facts about- and relating- its inputs and outputs, eg
+        * some of its symmetries (preserving transformations) and
+        * some example inputs and outputs; and
+      * a rough idea of how to build it.
+      You sketch out what you know
+      ###[
+        gcd := (
+            close. (nat -> nat -> nat)          #input and output types
+                 | (\g,x,y. g y x)              #symmetric binary function
+        ) (
+            \x,y.                               #inputs a couple numbers
+            is_zero x 0.
+            is_zero y 0.
+            ???                                 #then what?
+        ).
+        !assert gcd 3 6 = 3.                    #an example input
+        !assert x:nat |- gcd 0 x = 0.           #zero is a special case
+        !assert x:nat |- gcd 1 x = x.           #one is a special case
+        !assert x:nat |- gcd x x = x.           #idempotent
+        !assert gcd x(gcd y z) = gcd(gcd x y)z. #associative
+      ###]
+      but there's still a hole (#???#) in your definition.
+      How could you fill the hole?
+      Could a computer create a short list of completions?
+      Or break the hole into smaller parts?
+      Or fill in a little, and ask for help?
+
+    Open Problems: (possible research directions for next year or so)
+      (1) Implement the details of hole-filling.
+      (2) Kolmogorov complexity is independent of Turing-complete language,
+        up to Theta (constant + linear factor): explicitly defined simple
+        programs in one language will, on average, be simple in another.
+        However, SKJO allows for implicit definitions,
+        e.g., in SKJ, we construct the complicated
+        ###[
+          Simple := ...
+          bool := (Simple \a,a'. a->a->a').
+        ###]
+        whereas in SKJO we implicitly define much more simply
+        ###[
+          bool := "the closure with inhabs {_,K,F,T}".
+        ###]
+        How much, on average, does the #Pi11#-semicomplete oracle help?
+        Examine the difference between SKJ- and SKJO- complexity.
+        Prove bounds on how often and how much the SKJO norm is simpler.
+        Define a notion of implicit Kolmogorov complexity and show that
+        SKJO is implicit-Turing-complete and locally minimal (garbage-free).
+      (3) SKJO is aesthetically pleasing as a language of mathematics.
+        Drawing on results from random graph theory and statistical physics,
+        characterize _statistically_ the way in which SKJO is beautiful.
+      (4) One view of SKJ is as quotient of an algebra of computer programs.
+        In this view, the hole-filling problem presented is only half-solved;
+        we can guess possible behaviors, but have ignored implementation,
+        ignored the choice program from _within_ an equivalence class.
+        Design a method of choosing a program from each equivalence classes.
+        Define what it could mean to "run" a representative program.
+
+  Format. 
+
+    Many of the theorems in this document are verified
+    by the automated reasoning system Johann.
+    Displayed formulas for casual readers are printed plainly like
+    ###[
+      nat := (Simple\a,a'. (a'->a)->a->a').   #a definition
+    ###]
+    whereas formulas for Johann are displayed with a vertical bar on the left
+    ###<
+      zero := (\f,x. x).                #more definitions
+      succ := (\n,f,x. n f(f x)).
+      !check succ zero = (\x. x).       #a Johann command, preceeded by !
+    ###>
+    Comments are italicized and, in color versions, displayed in blue.
+    Some exercises for Johann are not printed in the latex'd version of this
+    thesis; interested readers may consult the \texttt{.jtext} source
+    or the html documentation at \url{http://www.askjohann.org} .
+
+  ###r notation
+

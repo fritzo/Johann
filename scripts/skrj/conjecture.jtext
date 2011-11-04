@@ -1,0 +1,118 @@
+
+Automated conjecturing. 
+  ###<
+    !import skrj/types skrj/tests skrj/lists skrj/terms.
+  ###>
+
+  Proof terms for encode derivations of #u[=v# using the rules
+  ###-
+    u[=v   w      u   v[=w      u[=v   v[=w
+    -------- mu   -------- nu   ----------- tau
+    u w[=v w      u v[=w v         u[=w
+
+    ...beta...
+  ###-
+  ###<
+    [mu, nu, tau, beta, db, dneg] := (
+      label := fun_of nat <B'<F>,<K>>.
+      map_list label [0,1,2,3,4,5]
+    ).
+    proof := close (
+        Sum (Prod tot_term proof).    #mu
+        Sum (Prod proof tot_term).    #nu
+        Sum (Prod proof proof;        #tau
+            & \pf. (eq_term (lhs pf) (rhs pf) pf Top)).
+        Sum (                         #beta
+            Sum ???.                  #K
+            ???.                      #
+    ).
+    lhs := (proof->term) ???.
+    rhs := (proof->term) ???.
+  ###>
+  Note: reflexivity is admissable by a trivial application of monotonicity
+    ###-
+      K u   Bot[=Top
+      -------------- mu
+          u[=u
+    ###-
+  We often want to specialize to proofs of a particular statement.
+  ###<
+    less := (term -> term -> Subtype proof) (
+        \x,y,pf.
+        assert (eq_term x (lhs pf)).
+        assert (eq_term y (rhs pf)).
+        pf
+    ).
+  ###>
+
+  The type #div# of divergent computations gives a smiple method of proving
+  convergence:
+  ###-
+    div x=]Top
+    ---------- conv
+      x conv
+  ###-
+  We thus define
+  ###<
+    conv := (term -> Subtype proof) (\x. less "Top" x).
+  ###>
+  For a fixed term #x# we can generate random convergent contexts, i.e., terms
+  #f# together with proofs of #f x conv#.
+  LATER...
+  ###<
+    conv_contexts := (/\x:term. Random. conv x) (
+        ???
+    ).
+  ###>
+
+  Proof checking actually combines both checking and finiteness-testing, and
+  yields not a semi-boolean, but a semi-probability.
+  First we will need random terms for probabilistic universal quantification
+  over witnesses in rule #dneg#. XXX this should be convertent-witnesses
+  ###<
+    atoms := Random term (R atom_J. R atom_K. atom_S).  #basis pmf
+    terms := Random term (R atoms. terms. terms. \t,t'. <app t t>).
+  ###>
+  Now the proof test can be defined by
+  ###<
+    test_proof := Test proof (
+        p := test_prod.
+        s := test_sum.
+        tm := test_term
+        pf := test_proof
+
+        s (p tm pf).  #mu
+        s (p pf tm).  #nu
+        s (p pf pf).  #tau
+        s (s ???.     #beta
+            ???).
+        <
+    ).
+  ###>
+
+  We thus have
+  Thm: #Hstarc|-x[=y <==> \/pf:less "x" "y". test_proof pf=I#.
+  Pf: ???
+  We can be even more accurate by showing complexity bounds.
+  Def: define two complexity norms (both denoted #|_|#)
+    * on terms $|x| := -\log(P_{tm}(x))$, and
+    * on proofs, corresponding to the complexity of failure
+      $|\pi|=-\log(1-P(#test_pf pi=I#))$, where #test_pf pi# is treated as a
+      #Random semi#.
+  Thm: Suppose #x![=y# (i.e., #Hnostar|-x[=y==>Top[=Bot#), with witness #w# of
+    term complexity #c#, so that #beta|-Top=w x# and #Hnostar|-w y[=Bot#.
+    Let #pf:less "x" "y"# be any arguement for #x[=y#.
+    Then #|w| > |pf|#.
+    XXX this theorem is not true;
+      The complexity of the witness can not be measured;
+      instead we need to measure the complexity of the witness (a converging
+      context) with its convergence proof attached.
+      See #conv_context# above.
+  Pf: ???
+
+  Note: We have translated a #Pi_1# statement of #Hstar# to a statement
+    relative to #Hnostar#; can the #Hnostar# oracle be omitted?
+  Qstn: What is the quantifier complexity of #Hstarcr#?
+  Qstn: Can we search for a proof of #x[=y#?
+    I.e., is there a term #prove# such that #x[=y <==> prove x y=I#?
+

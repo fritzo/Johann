@@ -1,0 +1,46 @@
+#Abstract Syntax for Johann 0.8.9:
+# atomic expressions
+  S,K,I,B,C,W,J,...    #atomic constants (type '!who' for full list)
+  0, 1, 2, ..., omega  #church numerals including infinity
+  ???, XXX             #the undefined and erroneous expressions
+  <e1, e2, ..., eN>    #the tuple \f. f e1 e2 ... eN
+  (e1, e2, ..., eN)    #the list <e1,<e2,<... ,eN>...>>
+  <identifier>         #variables
+  {expr}               #quoted expression
+  "stmt"               #K/F truth value of statement
+# expression operators, ordered by precedence[0m
+  e1* e2* ...* eN   #compose      = B(...B(B e1 e2)e3...)eN
+  e1  e2  ...  eN   #apply        = (...(e1 e2)...)eN
+  e1->e2->...->eN   #conjugation  = Exp e1(Exp e2(...eN...))
+  e1+ e2            #randomness   = R e1 e2,   nonassociative
+  e1| e2| ...| eN   #concurrency  = J e1(J e2(...eN...))
+  e1; e2; ...; eN   #precompose   = B(B(...eN...)e2)e1
+  e1. e2. .... eN   #church's dot = e1 (e2 ...(eN)...)
+  e1, e2, ..., eN   #comma has lowest precedence wherever it appears
+# expression binders
+  var := expr. expr       #definition
+  let patt := expr. expr  #patterned definition
+  \patts. expr            #abstraction (read '\' as 'lambda')
+  /\patts. expr           #universal quantification
+  \/patts. expr           #existential quantification
+# patterns
+  patt ::= var                #raw variables
+    | patt:expr | patt::expr  #typed and/or tested patterns
+    | <patt,...,patt>         #vectors of length => 0
+    | (patt,...,patt)         #tuples of length => 2
+    | {patt}                  #quoted term
+  patts ::= patt,...,patt     #tuples of length => 2
+# statements
+  stmt ::= expr rel expr          #relation between expressions
+    | ex rel ex rel ... rel ex    #chains of relations, as conjunctions
+    | var := expr. stmt           #local definitions
+    | let patt := expr. stmt      #local patterned definitions
+    | /\patt. stmt                #universally quantified statement
+    | stmt AND/OR stmt            #conjunction/disjunction
+    | ex::ex ==> stmt             #implication with test as hypothesis
+  rel ::=  =  | !=                #equality & inequality
+    | [=  | ![=  | =]  | !=]      #information ordering
+    | [[  | ]]                    #strict information ordering
+    | :   | !:  | ::  | !::       #typing & testing
+    | <:  | <!:  | :>  | !:>      #subtyping
+    | <::  | <!::  | ::>  | !::>  #subtesting

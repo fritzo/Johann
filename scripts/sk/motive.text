@@ -1,0 +1,501 @@
+
+Extensional lambda-calculus and combinatory algebra. \label{sec:thesis/sk}
+
+  In the first part of this thesis, we seek universal structures that
+  have simple grammars, allow simple definitions (ie are dense),
+  and have formal physical interpretations.
+  As a first attempt, we weaken the condition of universality,
+  and seek a structure into which at least all _computable_ structures embed.
+  That is, we seek a Turing-complete language
+  with simple grammar, elegant equational theory, and short definitions.
+ 
+  Comment: the argument for lambda-calculus and combinatory algebra...
+  The prevailing attitude in computer science is that among
+  programming language idioms, functional languages
+  have the most tractible semantics and simplest equational theories.
+  Among functional languages, the simplest are pure lambda-calculus
+  and --even simpler-- combinatory algebra.
+  These systems come in various flavors of typedness,
+  from unityped/untyped to sophisticated systems
+  with dependent and polymorphic types.
+  There is a divide between type systems that interact with the grammer
+  (intensional type systems a la Church)
+  and type systems that ignore the grammar
+  and describe properties of already-formed terms
+  (extensional type systems a la Curry) (see Barendregt92 for discussion).
+  Since we want as simple a grammar as possible,
+  we opt for an extensional type system:
+  we begin with a unityped language, and later interpret types in it.
+  Finally, our desire for quantitative density (or simple definitions)
+  suggest that our structure's equational theory should be extensional:
+  we want to equate as many terms as possible,
+  so let is equate all sets of terms having a common effect.
+  Curry showed (CurryFeys58) that under extensionality,
+  pure combinatory algebra is isomorphic to
+  the closed fragment of pure lambda-calculus
+  (indeed the most convenient way of writing combinators
+  is to first write a lambda-term and then
+  translate it to a combinator via Curry's abstraction algorithm).
+  Among pure unityped combinatory algebra and untyped lambda-calculus,
+  combinatory algebra has a simpler grammar,
+  but lambda-calculus is easier to read.
+  We begin with the easier-to-read extensional lambda-calculus,
+  and then progress to combinatory algebra.
+  Throughout this thesis we will mix the two systems,
+  and develop algorithms in whichever is more appropriate.
+
+  In summary
+  Design Goals: 
+    * The language has a simple grammar; yet
+    * it expresses enough, say expresses all computable structures; but
+    * it expresses as little extra junk as possible.
+    * The logic proves as many equations as possible, ie is "tight".
+  Approach: 
+    * Require embedding of computable structures;
+    * consider a language with functions (lambda-calculus);
+    * restrict embeddings to well-behaved expressions (normal forms); and
+    * quotient out uninteresting expressions (in equational theory H*).
+
+  Extensional lambda-calculus. \label{sec:thesis/sk:lambda}
+
+    History: 
+      Alanzo Church developed the lambda-calculus in the late 1920s
+      in an attempt to found mathematics on the notion of _function_
+      rather than set.
+      Later in 193? Church and Kleene proved that
+      all partial recursive functions were definable in the lambda-calculus
+      (before Turing-completeness had been defined).
+
+      Alan Turing published the first fixed-point combinator
+      #Theta=(\x,y.x(y y x))(\x,y.x(y y x))# in 1937.
+      The form we use here #Y=\f.(\x.f(x x))(\x.f(x x))# is due to Rosenbloom.
+      Park76 first proved that Y is the fixed-point combinator
+      in Scott's Dinfinity model.
+
+      Barendregt (in his thesis Barendregt71) first suggested interpreting
+      unsolvable terms
+      (those M with no solution #M _X=I# for any sequence of terms #_X#)
+      as undefined.
+      Wadsworth independently pursued the lambda-#Bot#-calculus
+      (in his 1971 thesis Wadsworth71)
+      Wadsworth and Hyland independently characterized unsolvable terms
+      as those without a head normal form.
+      Barendregt71 proved the consistency of H (identifying all unsolvables)
+      and ??? H* ???
+
+      (see Hindley06 for details).
+
+    Takeout: #tone is too static...
+      Terms of lambda-calculus are built from variables,
+      function application (of a term to another)
+      and lambda-abstraction (of a variable out of a term).
+      We use letters #f,g,x,y,z# for variables and #M,N,O# for terms.
+      ###-
+        x var             M term   N term            x var   M term
+        ------ term-var   --------------- term-app   -------------- term-abs
+        x term              (M N) term                (\x. M) term
+      ###-
+
+    What does a language of pure functions need?
+    Let's start with variables #f,g,x,y,z# etc.
+    #WORKING -----------------------------------------------------------------
+    And let's write function application as juxdeposition #f x#,
+    where f is a function and x is an input, or argument to f.
+    We can write functions of two variables #"f(x,y)"# in stages,
+    by first inputting x (#f |-> f x#) to create a function #f x#,
+    and then inputting y (#f x |-> (f x)y#).
+    Here #f x# is itself a function that inputs another thing y.
+    We will use this trick
+    Footnote: so called "Currying", though Curry credits Schonfinkel)
+    very often, so to avoid writing all the parentheses,
+    let us adopt the convention of associating left,
+    so that #(f x)y=f x y#, and #(((f a)b)c)d = f a b c d#.
+
+    Now we can create complicated expressions of variables applied to other
+    variables, but how to we create functions?
+    Suppose M is an expression containing a variable x, eg #M=f x x#.
+    We ought to be able to express the function that inputs something and
+    substitutes it for x in M,
+    a version of M in which the specific variable x becomes a mere paramter.
+    Following Church, we will denote this function by #\x. M=\x. f x x#,
+    the _lambda_abstraction_ of x out of M.
+    Takeout: 
+      This process of abstracting out a given variable and expecting it as an
+      input is called _lambda-abstraction_.
+    Again since currying is so useful in expressions like #\x.\y.\z.M#,
+    we use a shorter comma notation #\x.\y.\z.M=\x,y,z.M#.
+    
+    We can apply our new function #\x. f x x# to any other term,
+    eg #(\x. f x x)y = f y y#, substituting y wherever x appears in M.
+    We can even apply it to itself #(\x.f x x)\x.f x x=f(\x.f x x)(\x.f x x)#.
+    This substitution rule is called _beta-equality_.
+    In the above we can further abstract out f and produce an expression
+    #\f.(\x.f x x)=\f,x.f x x# with no _free_ variables;
+    both f and x are _bound_ by lambda's.
+    Note that variables are bound by the closest lambda above them,
+    so eg #(\x.x \x.x)y=y\x.x#.
+    This is because once a variable is bound, its name really doesn't matter,
+    so eg #\x.x\x.x=\x.x\z.z=\w.w\z.z#.
+    This rule of "freedom of spelling" is called as _alpha_equality_.
+
+    Formally we now have an abstract grammar for lambda #terms#
+    over some countable set of #var#iables (say #[a-z]+#),
+    and a theory of equations covering
+    basic equivalence (#refl#, #sym#, #trans#),
+    variable respelling (alpha), and substitution (beta).
+    (see figure \ref{fig:lambda-rules}).
+    Figure: \label{fig:lambda-rules}
+      #XXX split H, H* out
+      ###-
+        #terms
+        x var        M expr   N expr       x var   M expr
+        ------ var   --------------- app   -------------- abs
+        x expr          M N expr             \x. M expr
+
+        #equivlence
+        M expr        M = N       M = N   N = O
+        ------ refl   ----- sym   ------------- trans
+        M = M         N = M          M = O
+        
+        #respelling
+
+        ----------- alpha-var
+        \x.x = \y.y
+
+        \x.M=\x'.M'   \x.N=\x'.N'
+        ------------------------- alpha-app
+            \x.M N = \x'.M' N'
+
+        #XXX is this right?
+           \x.M=\x'.M
+        ---------------- alpha-app
+        \x.\y.M=\x'.\y.M
+
+        #substitution
+        ------------ beta-I
+        (\x. x)M = N
+
+        ------------ beta-K
+        (\x. y)M = y
+
+        (\x.M1)N=M1'   (\x.M2)N=M2'
+        --------------------------- beta-S
+           (\x. M1 M2)N = M1' M2'
+
+        y apart N   (\x.M)N=M'
+        ----------------------- beta-abs
+           \x.(\y.M)N=\x.M'
+        #XXX yuck!
+
+        #convergence
+        x var   _M nfs          x var   M nf
+        -------------- nf-var   ------------ nf-abs
+            x _M nf                \x.M nf
+
+        M _N nf           M conv   M=N           not M conv
+        ------- conv-nf   ------------ conv-eq   ---------- div
+        M conv               N conv                 M div
+
+        #extensionality
+         x apart M     
+        ----------- eta
+        \x. M x = M    
+
+        /\_N. M _N div   /\_N. M' _N div
+        -------------------------------- H
+                    M = M'
+
+        /\_N. M _N conv iff M' _N conv
+        ------------------------------ H*
+                    M = M'
+      ###-
+      Caption: 
+        Here #M,N# are varibles ranging over expressions, and
+        #x,y,z# are actually variables ranging over #var#iable expressions.
+        vectors #_M,_N# etc range over finite lists of expressions, eg
+        #_M = M1,M2,...,Mn#, and we write #f _M = f M1 M2 ... Mn#.
+        
+        Throughout this thesis, we represent grammars and theories
+        using Post systems extended with universal quantifiers, negation,
+        and least fixed points.
+        From this presentation it is straight forward to bound
+        where on the [hyper-]arithmetic hierarchy various theories lie.
+        For example, convergence is #Sigma01#, divergence #Pi01#,
+        and H* extensionality #Pi02#.
+    We would also like substitution to be _extensional_,
+    so that "accidental" abstraction-then-application, as in #\x.M x#,
+    doesn't complicate the structure.
+    This equational rule is know as eta-equality;
+    our equational theory so far is known as beta-eta.
+    But is this theory fully extensional or fully abstract as Plotkin puts it?
+    To answer this,
+    let us first take a closer look at how we'll use the structure.
+
+    Comment: #XXX
+      this sould focus more on algebras and _signatures_:
+      as Andrej Bauer's blogpost ??? notes,
+      computer-representation of datatypes begins with _verbs_,
+      what we will do with objects.
+
+      To model natural numbers, a _real_ structure,
+      we cannot simply finitely axiomatize;
+      rather, we must translate the infinte theory of nats
+      to the infinite theory of SK (later SKJ).
+      type and term implementations.
+    What formal systems can be embedded into the lambda-calculus?
+    Church showed how to systematically embed
+    natural numbers and polynomial datatypes
+    such as booleans, numerals, pairs, lists, trees, streams.
+    Consider first natural numbers:
+    how should we represent them in lambda-calculus?
+    Natural numbers count how many times something can be done.
+    In a functional language,
+    _doing_something_ is represented as applying a corresponding function.
+    For example we can do #f# three times #\x. f(f(f x))#,
+    or just once #\x. f x# or no times at all #\x. x#.
+    But natural numbers are abstract notions of multiple application.
+    Since we don't care about the particular #f#, let us define
+    ###[
+      0 := \f,x. x
+      1 := \f,x. f x
+      2 := \f,x. f(f x)
+      3 := \f,x. f(f(f x))
+      ...
+    ###]
+    In fact we can define the successor function #n|->1+x# by
+    ###[
+      succ := \n,f,x. f(n f x)
+    ###]
+    which, given n, applies f one more time.
+    Exercise: prove #1=succ 0#, #2=succ 1#.
+
+    Another equally good definition is
+    ###[
+      succ' := \n,f,x. n f(f x)
+    ###]
+    Although they behave identically on natural numbers,
+    these lambda terms behave differently on other objects,
+    eg #\f,x.y#:
+    ###[
+      succ \f,x.y = \n,f,x. f y
+      succ' \f,x.y = \n,f,x. y
+    ###]
+    Of course we didn't intend #succ# or #succ'# to be applied to anything but
+    natural numbers.
+    One solution to this mess is to enforce typing constraints in term
+    application, to restrict which terms can be written.
+    Another solution is to give functions the power to complain if they receive
+    an unexpected input, but not restrict term application.
+    Since our primary concern is simplicity of _grammar_,
+    we opt for the second solution.
+    But before we describe how to type-check,
+    let us further explore what else can be embedded.
+
+    Having constructed a successor function,
+    it is not difficult to generalize to addition
+    (given two numbers #n,n'#,
+    a function, and an argument,
+    apply the function n times, and then another #n'# times)
+    ###[
+      add := \n,n',f,x. n f(n' f x)
+    ###]
+    and multiplication
+    (given two numbers #n,n'#, and a function #f#,
+    #n' f# applies f n'-times, so #n(n' f)# applies #n' f# n-times,
+    or f #n%n'#-times
+    ###[
+      mult := \n,n',f. n(n' f)
+    ###]
+    Exercise: prove that for natural numbers m,n, #add m n=add n m#.
+    However a predecessor function is more complicated.
+
+    Church's approach, we start with a simple recursive type theory
+    ###-
+                 a church   b church   a church   b church
+      --------   -------------------   -------------------
+      1 church      a + b church           a % b church
+
+      x var |- a church
+      -----------------
+       mu x. a church
+    ###-
+    where we define common datatypes
+    ###[
+      numeral = mu x. 1+x
+      pair a b = a+b
+      stream a = mu x. a % x
+      list a = mu x. 1 + (a % x)
+      binary_tree a = mu x. a + (x % x)
+    ###]
+    Church's embedding into lambda-calculus is
+    ###-
+      --------
+      \x.x : 1
+
+           z : a             z : b
+      ---------------   ---------------
+      \x,y. x z : a+b   \x,y. y z : a+b
+
+        x:a     y:b
+      ---------------
+      \f. f x y : a%b
+      #XXX recursive?
+    ###-
+    We also have the typical functions
+
+    #TODO exhibit power of lambda calculus
+    #TODO INSERT barendregt's embedding theorem
+    #TODO Engler's view (of ETH)
+
+    Are all lambda-terms interesting?
+    Are they all useful for describing the computations of functions?
+    In this thesis, we take the position of Barendregt that
+    eventually only normal forms are interesting, and that more generally,
+    #XXX what is a normal form?
+    #XXX what does it mean to converge?
+    terms are only interesting insofar as they act on normal forms.
+    Now we're in the uncomfortable position
+    of having built a language that describes uninteresting things.
+    So let's identify all the uninteresting things.
+    Let's say that a term M is _uninteresting_
+    (Barendregt's unsolvable or meaningless) iff
+    under no sequence of arguments is M equivalent to a normal form.
+    ###-
+      /\_N. M _N diverges
+      ------------------- uninteresting
+        M uninteresting
+
+      M uninteresting   N uninteresting
+      --------------------------------- H
+                    M = N
+    ###-
+    The resulting theory H is almost "tight",
+    proves almost all equations we would like.
+    However there is a problem with, eg, infinite lists of meaningless terms,
+    which cannot be proved equal using finitary methods
+    (finitely many applications of rule H).
+    Eg: #TODO add example of H failing
+    It turns out that there is a unique maximal theory
+    (ie with as many equations as possible) extending H,
+    that keeps distinct our current equivalence class of normal forms;
+    this theory is known as H*, the Hilbert-Post-completion of H.
+    As desideratum as to whether any two terms are equivalent in H*,
+    we can use convergence at every input, rather than any input:
+    ###-
+      /\_N. M _N diverges iff M' _N diverges
+      -------------------------------------- H*
+                         M = N
+    ###-
+
+  Combinators and definitions. \label{sec:thesis/sk:combinators}
+
+    History: Combinators were actually developed before the lambda-calculus,
+      in an attempt to eliminate bound variables from logic,
+      and to formalize process of variable substitution.
+      Moses Shonfinkle first developed a system of combinators in the 1920s,
+      while working with Hilbert in Goetingen.
+      Later Haskell Curry developed combinatory algebra (combinatory logic)
+      including translations from lambda-calculus,
+      finite axiomatization of extensionality,
+      etc.
+
+      (see Hindley06 for details)
+
+    So far, all our terms, natural numbers, and functions of numbers have been
+    _closed_terms_, they have no free variables.
+    The fragment of lambda calculus consisting of only closed terms
+    is closed under the operation of application.
+    Thus we have an applicative algebra Lambda0,
+    a subalgebra of Lambda (where we forget lambda-abstraction).
+    In fact this algebra is finitely generated:
+    there is a finite set of closed lambda-terms generating all others.
+    Let's construct a set, working backwards from the proof of finite
+    generation.
+
+    What would a proof of finite generation look like?
+    Hopefully we can use structural induction on lambda-terms to eliminate
+    or compile-out lambda-terms to terms whose abstractions were localized to
+    some finite set of basic terms.
+    The simplest case is probably #\x.M# where #x apart M#.
+    In that case, the function #\x.M# iputting some x just discards the x.
+    So we can define
+    ###[
+      \x.M = (\x,y.x) M   #where #x apart M#
+    ###]
+    and add the constant function #K:=\x,y.x# to our basis.
+    Now what if x occurrs free in M?
+    By structural induction, we can eliminate abstractions from the inside out,
+    so that M is not an abstraction.
+    Thus there are two possible cases: M is a variable or M is an application.
+    If M is a variable, and x is free in M, M must be x.
+    So let's just add the term #I:-\x.x=\x.M# to our basis.
+    If M is an application #M1 M2#, let's first compile
+    #\x.M1-->M1'# and #\x.M2-->M2'#.
+    Now we can combine them with a term #S:=\x,y,x.(x z)(y z)#
+    that substitutes z into each of x and y:
+    ###[
+      (\x,y,z.(x z)(y z)) M1' M2'
+          = \x. (M1' x) (M2' x)         #beta
+          = \x. (\x. M1 x) (\x. M2 x    #hypothesis
+          = \x. M1 M2                   #eta
+          = M                           #definition
+    ###]
+    
+    Now we have a finite basis #{S,K,I}# generating all other closed lambda
+    terms.
+    Actually we can define #I# in terms of #S# and #K# by
+    ###[
+      S K K = (\x,y,z.x z(y z)) (\x,y.x) (\x,y.x)       #definition
+          = \w. (\x,y,z.x z(y z)) (\x,y.x) (\x,y.x) w   #eta
+          = \w. (\x,y.x) w ((\x,y.x) w)                 #beta
+          = \w. w                                       #beta
+          = \x. x                                       #alpha
+          = I                                           #definition
+    ###]
+    so the basis #{S,K}# suffices.
+
+    Our basis is now finite, but since equality of lambda terms (under H*) is
+    expressed in terms of variables, there are really infinitely many equations.
+    Can we finitely axiomatize our algebra?
+    Can we find a finite presentation (generators and relations)?
+    It turns out that the H* rule cannot be finitely axiomatized
+    (such theories are Sigma01, but H* is #Pi02# complete),
+    but we _can_ finitely axiomatize beta-eta equality just using S,K.
+
+    #XXX needs better explanation:
+
+    First consider beta: we know what each of S,K do under beta reduction, so
+    let's (re)axiomatize
+    ###[
+                                                     M=M'   N=N'
+      --------- beta-K   ------------------ beta-S   ----------- beta-app
+      K M N = M          S M N O = M O(N O)           M N=M' N'
+    ###]
+
+    Now what eta equality really does is guarantee that
+    beta-reduction commutes with abstraction:
+    If #M apart x# and #M x=N# (via beta), then also #M = \x.M x = \x.N#.
+    So to acheive commutativity of beta-reduction and abstraction-elimination,
+    let us again work backwards from a structural induction proof,
+    this time on abstraction-elimination steps.
+    The abstraction algorithm steps are
+    ###-
+      M --> M'   x apart M'           M --> x
+      --------------------- abs-K   ----------- abs-I
+          \x.M' --> K M'            \x. x --> I
+
+      M --> N O   x not apart N O   \x.N --> N'   \x.O --> O'
+      ------------------------------------------------------- abs-S
+                       \x. M --> S N' O'
+    ###-
+    By structural induction on beta-equality _and_ abstraction steps,
+    is enough to consider single steps #beta-K# and #beta-S# on combinators
+    with variables, where the final abstraction step changes.
+    Note: #XXX mention Hindley's paper on eta rules with eta abstraction
+    The cases are covered by assuming
+    ###[
+      \x,y,z. S x y z = \x,y,z. x z(y z)
+      \x,y. K x y = \x,y. x
+    ###]
+    #LATER
+

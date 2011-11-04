@@ -1,0 +1,161 @@
+
+Axioms for a power closure. (#P#) \label{sec:axioms/power}
+  ###<
+    !read axioms/close.
+  ###>
+  The space of closures has structure beyond that of the retracts in general:
+  it is a complete meet-semilattice with bottom #nil=T# and top #any=I#.
+  We use symbols #P x y# for the meet operation (type intersection)
+  and #x<:y# for the partial ordering (subtyping).
+  The subtype relation is defined generally as
+  ###(
+    /\x:V,y:V. &
+          x<:y &<==> inhabs(x) (= inhabs(y)   #containment of inhabitants
+               &<==> (/\z. z=x z ==> z=y z)
+               &<==> x:y->y
+               &<==> y*x = x = x*y            #explicitly
+  ###)
+  Note: Although idempotents are also a bounded poset with universal
+    object (with top #any=I#, bottoms #K x# for any x, and universe #idem#),
+    no meet operation is definable for idempotents.
+
+  The type intersection operator can thus be defined as
+  ###<
+    !define P := (\x,y. V(x|y)).
+  ###>
+  so that more generally, #x<:y <==> V x:P y#, ie, #x# is a subtype of #y#.
+
+  Among types ordered by information content, #P x y# is the least upper bound
+  of types # [=x,y#, i.e., the join #J# restricted to the lattice of types.
+  However, the usual ordering #<:# on types is \emph{dual} to the information
+  ordering, and thus we regard #P# as an intersection operator.
+
+  Axioms and axiom schemata. 
+
+    The following axiom shemata are enforced for the atom #P#:
+    ###-
+      ----------- idem   ------------- comm   ---------------------- assoc
+      P x x = V x        P x y = P y x        P x(P y z) = P(P x y)z
+    ###-
+
+    Algebraic properties
+    ###<
+      !assume P x x = V x.                #idempotence
+      !assume P x(P x y) = P x y.         #idempotence+associativity
+      !assume Y(P x) = V x.               #idempotence+fixedpoint
+      !assume P x y = P y x.              #commutativity
+      !assume P x(P y z) = P(P x y)z.     #associativity
+    ###>
+    Idempotence and commutativity are clear, but associativity is nontrivial.
+    Lem: 
+      ###<
+        !assume P x y = P x(V y) = P(V x)y = P(V x)(V y).
+      ###>
+    Pf: 
+      ###(
+        P x y &= V(x|y)
+              &= V*V(x|y)
+              &=] V(V x|V y)    #since #f(x|y) =] f x|f y#
+              &=] V(x|y)        #since #V=]I#
+              &= P x y
+      ###)
+      []
+    Thm: #P# defines a type intersection operator.
+      ###<
+        !assume P x y:V.
+        !assume P : V->V->V.            #type intersection operator
+        !check (/\a:V, b:V. P a b <: a).
+        !check (/\a:V, b:V. P a b <: b).
+        !check P any x = V x.
+        !check P nil x = nil.
+      ###>
+    Thm: #P# defines a power-type operator.
+      ###<
+        !assume P x : V.
+        !assume P : V->V.     #powertype operator
+      ###>
+
+    Pf: (associativity)
+      ###(
+        P x(P y x) &= V(x|(V(y|z)))
+                   &= V(V x|V(V y|V z))
+                   &= V(V x|V y|V z)
+                   &= V(V(V x|V y)|V z)
+                   &= V(V(x|y)|z
+                   &= P(P x y)z
+      ###)
+      []
+
+    We also assume the order axioms
+    ###<
+      !assume P x =] V.
+      !assume P _ x = P I x = V x.
+      !check P T x = T.
+    ###>
+
+  Derived properties. 
+
+    We can now prove the subtyping lemma from \ref{sec:axioms/close}.
+    Lem: \label{lem:subtyping}
+      Subtyping is a bounded preorder, and a partial order on closures.
+      (a) #nil <: a <: a <: any#.
+      (b) If #a<:b# and #b<:c# then #a<:c#.
+      (c) For #a,b:V#, if #a<:b# and #b<:a# then #a=b#.
+    Pf: 
+      (a) Deferring to Johann,
+        ###<
+          !check nil <: a <: a <: any.
+        ###>
+      (b) Assume #a<:b# and #b<:c#.  Then
+        ###(
+          V a &= P a b        #since #a<:b#
+              &= P a (V b)
+              &= P a (P b c)  #since #b<:c#
+              &= P(P a b)c
+              &= P a c        #since #a<:b#
+        ###)
+        whence #a<:c#.
+      (c) Assume #a,b:V#, #a<:b#, and #b<:a#.  Then
+        ###[
+          a  =  V a  =  P a b  =  V b  =  b
+        ###]
+      []
+
+    ###<
+      !check Y*P = V.
+      !check P _ = V.
+      !check P : I->I->V.   #intersections are types
+    ###>
+    Lem: 
+      ###<
+        !check P =] J.
+        !check P =] K*V.
+      ###>
+    Pf: SPACE
+      * #P  = \x,y. V(x|y)  =] \x,y. x|y  = J#.
+      * #P  = \x,y. P x y  =] \x,y. V y  = K*V#.
+      []
+
+  Theorems conjectured by Johann. 
+
+    Lem: 
+      ###<
+        !check T = Y P = V P = P J = P P.
+      ###>
+    Pf: #P =] J#, and #Y J = V J = T#.  []
+
+    Lem: 
+      ###<
+        !assume B [= P.
+      ###>
+    Pf: 
+      ###(
+        P x y &= V (V x|V y)
+              &=] V (x|y)
+              &=] 2 (x|y)
+              &= (x|y)*(x|y)
+              &=] x*y
+              &= B x y
+      ###)
+      []
+

@@ -1,0 +1,176 @@
+
+Enumeration Tools. \label{sec:skj/enum}
+  ###<
+    !import skj/types skj/coalgebras skj/logic.
+  ###>
+  Design Goals: 
+    * empty, singleton, & sum should be easy;
+    * product should be doable;
+    * indexing should be easy.
+
+  Stores/Enums/Spaces are infinitely-deep internally maybe-labelled binary
+  trees, and locations/indices/points are (isomorphic to) binary strings.
+  ###<
+    unroll_Enum := (type->type->type) (\a,e. Prod (Maybe a). W Prod e).
+    unroll_enum := (type->type) (\e. Prod maybe. W Prod e)
+    !check unroll_enum = unroll_Enum any.
+
+    Enum := (type->type) (\a. Y (unroll_Enum a)).
+    enum := type (Y unroll_enum).
+    !check enum = Enum any.
+  ###>
+
+  References/Indices/Points are access stores
+  ###<
+    idx := type (Y\i. Maybe. Sum i i).
+    !check /\a:type. e:Enum a, i:idx. (i e:a).
+    root := idx none.
+    left := (idx->idx) (some * inl).
+    right := (idx->idx) (some * inr).
+
+    id_idx := Sym_bin_fun idx semi ( 
+        Y\d. ((K, Bot, Bot), \i. (Bot, d i, Bot), \i. (Bot, Bot, d i))
+    ).
+    eq_idx := Sym_bin_fun idx bool (
+        Y\d. ((K, K F, K F), \i. (F, d i, K F), \i. (F, K F, d i))
+    ).
+
+    Get := (/\a:type. Enum a -> idx -> Maybe a) (
+        \-. Y\g. \(m,s1,s2). (m, g s1, g s2)
+    ).
+    get := Get any.
+
+    Put := (/\a:type. Maybe a -> Enum a -> idx -> Enum a) (
+        \-,m'. Y\f. \(m,s1,s2). ((m', s1, s2), (m, f s1, s2), (m, s1, f s2))
+    ).
+    put := Put any.
+
+    Set := (/\a:type. a -> idx -> Endo(Enum a)) (\x,i,s. put (some x) s i).
+    set := Set any.
+  ###>
+  Example: we can index an enum by 
+
+
+  One of the main uses of spaces is enumeration
+  ###<
+    e_empty := enum (Y\e. (none, e, e)). #contains no elements
+    e_Sgtn := (/\a:type. a -> Enum a) (\-,x. (x, e_empty, e_empty)).
+    e_Sum := (/\a:type. Bin_op. Enum a) (\-,e1,e2. (none, e1, e2)).
+
+    e_sgtn := e_Sgtn any.
+    e_sum := e_Sum any.     ## = \x,y,-,f. f x y
+  ###>
+  We also have standard recursive intro and elim forms
+  ###<
+    rec_Enum := (/\a:type,b:type. (unroll_Enum a b -> b) -> Enum a -> b) (
+        \-,(f,g). Y\r. (f, \(e1,e2). g (r e1) (r e2))
+    ).
+    rec_enum := rec_Enum any any.
+
+    ind_Enum := (/\a:type. m:=Maybe a. a -> (a->m) -> (a->m) -> Enum a) (
+        \-,root,left,right.
+        Y\e. (e_sgtn root, map_enum left e, map_enum right e)
+    ).
+    ind_enum := ind_Enum any.
+  ###>
+  We can get the domain of an enum via XXX is this right?
+  ###<
+    dom_enum := (enum -> Enum idx) (
+        rec_enum ((e_empty, K. e_sgtn root), map_enum left, map_enum right)
+    ).
+  ###>
+  Whence we can define a check
+  ###<
+    check_Enum := (/\(a,-):checkable. Check. Enum a) (
+        \(-,c). rec_enum (c, and_unit)
+    ).
+    check_enum := check_Enum any.
+  ###>
+  ###<
+    e_indices := Enum index (ind_enum root (B' left) (B' right)).
+    !check test_index i = I ==> i = i e_indices
+  ###>
+  Notation Suggestion: 
+    ###[
+      {x} := e_sgtn x.
+      {x,y,z} := (e_sum (e_sgtn x). e_sum (e_sgtn y). e_sgtn z).
+    ###]
+
+  Enumerations are containers, and thus support
+  * indexing,
+  * recursion,
+  * conversion to semiset,
+  * checking,
+  * replacement, and
+  * comprehension.
+  The most common usage of recursion also produces an enumeration
+  ###<
+    Renum := (/\a:type,b:type. (a -> Enum b) -> Enum a -> Enum b) (
+        \-,-,f. rec_enum (f, e_sum)
+    ).
+    renum := Renum any.
+
+    J_Enum := (/\a:type. Enum a -> any) (rec_enum (I, J)).
+    J_enum := J_Enum any.
+
+    Enum2Sset := (/\a:type. Enum a -> Sset a) (rec_enum (\x.<x>, J)).
+    enum2sset := Enum2sset any.
+
+    map_Enum := (/\a:type,b:type. (a->b) -> Enum a -> Enum b) (
+        \-,-,f. renum e_sgtn*f
+    ).
+    map_enum := map_enum any any.
+
+    restr_Enum := (/\a:type. (a->bool) -> Endo(Enum a)) (
+        \-,p. renum \x. p x (e_sgtn x) e_empty
+    ).
+    restr_enum := restr_enum any.
+  ###>
+  Produts are enumerated lexicographically
+  ###<
+    e_Prod := (/\a:type,b:type. Enum a -> Enum b -> Enum(Prod a b)) (
+        \-,-,e1,e2. renum (\x. map_enum (\y.(x,y)) e2) e1
+    ).
+    e_prod := e_Prod.
+  ###>
+
+  Example: We can enumerate #S,K#-terms easily via
+    ###[
+      e_SK := Enum term (
+          Y\e.
+          e_sum (e_sum (e_sgtn "S")
+                       (e_sgtn "K"))
+                (map_enum <app>. e_prod e e)
+      ).
+    ###]
+    or their beta-normal forms via
+    ###[
+      e_nf := Enum term (
+          arg0 := e_sum (e_sgtn "S") (e_sgtn "K").
+          arg1 := arg0.
+          arg2 := e_sgtn "S".
+          p := (\e,e'. map_enum <app>. e_prod e e').
+          Y\e.
+          e_sum arg0.
+                e_sum (p arg1 e).
+                      p (p arg2 e) e
+      ).
+    ###]
+  
+  We also define enumerations for some standard data types
+  ###<
+    e_Prod := (/\a:type. W Prod a -> Enum a) (
+        \(x,y). e_sum (e_sgtn x) (e_sgtn y)
+    ).
+    e_Stream := (/\a:type. Stream a -> Enum a) (rec_stream e_sgtn e_sum).
+    e_String := (/\a:type. String a -> Enum a) (
+        rec_string e_empty (\x,e. e_sum (e_sgtn x) e)
+    ).
+    e_Tree := (/\a:type. Tree a -> Enum a) (\-,t. t). #enums _are_ trees
+
+    e_prod := e_Prod any.
+    e_stream := e_Stream any.
+    e_string := e_String any.
+    e_tree := e_Tree any.
+  ###>
+

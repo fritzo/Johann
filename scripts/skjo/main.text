@@ -1,0 +1,236 @@
+
+Untyped lambda-calculus with logical reflection. (SKJO) \label{sec:skjo}
+
+  Comment: Design Goals: 
+    * extend program syntax to the logic of programs.
+      * represent codes of terms and statements
+        * keep codes simple (quotient as much as possible)
+        * fit the code comonad into the type system
+      * interpret a logic over SKJ terms into SKJO, including
+        * FOL over terms,
+        * the information ordering relation #[=#, and
+        * provability WRT a particular theory.
+
+  Comment: Approach: 
+    * combinator codes as affine normal forms
+    * extend by omega1CK-semi-complete oracle (definition below)
+      * oracle is defined in terms of basic info-ordering relation #[=#
+
+  Comment: Main theorems: 
+    * density of codes (axioms/code ? skjo/codes ?)
+    * reflection theorem (skjo/codes)
+    * Lob's theorem #[]([]p -> p) -> p# (skjo/codes)
+    * comonadic structure (skjo/codes)
+    * strength of #O# (axioms/oracle)
+
+  Comment: Bob Harper comments:
+    the first remark below is well-known, and was discovered by frank and peter
+    in their papers on run-time code generation.  they took a modal logic
+    perspective in which the type Box A (ie, Nec A, which is a comonad)
+    represents unevaluated code of type A.  they then develop a programming
+    language around this idea, see frank's web page for references.
+    various others took up similar ideas, including the meta-ocaml work at ogi
+    and rice about ten years ago, and lots of work under the rubric of
+    "staged computation".  rowan davies pushed it further using a temporal
+    modality to refer to multiple stages of processing, rather than just two
+    (unevaluated code for A and a value of type A).
+
+    the second remark is new to me, but fairly obvious once you have the idea
+    of a type of unevaluated code.  a complementary perspective is provided by
+    constable and smith's 20 year old approach to recursion theory that takes
+    the opposite viewpoint in which no indexing (representation of programs as
+    data) is assumed or required.  it's a very elegant approach.  this also
+    leads into constable and howe's subsequent work on computational reflection
+    in type theory.  all good stuff, very relevant to your point,
+    and very well-researched.
+
+  This chapter deals with automated reasoning in illative combinatory logic,
+  the programme of using combinatory algebras as languages for logics.
+  Building on the algebra SKJ and Johann's equational theorem proving,
+  we develop two tools to achieve a powerful verification system:
+  (1) a #code# comonad a la Brookes for efficient storage of quoted terms, and 
+  (2) an oracle for encoding #Delta11# statements about SKJO terms as booleans.
+  These two developments are independent, but in our implementation,
+  the oracle relies on comonadic codes to achieve a reasonable density of
+  information storage.
+
+  Our first verification tool is an coding of terms in a flat domain,
+  so that algorithms can work with intensions of terms.
+  Some coding of terms is needed if we are to reflect statements about the
+  calculus into the calculus itself,
+  ie to embed an intensional semantics into our extensional model.
+  The natural way to define codes (Davies96, Wickline98)
+  is with a modal type #Code#, functions #Apply,Eval,Quote#,
+  and an operation #{-}# to quote closed terms.
+  This structure and its untyped version #<code,A,E,Q,{-}># afford us
+  notation for quoted pattern-matching of untyped and typed terms
+  ###(
+                            M &|-> {M}        #quoting closed terms
+                        {M N} &= A{M}{N}      #application
+              (let {x}:=M. x) &= E M          #evaluation
+            (let {x}:=M. {x}) &= code M       #typing
+          (let {x}:=M. {{x}}) &= Q M          #quoting quoted terms
+
+                          M:a &|-> {M}:Code{a}
+          M:a->b,N:a |- {M N} &= Apply{a}{b}{M}{N}
+            (let {x:a}:=M. x) &= Eval{a} M
+          (let {x:a}:=M. {x}) &= Code{a} M
+        (let {x:a}:=M. {{x}}) &= Quote{a} M
+  ###)
+  Note that #Quote{a}:Code{a}->Code{Code{a}}# can be applied to arbitrary
+  terms of type #code#,
+  and #{-}# can be applied to closed terms of arbitrary type,
+  but variables of arbitrary type cannot be quoted.
+  This restriction allows quoting to be non-monotone,
+  so that codes can provide a flat representation of an ordered domain.
+
+  The problem with a naively modal type of codes is code size:
+  Johann remembers facts about extensional terms only once per equivalence
+  class, but intensional terms would require overhead for each inhabitant of
+  an equivalence class.
+  For example, Johann knows that #S K=K I#, and so needs store only one of the
+  equations #(K I)I=I# and #(S K)I=I#.
+  However the naively modal type of codes,
+  the intensions are different: #{S K}!={K I}#,
+  so each equation #E(A{S K}{I})=E{I}# and #E(A{K I}{I})=E{I}# must be stored
+  separately.
+
+  Our solution is to define intensional codes _modulo_extensionality_,
+  to achieve a space-efficient 1-1 coding of terms,
+  while still neutralizing the Scott order,
+  so that, eg, #_[=T# but #{_}# and #{T}# are order-incomparable.
+  This solution is captured by the two reasoning principles
+  ###-
+      |-M=N                   |-M!=N
+    --------- extensional   ----------- neutral
+    |-{M}={N}               |-{M}![={N}
+  ###-
+  The 1-1 coding of terms is only consistent only WRT _provable_ equality,
+  but this turns out to be just as space efficient as a true 1-1 coding
+  would have been.
+  Adding the extensionality equations to our modal type system
+  yields the richer structure of a _computational_comonad_,
+  as studied by Brookes and Geva Brookes92.
+  The extensional computational comonad provides a tower of isomorphisms
+  between the code types, where all but the first operation #{-}# are
+  SKJ-code-definable.
+  ###a
+                 eval           eval                 eval
+                <-----         <-----               <----- 
+              a        Code{a}        Code{Code{a}}        ...
+                - - ->         ----->               -----> 
+                 {-}           quote                quote  
+  ###a
+
+  Takeout: OLD
+    However there is a problem with this naive code comonad:
+    comonadic structure does not provide a quoting operation #(x:=M. {x})#,
+    even though this should be possible, at least sometimes, say for closed #M#.
+    For example, we would like to reference our existing library of definitions
+    as quoted terms, as eg our use of #{V}# in
+    ###[
+      Code := (code -> P code) (\a,x. A (A {V} a) x).
+    ###]
+    But to use #{V}# we would have had to use a quoted definition;
+    eg instead of
+    ###[
+      V := (\a,x. Y\y. x|a y).  ...
+    ###]
+    we would have needed to define the _intension_ of #V# via
+    ###[
+      let {V} := {\a,x. Y\y. x|a y}.  ...
+    ###]
+    But this solution is counter to Johann's design goal of extensionality:
+    #V# should denote its extension, its equivalence class modulo H*.
+    Practically, Johann prints #V# as the simplest code for #V# currently
+    known, and this code changes in time as new equations are proved and basis
+    weights are varied.
+
+    Our solution to the quoting problem is
+    to provide an (almost well-defined) quoting operation #{-}#,
+    and let codes be equivalence classes of terms (essentially Goedel numbers),
+    modulo Johann's equational theory.
+    The quoting operation provides the missing arrow #a->Code{a}#
+    in the code comonad,
+    but only for _closed_ terms, and only up to Johann's theory of equality.
+    Comment: As observed by Peter Lumsdaine, (and yet to be proved XXX)
+    Note that in our context, #eval,quote# provide an isomorphism between
+    #Code{a}# and #Code{Code{a}}#.
+
+  Our second verification tool is an extension of SKJ
+  with a #Pi11# semi-hard (hence #Delta11# bool-hard) oracle #O#,
+  to achieve an elegant illative combinatory logic SKJO
+  for hyperarithmetic functions.
+  It is well-known that the equational logic of hyperarithmetic functions
+  is equivalent in logical strength to predicative set theory (Feferman05).
+  Moreover, Feferman, Weyl, Poincare and later Friedman have shown
+  that "most" of mainstream mathematics can be carefully formulated within
+  predicative set theory (Feferman92).
+  Thus SKJO is sufficiently strong
+  to serve as a foundation for "most" of mathematics.
+
+  Our approach is to add an oracle answering a simple (but uncomputable)
+  problem, but allow it to recursively call itself as a subroutine.
+  There is some freedom as to
+  what sort of simple question the oracle solves at each stage.
+  An obvious choice would be to have the oracle solve the halting problem,
+  reducing a #Pi01#-complete problem down to a #Delta01# problem.
+  However, since we are starting with the #Pi02#-complete equational theory H*
+  (recall from \ref{sec:skj/logic}),
+  it is more convenient to be able to
+  reduce a #Pi02#-complete problem down to a #Delta02# problem.
+  Specifically,
+  we want to eliminate universal quantifiers over some countable domain,
+  converting them to semiboolean values, eg,
+  \[
+    #O_nat{phi}# = \begin{cases} #I# & #if /\n in NN. phi(n)=I# \\
+                                 #_# & \text{otherwise} \end{cases}
+  \]
+  We can make the oracle even more convenient if we abstract out the domain
+  as a parameter to #O#, ie as a code for the totality test for that domain
+  (so that, eg, #O_nat=O{test_nat}#).
+  Thus we choose to let #O# answer the #Pi02#-complete _subtest_ problem
+  Given: an SKJ-code #{s}# for #s:test#, and an SKJO-code #{t}# for #t:test#
+  Semidecide: #O{s}{t} = I <==> s<::t#
+  where the subtest relation is defined as
+  ###[
+    s<::t  <==>  (/\x::s. x::t)  <==>  /\x. (s x=I==>t x=I)
+  ###]
+  Recall from \ref{sec:skj/logic} that
+  the testing problem #x::t <==> semi(t x)=I# is #Delta02#,
+  so the subtest problem is #Pi02#.
+  We will define #O# more precisely in \ref{sec:axioms/oracle}.
+
+  Related work. 
+
+    Curry developed many systems of illative combinatory logic,
+    but his strongest systems were plagued by inconsistencies.
+    See Curry's volume Curry72 for an overview of his approach.
+    Barendregt93 discusses an illative combinatory logic for first-order
+    predicate calculus; our present logic is stronger.
+
+    Harrison (Harrison95) surveys a wide variety of
+    reflection principles in logic.
+    Nuprl's principle of proof reflection is detailed in Allen90 and surveyed
+    in Constable94.
+    Demers (Demers95) surveys reflection principles in logic,
+    functional programming and metaprogramming.
+
+    Kieffer, Avigad and Friedman Kieffer08
+    propose an extension ZFC with partial terms
+    as a human-motivated foundation for mathematics.
+    They compute statistics as to the complexity of formulas
+    on a corpus of data.
+    The language SKJO can be motivated as a foundation of math
+    with simplified syntax, so that such statistics are much easier to compute.
+
+    Comment: TODO
+      * discuss effective topos, etc.
+        regarding quantifying only over computable functions
+      * discuss relation to Church's delta
+
+  ###r ../axioms/code  codes  provability
+  ###r ../axioms/oracle  logic  types
+  ####r ../axioms/schemata
+  ####r theories
+

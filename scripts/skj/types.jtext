@@ -1,0 +1,596 @@
+
+Types as closures. \label{sec:skj/types}
+  ###<
+    !import skj/simple.
+  ###>
+
+  In this section we define a variety of types and type constructors,
+  whose inhabitants are exactly the partial SK-terms we would expect
+  --ambiguous SKJ inhabitants are eliminated.
+  We construct these types from #Simple#-definable types
+  by raising ambiguous terms to #T#, or "disambiguating".
+
+  However, this eschewing of ambiguous terms comes at the cost of
+  a clean categorical characterization of our type constructors:
+  our products and sums are not categorical products and sums.
+  The situation becomes clearer later when we add randomness in \ref{sec:skrj}
+  and our present disambiguation tricks fail.
+  Forced to work with ambiguous terms,
+  we will develop a monadic type system where
+  type constructors satisfy categorical properties,
+  and simple types are likely definable (this is future work).
+  For now we accept the loss of nice categorical properties.
+
+  Comment: Wadler (Wadler98) describes an analysis of theorems true of a
+    typable term with a normal form, visible from only the term's type.
+
+  Comment: 
+    See Berarducci85,Girard89 from Hindley06
+    for polymorphic type and term implementations.
+
+  Design Goals: Semantic-level types are used to ensure membership in a
+    well-behaved class of terms.
+    Our type system should be sufficiently rich to support
+    * products, sums, exponentials (hence be a ccc);
+    * recursive types;
+    * parametric polymorphism;
+    * subtype polymorphism, a semilattice closed under finite meets,
+      and hence a universal type;
+    * a universal type of types;
+    * atomic types such as bool, nat, etc.
+
+    An independent goal is for the inhabitants of various types to be
+    easy-to-use.
+    Ideally, each object would provide its own functionality for
+    * case analysis
+    * recursion
+    * mapping/replacement (for containers)
+    See the discussion of the three types of numerals for example.
+    (where is this discussion?)
+
+  Atomic types for truth-values. 
+
+    We first construct four atomic types #div,semi,unit,bool#
+    that will be used for various logics in \ref{sec:skj/logic}.
+
+    We can now give a #Simple# definition of the type of divergent computations,
+    introduced in section \ref{sec:axioms/types}.
+    This two-point closure will be used as the space of truth values for
+    _probing_logic_.
+    ###<
+      !check div = V K = V <T> = V raise = V lower.
+      !check div = (Simple\a,a'. a').
+    ###>
+    Thm: #inhab(div) = {_,T}#.
+    Pf: We already know that
+      ###<
+        !check _ : div.
+      ###>
+      Any other #q:div# converges and hence is sent to #T# by sufficiently many
+      arguments of #T#.
+      So #q=T#.
+      []
+
+    Semibooleans,
+    or Sierpinski space will be used as the space of truth values for
+    _testing_logic_.
+    ###<
+      !define semi := (Simple\a,a'. a->a').
+      
+      !check ( I,_ : I->I ).
+      !check ( I,_ : raise->lower ).
+      !check ( I,_ : pull->push ).
+      !check ( I,_ : semi ).
+
+      !check div <: semi.
+    ###>
+    Thm: #inhab(semi) = {_,I,T}#.
+    Pf: By the #Simple# theorem, since these are exactly the inhabitants of
+      the simple type #a->a#, they are the fixedpoints of the type's
+      interpretation #Simple\a,a'. a->a'#.
+      []
+
+    The canonical unit type will have inhabitants #{I,T}#,
+    with #I# the unique consistent inhabitant.
+    This space will be used as the space of truth values for
+    _checking_logic_.
+    ###<
+      !define unit := P semi(Above I).
+
+      !check unit = P semi(K I).
+      !check I : unit.
+      !check unit _ = I  AND  _ !: unit.
+      !check unit <: semi.
+    ###>
+    Thm: #inhab(unit) = {I,T}#.
+    Pf: #inhab(unit) (= inhab(semi)#; individual containment was just checked.
+      []
+    Note: We now know the entire semilattice of subtypes of #semi#:
+      Latex Only: 
+        Center: 
+          $\xymatrix@!=2mm{
+            &{#{_,I,T}#} \ar@{-}[dl] \ar@{-}[dr]
+             &&&&{#semi#} \ar@{-}[dl] \ar@{-}[dr]
+             \\
+            {#{_,T}#} \ar@{-}[dr]
+            &&{#{I,T}#} \ar@{-}[dl]
+              &{#:#}
+               &{#div#} \ar@{-}[dr]
+                &&{#unit#} \ar@{-}[dl]
+            \\
+            &{#{T}#}
+             &&&&{#nil#}
+          }$
+      Html Only: 
+        ###a
+             {_,I,T}         semi     
+              /   \          /   \    
+          {_,T}   {I,T} : div     unit
+              \   /          \   /    
+               {T}            nil     
+        ###a
+
+    Finally we need boolean values for _predicate_logic_.
+    The boolean type is like a widened #semi#, inhabited by #{_,K,F,T}#.
+    Such a #bool# is not #Simple#-definable,
+    but we can #Simple#-define a wider type #boool# inhabited by #{_,K,F,J,T}#
+    ###<
+      boool := (Simple \a,a'. a->a->a').
+
+      !check ( _,K,F,J : I->I->I ).
+      !check ( _,K,F,J : raise->raise->lower ).
+      !check ( _,K,F,J : pull->pull->push ).
+      !check ( _,K,F,J : boool ).
+ 
+      !check (/\x:boool. x I I : semi).
+    ###>
+    and then manually raise #J# to #T#.
+    ###<
+      !define bool := P boool (\q. q _ (q T _)).
+
+      !check ( _,K,F : (\q. q _ (q T _)) ).
+      !check ( _,K,F : bool ).
+      !check T = (\q. q _ (q T _)) J = bool J.
+    ###>
+    We will often employ join-eschewing terms like #(\q. q _ (q T _)#.
+    Because we regard join as ambiguity, we call these _disambiguating_ terms.
+    Thm: #inhab(bool) = {_,K,F,T}#.
+    Pf: By the simple theorem, we may restrict attention to the inhabitants of
+      #a->a->a#, namely #_#, #T#, #K=\x,-.x#, #F=\-,y.y#, and #J=K|F#.
+      All of #_,T,K,F# are fixed by the term \\
+      #disambiguate:=\q.q _ (q T _)#,
+      and hence inhabit #bool#, but #disambiguate J=T#.
+      Hence #_,T,K,F# are the only inhabitants.
+      []
+
+  Polymorphic type constructors. 
+
+    Various exponential types
+    ###<
+      Exp := (V->V->V) (\a,b. a->b).      #or written #a->b#
+      Endo := (V->V) (\a. a->a).          #endomorphisms
+      Bin_op := (V->V) (\a. a->a->a).     #binary operations
+      From := (V->V) (\a. a->any).
+      To := (V->V) (\a. any->a).
+
+      !check Endo a = Exp a a.
+      !check Bin_op a = Exp a (Exp a a).
+      !check From a = Exp a _.
+      !check To a = Exp _ a.
+      !check Exp a b = P (From a) (To b).
+    ###>
+    Recall that #x=y mod a# iff #a x = a y#.
+    Thm: Let #a,b:V#.  Then #f:a->b# iff both
+      (a) #f# is constant on #a# equivalence classes, and
+      (b) #rng(f) (= inhab(b)#.
+    Pf: If #f:a->b#, then #f=b*f*a#,
+      so #f=f*a# is constant on #a# equivalence classes, and
+      ###[
+                  rng(f)  =  rng(b*f)  (=  rng(b)  =  inhab(b)
+      ###]
+      Conversely, if (a) and (b) hold,
+      ###(
+        f &= f*a        #by (a)
+          &= b*f*a      #by (b)
+          &= (a->b) f
+          &= V(a->b) f  #since #a,b:V#
+      ###)
+      whence #f:a->b#.
+      []
+    A special type of endomorphisms are the idempotents
+    ###<
+      Idem := (V -> V) (\a. P U. Endo a).
+      !check U = Idem _.
+    ###>
+
+    For products, we want something like system F's #/\c. (a->b->c)->c#,
+    but need to disambiguate to prevent eg #<K,F>|<F,K>#.
+    ###<
+      Prod := (V -> V -> V) (
+          \a,b. P (Simple\c,c'. (a->b->c)->c') (\q. (q K,q F))
+      ).
+      !define prod := P (Simple\c,c'. (any->any->c)->c') (\q. (q K,q F)).
+      !check prod = Prod _ _.
+      !check Prod a b = P prod ((V a -> V b -> any) -> any).
+      !check (x,y) : prod.
+      !check (/\a:V,b:V. (a x,b y) : Prod a b).
+    ###>
+    Products are actually dropped products, since #<T,T>!=T=T_prod#.
+    (Note however that the least pair is indeed #(_,_)#).
+    ###<
+      !check ( (T,T),T : prod ).
+      !check prod _ = (_,_).
+    ###>
+    Note: We will often use this style a polymorphic type #Prod#
+      by a simpler type #prod = Prod _ _#.
+      This denotational equivalent of type inference allows us,
+      under the Curry-Howard correspondence,
+      to insert untyped proof _sketches_ into larger well-typed contexts.
+      See \ref{sec:skj/terms} for some simple examples,
+      and \ref{sec:examples/proofs} for extended example of how this works.
+    The intro and elim forms are
+    ###<
+      Pair := (/\a:V,b:V. a -> b -> Prod a b) (\-,-,x,y,f. f x y). 
+      pair := (any -> any -> prod) (\x,y,f. f x y).
+      !check pair = Pair _ _.
+      !check Pair = (\a:V,b:V,x:a,y:b. (x,y)).
+      !check pair = (\x,y. (x,y)). 		#verifying notation
+
+      Pi1 := (/\a:V. Prod a nil -> a) (\(x,-). x).
+      Pi2 := (/\b:V. Prod nil b -> b) (\(-,y). y).
+      pi1 := (prod->any) <K>.
+      pi2 := (prod->any) <F>.
+      !check pi1 = Pi1 _.
+      !check pi2 = Pi2 _.
+      !check (\p:prod. (pi1 p, pi2 p)) [= prod. #typing error prevents equality
+    ###>
+    Thm: #inhab(Prod a b) = {T} union {(x,y) | x:a, y:b}#.
+    Pf:  Any h.n.f. below #q:Prod a b# must be #(a x,b y)# or #T#.
+      We construct the maximum such approximation:
+      Its first component is #q K#.
+      Its second component is #q F#.
+      So #disambiguate:=\q. (q K,q F)# ensures sequentiality.
+      []
+    Note: Tuples with #nil# elements needn't be #nil#
+      (but this can be checked):
+      ###<
+        !check (T,T) : prod.
+        !check (T,T) [[ T.
+      ###>
+      thus this is really a "dropped" product.
+      The usual inhabitation relation does not hold:
+      ###<
+        !check Prod nil nil [[ nil.
+      ###>
+      however, we will see in Section \ref{sec:skj/tests} that
+      the theorem does hold for types as _checkable_closures_.
+
+    For sums, we want something like System F's #/\a,b. (a->c)->(b->c)->c#,
+    but need to disambiguate to prevent eg #inl K|inr F#.
+    ###<
+      Sum := (V->V->V) (
+          \a,b. (Simple\c,c'. (a->c) -> (b->c) -> c')
+              | \q. q _ (q T _)
+                  | q (q _ T) _
+                  | \f,g. q (K I) _ (q f T)
+                        | q _ (K I) (q T g)
+      ).
+      !define sum := Sum _ _.
+    ###>
+    The intro forms are
+    ###<
+      Inl := (/\a:V. a -> Sum a _) (\-,x,f,-. f x).
+      Inr := (/\b:V. b -> Sum _ b) (\-,y,-,g. g y).
+      !define inl := (\x,f,-. f x).
+      !define inr := (\y,-,g. g y).
+      !check ( inl,inr : any->sum ).
+      !check inl = Inl _.
+      !check inr = Inr _.
+      !check (inl,inr)*sum = sum.
+    ###>
+    Comment: the following fails since #_:sum# but maybe not #_:b#
+      ###[
+        !check (/\b:V,s:sum,f:any->b,f':any->b. s f f':b).
+      ###]
+    Sums are actually dropped, lifted coproducts since
+    #inl T!=T!=inr T# and #inl _!=_!=inr _# modulo #sum#.
+    ###<
+      !check ( T, inl T, inr T : sum ).
+      !check ( _, inl _, inr _ : sum ).
+    ###>
+    Thm: #inhab(Sum a b) = {T,_} union {inl x | x:a} union {inr y | y:b}#.
+    Pf: Combine the proofs of #bool# and #Prod#. []
+
+    For the successor type #1+a#
+    we define an operation like System F's #/\a. b->(a->b)->b#,
+    disambiguating as with sums.
+    ###<
+      Maybe := (V -> V) (
+          \a. (Simple\b,b'. b -> (a->b) -> b')
+            | (\n,-. n, \x,-,s. s x) #descend, # = <none, some>
+            | \q. q _ (q T _)
+                | q (q _ T) _
+      ).
+      !define maybe := Maybe _.
+    ###>
+    The intro forms are
+    ###<
+      !define none := maybe (\n,-. n).
+      Some := (/\a:V. Maybe a) (\a,x,-,s. s x).
+      !define some := maybe (\x,-,s. s x).
+      !check some = Some _.
+      !check none : Maybe a.
+    ###>
+    Thm: #inhab(Maybe a) = {T,_,none} union {some x | x:a}#.
+    Pf: Similar to proof of #Sum#. []
+    The #Maybe# together with its mapping functions form a functor.
+    ###<
+      map_Maybe := (/\a:V,b:V. (a->b) -> Maybe a -> Maybe b) (
+          \-,-,f. (none, some*f)
+      ).
+      map_maybe := (any -> maybe -> maybe) (\f. (none,some*f)).
+      !check map_maybe = map_Maybe _ _.
+    ###>
+
+    The naming of #Maybe# already hints at the Curry-Howard correspondence,
+    whereby we interpret type constructors as logical connectives.
+    When defining types of logical statements,
+    we will often use the additional terminology
+    ###<
+      And := Prod.
+      Or := Sum.
+      If := Exp.
+    ###>
+
+  Recursive types. 
+
+    We can define recursive types as fixedpoints of type constructors,
+    eg the dual types #num# and #Stream a# of algebraic numerals and streams.
+    Numerals have introduction forms #none# and #some#
+    ###<
+      num := V (Y\a. Maybe a).
+      !check none : num.              #zero
+      !check (/\n:num. some n:num).   #successor
+    ###>
+    To avoid streams that typecheck for a while but eventually err,
+    we disambiguate with #\q. q\-,q'. q'\-,-. _#, pulling errors to the head.
+    ###<
+      Stream := (V -> V) (\a. Y\b. Prod a b | \q. q\-,q'. q'\-,-. _).
+      stream := V (Y\a. Prod any a | \q. q\-,q'. q'\-,-. _).
+      !check stream = Stream _.
+      !check T = stream (_,T) = stream (_,_,T) = stream (_,_,_,T).
+    ###>
+    Now duality #Stream a<:num->a# is expressed as
+    ###<
+      !check (/\a:V, s:Stream a, n:num. s n:a).
+    ###>
+
+  Intersection types. 
+
+    Intersection types are definable for closures (but not general idempotents).
+    Recall that
+    ###<
+      !check P = (V -> V -> V) (\a,b. a|b).
+    ###>
+    Thm: #inhab(P a b) = inhab(a) insn inhab(b)#.
+    Pf: Let #a,b:V# be types.
+      * #(=#: If #x:P a b# then #x=P a b x=]a x=]x# and similarly #x:b#.
+      * #=)#: If #x:a# and #x:b# then #(a|b)x=a x|b x=x|x=x#,
+        so #P a b x=V(a|b)x=x#.
+      []
+    Intersection are also defined over enumerably-many types,
+    say in a #Stream# as defined below:
+    ###[
+      P_stream := (Stream V -> V) (Y\a:Stream V->V,(h,t). P h(a t)).
+    ###]
+    Comment: Question: Is it safe to omit the typing of #a# above?
+      ###[
+        P_stream := (Stream V -> V) (Y\a,(h,t). P h(a t)).
+      ###]
+
+    Lower-powerdomains support singletons, unions, mapping, and
+    restriction by a semipredicate; so we call them _semisets_.
+    We represent semisets as ambiguous terms of simple type #(any->a)->a#, e.g.
+    ###[
+      {} = _
+      {0} = <0>
+      {0,1,2} = <0>|<1>|<2>
+      {0,1,2,...} = (Y\n. <n>|y(succ n))0
+    ###]
+    ###<
+      Sset := (V -> P (Above <_>)) (\a. Simple\b,b'. (a->b)->b').
+      !define sset := P (Above <_>) (Simple\a,a'. (any->a)->a').
+      !check sset = Sset _.
+      !check sset _ = <_>.
+      !check ( T,<T> : sset ).
+
+      map_Sset := (/\a:V,b:V. (a->b) -> Sset a -> Sset b) (\-,-,f,<x>. <f x>).
+      map_sset := (any -> sset -> sset) (\f,<x>. <f x>).
+      !check map_sset = map_Sset _.
+    ###>
+    ###c M
+    Thm: #inhab(Sset) = {T} union {Join_(x in M) <x> | M (= inhab(a)}#.
+    Pf: By the #Simple# type theorem,
+      where #_# is the only term raised by #<_># []
+    ###u M
+    Note that #Sset,map_Sset# are the components of the functor of a monad
+    Footnote: See Wadler90 and Moggi91 for definition.
+    for ambiguity, with components
+    ###(
+                                       (V->V) &Sset         #action on objects
+      (/\a:V,b:V. (a->b) -> Sset a -> Sset b) &map_Sset     #action on arrows
+                         (/\a:V. a -> Sset a) &(\-,x. <x>)  #unit
+                  (/\a:V. 2 Sset a -> Sset a) &(\-,<x>. x)  #join
+    ###)
+
+  Dependent types. 
+
+    We have already been using quantified types in the notation
+    ###[
+      /\a:V.M  :=  \a:V,x. M(x a)
+    ###]
+    Now we build concrete universal and existential type constructors,
+    defined by the typing rules for indexed products and sums
+    ###-
+      x:Pi a f    i:a      (i,x):Sigma a f           (i,x):Sigma a f
+      --------------- Pi   --------------- Sigma.1   --------------- Sigma.2
+          x i:f i               i:a                       x:f i
+    ###-
+    We represent the universally quantified type #Pi a f=/\i:a. f i# by
+    ###<
+      Pi := (/\a:V. (a->V) -> V) (\-,f,x,i. f i(x i)).
+      !check (/\a:V, f:a->V. Pi a f = (/\i:a. f i)).  #verifying notation
+      !check (/\a:V, f:a->V, x:Pi a f, i:a. x i:f i). #rule #(Pi)#
+    ###>
+    and the existentially quantified type #Sigma a f=\/x:a. f x# by
+    ###<
+      Sigma := (/\a:V. (a->V) -> P prod) (\a,f,(i,x). (a i,f i x)).
+      !check (/\a:V, f:a->V. Sigma a f = (\/i:a. f i)). #verifying notation
+      !check (/\a:V, f:a->V, (i,x):Sigma a f.
+          i:a  AND  x:f i                   #rules #(Sigma.1)# and #(Sigma.2)#
+      ).
+    ###>
+    Because there is a type-of-types #V#,
+    these dependent types encompass kinds of polymorphic types.
+    For example
+    ###<
+      !check Exp : (/\a:V. V -> P (From a)).
+      !check Exp : V -> (/\b:V. P (To b)).
+    ###>
+
+    Using dependent types, we can even define a type of definable functor
+    ###<
+      functor := (\/f:V->V. /\a:V,b:V. (a -> b) -> f a -> f b).
+    ###>
+    Which types, eg, the semiset monad and the #Maybe# functor.
+    ###<
+      !check (Sset,map_Sset) : functor.
+      !check (Maybe,map_Maybe) : functor.
+    ###>
+
+  Symmetry types. 
+
+    An interesting feature of the types-as-closures paradigm is the
+    definability of quotient types for objects invariant under a monoid action.
+    For example the two-element group #{I,C}={\f,x,y.f x y, \f,x,y.f y x}#
+    (acting as always by left-application),
+    permutes the first two arguments of a function.
+    This action induces the type of symmetric binary functions
+    ###<
+      Sym_bin_fun := (V -> V -> P C) (\a,b. a->a->b).
+      sym_bin_fun := V C.
+      !check sym_bin_fun = Sym_bin_fun _ _.
+      !check sym_bin_fun <: (\f,x,y. f x y).
+      !check sym_bin_fun <: (\f,x,y. f y x).
+
+      !check ( J,P,2 K x : sym_bin_fun ).
+      !check J = sym_bin_fun K = sym_bin_fun F.
+    ###>
+    As a special case, we will use commutative binary operations
+    ###<
+      Comm_op := (V -> V) (\a. P sym_bin_fun. Bin_op a).
+      !check Comm_op a = Sym_bin_fun a a.
+      !check sym_bin_fun = Comm_op _.
+    ###>
+    Now we can conveniently define some logical types
+    ###<
+      Pred := (V -> V) (\a. a->bool).                 #predicate
+      Bin_rel := (V -> V) (\a. a->a->bool).           #binary relations
+      Sym_bin_rel := (\a. P sym_bin_fun. Bin_rel a).  #symmetric binary relation
+    ###>
+    Takeout: 
+      We will see later that transitivity of a relation requires an enumerator,
+      and reflexivity requires a separator/discriminator.
+
+    An advantage of types-as-closures over types-as-projections
+    is the definability of quotients by _infinite_ monoids.
+    Consider for example functions of tails of sequences,
+    which are invariant under shifts in either direction:
+    ###[
+      Fun_of_tail := (V -> V -> V) (
+          \a:V, b:V.
+          \f:Stream a -> b.
+          fwd := (\s:Stream a. (_,s)).
+          bwd := (\(-,t):Stream a. t).
+          f | f * fwd | f * bwd
+      ).
+    ###]
+    An example of a function symmetric under an uncountable symmetry monoid
+    (in fact group) is the #Join_stream# function on streams, invariant under
+    the group of permutations of #omega#.
+
+    More generally, we can define the quotient of semisets
+    ###<
+      Mod := (/\a:V. Sset (a->a) -> P (Sset a)) (
+          \-,ms,xs. ms\m. xs\x. <m x>
+      ).
+      mod := Mod _.
+      !check mod <C> <K> = <K>|<F>.
+    ###>
+
+    If we further have
+    an apartness assertion #assert_neq:a->a->unit# for some algebra,
+    we can construct true quotients.
+    ###<
+      Quotient := (/\a:V. Sset (a->a) -> P C (a->a->unit) -> P (Sset a)) (
+          \a,sym,assert_neq.  \xs.
+          (xs\x. xs\x'. assert_neq x x').
+          sym\s. xs\x. <s x>
+      ).
+    ###>
+    Takeout: Thm: 
+      Let #a:V# and #sym:Sset a->a# be a semiset of generators of a group
+      action on #a#, with closure #orbit:=(\x.<x>.V\xs. xs\x. sym\s. <s x>)#.
+      Suppose #assert_neq:a->a->unit# is a complete apartness relation for #a#
+      in the sense that for #x,y:a# convergent inhabitants,
+      either #orbit x=orbit y# or #assert_neq x y=T#.
+      Let #q:=Quotient a sym assert_neq#.
+      Then #inhab(q)-{T}# is isomorphic to the quotient of #a# by #sym#.
+
+    Takeout: ALT
+      Working in SKJ, let #a# be an type,
+      #test_a# be a test on #a#'s,
+      #Join_a# enumerate #a#'s,
+      and #if_eq_a# be an equality semipredicate on #a#,
+      satisfying the eqivalence relation axioms
+      ###[
+        if_eq_a x x = test_a x
+        if_eq_a x y = if_eq_a y x
+        if_eq_a x z =] Join_a \y. and_semi (if_eq_a x y) (if_eq_a y z)
+      ###]
+      Then we can define a quotient type of #a# modulo #if_eq_a#.
+
+  Open Questions. \label{sec:skj/types:questions}
+
+    Question: Are intro-elim forms definable uniformly from a simple type code?
+
+    Question: Does SKJ have all singleton closures,
+      ie is there for every SKJ-term #m# a closure #unit_m#
+      with inhabitants only #{m,T}#?
+      If so, is this uniformly definable from codes for #m#?
+    Def: Let #M# be a term and define
+      ###[
+        unit_M := Join {a:V | M:a}
+      ###]
+      to be the _principle_type_ of M.
+    Lem: #inhab(unit_M)={M,T}#
+    Pf: Clearly #M,T:unit_M#.
+      Moreover, #M:J M#, so #J M:>unit_M# and
+      every inhabitant of #unit_M# extends #M#.
+      Let #M']]M# be such an inhabitant.
+      Then by definition of H*, there is a term #N# with #N M=_# and #N M'=T#.
+      But #M:V N# so #V N:>unit_M#.
+      Hence #M'  =  unit_M M'  =]  V N M'  =  T#.
+      []
+    Question: For which #M# is #unit_M# definable?
+    For example we already have principle types for #I,T,_,K,F#, namely
+    #unit_I=unit#, #unit_T=nil#, \\
+    #unit_Bot=div#, #P bool (J K)=unit_K#, and #P bool (J F)=unit_F#.
+    Conjecture: #unit_M# is not uniformly definable.
+    Takeout: Pf: Suppose a term #Unit# were SKJ-definable.
+      The the question #x![=M# could be reduced to #Unit M x=T#,
+      which is #Sigma01# XXX not; it is #Pi02# as well.
+      However, 
+    Later in \ref{sec:skjo/types} we show that principle types of SKJ terms
+    are uniformly definable in SKJO.
+

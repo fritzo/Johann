@@ -1,0 +1,193 @@
+
+Background and related work. \label{sec:algorithms/background}
+
+  Takeout: Graphical models and Tree automata.  TODO
+  Takeout: Convex sets of probability distributions.  TODO
+
+  Takeout: Complexity-conscious foundations of math. TODO
+
+    mention Kieffer08
+
+    TODO Discuss foundational vs axiomatic 
+
+    TODO discuss foundational vs. axiomatic systems
+      (eg set theory vs group theory)
+      Show that Johann is co-foundational.
+      refs ???
+
+  Comment: copied from notes/proof/intro.text
+  Forward-Chaining with Equations. 
+
+    Perhaps the first use of forward-chaining in equational theories was the
+    algorithm of Todd and Coxeter Todd36 (more recently Cannon73) for
+    enumerating the cosets of a finitely presented finite group.
+    Given a finitely presented group, say
+    ###d i {-1}
+    ###[
+      <r,s | rr=1, rsrs^i=1, s^4=1>
+    ###]
+    the Todd-Coxeter algorithm starts with a database of relations of the
+    form #x.y=z#:
+    ###[
+      { r.r=1, rsr.s^i=1, s^3.s=1, r.r^i=1, r^i.r=1, s.s^i=1, s^i.s=1 }
+    ###]
+    This database is then EXTENDed by inference rules for each
+    pair #(g,g')# of generators or inverses (e.g. a pair #(r^i,s^i)#):
+    ###u i
+    ###-
+       x . g = xg
+      -------------- Extend-g,g'
+      xg . g' = xgg'
+    ###-
+    It is also necessary to backward-subsume equations following from the rules
+    ###-
+        y = y'                x = x'
+      --------- Reduce-nu   ---------- Reduce-mu
+       xy = xy'              xy = x'y
+    ###-
+    Here it is assumed that substitution and string pattern-matching is
+    automatic.
+    If the presented group is finite, and the database is extended
+    "sufficiently uniformly" (e.g., by breadth-first search), then the
+    database will saturate to have $2|P||G|$ equations, where $|G|$
+    is the order of the group and $|P|$ is the number of generators.
+
+    The Todd-Coxeter algorithm is more natural in the setting of semigroups,
+    and has many generalizations to equational theories of other algebraic
+    structures, e.g., nonassociative- and many-sorted algebras, and even
+    categories (Carmody91,Bush03).
+    For our interests, we will generalize to nonassociative algebras with a
+    join operation (thus single-sorted semilattices).
+    Although the join operation #x|y#, and thus the ordering relation #x[=y#
+    and its negation #x![=y#, is definable (#x[=y <==> x|y=y#), it is much
+    more practical to introduce extra logical inference rules relating the
+    ordering to the equational fragment, as in the term ordering rules below.
+
+    A major limitation of the Todd-Coxeter algorithm is the restriction to
+    finite groups (or other structures).
+    An often-used alternative to Todd-Coxeter is Knuth-Bendix completion
+    based on reduction strategies (Knuth70,Baader99).
+    Our application is concerned with algebraic structures which are not only
+    infinite but also uncomputable in a sense that thwarts also the Knuth-Bendix
+    algorithm, thus we use a probabilistic version of the Todd-Coxeter algorithm
+    as a workaround.
+
+  Kolmogorov-Solomonoff-Chaitin Complexity. 
+
+    In the early 1960's,
+    Ray Solomonoff (in Solomonoff64),
+    Andrey Kolmogorov (in Kolmogorov65), and
+    Gregory Chaitin (in Chaitin66)
+    all independently defined a notion of complexity of binary strings and
+    streams that was based on the size of computer program generating them.
+    In their definition, one assigns a length to each computer program in some
+    model of computation, and defines the _complexity_ #K(x)# of a binary
+    string #x# as the length of the smallest program generating it.
+    The resulting field of Algorithmic Complexity
+    is surveyed in V'Yugin's paper Yugin99
+    and detailed in Li and Vitayni's comprehensive reference Li97.
+
+    The main theorems about algorithmic complexity
+    come from the three inventors different perspectives.
+    Thm: (Kolmogorov) #K(x)# is independent of machine model,
+      up to additive and multiplicative constants.
+    Pf: By Church's Thesis, there is a universal virtual machine and
+      a translator between any two machines.
+      The additive factor accounts for the size of the virtual machine,
+      and the multiplicative factor accounts for the translation blow-up.
+      []
+    Thm: (Chaitin) #K(x)# is computable from below, but not from above.
+    Pf: From below, simply enumerate programs, and add to result when a program
+      converges.
+      From above, we could solve the halting problem by computing Kolmogorov
+      complexity of all binary strings to a given precision.
+      []
+    Chaitin used this result to define a real number whose value was provably
+    uncomputable.
+    Thm: (Solomonoff, Solomonoff78) among all computable Bayesian priors
+      for predicting future values of a binary stream,
+      #exp(-K(x))# is Pareto optimal WRT, say, a zero-one loss loss function.
+    Pf: Follows from machine independence. []
+    Our interest is mostly in Solomonoff's result, as it motivates our proof
+    search and complexity definition.
+    Solomonoff's original interest was in optimally estimating and predicting
+    values in a binary stream.
+    He defined a pseudo-algorithm to do this prediction by running all
+    programs at once, a process now known as Solomonoff Induction.
+    This idea has been generalized to agent systems by Hutter Hutter05,
+    who extends Solomonoff's theorem in many directions.
+
+    One of the problems in applying standard Kolmogorov complexity to our
+    problems is the non-differentiability caused by minimizing over programs.
+    The solution lies in Solomonoff's original application,
+    where the probability of a string was not a minimum of anything,
+    but rather a _sum_ over all program probabilities,
+    where program probabilities are roughly #exp(-program_length)#.
+    This is exactly what motivates our definition of complexity in
+    \ref{sec:algorithms/annealing}.
+
+  Comment: copied from notes/proof/intro.text
+  Simulated Annealing and The Metropolis-Hastings Algorithm. 
+
+    Consider the Monte Carlo problem of sampling a complicated data structure
+    with complicated constraints from a probability distribution.
+    A naive attempt might try to randomly generate such data structures
+    until one satisfying the constraint is found, however for complicated
+    constraints this is often infeasible due to the low probability of
+    satisfaction.
+
+    One class of algorithms to solve this problem are Markov-Chain Monte Carlo
+    (MCMC) algorithms (Jerrum96).
+    MCMC algorithms have been studied since 1950's, when they were used to
+    compute solutions to integral equations for nuclear devices.
+    The general MCMC approach is to start with an example such feasible data
+    structure, and randomly perturb it over time, effectively randomly walking
+    around a state graph of feasible structures.
+    As one walks farther and farther, the distribution over states
+    asymptotically approaches a _steady_state_ distribution.
+    
+    The relationship between the "microscopic" perturbation likelihoods and the
+    "macroscopic" steady state distribution is called _detailed_balance_
+    (Jerrum96), and can be considered the "correctness" statement of such
+    an algorithm.
+    Subject to correctness, it is also important to define the microscopic
+    perturbations and likelihoods so that the _mixing_rate_ is high; that is,
+    so that the initial distribution quickly diffuses and converges to the
+    steady state distribution.
+
+    The MCMC algorithm closest to that employed in the Johann system is the
+    Metropolis-Hastings algorithm (Chib95).
+    This algorithm is characterized by a _pair_ of probability distributions
+    governing perturbation: one to randomly choose a candidate perturbation,
+    and one to decide whether to reject the candidate or proceed.
+    The advantage afforded by the second step is that constraints that are
+    difficult to predict ahead of time may be easy to check given a candidate
+    (think P vs. NP).
+
+    Johann uses an MCMC algorithm to randomly generate a database of theorems
+    in combinatory algebra, where the database is constrained to be saturated,
+    and the database should be relevant to a specified goal, on average.
+    (This will be explained in more detail below.)
+    The point of divergence from the pure Metropolis-Hastings algorithm is that
+    the database is expanded by a randomly chosen term, but the rejection step
+    is allowed to remove any existing term, not just the latest-added.
+
+    The MCMC method can be applied to a maximization problem by treating the
+    objective function as a likelihood distribution and randomly sampling from
+    the distribution.
+    The resulting sample will thus likely have a large value of the objective
+    function.
+    More generally, given an objective function #f:X->[0,1]# on the space of
+    structures #X#, we can define a _temperature_-parameterized family
+    #f^beta(-)# of likelihood distributions (where #beta=1/tau# is the inverse
+    temperature).
+    The higher the temperature, the more #f# is smoothed-out, and the easier it
+    is to randomly walk around the space.
+    The lower the temperature, the sharper #f# is, and the more likely a random
+    sample #x# will have a high value of #f(x)#.
+    To achieve a large value of #f#, one strategy is to walk around from the
+    starting position at high temperature (to mix), and slowly decrease the
+    temperature until a large value of #f# is found (to maximize).
+    This strategy is called _simulated_annealing_, in analogy to the process
+    of slowly cooling metals to achieve a solid which maximizes grain size.
+

@@ -1,0 +1,52 @@
+
+Vectors. \label{sec:skj/vectors}
+  ###<
+    !import sk/misc skj/types skj/nats.
+  ###>
+
+  We begin with some utilities for singletons and pairs.
+  ###<
+    mk_sgtn := (any->sgtn) (\x. <x>).
+    mk_pair := (any->any->sgtn) (\x,y. <x,y>).
+    mk_Sgtn := V (/\a:V. a -> Sgtn a) (\x. <x>).
+    mk_Pair := V (/\a:V,b:V. a -> b -> Prod a b) (\x,y. <x,y>).
+    !check mk_sgtn = mk_Sgtn _.
+    !check mk_pair = mk_Pair _ _.
+  ###>
+  The implementation for concatenation is uniform across tuple lengths:
+  ###<
+    cat := (\t,t',z. t'(t z)) ## = B'#, i.e., precomposition
+  ###>
+  but we wrap for safety
+  ###<
+    cat_11 := (sgtn->sgtn->prod) B'.
+    Cat_11 := V (/\a:V. Sgtn a -> Sgtn a -> W Prod a) B'.
+  ###>
+  To concatenate longer tuples we will need a general tuple type.
+
+  General tuples. 
+    First we need semisets of tuples
+    ###<
+      emptiset_n := V (/\n:num. semiset) <Bot>.
+      semiset_n := V (\
+      tuple := (nat->V) (
+          ???
+      ).
+    ###>
+    and polymorphic variants
+    ###<
+      emptiset_n := V (/\n:num. semiset) <Bot>.
+    ###>
+
+    As defined in section \ref{sec:skj/untyped},
+    ###<
+      mk_tup := type (/\n:nat. tuple n) mk_tuple.
+    ###>
+
+    ###<
+      sel := (nat -> /\m:nat. tuple m -> any) (
+        XXX #is this right?
+        \n,m. n K (n<_>)*(m K) _
+      ).
+    ###>
+

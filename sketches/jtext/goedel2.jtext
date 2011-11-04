@@ -1,0 +1,151 @@
+
+Goedel Numerals. \label{sec:lib/numerals}
+  ###<
+    !skim lib/types
+    !skim lib/tests
+  ###>
+
+  Non-polymorphic Goedel numerals satisfying #num=(num->a->a)->a->a#
+  ###-
+    n:num   f:num->a->a   x:a
+    ------------------------- num--type
+            n f x:a
+  ###-
+  ###<
+    num := close (???).
+    test_num := Test num (\_,x.x, success).
+  ###>
+
+  basic operations
+  ###<
+    zero := num (\_,x.x).
+    succ := Endo num (\n,f,x.f n.n f x).
+    pred := Endo num (\n',_.n', error).
+    !check pred*succ = num.
+  ###>
+  tests
+  ###<
+    is_zero := num->bool (\_,_.false, true).
+    nonzero := num->bool (\_,_.true, false).
+  ###>
+  Goedel's recursor now has a very simple form
+  ###<
+    Seq := close->close (\a. num->a).
+    seq := num->any.
+    Rec := (/\a:close. Endo. Seq. Endo a) (\_,f,n.n f).
+    rec := (\f,n:num.n f).
+    !check (/\a:close.f:num->a->a. (rec f:num->a->a)).
+  ###>
+  Note that our choice of order of arguments led to the recursor mapping
+  sequences of functions to sequences of functions.
+
+  Relation to Church numerals
+  ###<
+    iterate := num->nat (\n,f.n.K f).
+    !check (/\n:num,a:close,f:a->a. (iterate n f:a->a)).
+  ###>
+
+  Applications. 
+    Arithmetic
+    ###<
+      add := Sym_bin_op num (???).
+      mul := Sym_bin_op num (???).
+      pow := Bin_op num (???).
+      factorial := Endo num (???).
+      fibonacci := Endo num (???).
+    ###>
+
+    The n-tuple type can now be written
+    ###<
+      Tuple := close->num->close (\a,n. n':=pred n. iterate n' (Prod a) a).
+      tuple := num->close (\n. n':=pred n. iterate n' pair any).
+      !check Tuple 0 a = nil.
+      !check Tuple 1 = close.
+      !check Tuple 2 = Pair.
+    ###>
+    Criticism: this was already possible with church numerals:
+      ###[
+        Tuple := close->nat->close (\a,n. n (Prod a) unit).
+      ###]
+      with inhabitants like #[x,y,z]:=<x,<y,<z,I>>>#.
+
+    The choice of type for Goedel numerals applies to general coalgebras.
+    Consider a polymorphic specification #Nat=/\a.mu n.(n->a->a)->a->a#.
+    (This specification is too weak and allows terms such as
+    #\f:(Num a)->a->a,x:a.f zero(f zero x)x#)
+    Here the polynomial functor is #F(n)=n+1#, whence we note
+    ###(
+      (n->a->a)->a->a &== (Prod (n->a->a) a) -> a
+                      &== (Prod ((Prod n a)->a) a) -> a
+                      &== ((Sum (Prod n a) 1)->a)->a
+    ###)
+    The general raw coinductive type is
+    ###[
+      functor := close->close.
+      Coalg := close & (Sub. functor->close->close) (
+          \f,a.
+          Y\b.
+          2 (Of a).
+          f b
+      ).
+    ###]
+    which requires a Goedel--style recursor
+    ###[
+      Rec := (/\f:functor,a:close. b:=Raw f a. (b->a->a)->a).
+    ###]
+    The recursor can be built into the original type by instead defining
+    ###[
+      Coalg' := close & (Sub. functor->close->close) (
+          \f,a.
+          Y\b.
+          2 (Of a).
+          f. Prod b a #XXX is this right?
+      ).
+    ###]
+    For example, the natural tree type corresponds to the functor
+    #F(b)=Maybe(Prod b b) =1+(b**b)#,
+    which gives the weak specification
+    #t:=Tree a.(t = a->(Pair (Prod t a))->a)#.
+  
+  An Argument for Goedel Types. 
+    Which are more natural:
+    (i) Church types,
+    (ii) Coalgebraic types, or
+    (iii) Goedel types.
+
+    For concreteness, consider the three types of naturals
+    ###[
+      /\a:close. (a->a)->a->a           #Church
+      /\a:close. mu n. (n->a)->a->a     #algebraic
+      /\a:close. mu n. (n->a->a)->a->a  #Godel
+    ###]
+    Both polymorphic Church numeral and coinductive numerals (see (R1)) are
+    definable in system F, but Goedel numerals are not.
+    All three are SKJ-definable.
+    Conversion  from Goedel to the others is easy, but the reverse conversions
+    are difficult.
+    Church types are certainly convenient, but the predecessor is ugly.
+    Coalgebraic types lead to simple numerals, but using them is difficult
+    (generally requiring the #Y# combinator).
+    Godel numerals provide all the functionality of Church and algebraic
+    numerals, but lead to complicated numerals.
+
+    Notice the tradeoff between complexity of _data_ (e.g. numerals) and
+    _operations_ on the data.
+    The same tradoff has been noticed for codes in (R2-6).
+    Coalgebraic types lead to simple data, Godel types lead to simple functions,
+    and Church types are inconsistently make some operations simple
+    (iteration) and others complicated (predecessor).
+    Which should be minimized?
+
+    The motivation in learning theory is to search for functions operating on
+    existing data.
+    Here the data is pre-processed and provided.
+    Thus to minimize the learner's search space, the best data format is the
+    data easiest to use: preprocessing helps.
+
+    Thus we generally prefer Goedel types in Johann.
+    
+(R1) "Recursion for free" -Wadler
+(R2-5) from Barendregt's "descriminating lambda terms" note
+

@@ -1,0 +1,265 @@
+
+
+Axioms for basic combinators. \label{sec:axioms/combinators}
+  ###<
+    !read axioms/order.
+  ###>
+
+  Axiom Schemata. 
+    A few axiom schemata are hard-coded in Johann: beta-reduction
+    ###-
+      -------   ------------   ---------   -------------
+      I x = x   Y g = f(Y f)   K x y = x   W x y = x y y
+
+      ----------------   ---------------   ------------------
+      B x y z = x(y z)   C x y z = x z y   S x y z = x z(y z)
+    ###-
+    and some #eta# schemata, including two fixed-point schemata for #Y#
+    ###-
+                                  y = S I y      f x [= x   
+        --------------- B-assoc   --------- Y1   -------- Y2
+        x*(y*z)=(x*y)*z             y = Y        Y f [= x
+    ###-
+    where #(Y2)# is just a pointwise version of #(Y1)#.
+    (The #(Y1)# rule was proved independently by Bohm and van der May;
+    see Barendregt84 Lemma 6.5.3)
+
+  Axioms for extensionality. 
+    First let us define all other atoms in terms of #S# and #K#.
+    ###<
+      !assume I = S K K.
+      !assume F = K I.
+      !assume B = S(K S)K.
+      !assume C = S(S(K B)S)(K K) = S(B B S)(K K).
+      !assume W = C S I.
+      !assume Y = S B B'(W I) = B(W I)(B'.W I).
+      !assume Y = S(B'.W I)(B'.W I).                #a la Rosenbloom
+      !assume Y = B(S I)(W I)(B(S I).W I).          #a la Turing
+      !assume Y = S S K(S(K.S S.S.S S K)K).         #a la Tromp (see Tromp02)
+    ###>
+
+    For extensionality we need beta-reduction to commute with
+    Curry's bracket abstraction algorithm, ie, #M->>N ==> \x.M=\x.N#.
+    This entails
+    * #beta#-reducuction axioms,
+      where each reduction leads to an #eta# axiom, and
+    * (bracket) abstraction axioms,
+      so that the abstraction algorithm commutes with #beta#-reduction.
+    First, the #beta#-reduction axioms ensure that #M->>N ==> M=N#.
+    ###<
+      !assume 0 x y = y.      #i.e., #F x y = y.
+      !assume 1 x y = x y.    #i.e., #I x = x.
+      !assume 2 x y = x(x y). #i.e., #W B x = x*x.
+      !assume K x y = x.
+      !assume W I x = x x.
+      !assume W x y = x y y.
+      !assume B x y z = x(y z).
+      !assume C I x y = y x.
+      !assume C x y z = x z y.
+      !assume S x y z = x z(y z).     #very expensive!
+      !assume Y x = x(Y x).
+      !assume B' x y z = y(x z).
+      !assume S' x y = (x y)*x.
+      ####!assume S' x y z = x y(x z).    #very expensive!
+      ####!assume Phi a f g x = a(f x, g x).
+      ####!assume Psi a f x y = a(f x, f y).
+      ####!assume Jay w x y z = w x(w z y).
+    ###>
+    Second, the abstraction axioms ensure that #M->>N==>\x.M=\x.N#.
+    We extend Hindley's extensionality proof (Hindley67)
+    to the (bracket) abstraction algorithm #S,K,I,B,C,W,eta#
+    compiling #\x.M# by the following rules
+    Html Only: 
+      ###a
+        rule  \x.M              condition
+        -------------------------------------------------------------------
+        K     K M               if x not free in M
+        I     I                 if M == x
+        ----------------------- otherwise M = M' M'' is an application:
+        eta   M'                if M'' == x
+        B     B M'(\x.M'')      if x free in M'' but not M'
+        C     C(\x.M')M''       if x free in M' but not M''
+        W     W(\x.M')          if x free in M' and M'' = x
+        S     S(\x.M')(\x.M'')  if x free in M' and M'' and M'' != x
+      ###a
+    Latex Only: 
+      \begin{quote} \begin{tabular}{ l @{{\hspace{5mm}}} l @{{\hspace{5mm}}} l}
+      rule    &#\x.M#             &condition \\ \hline
+      #K#.    &#K M#              &if #x# not free in #M# \\
+      #I#.    &#I#                &if #M == x# \\
+              &                   &otherwise #M = M' M''# is an application: \\
+      #eta#.  &#M'#               &if #M'' == x# \\
+      #B#.    &#B M'(\x.M'')#     &if #x# free in #M''# but not #M'# \\
+      #C#.    &#C(\x.M')M''#      &if #x# free in #M'# but not #M''# \\
+      #W#.    &#W(\x.M')#         &if #x# free in #M'# and #M'' = x# \\
+      #S#.    &#S(\x.M')(\x.M'')# &if #x# free in #M'# and #M''# and #M'' != x#
+      \end{tabular} \end{quote}
+    each abstraction axiom identifies a pair of paths through this algorithm,
+    which are not otherwise independent of beta reduction.
+    E.g., for #M->>N#, certainly #FV(N)(=FV(M)#,
+    but #x# may appear free in #M# but not #N#.
+    ###<
+      !assume K(a b)       ## \x.a b
+          = C(K a)b        ## K<<-B
+          = B a(K b)       ## K<<-C
+          = S(K a)(K b).   ## K<<-S
+
+      !assume I            ## \x.x
+          = C K a          ## I<<-C
+          = W K            ## I<<-W
+          = S K a.         ## I<<-S
+
+      !assume a            ## \x.a x
+          = B a I          ## eta<<-B
+          = B I a          ## eta<<-B
+          = W(K a)         ## eta<<-W
+          = S(K a)I        ## eta<<-S
+          = S(K I)a.       ## eta<<-S
+    ###>
+    ###<
+      !assume B a b        ## \x.a(b x)
+          = S(K a)b.       ## B<<-S
+
+      !assume C a b        ## \x.a x b
+          = S a(K b).      ## C<<-S
+
+      !assume W a          ## \x.a x x
+          = S a I.         ## W<<-S
+    ###>
+    In addition to the "syntactic schemata" above, Hindley's finite
+    axiomatization of strong reduction requires a semantics of the closure
+    operation on equations.
+    The simplest such closure would be
+    ###[
+      closure(M=N) = {\x1,...,xn.M = \x1,...,xn.N}
+    ###]
+    where #{x1,...,xn}=FV(M)+FV(N)#.
+    For example from above,
+    ###[
+      closure(K(a b)=B a(K b)) = {\a,b.K(a b) = \a,b.B a(K b)}
+    ###]
+    where as always #\x.M# is the bracket abstraction of #x# out of #M#.
+
+    Hindley's closure operation produces a set of equations, each of which must
+    be "assumed".
+    The set is constructed by allowing each free variable to also be
+    "wrapped" in a fresh free variable, so, e.g.,
+    ###[
+      closure(K(a b)=B a(K b)) = {
+          \a,b.K(a b) = \a,b.B a(K b),                #neither are wrapped
+          \f,a,b.K(f a b) = \f,a,b.B(f a)(K b),       ##a# is wrapped
+          \f,a,b.K(a(f b)) = \f,a,b.B a(K(f b)),      ##b# is wrapped
+          \f,a,b.K(f a(f b)) = \f,a,b.B(f a)(K(f b))  #Sub are wrapped
+      }
+    ###]
+    As the combinatory axioms form the core of Johann, and proof search
+    capabilities are limited, we use a much stronger closure semantics.
+    Our closure is in two parts: first a wrapping operation of order
+    $m=2^{|FV|}$ and then a mapping operation of factorial order, where every
+    permutation and combination of variables is considered.
+    Extending the example above, the first operation yields
+    ###[
+      wrap(K(a b)=B a(K b)) = {
+          K(a b) = B a(K b),              #neither are wrapped
+          K(f a b) = B(f a)(K b),         ##a# is wrapped
+          K(a(f b)) = B a(K(f b)),        ##b# is wrapped
+          K(f a(f b)) = B(f a)(K(f b))    #Sub are wrapped
+      }
+    ###]
+    simply the open versions of Hindley's, and the second operation yields,
+    say on the second in the list
+    ###[
+      closure(K(f a b) = B(f a)(K b)) = {
+        \{f,a,b}.K(f a b) = \{f,a,b}.B(f a)(K b), #6 permutations of #{f,a,b}
+        \{x,b}.K(x x b) = \{x,b}.B(x x)(K b),     #2 permutations when #f=a=x#
+        \{x,a}.K(x a x) = \{x,a}.B(x a)(K x),     #2 permutations when #f=b=x#
+        \{x,f}.K(f x x) = \{x,a}.B(f x)(K x),     #2 permutations when #a=b=x#
+        \x.K(x x x) = \x.B(x x)(K x)              #the case when all coinincide
+      }
+    ###]
+    This closure semantics is prohibitively expensive for large numbers of
+    variables, say four or more (see Sloan's
+    \href{http://www.research.att.com/~njas/sequences/A000670}{A000670},
+    Sloan08)
+    Html Only: 
+      ###a
+        number of free vars  0  1  2   3   4    5     6      7
+        -----------------------------------------------------------
+        number of closures   1  3  13  75  541  4683  47293  545835
+      ###a
+    Latex Only: 
+      \begin{quote} \begin{tabular}{ r  c  c  c  c  c  c  c  c }
+      number of free variables  & 0 & 1 & 2 & 3 & 4 & 5 & 6 & 7
+      \\\hline
+      number of closures & 1 & 3 & 13 & 75 & 541 & 4683 & 47293 & 545835
+      \end{tabular} \end{quote}
+    so axioms involving a large number of variables should be partially
+    abstracted by hand.
+    This was done in the reduction axiom for #S'# above,
+    where the variable #z# is abstracted from the schema #S' x y z=x y(x z)#
+    to yield the simpler #S' x y=(x y)*x#.
+
+    In this semantics,
+    Johann's most expensive axioms all involve three variables
+    * the #S# axiom #S x y z=x z(y z)# costing 221 obs;
+    * the #J# linearity axioms
+      #J(x y)(x z) [= x(J y z)# and #J x y z=J(x z)(y z)#
+      costing 216 and 173 obs, respectively
+      (see \ref{sec:axioms/join});
+    * the associativity of composition axiom
+      ###<
+        !assume x*(y*z) = (x*y)*z.
+      ###>
+      costing 131 obs; and
+    * the #B# axiom #B x y z=x(y z)# costing 119 obs;
+    * the #C# axiom #C x y z=x z y# costing 83 obs.
+
+  Relations to other axiomatizations of eta. 
+
+    Barendregt's axioms for extensionality are immediately satisfied
+    (see Barendregt84, pp. 158-161):
+    ###<
+      !check S B(K I) = I.            # $SKIBC\eta = SKIBC$
+      !check S(K x)(K y) = K(x y).    # $SKI ( = \lambda^*) = \lambda_1$
+      !check S(K x)y = B x y.         # $SKIB = SKI$
+      !check S x(K y) = C x y.        # $SKIBC = SKIB$
+    ###>
+
+    Hindley's axioms for strong reduction are immediately satisfied
+    (see Hindley67):
+    ###<
+      !check S x y z = (x z)(y z).
+      !check K x y = x.
+      !check I x = x.
+      !check S(K x)I = x.
+      !check S(K x)(K y) = K(x y).
+      !check S(K I) = I.
+      !check x = x.
+    ###>
+
+    The Meyer-Scott axiom is immediately satisfied (see Barendregt84, pp. 95):
+    ###<
+      !check S(K I) = I.
+    ###>
+
+  Derived properties. 
+
+    Definitions of common combinators
+    ###<
+      !check 2 = W B.
+      !check B' = C B.
+      !check Delta = W I.
+      !check Phi = (B S)*B.
+      !check Psi = W*(B C)*(B.B B)*B.
+      !check Jay = S C*(W B.B B)C.
+    ###>
+    Alternate definitions
+    ###<
+      !check 2 = W B'.
+      !check S = Phi I.
+      !check S' = Psi I.
+      !check Y = (\x,f. f(x x f))(\x,f. f(x x f)).
+      !check Y = (\f. (\x. f(x x))(\x. f(x x))).    ## = S(B'.W I)(B'.W I)
+      !check Y = W S(B' Delta).
+    ###>
+

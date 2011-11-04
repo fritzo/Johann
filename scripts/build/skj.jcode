@@ -1,0 +1,78 @@
+
+!log Building a database for SKJ.
+!restart
+!set size = 4000        #with ~2100 obs in core
+!set time-scale = 4000  #with ~1500 obs in theory
+!stop resting
+!set loudly
+
+!log Defining a basis...
+!using inl inr J'. #for sum,sset
+!using J U V P div semi unit bool Simple prod sum maybe sset.
+#!using term test_term Red.
+!set P_app = 0.374992
+!set P_comp = 0.198589
+!set P_join = 0.1 #0.0569286
+!think in
+    B       @ 1,
+    C       @ 1.30428,
+    C B     @ 1.35451,
+    C I     @ 1.74145,
+    I       @ 2.21841,
+    Y       @ 2.2918,
+    K       @ 2.6654,
+    S       @ 2.69459,
+    J       @ 2.81965,
+    V       @ 2.87327,
+    div     @ 3.06752,
+    S B     @ 3.5036,
+    P       @ 3.69204,
+    F       @ 3.72682,
+    S I     @ 4.12483,
+    semi    @ 4.18665,
+    W       @ 4.36313,
+    unit    @ 4.3634,
+    W B     @ 4.3719,
+    bool    @ 5.21614,
+    W I     @ 6.21147,
+    U       @ 6.3754,
+    Simple              @ 10,
+    prod,sum,maybe,sset @ 12.
+    #term,test_term      @ 16,
+    #Red                 @ 20.
+
+!log Defining a theory...
+!read axioms/order axioms/combinators axioms/eta axioms/diverge.
+!validate
+!recheck
+
+!read axioms/join axioms/idem axioms/close axioms/power.
+!validate
+!recheck
+
+!read axioms/div axioms/types axioms/tests.
+!validate
+!recheck
+
+!read skj/nats skj/numerals.
+!validate
+!recheck
+
+#!read skj/terms.
+#!validate
+#!recheck
+
+#!mark
+!save skj
+
+!log Starting to think...
+!set density = 0.85
+!start resting
+!start thinking
+!64 think
+!think about theory
+!recheck
+!save
+
+!listen
+

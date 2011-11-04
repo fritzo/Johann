@@ -1,0 +1,101 @@
+#Extended help for Johann 0.9.0:
+  !command [optional args]  #(alternate name) does something
+# help
+  help / ?brief / ?  #prints this page
+  ?full / ??         #prints full command list
+  ?syntax            #prints syntax help
+  license            #prints license (GPL3)
+# system
+  exit/quit/CTRL+D          #exits system
+  !restart                  #restarts the system
+  !save/load <filename>     #saves/loads brain to/from file cores/filename
+  !import/read <filenames>  #quickly imports/thoroughly reads script files
+  !validate [<num>]         #validates entire system [at level 1--5]
+  !test                     #runs function tests
+  !dump [obs|eqns] <fname>  #dumps structure to human-readable file cores
+  !send [lang|eqns]         #sends langauge and/or equations to server
+  !listen                   #gives control to console   (useful in scripts)
+  !log <message text>       #writes message to log file (useful in scripts)
+# language
+  !lang                      #prints current language
+  !using <names>.            #ensures basis contains given atom
+  !with <ob>. !command       #(w) runs command only when using atom
+  !without <ob>. !command    #(wo) runs command only when not using atom
+  !define <name> := <expr>.  #adds atom to basis, recognized as expr
+  !define <name> := ???.     #removes atom from basis
+  !extend/retract <expr>.    #extends/retracts language by expression
+# context
+  !ls [basis|context]  #prints atoms and/or defined variables
+  <name> := <expr>.    #adds definition to context
+  let <patt> := expr.  #adds patterned definition to context
+  !write <filename>    #writes theory+context to scripts/user/filename
+  !clear               #clears context and theory
+# expression manipulation
+  <expr>.                    #prints expression (see ?syntax)
+  !comb <expr>.              #(C) compile to combinator form
+  !pretty <expr>.            #(P) decompile to pretty form
+  ![nat] reduce <expr>.      #(R) compile ; reduce [nonlin steps]
+  ![nat] sample <expr>.      #compile ; sample [nonlin steps]
+  ![int] expand <expr>.      #(E) compile ; normalize ; subs defs
+  ![int] compress <expr>.    #compile ; normalize ; match defs
+  ![float] simplify <expr>.  #(S) compile ; norm. ; grok [at energy]
+  !grok <expr>.              #(G) fully grok an expr (add it to db)
+  ![<expr>].                 #fully grok an expr (add it to db)
+  !express <expr>.           #(X) expresses in terms of basic constants
+  !size <expr>.              #prints size of an expression
+  !props <expr>.             #describes known properties of an ob
+  !simplest [<num>]          #prints list of num simplest obs in brain
+  !relevant [<num>]          #prints list of num most relevant obs in brain
+  !sketchy [<num>]           #prints list of num sketchiest obs in brain
+# statement manipulation
+  <stmt>.          #prints statement (see ?syntax)
+  !normal <stmt>.  #(N) translates to query normal form
+# theory
+  <stmt>?              #prints current truth-value of statement
+  !assume <stmt>.      #assumes (universal closure of) statement
+  !check <stmt>.       #checks (universal closure of) statement
+  !recheck             #reviews axioms and theorems ; rechecks all problems
+  !problems            #prints all unverified statements
+  !errors              #prints all failed statements, saves to errata.jtext
+  !clear               #clears theory and context
+  !conjecture [<num>]  #conjectures a few unproven [= relations
+  !solve <stmt>.       #(s) solves a statement for a free variable (faster)
+  !solve' <stmt>.      #(s') solves for a free variable (more thoroughly)
+  !start/stop proving  #starts/stops maintaining proof information
+  !mark/unmark [expr]  #marks/unmarks all [or one] exprs as un-deletable
+# thinking
+  !think about <name>      #thinks about definition
+  !think about context     #thinks about all definitions
+  !think about theory      #thinks about axioms, theorems, and problems
+  !think about everything  #thinks about random terms
+  !think about reducing    #(ta _) thinks about reducing interesting obs
+  !think about <exprs>.    #(ta _) thinks about the expressions
+  !think in <expr pmf>.    #sets language to a  given  pmf of exprs
+  !start/stop thinking     #starts/stops background process thinking
+  !start/stop resting      #whether I rest when I want to
+  ![nat] think             #thinks for one or more cycles (expand-contract)
+  !nap/rest                #slow/slower self-optimization functions
+  !todo                    #shows unfinished definitions
+# statistics
+  !stats       #prints database statistics
+  !win/map     #writes stats page/saves map for jmapper
+  !plot        #plots functions to file stats/funs_of_eps
+  !<num> plot  #plots with <num> datapoints from [0,1]
+  !perturb     #writes perturbation matrix to file stats/filename.out
+# parameters
+  !set                        #(params) prints system parameters
+  !set <param>                #sets a paramter:
+  !set size = <num>           #brain size (in obs = concepts)
+  !set steps = <num>          #default number of reduction steps
+  !set quietly | loudly       #for reading files
+  !set linear | nonlinear     #for reduction
+  !set typed | untyped        #for reduction
+  !set small/large parse      #parse to theory vs. lexicon
+  !set density = <float>      #desired ord table density before resizing
+  !set granularity = <nat>    #number of deletions per thought cycle
+  !set time scale = <nat>     #number of deletions per rest cycle
+  !set temperature = <float>  #(temp) annealing temperature
+  !set elegance = <float>     #prevents over-fitting in basis optimization
+  !set P_app = <weight>       #sets applicaiton-size parameter P_app
+  !set P_comp = <weight>      #sets composition-size parameter P_comp
+  !set P_join = <weight>      #sets join-size parameter P_join

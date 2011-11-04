@@ -1,0 +1,280 @@
+
+Annealing a database of interest. \label{sec:algorithms/annealing}
+  
+  This section describes Johann's algorithm for randomly annealing a database,
+  when motivated to simplify a corpus of terms.
+  The main theorem is a _detailed_balance_ theorem,
+  relating the microscopic operations of adding and removing obs
+  to the macroscopic fitness of the database.
+  We have also looked at more precise motives to accumulate evidence for
+  automated conjecturing, but these turned out to too computationally expensive
+  for pracitical purposes.
+  In defining the motive we do implement, we make some linearization
+  approximations to achieve an easily computable sum-product representation.
+
+  At the core of Johann is a database of facts about combinators.
+  The database represents knowledge in three main data structures:
+  a support (a time-varying set of say 1K--12K obs or equivalence classes),
+  a application table
+  (a multiplication table for the function-value application operation),
+  and true/false/unknown-valued order table
+  for the partial order relation #[=#.
+  The application table and partial order table
+  both require space quadratic in the number of obs.
+
+  Johann acquires knowledge by
+  randomly adding and removing obs from the support,
+  saturating the database at each step.
+  To specify what knowledge to accumulate we specify a _motive_,
+  in the form of a pair of probability distributions #e(l,r),c(a)#,
+  from which random lhs-rhs pairs are drawn to extend the support,
+  and from which random obs are drawn for removal, to contract the support.
+  This pair of distributions is chosen so that the steady-state distribution
+  over databases favors interesting databases
+  (depending on our notion of interesting).
+
+  Expanding and Contracting the Database. 
+
+    A database's _support_ consists of a few (#~10#) basic atoms
+    (e.g., #S,K,J#),
+    a small number (#~200-2000#) of terms used in axiomatizing our theory, and
+    a variable set of other terms (#~1000-10000#).
+    Following Lakatos' terminology of the _hard_core_ of a scientific theory
+    Lakatos76,
+    we call the fixed axiomatization portion of the database the _core_;
+    all possible databases in a given theory extend the minimal core.
+
+    We consider two kinds of mutations to the database: _expansion_, by adding
+    to the support random applications of existing terms, and _contraction_, by
+    removing from the support randomly selected terms.
+    Expansions and contractions are balanced to keep the database support
+    within some size window.
+    Because of the equational theorem proving in forward-chaining, "expansions"
+    may sometimes _decrease_ the size of the support, by creating proofs
+    that existing pairs of terms are equal, and should be merged.
+
+    Suppose we have a notion #R(db)# of relevance of databases,
+    and a corresponding notion of relevance of an ob WRT a database:
+    ###a
+                R(db+x)
+      R(x;db) = -------
+                 R(db)
+    ###a
+    To specify mutation likelihoods WRT relevance,
+    we need a pair of distributions from which to sample,
+    say #e(l,r)# to expand and #1/c(x)# to contract
+    (we use the inverse so that #c# and #e# both increase with relevance):
+    ###a
+      e(l,r) = "simple estimate of R(l r;db)"
+      c(x)   = "remainder of R(x;db) not accounted for in Sum lr=x. e(l,r)"
+    ###a
+    The statement of correctness for random backward-chaining is now a
+    detailed balance statement for the expansion and contraction mutations:
+    Def: (Detailed Balance) An expansion-contraction pair #e(l,r),c(x)# shows
+      _detailed_balance_ iff state-transitions are proportional to relevance,
+      i.e., for every #db# (extending the core) and term #x in db#
+      (outside the core),
+      ###a
+         R(db)
+        -------   =  c(x) Sum lr=x in db. e(l,r)
+        R(db-x)
+      ###a
+    Note that the restriction to databases extending the core is not a problem,
+    as we can simply restrict and renormalize the steady-state distribution
+    #pi#.
+    Our proofs for various #e,c# pairs will have the form
+    Proof Template: (Correctness)
+      Let #x in db# be a term outside the core, and #db' := db-x#.
+      Then
+      ###a
+        c(x) Sum l r=x in db. e(l,r)  =  ...algebra...  =  R(x)
+      ###a
+
+    In constructing specific #e,c# pairs, we need to rewrite the macroscopic
+    relevance ratio in two different microscopic forms:
+    * for expansion, where #l,r in db# but #lr# is not; and
+    * for contraction, where #x in db#.
+    We prove correctness for a generic class of #e,c#-pairs as follows.
+    Thm: (Generic Detailed Balance) Suppose an expansion-contraction pair
+      #e(l,r),c(x)# satisfies
+      (1) #e(l,r)# is positive for every #l,r in db#;
+      (2) #e(l,r)# is independent of whether #lr# is in the database; and
+      (3) #c(x)# is defined by
+        ###a
+                                   R(x;db)
+          c(x) = ----------------------------------------------
+                 Sum l,r in db. if lr=x and l!=x!=r then e(l,r)
+        ###a
+      Then #e(l,r),c(l,r)# shows detailed balance.
+    Pf: It is sufficient to show that
+      ###a
+                Sum l,r. if lr=x                  e(l,r)  #evaluated in db
+        const = ----------------------------------------
+                Sum l,r. if lr=x and l!=x!=r then e(l,r)  #evaluated in db+x
+      ###a
+      for some constant independent of the database.
+      Here two sums and two values #e(l,r)# are different, since they are
+      evaluated in different databases, the numerator in the original #db#,
+      and the denominator in the extended #db+x#.
+
+      Since this is a statement about steady-state databases, we may assume
+      that no new theorems were found in expanding by #x# (besides those
+      explicitly mentioning #x#.
+      Under this assumption, the two sums indeed have the same domain.
+
+      Finally condition (2) guarantees that the two evaluations of #e(l,r)#
+      are within a constant factor.
+      []
+    Subject to correctness (i.e., that together #e,c# account for all of #R#)
+    the more accurate #e(l,r)# is, the higher the mixing rate will be, and the
+    faster proofs will be found; that is: it's better to know how to look for a
+    proof with #e(l,r)#, than to only know one when you see it with #c(x)#.
+    But accuracy must not come at the expense of computability: #e(l,r)# must
+    be easy to sample from; e.g., it would be nice if #e# factored into
+    ###a
+      e(l,r) = e_L(l) e_R(r) (1-e_rej(l,r))
+    ###a
+    where the rejection probability #e_rej# is usually not too close to one.
+    We now examine a few versions of expansion-contraction pairs,
+    exercising the freedom of the #e-c# tradeoff.
+   
+    Subject to correctness (i.e., that together #e,c# account for all of #R#)
+    the more accurate #e(l,r)# is, the higher the mixing rate will be, and the
+    faster proofs will be found; that is: it's better to know how to look for a
+    proof with #e(l,r)#, than to know one when you see it with #c(x)#.
+    But accuracy must not come at the expense of computability: #e(l,r)# must
+    be easy to sample from; e.g., it would be nice if #e# factored into
+    ###a
+      e(l,r) = e_L(l) e_R(r) (1-e_rej(l,r))
+    ###a
+    where the rejection probability #e_rej# is usually not too close to one.
+    We now examine a few versions of expansion-contraction pairs,
+    exercising the freedom of the #e-c# tradeoff.
+
+  Annealing to simplify a corpus of terms. 
+
+  \newcommand \expect {\operatorname{\mathbb E}\limits}
+
+    The motive we will examine for annealing a database
+    is the motive to simplify a term,
+    or more generally to simplify a corpus of terms.
+    Let #C# denote a corpus, say a weighted set,
+    or a probability mass function (pmf) over some set of terms.
+    First we need a notion of complexity of obs in the database.
+    Def: The syntactic _probability_ $P(#M#)$ of an intensional term #M#
+      database is defined by the probabilistic inference rules
+      ###-
+        x in basis              x term   y term
+        ---------- P_basis(x)   --------------- P_app
+          x term                   x y term
+      ###-
+      so that, eg, #P(S K K) = P_app^2 P_basis(S) P_basis(K)^2#.
+      The semantic _Solomonoff_probability_ $P(#x#)$ of an ob in the database
+      is the sum over syntactic terms #M# in its equivalence class
+      \[
+        P(#x#) = \sum_{#M=x#} P(#M#)
+      \]
+    The sum-product form of Solomonoff probability allows us to efficiently
+    compute it as the fixed-point of a contraction equation
+    \[
+      P(#x#) = #P_basis(x)# + #P_app# \sum_{#l r=x#} P(#l#) P(#r#)
+    \]
+
+    Now given a corpus $C$,
+    we define the steady-state distribution $\pi(#db#;C)$ of the
+    database to be proportional to relevance:
+    Def: The _relevance_ of a database for simplifying a corpus is
+      a real number
+      \[
+        R(#db#;C) = \prod_{c\in C} P(c;#db#)^{C(c)}
+      \]
+      where $P(c;#db#)$ is the Solomonoff probability of the ob $c$
+      as evaluated in a database #db# (#c# is assumed to be in the database),
+      and $C(c)$ is the weight given by the corpus $C$ to the ob $c$.
+    At steady-state we want the database to be relevant,
+    so consider the transition probabilities of adding / removing a term #x#.
+    We factor these probability ratio from a macroscopic function of the
+    database to a mesoscopic product of sums of combinatory expressions #M#
+    and expressions #M[x]# with specifiec occurrences of #x#,
+    and finally into microscopic effects of sigle terms #R(x)#.
+    Latex Only: 
+      \begin{align*}
+        \frac{R(#db+x#;C)}{R(#db#;C)}
+          &= \prod_{c\in C} \frac{P(c;#db+x#)^{C(c)}}
+                                 {P(c;#db#  )^{C(c)}}  \\
+          &= \prod_{c\in C}
+              \left(
+                \frac{\sum_{#M#=c\in #db+x#} P(#M#)}
+                     {\sum_{#M#=c\in #db#  } P(#M#)}
+              \right)^{C(c)}
+           &&\textcomment{summing over expressions evaluating to $c$} \\
+          &= \prod_{c\in C}
+              \left(
+                1 + \sum_{\substack{#M#=c\in #db+x#\\#x#\in#M#}} P(#M#)
+              \right)^{C(c)}  \\
+          &\approx 1 + \sum_{c\in C} C(c)
+                       \sum_{\substack{#M#=c\in #db+x#\\#x#\in#M#}} P(#M#)
+           &&\textcomment{homogeneous corpus approximation}\\
+          &= 1 + \sum_{\substack{#M#\in #db+x#\\#x#\in#M#}} P(#M#) C(#M#) \\
+          &\approx 1 + \sum_{#M#\in #db+x#} #occ(x,M)# P(#M#) C(#M#)
+           &&\textcomment{extensional/intensional approximation}\\
+          &= 1 + \sum_{#M[x]#\in #db+x#} P(#M[x]#) C(#M#) \\
+          &= 1 + P(#x#) \sum_{#M[x]#\in #db+x#} P(#M[ ]#) C(#M#)
+           &&\textcomment{factoring $P(#M[x]#)=P(#x#)P(#M[ ]#)$} \\
+          &=: 1 + P(#x#) R(#x#)
+           &&\textcomment{in terms of relevance}
+      \end{align*}
+    We make two linearization assumptions here.
+    The first assumes most terms in the corpus are of the same size,
+    and tends to devalue the effect of large terms.
+    The second approximation allows us to multiple-count terms #M#
+    containing #x# by counting the occurrences of #x# in #M#.
+    This latter is discussed by Pearl in Pearl88 as an approximation of
+    _intensional_ semantics of sum-product expressions
+    as _extensional_ semantics.
+    This approximation allows us to compute #R(x)# using a
+    sum-product algorithm for evidence propagation (also discussed by Pearl).
+
+    The reverse sum-product computation of #R(x)# is dual to the forward
+    sum-product propagation of #P(x)# in computing term probability.
+    We thus calculate relevance as the fixed-point of a propagation equation
+    \begin{align*}
+      R(#x#) &= C(#x#)
+              + \sum_{#w#} C(#w x#) \frac{P(#w#) #P_app# P(#x#)}{P(#w x#)}
+              + \sum_{#y#} C(#x y#) \frac{P(#x#) #P_app# P(#y#)}{P(#x y#)} \\
+             &= C(#x#)
+              + P(#x#) #P_app# \sum_{#z#} P(#z#)
+                \left[
+                  \frac{C(#z x#)}{P(#z x#)}
+                + \frac{C(#x z#)}{P(#x z#)}
+                \right]
+    \end{align*}
+
+    Now we can factor the transition probability as
+    \[
+      1 + P(#x#) R(#x#) = P(#x#) \left(R(#x#) + \frac 1 {P(#x#)}\right)
+    \]
+    and define an expansion,contraction pair of distributions
+    Thm: (detailed balance) The expansion,contraction pair
+      \begin{align*}
+        e(#l#,#r#) &= P(#l#) P(#r#)       &
+        c(x) &= R(#x#) + \frac 1 {P(#x#)}
+      \end{align*}
+      shows detailed balance for corpus simplification
+      (up to the above approximations).
+    
+    In practice, Johann ignores the $1/P(#x#)$ term
+    in contraction, and contracts WRT relevance alone.
+    This is important, since some obs in the database may have been added
+    for reasons other than random selection.
+    For example, very complex obs are added during the process of checking
+    theorems; these may have near zero probability, and hence would almost
+    never be removed with the $1/P(#x#)$ term included.
+    Another perspective is that we are factoring database relevance as
+    \[
+      1 + P(#x#) R(#x#) = \left(\frac 1 {R(#x#)} + P(#x#)\right) R(#x#)
+    \]
+    so that Johann randomly adds terms WRT $P(#x#)$ and randomly removes terms
+    WRT $R(#x#)$, and assume that the user randomly adds terms WRT the
+    distribution $\frac 1 {R(#x#)}$.
+

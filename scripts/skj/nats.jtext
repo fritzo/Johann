@@ -1,0 +1,210 @@
+
+Church numerals. \label{sec:skj/nats}
+  ###<
+    !import skj/types skj/tests skj/logic.
+  ###>
+
+  The type of Church numerals
+  ###<
+    nat := V (
+        Y\a. V. (Simple \b,b'. (b'->b)->b->b')
+              | <J,I,_>
+              | <\n:a,f:a->a,x:a.f(n f x), \-,x:a.x>
+              | \q. q _ (q T _)
+                  | q (q _ T) _
+    ).
+    check_nat := Check nat <\x. I|x, I>.
+    test_nat := Test nat <\x. x, I>.
+  ###>
+  with intro forms
+  ###<
+    zero := nat (\f,x.x).
+    succ := (nat -> nat) (\n,f,x.f.n f x).
+  ###>
+  Thm: #inhab(nats) = {T}union{succ^n z | n in Nats, z in {_, zero}}#.
+  Pf: By the #Simple# types theorem,
+    all inhabitants of the raw simple type can be written as
+    ###-
+      --------------   --------------   -----------------
+      T:(b->b)->b->b   _:(b->b)->b->b   zero:(b->b)->b->b
+
+         n:(b->b)->b->b     /\m in M. m:(b->b)->b->b
+      -------------------   ------------------------
+      succ n:(b->b)->b->b     Join M:(b->b)->b->b
+    ###-
+    Of these, we want to eliminate incompatible joins and successors of #T#
+    via disambiguation.
+    The first disambiguation term #<J,I,_>#
+    eliminates successors of #T# by raising them to the head, as in
+    ###<
+      !check <J,I,_> (succ T)
+          = succ T J I _
+          = J (T J I) _
+          = J T _
+          = T.
+    ###>
+    and similarly for #n succ T#.
+    The third disambiguation term #q. q _ (q T _) | q (q _ T) _#
+    prevents incompatible joins at the the top of the Bohm tree, as in
+    ###<
+      !check (
+          zs := zero | succ _.
+          zs _ T = T   AND
+          zs T _ = T   AND
+
+      (\q. q _ (q T _) | q (q _ T) _) zs
+          = zs _ (zs T _) | zs (zs _ T) _
+          = zs _ T | zs T _
+          = T
+      ).
+    ###>
+    Finally, the third disambiguation term
+    #<\n:nat,f:nat->nat,x:nat.f(n f x), \-,x:nat.x>#
+    applies the second disambiguator deeper in the Bohm tree,
+    preventing successors of incompatible joins.
+    []
+
+  Dual to the type #nat# is the type of sequences.
+  ###<
+    Seq := (V -> V) (\a. nat->a).
+    seq := Seq _.
+  ###>
+
+  Som extra intro forms for nats are convenient.
+  ###<
+    one := nat (\f,x.f x).
+    two := nat (\f,x.f.f x).
+    !check omega = nat (\f,x.Y f).
+    !check succ zero = one.
+    !check succ one = two.
+    !check succ omega = omega.
+    !check Y succ = omega.
+  ###>
+  We also have a two-sided test for zero
+  ###<
+    is_zero := (nat -> bool) <K false, true>.
+    nonzero := not * is_zero.
+    !check is_zero zero = true.
+    !check is_zero(succ _) = false.
+  ###>
+  and a one-sided test for infinity, recalling the definition of omega,
+  ###<
+    !check omega = Y succ.
+    !check omega : nat.
+    if_finite := (nat -> semi) <I,I>.
+    !check if_finite zero = I.
+    !check if_finite x = if_finite (succ x).
+    !check if_finite omega = _.
+  ###>
+
+  We can partially eliminate with
+  Kleene's predecessor function, assuming nonzero input
+  ###<
+    prec := (nat -> nat) <
+        \(n,-). (succ n, n),  #step
+        (zero,T),             #initial value
+        F                     #extract rhs of result
+    >.
+    !check prec zero = T.
+    !check prec one = zero.
+    !check prec two  = one.
+    !check prec omega = omega.
+    !check prec * succ = nat.
+    !check succ * prec = P nat (\n. if (is_zero n) T).
+    !check prec*succ*succ _ = succ _.
+  ###>
+  Comment: is prec is not total enough?
+  Note: Note the difference between the predecessor function in Goedel's T
+    and in system F (Girard89 end of sec. 7.3.2).
+  Case analysis gives a more complete elimination form.
+  ###<
+    case_nat := (nat -> Maybe nat) (\n. is_zero n none (some. prec n)).
+    !check case_nat*(succ n) = test_nat n (some n).
+    !check <zero,succ>*case_nat = nat.
+  ###>
+  Note that Church numerals are particularly poor representatives of counting,
+  since the predecessor or case analysis is so difficult to construct.
+
+  G\"odel's recursor can be seen as a non-homogeneous time-evolution operator,
+  polymorphic with type #(nat->a->a)->nat->a->a#,
+  ###<
+    Rec_nat := (/\a:V. Endo. Seq. Endo a) (
+        \-. Y\r,fs,n,x. case_nat n x \n'. r fs*succ n' (fs 0 x)
+    ).
+    rec_nat := Rec_nat _.
+  ###>
+  The recursor is perhaps more natural on streams and coalgebraic numerals
+  (see \ref{sec:skj/numerals}).
+  Note: Girard considers G\"odel's system a step backward from the logical
+    standpoint (see Girard89 ch. 7), since its terms "do not correspond to
+    proofs in an extended logical system".
+    On the contrary, G\"odel's T is a half-step forward, the remaining half
+    being dependent types, where the recursor becomes the induction scheme for
+    second-order Peano arithmetic.
+  A dependent recursor for second-order dependently typed Peano arithmetic is
+  ###<
+    Ind_nat := (
+        /\a:nat->V. a zero -> (/\n:nat. a n -> a*succ n) -> /\n:nat. a n
+    ) (
+        \-. Y\i. \z,s,n. case_nat n z \n'. i (s 0 z) s*succ n'
+    ).
+    ind_nat := Ind_nat _.
+  ###>
+  Alternatively, without using the fixed-point combinator,
+  and so typable in system-F,
+  ###<
+    !check Ind_nat = (
+        /\a:nat->V. a zero -> (/\n:nat. a n -> a*succ n) -> /\n:nat. a n
+    ) (
+        \-. \z,s,n. n (\(z,s). (s zero z, s*succ)) (z,s) K
+    ).
+  ###>
+
+  We can now define arithmetic operations
+  ###<
+    add := P C (nat -> nat -> nat) (\m,n,f. (m f)*(n f)).
+    !check add zero = nat. ##zero# is an additive unit
+    !check add one = succ.
+    !check add two = succ * succ.
+    !check add omega = (\n. check_nat n omega).
+
+    mul := P C (nat -> nat -> nat) (\m,n,f. m(n f)).
+    !check mul one = nat. ##one# is a multiplicative unit
+    !check mul zero = (\n. check_nat n zero).
+    !check mul one = nat.
+    !check mul omega x = is_zero x zero omega.
+
+    pow := (nat -> nat -> nat) (\m,n. n m).
+    !check pow zero = (\n. check_nat zero).
+    !check pow one = (\n. if_finite n one).
+
+    sub := (\n,m. m prec n).
+    !check (\n:nat. sub n (succ n)) = (\n. if_finite n T).
+  ###>
+
+  Exercise: Basic arithmetic.
+    ###<
+      !check ( s:=succ.
+          s 0 = 1 AND s 1 = 2 AND s 2 = 3 AND s 3 = 4 AND s 4 = 5 AND s 5 = 6
+      ).
+          
+      !check ( p:=prec.
+          p 1 = 0 AND p 2 = 1 AND p 3 = 2 AND p 4 = 3 AND p 5 = 4 AND p 6 = 5
+      ).
+          
+      !check ( a:=add.
+          a 1 1 = 2 AND a 1 2 = 3 AND a 1 3 = 4 AND a 1 4 = 5 AND a 1 5 = 6 AND
+          a 2 1 = 3 AND a 2 2 = 4 AND a 2 3 = 5 AND a 2 4 = 6 AND a 2 5 = 7 AND
+          a 3 1 = 4 AND a 3 2 = 5 AND a 3 3 = 6 AND a 3 4 = 7 AND a 3 5 = 8 AND
+          a 4 1 = 5 AND a 4 2 = 6 AND a 4 3 = 6 AND a 4 4 = 8 AND a 4 5 = 9 AND
+          a 5 1 = 6 AND a 5 2 = 7 AND a 5 3 = 8 AND a 5 4 = 9
+      ).
+
+      !check ( m:=mul.
+          m 1 1 = 2 AND m 1 2 = 2 AND m 1 3 = 3 AND m 1 4 = 4 AND m 1 5 = 5 AND
+          m 2 1 = 2 AND m 2 2 = 4 AND m 2 3 = 6 AND m 2 4 = 8 AND
+          m 3 1 = 3 AND m 3 2 = 6 AND m 3 3 = 9 AND
+          m 4 1 = 4 AND m 4 2 = 8 AND
+          m 5 1 = 5
+      ).
+    ###>

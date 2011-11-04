@@ -1,0 +1,200 @@
+
+The lattice of theories approximating SKJO. \label{sec:skjo/theories}
+
+  XXX this section needs to be updated to new definition of O
+
+  TODO: move theory/learning here
+
+  Although we have completely axiomatized SKJ by Hstar and SKJO by the #code#
+  axiom, we can only verify (evern write down) a #Sigma01# fragment of these
+  respectively #Pi02#-complete and #Pi11#-hard theories.
+
+  The lattice of lambda-theories. \label{sec:skjo/theories:lattice}
+    ###m p
+
+    Lusin04 and later Manzonetto08 survey results about
+    the lattice of lambda theories.
+    Our reference for lattice theory and universal algebra is Mckenzie87.
+
+    Def: An algebra #A# is _congruence_distributive_ if its
+      congruence lattice is distributive.
+    Thm: (Funayama and Nakayama 1942)
+      Every lattice is congruence-distributive.
+    Pf: (from Mckenzie87 Thm 2.50, pp. 78)
+      It is enough to construct a polynomial satisfying
+      ###[
+        a = M(a,a,b) = M(a,b,a) = M(b,a,a)
+      ###]
+      which can be done in any lattice-like structure
+      with join #|# and a #Meet(-,-)# polynomial
+      ###[
+        M(x,y,z) = Meet(x,y) | Meet(y,z) | Meet(z,x)
+      ###]
+      
+      To show distributivity, we show #r(s+t)<=rs+rt# for congruences r,s,t.
+      Thus suppose
+      ###a
+        a ====== b ,   whence   a === b   and   a === b
+          r(s+t)                   r              s+t
+      ###a
+      The latter implies that for some sequence c1,...,cn,
+      there is an equational proof of alternating s,t steps.
+      ###a
+        a = c1 === d1 === c2 === ... === dn = b
+                s      t      s       s
+      ###a
+      Now for each neighboring c,d pair r shows
+      ###a
+        M(a,b,c) === M(a,a,c) === a === M(a,a,x) === M(a,b,d)
+                  r                               r
+      ###a
+      so that also, at each pair
+      ###a
+        ... M(a,b,c) ===== M(a,b,d) ===== M(a,b,c') ...
+               ||      s      ||      t      ||
+               || r           || r           || r
+               ||             ||             ||
+            M(a,a,c) = a = M(a,a,d) = a = M(a,a,c')
+      ###a
+      and at the endpoints
+      ###a
+        a = M(a,b,a) = ... = M(a,b,b) = b
+      ###a
+      Finally, since each step is either proved in rs or rt, we have
+      ###a
+        a ===== b
+          rs+rt
+      ###a
+      []
+    Lem: In SKJO a #Meet(-,-)# polynomial is definable.
+    Pf: Define first an operation on codes
+      ###<
+        if_eq_term := term->term->semi (\x,y. ...).
+        meet := code->code->code (
+            \<x>,<y>. if_eq_term x y <x>
+        ).
+      ###>
+      Then using #{-}#, define a polynomial
+      ###[
+        Meet(x,y) = eval(meet{x}{y})
+      ###]
+      []
+
+    OLD ----------------------------------------------------------------------
+
+    Def: An algebra #A# is _arithmetic_ iff it has permuting congruneces and is
+      congruence distributive.
+    Thm: (Mal'cev and Pixley, in Mckenzie87 thm. 4.141)
+      An algebra #A# is arithmetic iff there is a
+      polynomial #p(x,y,z)# in #A[x,y,z]# satisfying
+      ###[
+        y = p(x,x,y) = p(y,x,x) = p(y,x,y)
+      ###]
+      for any #x,y#.
+    Such a polynomial is called a _Pixley_term_.
+    Pf: (if direction only; see Mckenzie87 for only-if direction)
+      
+      First we show #A# has permuting congruences,
+      that for any theories #phi,psi# we have #phi*psi=psi*phi#.
+      Thus suppose #a=_(phi)b=_(psi)c#.
+      Then
+      ###[
+        a = p(a,c,c) =_(psi) p(a,b,c) =_(phi) p(a,a,c) = c
+      ###]
+
+      Now we show distributivity, ie that for any theories #tau,phi,psi#,
+      #tau(phi+psi) <= (tau phi)+(tau psi)#.
+      Thus suppose
+      ###a
+        a ====== c
+          t(u+v)
+      ###a
+      then by permutivity, there is some #b# with
+      ###a
+        a === c   a === b === c
+           t         u     v
+      ###a
+      so
+      ###a
+                       t            t
+          == p(a,b,a) ===          === p(c,b,c) ==
+        a                 p(a,b,c)                 c
+          == p(a,b,b) ===          === p(b,b,c) ==
+                       u            v
+      ###a
+      []
+
+    Note that congruences are just equivalence relations
+    closed under #Sigma01# schemata of the form
+    ###-
+       M1=N1     ...     Mn=Nn
+      -------------------------
+      f(M1,...,Mn)=f(N1,...,Nn)
+    ###-
+    for each function symbol #f# in the signature.
+    In fact, the above proof extends to the more general class of algebras
+    modulo #Sigma01# theories.
+    For example Johann uses non-algebraic but still #Sigma01# axiom schemata
+    in interpreting inequality as inconsistent-equality in
+    ###-
+         M conv        M=N|-_=T
+      -----------   -------------
+      semi M =] I   delta{M}{N}=_
+    ###-
+
+    Let #Th(SKJO)# be the lattice of theories of SKJO closed under Johann's
+    inference rules.
+    Thm: #Th(SKJO)# is distributive.
+    Pf: Consider extended the algebraic signature
+      ###[
+        <ap:A^2->A, S,K,J,code:A, {-}:A->A>
+      ###]
+      where extension by quoting #{-}# is admissable because Johann assumes the
+      inference rule
+      ###=
+          M=N
+        -------
+        {M}={N}
+      ###=
+      .
+      []
+    Formally checking, we abstract over tested codes
+    ###<
+      pixley := code->code->code->any (
+        \{x},{y},{z}. if_equal{x}{y}z | if_equal{y}{z}x | if_equal{x}{z}x
+      ).
+      !check (
+          /\{x}::test_code, {y}::test_code.
+          pixley{x}{x}{y} = y  AND
+          pixley{y}{x}{x} = y  AND
+          pixley{y}{x}{y} = y
+      ).
+    ###>
+
+    ###d neg {{\M{\neg\NS}}}
+    What can we infer from the arithmeticity of SKJO?
+    One nice property is that #Th(SKJO)# is a complete Heying algebra (CHA),
+    and hence models intuitionisitc propositional logic.
+    In particular, this provides a weak complement operation on theories
+    ###[
+      neg phi = Join {psi | psi phi = Delta}
+    ###]
+    satisfying #neg neg neg phi=neg phi#.
+    Theories for which #neg neg phi=phi# are called factors, and are generated
+    by #neg psi# for theories psi.
+    For phi a factor, #phi+neg phi=Del#.
+    Thm: The lattice of factors of #Th(SKJO)# is a Boolean algebra.
+    Question: Which theories are factors?
+    Conjecture: No factors are #Sigma01#.
+
+    Another nice property following from distributivity is strict refinement,
+    an infinite analog of the unique factorization property.
+    Def: An algebra satisfies _strict_refinement_ iff LATER...
+    Thm: (Mckenzie87 thm. 5.17 cor. 1) If #A# is congruence distributive
+      then it satisfies the strict refinement property.
+    Cor: SKJO satisfies strict refinement.
+
+  Learning lambda-theories. \label{sec:skjo/theories:learning}
+
+    LATER discuss Kevin Kelly's work
+

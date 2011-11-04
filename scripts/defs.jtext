@@ -1,0 +1,102 @@
+
+\usepackage{hyperref}
+\usepackage[margin=1cm,font=small,labelfont=bf]{caption}
+\tightlists
+###v \renewcommand*{\descriptionlabel}[1]{\hspace\labelsep\normalfont\bfseries #1:}
+
+% atoms
+###k I K F B C S W Y J U V P R O A Q E
+###d KI \ATM{K_\ast}
+###d CI \ATM{C_\ast}
+###d WI \ATM{W_\ast}
+###d SI \ATM{S_\ast}
+####l join meet both
+####l infty
+###d _      \bot
+####d Bot    \bot
+####d Top    \top
+###d T      \top
+###v \newcommand \bigjoin {\operatorname*{\bigsqcup\NS}\limits}
+###v \newcommand \biginsn {\operatorname*{\bigcap\NS}\limits}
+###v \newcommand \bigunion {\operatorname*{\bigcup\NS}\limits}
+###d Join   \bigjoin
+###d Meet   \bigsqcap
+###d Union  \bigunion
+###d Insn   \biginsn
+###d union  \cup
+###d insn   \cap
+###d Intersect  \bigcap
+###d intersect  \cap
+###d NOT    \mbox{\small\M{\mathbf{NOT\;}}}
+###d AND    \mbox{\small\M{\mathbf{\;AND\;}}}
+###d OR     \mbox{\small\M{\mathbf{\;OR\;}}}
+###k let
+###s pi1 pi2
+
+% operators
+###o inhab
+###o dom
+###o rng
+
+% Commands
+\newcommand \CLC  {{\M{\lambda_\|}}}
+\newcommand \LamC {{\M{\Lambda_\|}}}
+\newcommand \SK   { #SK# }
+\newcommand \SKJ  { #SKJ# }
+\newcommand \SKR  { #SKR# }
+\newcommand \SKRJ { #SKRJ# }
+\newcommand \SKJO { #SKJO# }
+
+% theories
+\newcommand \Hnostar {{\M{ \mathcal H }}}
+###v \newcommand \HSTAR [1] {{\M{\mathcal{H}^*_{#1}}}}
+\newcommand \Hstar {{\M{ \HSTAR{} }}}
+\newcommand \Hstarc {{\M{ \HSTAR{\|} }}}
+\newcommand \Hstarr {{\M{ \HSTAR{\VAR{R}} }}}
+\newcommand \Hstarcr {{\M{ \HSTAR{\|,\VAR{R}} }}}
+\newcommand \Hstaro {{\M{ \HSTAR{\VAR{less}} }}}
+###l Hnostar Hstar Hstarc Hstarr Hstarcr Hstaro
+
+%categories
+###v \newcommand \cat [1] {\ensuremath{\mathbf{#1}}}
+\newcommand \APOS {{\cat{APOS}}}
+
+%domains
+\newcommand {\Plower} {{\ensuremath{\mathcal P^\flat}}}
+\newcommand {\Pupper} {{\ensuremath{\mathcal P^\sharp}}}
+###D Hstar  {\M{\mathcal H^*}}
+###D Dinfty {\M{D_\infty}}
+###D Pomega {\M{\mathbb{P}(\omega)}}
+
+%misc
+\newcommand {\eps} {\epsilon}
+\newcommand {\model} {D}
+
+%recursion theory
+###d Pi01     {\Pi^0_1}
+###d Sigma01  {\Sigma^0_1}
+###d Delta01  {\Delta^0_1}
+###d Pi02     {\Pi^0_2}
+###d Sigma02  {\Sigma^0_2}
+###d Delta02  {\Delta^0_2}
+###d Pi11     {\Pi^1_1}
+###d Sigma11  {\Sigma^1_1}
+###d Delta11  {\Delta^1_1}
+###d Delta12  {\Delta^1_2}
+###d Lomega1CKomega {L_{\omega_1^{CK},\omega}}
+
+%text symbols
+###D WLOG {\small{WLOG}}
+###D WRT {w.r.t.}
+###D Goedel G\"odel
+###D Godel G\"odel
+###D Bohm B\"ohm
+###D Lob L\"ob
+###D Hstar \HSTAR{}
+###D SK \SK
+###D SKJ \SKJ
+###D SKR \SKR
+###D SKRJ \SKRJ
+###D SKJO \SKJO
+
+

@@ -1,0 +1,104 @@
+
+Comment: 
+  Audience: committee members
+  Tone: I show ___.
+  Topics: combinatory logic, type theory, denotational semantics,
+    automated deduction, \\
+    knowledge representation, inductive inference, imprecise probabilities.
+
+Comment: 
+  \title{ Automated reasoning under the theory H* \\
+          \Large (thesis abstract) }
+  \author{ Fritz Obermeyer }
+  \maketitle
+
+Comment: RS-
+  I would mention "verification" a bit more ; at least
+  as it bears on storage. One would expect a trade off.
+
+In this thesis I study four extensions of untyped lambda-calculi
+all under the maximally coarse semantics of the theory #Hstar#
+(observable equality),
+and implement a system for reasoning about and storing abstract knowledge
+expressible in languages with these extensions.
+The extensions are:
+(1) a semilattice operation #J#, the join w.r.t the Scott ordering;
+(2) a random mixture #R# for stochastic lambda-calculus;
+(3) a computational comonad #<code,apply,eval,quote,{-}>#
+  for Godel codes modulo provable equality; and
+(4) a #Pi11#-complete oracle #O#.
+I develop three languages from combinations of these extensions.
+The syntax of these languages is always simple:
+each is a finitely generated combinatory algebra.
+The semantics of these languages are various fragments of Dana Scott's
+Dinfty models.
+Although the languages use ideas from the theory of computer programming
+languages, they have no operational semantics and do not describe programs.
+
+The first language, SKJ,
+extends combinatory algebra with
+a join operation, with respect to the information ordering on terms.
+I show that an interpretation of types-as-closures
+reflects from Dinfty down to this definable fragment.
+The main theorem for SKJ is that simple types are definable as closures.
+The resulting type theory is very rich
+(omega-order polymorphism, dependent types, a type-of-types, power-types,
+quotient types) but logically unsound (every type is inhabited).
+However I demonstrate that this type system provides an expressive
+interpretation of type-as-symmetry and join-as-ambiguity.
+
+The second language, SKRJ,
+extends combinatory algebra with a random bit, then with join.
+I show that SKRJ provides semantics for a monadic lambda-calculus for
+convex sets of probability distributions (CSPDs).
+This follows from our choice of join distributing over randomness
+--the opposite of what one would expect from
+the usual interpretation of join-as-concurrency.
+I conjecture that a weakened definable-types theorem also holds in SKRJ,
+and provide some evidence to this effect.
+I also show that, in case simple types are definable,
+the monadic CSPD types are polymorphic in the simple definable types.
+
+Takeout: 
+  An application of this language is in practically computing the
+  Kolmogorov complexity of very general models of uncertainty,
+  addressing the problem of patterns in learning structure for graphical models.
+
+The third language, SKJO, extends combinatory algebra with join,
+a comonadic type of codes,
+and a carefully defined #Pi11#-complete oracle,
+so that exactly the #Delta11# predicates about SKJ-terms
+are realized as total terms of type #code->bool#.
+This language is sufficient to represent all of predicative mathematics,
+and can thus serve to represent virtually any kind of abstract knowledge.
+As an example,
+I formulate the statement and proof of termination in Goedel's #T# in the
+language SKJO, but do not formally verify the proof.
+
+The final component of this thesis is a system, Johann,
+for automated reasoning about equality and order in the above languages.
+Johann was used to formally verify many of the theorems in this thesis
+(and even conjecture some simple theorems).
+
+The general design focus is on efficient knowledge representation,
+rather than proof search strategies.
+Johann maintains a database of all facts about a set of (say 10k) objects,
+or terms-modulo-equivalence.
+The database evolves in time by randomly adding or removing objects.
+Each time an object is added, the database is saturated with facts
+using a forward chaining algorithm.
+
+A specific design goal is to be able to run Johann for long periods of time
+(weeks) and accumulate useful knowledge, subject to limited memory.
+This requires statistical analysis of a corpus of interest
+(eg the set of problems to be verified in this thesis),
+statistical search for missing equations
+(from our #Sigma01# approximation to a #Pi02#-complete theory),
+and careful choice of sampling distributions from which to draw objects to
+add-to and remove-from the database.
+The (add,remove) pair of distributions is chosen
+to achieve a _detailed_balance_ theorem, so that, at steady state,
+Johann (provably) remembers simple facts relevant to the corpus.
+
+Comment: mention automated conjecturing and basis optimization
+

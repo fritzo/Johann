@@ -1,0 +1,323 @@
+
+Axioms for a universal closure. (#V#) \label{sec:axioms/close}
+  ###<
+    !read axioms/idem.
+  ###>
+
+  Def: Let #<A,[=># be a poset, #f:A->A# be an endomorphism.
+    Let us say that #f# is a _closure_ iff #f*f=f=]I#,
+    where #I# is the identity on #A#.
+
+  We construct the universal closure from the universal idempotent
+  ###<
+    !define V := (\a. U(I|a)).
+    !check V = (\a. U(a|I)).
+    !check V a = U(I|a).
+  ###>
+  An infinitary representation of #V# follows from that of #U#
+  ###l vdots
+  ###m m n
+  ###( 
+    V a &= (a|I) | (a|I)*(a|I) | ...
+        &= I | (a|I) | (a|I)*(a|I) | ...
+        &= Join_(n < omega) (a|I)^n
+  ###)
+  Thm: #V# is a universal closure, i.e.
+    (a) #V# is a closure: #V=]I, V*V=V#;
+    (b) points in the range of #V# are closures: #x=V y ==> x=]I, x*x=x#;
+    (c) all closures are in the image of #V#: #x=]I, x*x=x ==> V x=x#;
+  Pf: SPACE
+    (a) Using the infinitary representation, #V=]I# is immediate.
+      Rearranging terms of #V*V#, we have
+      ###(
+        V(V a) &= Join_(n < omega) (V a|I)^n
+               &= Join_(n < omega) Join_(m < omega) (a|I)^(n m)
+               &= Join_(n < omega) (a|I)^n
+               &= V a
+      ###)
+      whence #V*V=V#.
+    (b) Suppose #x=V a# for some #a#.
+      By the infinitary representation #x = V a = I|... =] I#.
+      Since #V# is idempotent, and since #x=]I#,
+      ###[
+        x   = V a   = V(V a)   = V x   =] I|x|x*x|...   =] x*x
+      ###]
+      On the other hand, #x = I*x [= x*x#, whence #x=x*x#.
+    (c) If #x=]I# and #x=x*x# then also
+      ###[
+        (x|I)*(x|I)   = x*x   = x   = x|I
+      ###]
+      so the infinitary representation of #V x# collapses to #(I|x)=x#.
+    []
+  We have in addition a variety of equivalent definitions,
+  e.g. Scott's (Scott76),
+  ###<
+    !check V = (\a,x. Y\y. x|a y).  ## = (B Y)*(C B*J)#
+  ###>
+  and as a least fixed-point,
+  ###<
+    !check V = Y(\y,a. I|a*(y a)).
+  ###>
+
+  Types as closures. \label{sec:axioms/close:notation}
+
+    Closures allow an interpretation of various typed lambda calculi in the
+    untyped calculus SKJ.
+    In particular, this provides convenient notation.
+    Def: (types as closures)
+      ###(
+         (\x:a. M) &= (\x. M)*(V a)           #typed abstraction
+               x:a &<==> V a x=x              #type inhabitation
+        /\x:a. M=N &<==> (\x:a. M)=(\x:a. N)  #universal closure of equations
+              a<:b &<==> V a:P b              #subtyping
+      ###)
+      where the powertype #P# will be discussed in \ref{sec:axioms/power}.
+    Lem: 
+      ###<
+        !check (/\x:a. x:a).
+      ###>
+    Pf: 
+      ###(
+        /\x:a. x:a &<==> /\x:a. V a x = x
+                   &<==> (\x:a. V a x) = (\x:a. x)
+                   &<==> (\x. V a(V a x)) = (\x. V a x)
+                   &<==> V a(V a x) = V a x
+      ###)
+      []
+    Takeout: Questionable XXX
+      Recalling our definition of conjugation #a->b = \f. b*f*a#,
+      we also get a lemma that looks like
+      Lem: (modus ponens)
+        ###<
+          !check (/\f:a->b,x:a. f x:b).
+        ###>
+      Pf: Unravelling to an implicitly universally closed equation
+        ###(
+          /\f:a->b,x:a. f x:b &<==> /\f:a->b. f (V a x) : b
+                              &<==> V (a->b) f (V a x) : b
+                              &<==> V(a->b)f(V a x) = V b (V(a->b)f(V a x))
+        ###)
+        XXX is this true?
+      But this is a bit odd since the #a,b# might not be types in #a->b#:
+      ###<
+        !check V (a->b) != V a -> V b.
+      ###>
+      The statement is really about the induced closures #V a# and #V b#.
+
+    Lem: 
+      Subtyping is a bounded preorder, and a partial order on closures.
+      (a) #nil<:a<:a<:any#.
+      (b) If #a<:b# and #b<:c# then #a<:c#.
+      (c) For #a,b:V#, if #a<:b# and #b<:a# then #a=b#.
+    We will prove this later in \ref{sec:axioms/power}
+    we know more properties of #V# and #P#.
+
+    A quirk of this system is that exponentials have unusual variance:
+    they are covariant in both arguments
+    (as discussed later in \ref{sec:skj/types}).
+
+    Later in \ref{sec:skj/tests:notation} we will consider a similar
+    interpretation of types-as-tests.
+
+  Axioms and axiom schemata. 
+
+    The following axiom shemata are enforced for the atom #V#:
+    ###-
+       x:V          x:V        x*x=x   x=]I            f x[=x
+      ----- idem   ---- incr   ------------ closures   ------- fixed
+      x*x=x        x=]I            x:V                 V f x=x        
+    ###-
+    Note: Together the #idem,incr,closures# schemata imply that
+      #V# fixes exactly the closures.
+    Question: Is the #fixed# schema necessary?
+
+    Now we assume #V# is a closure
+    ###<
+      !assume I [= V = V * V.
+    ###>
+    whose images are closures
+    ###<
+      !assume I [= V a = (V a)*(V a).
+    ###>
+    and hence #V# fixes itself.
+    ###<
+      !check V = V V.
+    ###>
+
+    Lem: The #a# in #V a# is w.l.o.g. increasing.
+      ###<
+        !assume V a = V(I|a).
+      ###>
+    Pf: #V(I|a) = U(I|I|a) = U(I|a) = V a# []
+    Thm: (algebraic characterization)
+      ###<
+        !assume V a = I|a*(V a).
+      ###>
+    Pf: 
+      ###( 
+        V a &= \x. Y\y. x|a y
+            &= \x. x|a(Y\y. x|a y)
+            &= \x. x|a(V a x)
+            &= I|a*(V a)
+      ###)
+      []
+    Indeed #V# is the least solution to the above, by definition.
+
+    Note that
+    ###<
+      !assume V = 2 * V.
+    ###>
+    however the transpose fails
+    Thm: #V!=V*2#
+    First a lemma
+    Lem: 
+      ###<
+        !assume V C = C|I.
+      ###>
+    Pf: 
+      Since #C*C=I#, also
+      ###(
+        (C|I)*(C|I) &= \x. (C|I)(C x|x)
+                    &= \x. C*C x|C x|x
+                    &= \x. x|C x|x
+                    &= \x. C x|x
+                    &= C|I
+      ###)
+      whence #C|I# is a closure.
+      Hence #V C = V(C|I) = C|I#.
+      []
+    We can now prove the theorem:
+    Pf: 
+      ###<
+        !check 2 C = I.
+        !check I : V.
+        !check C !: V.      #i.e., #C# is not fixed by #V#
+        !check V != V * 2.
+      ###>
+      []
+
+  Derived properties. 
+
+    ###<
+      !check V =] Y*B.
+      !check V : V.
+    ###>
+    Note that #T# inhabits every closure
+    ###<
+      !check (/\a:V. T:a).
+    ###>
+    Lem: 
+      ###<
+        !assume (V a)->(V b) : V.   #exponential
+      ###>
+    Pf: for any #a,b,f#, by definition
+      #(V a)->(V b) f = (V b)*f*(V a)#.
+      To show idempotence,
+      ###(
+        2 (V a)->(V b) f &= (2. V b) * f * (2. V a) #def of #->#
+                         &= (V b) * f * (V a)       #since #(V a),(V b):V
+                         &= (V a)->(V b) f          #def of #->#
+      ###)
+      Now to show closure,
+      ###[
+        (V b)*f*(V a)     =]  I*f*I     =  f
+      ###]
+      whence #(V a)->(V b) =] I#.
+      []
+    We can now represent #J# in terms of #V#:
+    ###<
+      !check J = K|F.
+      !check J = V C K.
+      !check J = V C F.
+    ###>
+
+    Note that
+    Lem: 
+      ###<
+        !assume V J = T.
+      ###>
+    Pf: 
+      Suppose #q:V J#.
+      Then #q T = J q T = T#, so #q# is solvable.
+      But #q _ = J q _ = q#, so q is undivergable.
+      Hence #q# is #T#.
+      []
+
+  Miscellaneous closures. 
+
+    The Maximal type.
+    ###<
+      any := I.
+      !check any : V.
+      !check any = V _.
+      !check V : any->V.
+      !check any = any->any.      #whence a reflexive object
+      !check (/\a:V. (a->any,any->a,a->a : V )).
+      !check (/\a:V,b:V. a->b:V).
+    ###>
+    Thm: #inhab(any) = # "everything".
+    Pf: #any x = I x = x#.  []
+
+    The Minimal type #nil# has no consistent inhabitants
+    ###<
+      nil := T.
+      !check nil : V.
+      !check _ !: nil.
+    ###>
+    Thm: #inhab(nil) = {T}#.
+    Pf: 
+      ###<
+        !check (/\x:nil. x = nil x = T x = T).
+      ###>
+      []
+
+    We use the following lemma often.
+    Lem: #x:V t <==> t x[=x#.
+    Pf: SPACE
+      * (#==>#)
+        ###(
+          x &= V t x
+            &= x|t x|2 t x|...
+            &= x|t x
+        ###)
+        whence #t x[=x#.
+      * (#<==#) since #(I|t)x = x|t x = x#,
+        ###(
+          V t x &= V (I|t) x
+                &= x | (I|t)x | 2(I|t)x | ...
+                &= x | x|t x | (I|t)(x|t x) | ...
+                &= x | x | (I|t)x | ...
+                &= x | x | x | ...
+                &= x
+        ###)
+
+    The type of symmetric binary functions.
+    Lem: 
+      ###<
+        !assume V C = C|I.
+      ###>
+    Pf: #C*C=I#, so expanding, #V C=I|C|C*C*(V C)=I|C|V C=I|C#.
+
+    Closure for upper sets are also definable as
+    ###<
+      Above := J.
+      !assume Above : any->V.  #upper-sets are types
+    ###>
+    Pf: Idemopotence and closure are inherited from #J#:
+      ###(
+             J a x &=] x          #whence #  J a =] I
+        J a(J a x) &= J(J a a)x   #by associativity of #J#
+                   &= J a x       #by idempotence of #J#
+      ###)
+
+    Lem: 
+      ###<
+        !check V Delta : V W.
+      ###>
+    Pf: Suppose #Delta x[=x#.  Then
+      ###[
+        W(V Delta)x = V Delta x x = x x [= x [= V Delta x
+      ###]
+
+  ###u m n
+

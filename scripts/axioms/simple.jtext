@@ -1,0 +1,43 @@
+
+Axioms for the simple type constructor. \label{sec:axioms/simple}
+
+  ###<
+    !read skj/simple.
+  ###>
+
+  #TODO this is not yet implemented
+
+  When assuming a simple typing of a term, we close over all partitions and
+  permutations of free variables in a type expression.
+  Thus for example the statement #K:a->b->a# is closed in all of the ways
+  ###[
+    K : Simple \a,a'. Simple \b,b'. a->b->a'
+    K : Simple \b,b'. Simple \a,a'. a->b->a'
+    K : Simple \a,a'. a->a->a'
+  ###]
+
+  (from Hindley97
+  ###[
+    !assume I : a->a.
+    !assume K : a->b->a.
+    !assume F : a->b->b.
+    !assume B : (a->b)->(c->a)->c->b.
+    !assume B': (a->b)->(b->c)->a->c.
+    !assume C : (a->b->c)->b->a->c.
+    !assume W : (a->a->b)->a->b.
+    !assume S : (a->b->c)->(a->b)->a->c.
+    !assume Phi : (a->b->c)->(d->b)->(d->c)->d->c.
+  ###]
+
+  and polymorphic versions
+  ###<
+    !assume (/\a:V, x:a. I x:a).
+    !assume (/\a:V,b:V, x:a,y:b. K x y:a).
+    !assume (/\a:V,b:V, x:a,y:b. F x y:a).
+    !assume (/\a:V,b:V,c:V, x:a->b,y:c->a,z:c. B x y z:b).
+    !assume (/\a:V,b:V,c:V, x:a->b,y:b->c,z:a. B' x y z:c).
+    !assume (/\a:V,b:V,c:V, x:a->b->c,y:b,z:a. C x y z:c).
+    !assume (/\a:V,b:V, x:a->a->b,y:a. W x y:b).
+    !assume (/\a:V,b:V,c:V, x:a->b->c,y:a->b,z:a. S x y z:c).
+  ###>
+

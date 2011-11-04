@@ -1,0 +1,12 @@
+#\title{ Errata }
+#\author{ Johann 0.9.1.9 }
+#\date{ 2009:04:09:12:38 }
+#\maketitle
+
+#Problems (false). 
+
+!check (B I)*(C B prod)(C I K) = (C B(V V))*(S V*(S B*B(C B)*(C((B(B V)*(C B V))*(C B V)(C C*(B P)*(B Simple)*(B(B(C B B)))*(B(B(C B)))*(B(B(C B)))*(C B(B B)*(C B B)*(C B)*(C B))*B*(C B)*(C B)(S C*(C I)*(C I K)(C I F))))T)))(C I K)_. #scripts/skj/types.jtext:243
+!check (B I)*(C B prod)(C I F) = (C B(V V))*(S V*(S B*B(C B)*((B(B V)*(C B V))*(C B V)(C C*(B P)*(B Simple)*(B(B(C B B)))*(B(B(C B)))*(B(B(C B)))*(C B(B B)*(C B B)*(C B)*(C B))*B*(C B)*(C B)(S C*(C I)*(C I K)(C I F)))T)))(C I(K I))_. #scripts/skj/types.jtext:244
+!check (C B(V sum))*(S B*(C B)*V*(C B(C B I))*B(S B*B*(C B)*V*(C B(C B I))*B(B(B K))*(C B W)*B*V))*(V V) = (C B(V sum))*(S B*(C B)*V*(C B(C B I))*B(C B(B K)*W)*B*(C B)*V*(C B(C B I))*B)*(V V). #scripts/skj/types.jtext:290
+!check (B(B maybe)*(C B maybe))*(C B I)(C(C I(maybe K)))*(B(maybe K*(C I))) = (C B(V V))*(S V*(B(C B(V V)))*S*(B V)*(S S*(B B)*(B B)*(C B B*((B V)*(C B V)(J(S(C I _)(C(C I T)_)|C(S I(C(C I _)T))_))*(J(C(C I K)K*(C I)))*Simple*(S B*(C B)*(C B))*(B(B B))*(B(C B B))*(B(C B))*(B(C B))*(C B B)*(C B)*(C B)))*(C B)*(C B)*((B V)*(C B V)(J(S(C I _)(C(C I T)_)|C(S I(C(C I _)T))_))*(J(C(C I K)K*(C I)))*Simple*(S B*(C B)*(C B))*(B(B B))*(B(C B B))*(B(C B))*(B(C B))*(C B B)*(C B)*(C B))(B(C B))*(C B B)*(C B)*(C B)))(K(K(C(C I(maybe K)))*(B(maybe K*(C I)))))_. #scripts/skj/types.jtext:329
+!check V(B(C B(V V))*(S V*((B V)*(C B V)(C B(C B I))*B)))*(C B V)((B(B V)*(C B V))*(C B V)(C B B)*(C B)*(C B)) = (B(B V)*(C B V))*(C B V)(C B B)*(C B)*(C B). #scripts/skj/types.jtext:455

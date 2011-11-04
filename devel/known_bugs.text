@@ -1,0 +1,556 @@
+
+  ######## ddd hints ########
+  * to run a test
+      run -l test.log ../scripts/test/test.jtext
+  * to print Eqn(512)(E::APP), use
+      print ((Int*)(Eqn::s_heap.m_base + 512))[APP.m_value]
+
+========== funkiness with join data structure ============
+  #log file
+  206.037 struct  Comb. Struct stats:
+          2400 obs, 1171 used (1171 in core, 21 named, 0 marked)
+          2.90266% apps known = 167193 eqns / 5760000 supported
+          2.57679% comps known = 148423 eqns / 5760000 supported
+          0.0040625% joins known = 234 eqns / 5760000 supported
+          2.16667% obs, 74.6443% apps, 84.084% comps constant
+          59.9047% order known = (18059 pos + 3432453 neg) / 5760000 supported
+  208.733 brain   contracting from 2432 to 2400 at beta = 1
+  208.733 cplxty  Propagating term complexity (P_app = 0.5, P_comp = 0.25)
+  208.739 cplxty    stepsize = 2.49062e-07
+  208.739 cplxty  Propagating term relevance (P_app = 0.5)
+  208.75  cplxty    total = 1.21104, stepsize = inf
+  208.755 cplxty    total = 1.21108, stepsize = 2.49013e-08
+  208.755 cplxty  H(A) = inf
+  208.755 thought Forgetting: contracting to 2400
+  208.758 heap        freeing named pos
+          node_heap.h : 214
+          static void _Heap::_Pos<Signature>::free(typename Signature::Pos) [with Signature = Nodes::CompSignature]
+
+========== language optimization error ============
+  #description
+  gradient and directional derivative disagree
+  #log file
+  123.587 cplxty        evaluating gradient of language cost
+  123.587 cplxty          Propagating term complexity (P_app = 0.498795)
+  123.814 cplxty            stepsize = 2.187e-11
+  123.814 cplxty          finding gradient dZ, dim = 20
+  124.943 cplxty            stepsize = 0.0248168, scale = 0.0103363
+  ...
+  164.511 cplxty            stepsize = 3.53995e-07, scale = 0.0102618
+  164.511 cplxty          P_app = 0.498795, cost = 52443.7
+  164.511 optim         Line searching interval to tolerance 1e-05
+  164.511 optim           scaling by 0.00299703 to stay inside simplex
+  164.511 optim           interval size = 0.00199902
+  164.511 cplxty          evaluating directional deriv of language cost
+  164.511 cplxty            Propagating term complexity (P_app = 0.498795)
+  164.737 cplxty              stepsize = 1.23049e-15
+  164.737 cplxty            finding directional dZ, dim = 20
+  164.966 cplxty              stepsize = 0.0165622, scale = 3.75338e-05
+  ...
+  170.464 cplxty              stepsize = 3.22929e-07, scale = 2.05839e-05
+  170.464 cplxty            P_app = 0.498795, cost = 52443.7, dcost = 148.288
+  170.464 optim           directional deriv = 148.288
+  170.464 optim           gradient and directional derivative disagree XXX
+  170.464 cplxty      projector called 19 fun0's, 2 fun1's, and 0 fun2's
+  170.464 cplxty      language optimizer failed to converge
+
+
+========== language optimization error ============
+  #description
+  crash when theory is recompiled into obs with too-large complexity
+  #log file
+  ???
+
+========== language optimization error ============
+  #description
+  when !thinking about theory while building skj,
+  directional dZ and metric dZ disagree
+  #log file
+  79357 brain   Optimizing measures
+  8.79358 cplxty    fitting language to corpus, elegance = -2
+  8.79359 meas        resizing measures to 128B
+  8.79387 optim       Optimizing via Newton's method: dim = 21
+  8.79388 cplxty        Propagating term complexity (P_app = 0.500001)
+  8.79909 cplxty          stepsize = 3.915e-15
+  8.79917 cplxty        cost = inf
+  8.79919 cplxty        evaluating metric of language cost
+  8.7992  cplxty          Propagating term complexity (P_app = 0.500001)
+  8.80428 cplxty            stepsize = 2.05017e-15
+  8.80439 cplxty          finding gradient dZ, dim = 21
+  8.80441 meas              resizing measures to 256B
+  8.92501 cplxty            stepsize = 0.371443, scale = 0.0211813
+  ...
+  13.6143 cplxty            stepsize = 3.49931e-07, scale = 0.0219958
+  13.6153 cplxty          cost = 214344
+  13.6153 optim         cost = 214344
+  13.6155 cplxty        Propagating term complexity (P_app = 0.500001)
+  13.6207 cplxty          stepsize = 0
+  13.6208 cplxty        finding directional dZ, dim = 21
+  13.6254 cplxty          stepsize = 0.00703264, scale = 0.00245188
+  ...
+  13.7243 cplxty          stepsize = 2.7104e-07, scale = 0.00248595
+  13.7244 cplxty        cost = 81.6708, dcost = -7.34066
+  13.7244 optim         Newton direction is not descending, using -grad instead
+  13.7244 optim         Line searching interval of length 1.39973e+06
+  13.7244 cplxty          Propagating term complexity (P_app = 0.493162)
+  13.7296 cplxty            stepsize = 0.00353393
+  ...
+  13.779  cplxty            stepsize = 1.97607e-07
+  13.779  cplxty          finding directional dZ, dim = 21
+  13.7841 cplxty            stepsize = 0.0751299, scale = 0.0004769
+  ...
+  13.8881 cplxty            stepsize = 3.82214e-07, scale = 0.000244593
+  13.8882 cplxty          cost = 81.9819, dcost = 0.625769
+  13.8882 cplxty          Propagating term complexity (P_app = 0.496581)
+  ...
+  14.6041 cplxty          Propagating term complexity (P_app = 0.500001)
+  14.6096 cplxty            stepsize = 2.5617e-19
+  14.6097 cplxty          finding directional dZ, dim = 21
+  14.6148 cplxty            stepsize = 5.04747e-29, scale = 0.000246142
+  14.6149 cplxty          cost = 81.6708, dcost = 0.618574
+  14.6149 optim           t = 9.09495e-13, |dx| = 1.27305e-06, safety = 0.00128358
+  14.6149 cplxty        Propagating term complexity (P_app = 0.500001)
+  14.6205 cplxty          stepsize = 2.5617e-19
+  14.6205 cplxty        cost = inf
+  14.6205 optim         objective function did not decrease XXX
+  14.6206 optim         x-tolerance met: |dx| = 8.81542e-15, cost = inf
+  14.6206 cplxty      projector called 42 fun0's, 0 fun1's, and 1 fun2's
+  14.6206 cplxty      final result after 0 changes:
+          [    0.1905,  0.0700809,  0.0700809,  0.0257813,  0.0257813,  0.0257813,  0.0257813, 0.00948442, 0.00948442, 0.00948442, 0.00948442, 0.00348912, 0.00348912, 0.00348912, 0.00348912, 0.00348912, 0.00348912, 0.00348912, 0.00128358, 0.00128358,0.00128358]
+  14.6206 cplxty    Propagating term complexity (P_app = 0.500001)
+  14.6264 cplxty      stepsize = 2.53643e-19
+  14.6265 cplxty    Propagating term relevance (P_app = 0.500001)
+  14.6377 cplxty      total = 2.06863, stepsize = 0.790585
+  ...
+  14.7112 cplxty      total = 3.36634, stepsize = 3.02225e-07
+  14.7114 brain     P_app = 0.500001, Z(A) = 1 - 0.29254, N = 13.696
+  14.7116 cplxty  H(A) = 2.61711
+
+========== language optimization error ============
+  #description
+  when !thinking about context while building skj.
+  #log file
+  57.6375 brain   Optimizing measures
+  57.6375 cplxty    fitting language to context, elegance = -2
+  57.6375 meas        resizing measures to 128B
+  57.6376 optim       Optimizing via Newton's method: dim = 18
+  57.6501 meas          resizing measures to 256B
+  58.2362 optim         cost = 8783.08
+  58.2575 linalg        matrix not pos def: eigs = [
+      -1.37306e+12, -3.70408e+11, -3.9503e+10, -2.09783e+10,
+      -19079.2,   -271.786,    440.261,    2172.13, 3.5113e+09,
+      3.02602e+10, 5.06774e+10, 5.3979e+10, 5.96761e+10,
+      1.03455e+11, 4.09563e+11, 5.0075e+11, 3.67215e+12, 4.52678e+19
+      ]
+  58.2575 linalg        spotrf_ error, info = 4
+          linalg.C : 260
+          LinAlg::Tensor LinAlg::Tensor::cholesky() const
+
+========== memory error in computing eivenvalues ============
+  #log file
+  13.7201 brain     Incrementally expanding
+  13.7276 thought     expanding to 1341 at beta = 1
+  13.728  struct        Resizing combinatory structure to 1440 obs
+  13.8946 thought       no new apps found; raising temperature
+  13.8946 thought       no new apps found; raising temperature
+  13.8946 thought       no new apps found; raising temperature
+  13.8946 thought       no new apps found; raising temperature
+  13.8946 thought       no new apps found; raising temperature
+  13.8946 thought       no new apps found; raising temperature
+  13.8946 thought       no new apps found; raising temperature
+  13.8946 thought       no new apps found; raising temperature
+  13.8946 thought       no new apps found; raising temperature
+  13.8947 thought       no new apps found; raising temperature
+  13.8947 thought       no new apps found; raising temperature
+  13.8947 thought       no new apps found; raising temperature
+  13.8947 thought       no new apps found; raising temperature
+  13.8947 thought       no new apps found; raising temperature
+  13.8947 thought       no new apps found; raising temperature
+  13.8947 thought       no new apps found; raising temperature
+  13.8947 thought       no new apps found; raising temperature
+  13.8947 thought       no new apps found; raising temperature
+  13.8947 thought       no new apps found; raising temperature
+  13.8947 thought       no new apps found; raising temperature
+  13.8947 thought       no new apps found; raising temperature
+  13.8947 thought       no new apps found; raising temperature
+  13.8947 thought       no new apps found; raising temperature
+  13.8947 thought       no new apps found; raising temperature
+  13.8947 thought       no new apps found; raising temperature
+  13.8948 thought       no new apps found; raising temperature
+  13.8948 thought       no new apps found; raising temperature
+  13.8948 thought       no new apps found; raising temperature
+  13.8948 thought       no new apps found; raising temperature
+  13.8948 thought       no new apps found; raising temperature
+  13.8948 thought       no new apps found; raising temperature
+  13.8948 thought       no new apps found; raising temperature
+  13.8948 thought       no new apps found; raising temperature
+  13.8948 thought       no new apps found; raising temperature
+  13.8948 thought       no new apps found; raising temperature
+  13.8948 thought       no new apps found; raising temperature
+  13.8948 thought       no new apps found; raising temperature
+  13.8948 thought       no new apps found; raising temperature
+  13.8948 thought       no new apps found; raising temperature
+  13.8949 thought       no new apps found; raising temperature
+  13.8949 thought       no new apps found; raising temperature
+  13.8949 thought       no new apps found; raising temperature
+  13.8949 thought       no new apps found; raising temperature
+  13.8949 thought       no new apps found; raising temperature
+  13.895  thought       no new apps found; raising temperature
+  13.895  thought       no new apps found; raising temperature
+  13.895  thought       no new apps found; raising temperature
+  13.895  thought       no new apps found; raising temperature
+  13.895  thought       generator efficiency = 0.763359%
+  13.895  thought       created 8 new obs from 8 new apps
+  13.895  brain       expansion failed :(
+  ... then much later ...
+  38.4311 thought compiling context up to inf symbols
+  38.4557 kernel  Resting...
+  38.4558 brain     Optimizing measures
+  38.4558 cplxty      fitting language to context, elegance = -2
+  38.4558 meas          resizing measures to 128B
+  38.4559 optim         Optimizing via Newton's method: dim = 18
+  38.4656 meas            resizing measures to 256B
+  38.6842 optim           cost = 7960.73
+
+  #glibc error
+  !*** glibc detected *** ./johann: free(): invalid next size (fast): 0x09151d08 ***
+  ======= Backtrace: =========
+  /lib/tls/i686/cmov/libc.so.6[0x40d763f4]
+  /lib/tls/i686/cmov/libc.so.6(cfree+0x96)[0x40d78456]
+  /usr/lib/libstdc++.so.6(_ZdlPv+0x21)[0x40c82031]
+  /usr/lib/libstdc++.so.6(_ZdaPv+0x1d)[0x40c8208d]
+  ./johann(_ZNK6LinAlg6Tensor9eigenvalsEv+0x6d7)[0x814d8b7]
+  ./johann(_ZNK6LinAlg6Tensor8choleskyEv+0x10c)[0x814ed5c]
+  ./johann(_ZNK6LinAlg6Tensor5solveERKS0_+0x3e)[0x814f0ce]
+  ./johann(_ZN12Optimization19newton_over_simplexEjRKN6LinAlg6TensorERS1_RNS_19FunGradMetricOfVectEffj+0x10e)[0x816b01e]
+  ./johann(_ZN10Complexity11LangFitness16optimize_locallyEv+0x4f)[0x81417ef]
+  ./johann(_ZN10Complexity15fit_lang_to_obsERN9Languages8LangaugeERKN8Measures12ObPolynomialEf+0x15a)[0x814258a]
+  ./johann(_ZN7Thought15Interest_in_obs14calibrate_langEv+0x27)[0x81536c7]
+  ./johann(_ZN8TheBrain5Brain13calc_measuresEb+0x42)[0x80a7182]
+  ./johann(_ZN8TheBrain5Brain4restEv+0x1a)[0x80a833a]
+  ./johann(_ZN6Kernel5_restEi+0x38)[0x8177d18]
+  ./johann(_ZN6Kernel13SyntaxCommandIiE3runEv+0x18)[0x817ef58]
+  ./johann(_ZN6Kernel12process_cmdsEPv+0x1af)[0x817569f]
+  ./johann(main+0x4ee)[0x817d3be]
+  /lib/tls/i686/cmov/libc.so.6(__libc_start_main+0xe5)[0x40d1d685]
+  ./johann[0x8089491]
+  #location in code cpp/linalg.C
+  Tensor Tensor::cholesky () const
+  {//cholesky decomposition of symmetric pos-def matrix
+      Assert (m_rank == 2, "inverted tensor of rank != 2");
+      Tensor result = *this;
+
+      //Cholesky decomposition
+      int dim = m_dim;
+      int uplo = 'U'; //this is lower-diag in C indexing
+      int leading = m_dim;
+      int info;
+      spotrf_ (&uplo, &dim, result.data(), &leading, &info);
+      if (info) {
+          if (info > 0) {
+              Tensor eigs = eigenvals();  // <-- XXX error here XXX
+              logger.error() << "matrix not pos def: eigs = " << eigs |0;
+          }
+          Error ("spotrf_ error, info = " << info );
+      }
+
+      //zero-out lower-diagonal
+      for (Int i=0; i<m_dim; ++i) {
+      for (Int j=0; j<i; ++j) {
+          result(j,i) = 0;
+      } }
+
+      return result;
+  }
+
+========== generator empty ============
+  #log file
+  72471.6 kernel  Napping...
+  72472.2 kernel    nap took 0.546875 sec
+  72476   brain   contracting from 8116 to 8084 at beta = 1
+  72476.3 thought Forgetting: contracting to 8084
+  72476.4 struct  Comb. Struct stats:
+          8084 obs, 1154 used (1108 in core, 20 named, 1154 marked)
+          6.0319% apps known = 3941909 eqns / 65351056 supported
+          89.9935% order known = (48205 pos + 58763474 neg) / 65351056 supported
+  72525.8 thought no lhs,rhs found; something's wrong
+  72525.8 kernel  failed to think; stopping thinking
+  #system parameters:
+  currently not thinking
+  resting when I want to
+  extension theory
+  structural basis = {B,C,F,I,J,K,P,S,T,U,V,W,Y,_}
+  brain size = [8084 < 8116]
+  time-scale = 1000
+  density = 0.9
+  temperature = 1
+  elegance = -2
+  not guessing
+  intested in cool stuff
+  motivated to ponder
+  two-level memory: hipness = 0.3
+  #location in code cpp/thought.C:
+  Motive::Created Motive_to_ponder::_create_random_term ()
+  {
+      if (brain().generator_empty()) {
+          logger.warning() << "no lhs,rhs found; something's wrong" |0;
+          return FAILURE;
+      }
+      float p = brain().get_P_app(), q = brain().get_P_quote();
+      return RC::random_bernoulli(p/(p+q)) ? _create_random_app()
+                                           : _create_random_quote();
+  }
+
+========== handle copy problem while sending eqns ============
+  #location in code
+  Handle (const MyType& other) : m_object(other.m_object)
+  #log file
+  186113  brain   contracting from 7488 to 7456 at beta = 1
+  186114  thought Forgetting: contracting to 7456
+  186114  struct  Comb. Struct stats:
+          7456 obs, 1224 used (1174 in core, 21 named, 1224 marked)
+          7.18265% apps known = 3992976 eqns / 55591936 supported
+          92.9562% order known = (80781 pos + 51595372 neg) / 55591936 supported
+  187498  brain   Saving db to data/big.jdb ...
+  187498  brain     Compacting (sorting eqns)
+  187500  struct      Compacting structure to 7460 obs
+  187539  meas        resizing measures to 64B
+  187540  brain     ...done saving.
+  187540  console Saving context and params to data/big.jcode
+  187540  console parse error: stdin, line 12 syntax error
+  187540  struct  Resizing combinatory structure to 8207 obs
+  187606  brain   Sending language to server
+  187606  brain   Sending equations to server
+  187606  brain     caching ob parses
+  187640  brain     sending equations
+  #command
+  !send #(while thinking)
+
+========== segfault when calling inline Expr::pretty() ============
+  #to reproduce
+  map the BCSK database
+
+========== inconsistency ============
+  #log file
+  103206  struct  Comb. Struct stats:
+          1600 obs, 964 used (954 in core, 53 named, 0 marked)
+          8.37941% apps known = 214513 eqns / 2560000 supported
+          94.732% order known = (13823 pos + 2411317 neg) / 2560000 supported
+  103208  struct  inconsistent: ensuring Sub type [= (join type)*type
+  see data/notcon.struct.*
+          combinatory_structure.C : 771
+          bool CombinatoryStructure::ensure_less(Nodes::Ob, Nodes::Ob)
+  ==========
+  #log file
+  17072.3 struct  Comb. Struct stats:
+          1600 obs, 964 used (956 in core, 52 named, 0 marked)
+          7.9093% apps known = 202478 eqns / 2560000 supported
+          82.8309% order known = (9069 pos + 2111403 neg) / 2560000 supported
+  17080.3 main    Napping...
+  17080.3 corpus    simplifying definitions
+  17080.3 thought   compiling corpus at energy 0.638012
+  17080.3 main      nap took 0.0625 sec
+  17088.7 struct  inconsistent: ensuring K(join I) [= join I
+  see data/notcon.struct.*
+          combinatory_structure.C : 771
+          bool CombinatoryStructure::ensure_less(Nodes::Ob, Nodes::Ob)
+  ==========
+  #log file
+  444743  ERROR   struct  inconsistent: ensuring both close = W I(join close)
+          combinatory_structure.C : 669
+          bool CombinatoryStructure::ensure_equiv(_Heap::_Pos<Nodes::ObSignature>, _Heap::_Pos<Nodes::ObSignature>)
+  #note
+  i.e., both close         = \x.I|x|close|2 x|x*close|close*x|2 close|...
+     ]] close | join close = \x.I|close|2 close|...
+                               |x|close
+  #relevant facts (from inconsistent database)
+  (U) both close =] W I(join close).
+  K.
+  (U) both close x [= W I(join close) x.
+  F.
+  (U) !solve both close x [!= W I(join close) x.
+  (J) {C, K close, close C, join close, B close, K both, join both, B' close,
+      K(K close), join(K close), join(join close), K(join close), join(I|both)}
+  ==========
+  #note
+  the problem is
+    close C C [!= (join|I)C
+  since
+    close C C = (I|C)C
+              = C|C'
+    (C|C')w x y z = w y x z|x y w z       # x y w z
+    (J|I)C = J C|C
+    (J C|C)w x y z = (w|C)x y z|w y x z
+                 = w x y z|x z y|w y x z
+                 = w y x z|x z y|w x y z  # x z y|w x y z
+
+  #log file
+          8000 obs, 957 used (955 in core, 24 named, 0 marked)
+          4.26831% apps known = 2731716 eqns / 64000000 supported
+          69.1094% order known = (137013 pos + 44093020 neg) / 64000000 supported
+  881116  main    Napping...
+  881116  corpus    simplifying definitions
+  881116  brain     Calculating measures
+  881116  brain       P_app = 0.5, Z(A) = 1 - 0.264204, N = 27.3598
+  881116  main      nap took 0.8125 sec
+  881247  struct  inconsistent: ensuring close C C [= (join|I)C
+  see data/notcon.struct.*
+          combinatory_structure.C : 771
+          bool CombinatoryStructure::ensure_less(Nodes::Ob, Nodes::Ob)
+
+  881247  struct  Dumping Comb. Struct. to files data/notcon.* ...
+  881247  struct    printing obs
+  881464  struct    printing eqns
+  881483  struct    printing order
+  881654  struct    ...done printing.
+
+========== spurrious deadlock ============
+#----- hopefully fixed -----
+  #command line
+  ./johann -c cores/typed.jcore
+  #log file
+  ================ Johann 0.7.6.5 ================
+  0.00812 brain   Loading core from cores/typed.jcore: ...
+  0.00898 brain     core was saved by other version 0.7.6.4
+  0.00913 struct    Initializing combinatory structure with 1903 obs, 138750 eqns
+  1.26307 expr      Initializing expressions
+  1.26383 expr        using unfamiliar atom div
+  1.26431 brain     resizing brain to 1903 concepts
+  1.26461 brain     Initializing basis measure
+  1.26497 brain       Calculating measures
+  1.26509 cplxty        Propagating term complexity (P_app = 0.5)
+  1.36376 cplxty          stepsize = inf
+  ...
+  3.06157 cplxty          stepsize = 8.90932e-07
+  3.06276 cplxty        H(A) = 2.94711
+  3.06297 cplxty        Propagating term relevance (P_app = 0.5)
+  3.1653  cplxty          total = 1.58973, stepsize = inf
+  ...
+  4.01383 cplxty          total = 2.03533, stepsize = 5.64561e-07
+  4.0142  brain         P_app = 0.5, Z(A) = 1 - 0.311516, N = 19.0508
+  4.01469 brain     Brain parameters:
+          P_app = 0.5, Z(A) = 0.688484
+  4.015   brain     ...done loading.
+  4.01617 console begin      reading scripts/init.jcode
+  4.01701 console begin      reading scripts/notation.jtext
+  4.01951 theory  Assuming F = F
+  #problem
+  both threads are caught in mutex_wait
+  #note
+  sometimes there is no deadlock
+
+========== weird unenforcement errors ============
+#----- hopefully fixed -----
+  #log file (axiom close)
+  813.537 invalid theory        repaired unenforced fx[=x |- Vfx=x instance:
+           f = F, x = S B close
+  813.538 invalid theory        repaired unenforced fx[=x |- Vfx=x instance:
+           f = F, x = close W(close(W I))
+  813.54  invalid theory        repaired unenforced fx[=x |- Vfx=x instance:
+           f = F, x = Y(K F|S B)
+  813.542 invalid theory        repaired unenforced fx[=x |- Vfx=x instance:
+           f = F, x = Y(K F|S(C B))
+  813.544 invalid theory        repaired unenforced fx[=x |- Vfx=x instance:
+           f = F, x = ???
+  #log file (axioms C & V)
+  77.4498 debug   theory      Validating axiom scheme C
+  79.1364 invalid theory        repaired unenforced C instance:
+          x = J(W I), y = <U>, z = V
+  79.14   invalid theory        repaired unenforced C instance:
+          x = J(W I), y = <U>, z = V(W I)
+  79.1416 invalid theory        repaired unenforced C instance:
+          x = J(W I), y = <U>, z = U Y(W I)
+  79.1433 invalid theory        repaired unenforced C instance:
+          x = J(W I), y = <U>, z = U C(W I)
+  ...
+  93.4446 debug   theory      Validating axiom scheme V
+  93.4481 invalid theory        repaired unenforced fx=x |- Vfx=x instance:
+          W I.S(W I)Bot
+  93.4523 invalid theory        repaired unenforced fx=x |- Vfx=x instance:
+          W W.S(W I)Bot
+  93.4552 invalid theory        repaired unenforced fx=x |- Vfx=x instance:
+          Y(C I).S B Bot
+  #log file (axioms J & S)
+  18.6417 debug   theory        Validating J-associativity
+  19.4569 invalid theory        repaired unenforced z=]x, z=]y |- z=]Jxy instance:
+          x = V, y = <K>, z = S S(C I)U
+  ...
+  89.3382 debug   theory      Validating axiom scheme S
+  89.9999 invalid theory        repaired unenforced S instance:
+          x = W I, y = B, z = J I
+  90.0015 invalid theory        repaired unenforced S instance:
+          x = W I, y = B, z = W(W S)
+  #then even after repairs,
+  341.707 debug   theory      Validating axiom scheme S
+  342.361 invalid theory        repaired unenforced S instance:
+          x = W I, y = V(W I), z = S(W I)Bot
+  342.364 invalid theory        repaired unenforced S instance:
+          x = W I, y = V(W I), z = S Y Bot
+  342.368 invalid theory        repaired unenforced S instance:
+          x = W I, y = V(W I), z = S(W I)U
+
+========== out of memory in resizing ==========
+  #note
+  this is due to poor memory usage in resizing
+  #fix
+  write-to-file; deallocate; reallocate; read-from-file; remove file
+  #log file
+  2.22983e+06     info    thought     Pondering: expanding to 10218
+  2.23038e+06     warning general         posix_memalign failed
+  2.23038e+06     ERROR   heap            reallocation failed
+          node_heap.C : 224
+          void _Heap::_Heap<Signature>::resize(unsigned int, const Int*) [with Signature = Nodes::_ESignature]
+
+========== thinking about reduction doesn't work ==========
+  #note
+   (1) "!think about reduction" finds no redexes
+   (2) many Bx's found are not actually apps of B.
+
+========== eqn stack overflow ==========
+  #log file
+  131.426 ERROR   general       max stack size exceeded, 126
+          stack.h : 24
+          void nonstd::stack<T, SIZE>::push(T) [with T = _Heap::_Pos<Nodes::_ESignature>, unsigned int SIZE = 126]
+
+========== enforcement bugs ==========
+  * C,S instances (early in building process, clear up later)
+  * eta
+  * R-functionality
+
+========== reduction error ==========
+  #script
+  reduce W W(W W)
+
+========== null br::Iterator in building ==========
+  #log file
+  3135.93 info    app     Contracting
+  3135.93 info    struct    Contracting comb. struct.
+  3135.94 info    struct    Comb. Struct stats:
+          1734    obs
+          23.1492% apps known = 696040 eqns / 3006756 supported
+          0.226224% order known = (6302 pos + 500 neg) / 3006756 supported
+  3135.94 info    app     Incrementally expanding
+  3135.94 info    app       Calculating measures
+  3136.98 info    app         eps = 0.389763, Z = 0.981095, N = 16.3387
+  3136.98 info    app       Expanding
+  3136.98 info    struct      Expanding comb. struct.
+  3148.47 ERROR   general       tried to begin() a null br::Iterator
+          dense_bin_rel.h : 143
+          void nonstd::dense_bin_rel::Iterator<idx>::begin() [with int idx = 1]
+  #again more recently,
+  16.5264 ERROR   general   tried to begin() a null br::Iterator
+          dense_bin_rel.h : 143
+          void nonstd::dense_bin_rel::Iterator<idx>::begin() [with int idx = 1]
+
+========== segfault in building ==========
+  #log file
+  49444.2 info    app     Incrementally expanding
+  49444.2 info    app       Calculating measures
+  49446.2 info    app         eps = 0.425673, N = 17.3079, |Bot| = 0.244209
+  49446.2 info    app       Expanding
+  49446.2 info    struct      Expanding comb. struct.
+  49446.2 info    struct        Resizing combinatory structure to 3714 obs
+  49446.2 info    heap            Rellocating 2626 --> 3714 nodes
+  49446.2 debug   order           Resizing order table
+  49446.2 info    heap          Rellocating 1390359 --> 1966265 nodes
+

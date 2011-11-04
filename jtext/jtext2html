@@ -1,0 +1,1025 @@
+#!/usr/bin/python
+#command: jtext2html
+#synopsis: a simple typesetting front-end : jtext --> html
+#associated files: main.css
+#author: Fritz Obermeyer
+LICENSE = """\
+This file is a part of Johann.
+Copyright 2004-2009 Fritz Obermeyer.
+
+Johann is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
+
+Johann is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Johann.  If not, see <http://www.gnu.org/licenses/>.\
+"""
+VERSION = "2009:02:08"
+TODO = """\
+  * generate table of contents
+  * fix lettered lists
+  * generate index/glossary
+"""
+
+import re, os, sys, time, shutil, cgi, math, exceptions, traceback
+
+verbose = False
+glossary = []
+num_codes = 0
+
+def boilerplate_header (title,prefix=""):
+    return """\
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="en">
+<head>
+\t<title>%s</title>
+\t<link rel="stylesheet" type="text/css" href="%s../main.css" />
+\t<link rel="shortcut icon" type="image/vnd.microsoft.icon" href="%s../favicon.ico" />
+</head>
+""" % (title,prefix,prefix,)
+def boilerplate_navigator (prefix=""):
+  return """\
+<div id="navigator">
+<a href="%sindex.html"
+   title="main documentation page" class="main">Johann</a> -
+<a href="%sdoc/index.html"
+   title="library documentation">library</a> -
+<a href="%sdoc/dependency.html"
+   title="map of library modules">map</a> -
+<a href="%sdoc/glossary.html"
+   title="glossary of terms in library">defs</a> -
+<a href="%sdoc/bib.html"
+   title="references">bib</a> -
+<a href="%sdoxygen/index.html"
+   title="source code documentation">doxygen</a> -
+<a href="http://www.math.cmu.edu/~fho/johann/index.html"
+   title="project description page" target="_blank">[web]</a>
+<hr />
+</div>
+""" % (("../" + prefix,) * 6)
+boilerplate_footer = """\
+<div id="copyright">
+<hr />
+copyright &copy; 2007-2009 <a href="http://www.math.cmu.edu/~fho/index.html" target="_blank">fritz obermeyer</a>
+</div>
+"""
+
+#================ string utils ================
+
+def fix_fname(name):
+    if name[-5:] in ["jtext","jcode",".text"]:  return name
+    if os.access(name+".text",os.F_OK):         return name+".text"
+    if os.access(name+".jtext",os.F_OK):        return name+".jtext"
+    if os.access(name+".jcode",os.F_OK):        return name+".jcode"
+    if os.access(name+"/main.text",os.F_OK):    return name+"/main.text"
+    if os.access(name+"/main.jtext",os.F_OK):   return name+"/main.jtext"
+    if os.access(name+"/main.jcode",os.F_OK):   return name+"/main.jcode"
+    raise exceptions.IOError("file %s??? not found" % name)
+def fix_dirname (dir):
+    dir = dir.strip("/")
+    if dir in ["","."]: return ""
+    return dir + "/"
+rootdir = ""
+def rel_dir (dir):
+    global rootdir
+    rootdir = "../" * fix_dirname(dir).count("/")
+    return rootdir
+def get_ftype(name):
+    return re.search(".[a-z]*$",name).group()
+def get_dir(name):
+    match = re.match(".*\/", name)
+    if match: return match.group()
+    else:     return ""
+def lstrip (line):
+    "returns (indentation, stripped)"
+    stripped = line.lstrip()
+    indent = len(line) - len(stripped)
+    return (indent, stripped)
+def re_searchall(patt,line):
+    "returns list of all ranges of matches"
+    m = re.compile(patt)
+    bounds = []
+    match = m.search(line)
+    while match:
+        beg = match.start()
+        end = match.end()
+        bounds.append((beg,end))
+        match = m.search(line,end)
+    return bounds
+def mush_spaces (line):
+    return re.sub("\s+"," ",line)
+def get_date ():
+  return ':'.join(['%02i'%i for i in list(time.localtime())[:3]])
+
+#================ text notation ================
+def doc_string (args):
+    "converts title,opts string into documentclass spec"
+    args = args.split(",",1)
+    title = args[0]
+    if len(args) > 1:
+        if args[1]: dopts = "[fleqn,%s]" % args[1]
+        else:       dopts = ""
+    else:           dopts = "[fleqn,10pt,letterpaper,fullpage]"
+    return "\\documentclass%s{%s}\n" % (dopts,title)
+def emphasize (m): return "<i>%s</i>" % m.group()[1:-1].replace("_"," ")
+def cite (m):
+    name = m.group()
+    return "<a class=cite href=\"%sbib.html#%s\">%s</a>" % (rootdir,name,name)
+def label (m):
+    parts = m.group()[11:-1].split(":")
+    if len(parts) > 1:  return "<a name=\"%s\"></a>" % parts[1]
+    else:               return ""
+def ref (m):
+    parts =  m.group()[9:-1].split(":")
+    ref = parts[0]
+    if   os.access(ref+".text",os.F_OK): file = ref
+    elif os.access(ref+".jtext",os.F_OK): file = ref
+    elif os.access(ref+".jcode",os.F_OK): file = ref
+    else: file = ref + "/main"
+    point = ""
+    if len(parts) > 1: point = "#" + parts[1]
+    return ( "<a class=file href=\"%s%s.html%s\">%s</a>"
+           % (rootdir,file,point,ref) )
+def source (m):
+    ref = m.group()
+    file = ref[4:].replace(".","_8") + ".html"
+    return "<a class=file href=\"%s../doxygen/%s\" title=\"doxygen\">%s</a>" % (rootdir,file,ref)
+def namesp (m):
+    ref = m.group()[10:]
+    file = "namespace" + ref + ".html"
+    return "namespace <a href=\"%s../doxygen/%s\" title=\"doxygen\">%s</a>" % (rootdir,file,ref)
+def fileref (m): return "<tt>%s</tt>" % m.group()
+def href (m):
+    file = m.group()
+    name = m.group()
+    if len(name)>10 and name[-10:]=="index.html":
+        name = name[:-10]
+    else:
+        name = name[:-5]
+    if file[:4] == "http":
+        name = name[7:]
+    #else:
+    #    file = "/" + file
+    return "<a href=\"%s\">%s</a>" % (file,name)
+TextDefs = {}
+def hrule (m): return "<hr />"
+def special (m): return "<b class=xxx>%s</b>" % m.group()
+class ConvertText:
+    def __init__ (self):
+        #self.emph   = re.compile("_([-a-zA-Z]+_)+")
+        self.emph   = re.compile("_([-a-zA-Z0-9()']+_)+")
+        self.html   = re.compile("\\b[a-z_:~./]+.html\\b")
+        self.file   = re.compile("\\b[a-z_\-/]+.text\\b")
+        self.source = re.compile("\\bcpp/[a-z0-9_]+.[lyCh]\\b")
+        self.namesp = re.compile("\\bnamespace [A-Za-z_0-9]+\\b")
+        self.cite   = re.compile("\\b([A-Z][a-z]+)+[0-9X][0-9X][a-z]*\\b")
+        self.label  = re.compile("\\\\label{sec:[-A-Za-z0-9_:/]+}")
+        self.ref    = re.compile("\\\\ref{sec:[-A-Za-z0-9_:/]+}")
+        self.hrule  = re.compile("----+")
+        self.word   = re.compile("(^|[^\\\\])\\b[A-Za-z]+\\b")
+        self.xxx    = re.compile("(\\b(XXX|OLD|ALT|TODO|LATER|FIXME|WORKING|INSERT)\\b|\?\?\?)")
+        self.date   = re.compile("\\bDATE\\b")
+    def __call__(self, text):
+        #font stuff
+        text = self.emph.sub(emphasize, text)
+        text = self.html.sub(href, text)
+        text = self.file.sub(fileref, text)
+        text = self.source.sub(source, text)
+        text = self.namesp.sub(namesp, text)
+        text = self.cite.sub(cite, text)
+        text = self.label.sub(label, text)
+        text = self.ref.sub(ref, text)
+        text = self.hrule.sub(hrule, text)
+        text = self.xxx.sub(special, text)
+        text = self.date.sub(get_date(), text)
+        
+        text = text.replace("BREAK","<br /><br />")
+        text = text.replace("NEWPAGE","<br /><br />")
+        text = text.replace("[]", "<b class=block>[]</b>")
+
+        return text
+__convert_text = ConvertText()
+
+def convert_text (text):
+    "converts text symbols"
+    global __convert_text
+    return __convert_text(text)
+
+#================ math notation ================
+def import_file (m):
+    parts = m.group().split()
+    result = parts[0]
+    for part in parts[1:]:
+        part = part.strip(".,")
+        result += " <a href=\"%s%s.html\">%s</a>" % (rootdir,part,part)
+    return result + "."
+def working (m): return "<b class=working>%s</b>" % m.group()
+def cmd_name (m): return "<b class=cmd>%s</b>" % m.group()
+def dashes (m): return "&#8212;" * len(m.group())
+class ConvertMath:
+    def __init__ (self):
+        self.xxx  = re.compile("(\\b(XXX|OLD|ALT|TODO|LATER|FIXME|WORKING|INSERT)\\b|\?\?\?)")
+        self.read = re.compile("!(read|import|skim)( [a-zA-Z_/]+)+.$")
+        self.cmd  = re.compile("![a-z]+")
+        self.dashes = re.compile("--+")
+    def __call__(self, math, comment):
+        math = cgi.escape(math)
+        #if comment: math = self.xxx.sub(working, math)
+        math = self.xxx.sub(working, math)
+        math = self.read.sub(import_file, math)
+        math = self.cmd.sub(cmd_name, math)
+        math = self.dashes.sub(dashes, math)
+        return math
+__convert_math = ConvertMath()
+
+def convert_math (math, comment=False):
+    "converts math symbols"
+    global __convert_math
+    return __convert_math(math, comment)
+
+#================ ascii notation ================
+def dashes (m): return "&#8212;" * len(m.group())
+class ConvertAscii:
+    def __init__ (self):
+        self.dashes = re.compile("--+")
+        self.xxx  = re.compile("(\\b[A-Z]{3,}\\b|\?\?\?)")
+    def __call__(self, ascii, comment):
+        #ascii = ascii.replace("&","")
+        ascii = cgi.escape(ascii)
+        ascii = self.xxx.sub(working, ascii)
+        ascii = self.dashes.sub(dashes, ascii)
+        return ascii
+__convert_ascii = ConvertAscii()
+
+def convert_ascii (ascii, comment=False):
+    "converts ascii symbols"
+    global __convert_ascii
+    return __convert_ascii(ascii, comment)
+
+#================ writers ================
+def write_math(write, text):
+    write("<code class=math>")
+    write(convert_math(text))
+    write("</code>")
+
+def write_text(write, parts):
+    "writes an alternating sequence of text, math, text, ..."
+    #print parts #DEBUG
+    is_math = False
+    for part in parts:
+        if is_math: write_math(write, part.strip())
+        else:       write(convert_text(part))
+        is_math = not is_math
+
+#================ environment errors ================
+class TransitionError(Exception):
+    def __init__(self, state, marker):
+        self.state = state
+        self.marker = marker
+    def __str__(self):
+        return "%s[\"%s\"]" % (self.state, self.marker)
+class IndentError(Exception):
+    def __init__(self, line, indent):
+        self.line = line
+        self.indent = indent
+    def __str__(self):
+        return ( "bad indentation (line too far to left):"
+               + "\n" + self.line[:self.indent]
+               + "\n" + " " * self.indent + self.line[self.indent:] )
+
+#================ environments ================
+def _pair (marker):
+    if marker == "(": return ")"
+    if marker == "[": return "]"
+    if marker == "<": return ">"
+    if marker == "{": return "}"
+    else:             return marker
+class State:
+    def __init__ (self, parser, indent=0):
+        self.parser = parser
+        self.indent = indent
+        self.write = parser.write
+        parser.push(self)
+        self.open()
+    def open (self): pass
+    def close (self): pass
+    def setindent (self,indent): pass
+    def writeline (self, line):
+        assert not line[:self.indent].rstrip(), IndentError(line,self.indent)
+        self._writeline(line[self.indent:])
+    def _writeline (self, line): pass
+    def transition (self, marker, indent):
+        if   marker == "{": Text(self.parser, indent)
+        elif marker == "<": Code(self.parser, indent)
+        elif marker == "[": Math(self.parser, indent, _pair(marker))
+        elif marker == "(": Math(self.parser, indent, _pair(marker))
+        else:               Ascii(self.parser, indent, _pair(marker))
+
+class Script (State):
+    def __str__(self): return "script"
+
+    def _writeline (self, line):
+        #pass blank lines
+        if not line:
+            self.write("\n")
+            #self.write("\n\\vspace{3mm}\n")
+            return
+
+        #pass latex comments
+        if line[0] == "%": return
+
+        parts = line.split("#")
+        if parts[0]:
+            #start of code block
+            Code(self.parser, self.indent).writeline(line)
+        else:
+            #parse line as text
+            write_text(self.write, parts[1:])
+            self.write("\n")
+
+class Document (State):
+    def __init__(self, parser, indent):
+        State.__init__(self, parser, indent)
+    def __str__(self): return "document"
+
+class Text (State):
+    def __str__(self): return "text"
+
+    def open (self): self.write("<p>\n")
+    def close (self): self.write("</p>\n")
+    def transition (self, marker, indent):
+        if   marker == "}": self.parser.pop()
+        else: State.transition(self, marker, indent)
+
+    def _writeline (self, line):
+        #pass latex comments
+        if line and line[0] == "%": return
+        if not line.strip():
+            self.write("<\p><p>")
+            return
+
+        #parse the line as text
+        parts = line.split("#")
+        write_text(self.write, parts)
+        self.write("\n")
+
+class Math (State):
+    def __init__(self, parser, indent, marker):
+        State.__init__(self, parser, indent)
+        self.marker = marker
+    def __str__(self): return "math"
+
+    def open (self):  self.write("<code><pre class=math>\n")
+    def close (self): self.write("</pre></code>\n")
+
+    def transition (self, marker, indent):
+        if marker == self.marker: self.parser.pop()
+        else: raise TransitionError(self, marker)
+
+    def _writeline (self, line):
+        parts = line.split("#",1)
+        self.write(convert_math(parts[0].replace('&','')))
+        if len(parts) > 1 and parts[1]:
+            self.write("<span class=jcomment>#")
+            self.write(convert_math(parts[1], comment=True))
+            self.write("</span>\n")
+        else:
+            self.write("\n")
+
+class Code (Math):
+    def __init__(self, parser, indent=0):
+        if parser.outfilename:
+            global num_codes
+            num_codes += 1
+            self.file = parser.outfilename.replace("html/","") #HACK
+            self.name = "code:%i" % num_codes
+            self.using   = re.compile("^!using(\s[A-Za-z_][a-zA-Z_0-9']*)+[.]")
+            self.with_   = re.compile("^!(w|with|wo|without)\s[A-Za-z_]+[.]\s*")
+            self.defline = re.compile("^[a-zA-Z_][a-zA-Z_0-9']*\s*(:=|=:)")
+            self.defname = re.compile("^[a-zA-Z_][a-zA-Z_0-9']*")
+        else:
+            self.name = None
+        Math.__init__(self,parser,indent,">")
+    def __str__(self): return "code"
+
+    def open (self):
+        self.write("<a name='%s'><code><pre class=code>\n" % self.name)
+    def close (self):
+        self.write("</pre></code></a>\n")
+
+    def transition (self, marker, indent):
+        if marker == ">": self.parser.pop()
+        else: raise TransitionError(self, marker)
+
+    def _writeline(self, line):
+        Math._writeline(self,line)
+        if line:
+            assert line[:2].isspace, IndentError(line,2)
+        if self.name:
+            global glossary
+            line = line[2:]
+            with_ = self.with_.match(line)
+            if with_: line = line[len(with_.group()):]
+            if self.defline.match(line):
+                glossary.append((self.defname.match(line).group(),
+                                 "%s#%s" % (self.file,self.name)))
+            if self.using.match(line):
+                names = self.using.match(line).group()[7:-1].split()
+                for name in names:
+                    glossary.append((name, "%s#%s" % (self.file,self.name)))
+
+class Ascii (State):
+    def __init__(self, parser, indent, marker):
+        State.__init__(self, parser, indent)
+        self.marker = marker
+    def __str__(self): return "ascii"
+
+    def open (self):
+        self.write("<pre class=ascii>\n")
+    def close (self):
+        self.write("</pre>\n")
+
+    def transition (self, marker, indent):
+        if marker == self.marker: self.parser.pop()
+        else: raise TransitionError(self, marker)
+
+    def _writeline(self, line):
+        self.write(convert_ascii(line) + "\n")
+
+#================ Ascii-formated note class ================
+
+def notspace (line):
+    return line and not line.isspace()
+
+class Block:
+    def __init__(self, note, label=None):
+        self.note = note
+        self.write = note.write
+        note.indent += 2
+        note.env.append(self)
+        self.open(label)
+    def kill(self):
+        self.close()
+        self.note.env.pop()
+        self.note.indent -= 2
+    def open(self, label): pass
+    def close(self): pass
+    def blank(self): self.write("</p>\n\n<p>\n")
+
+class SectionBlock (Block):
+    def __init__(self, note, title, indent):
+        Block.__init__(self, note, title)
+        if   indent == 0: note.write("<h1>")
+        elif indent == 2: note.write("<h2>")
+        elif indent == 4: note.write("<h3>")
+        else:             note.write("<h4>")
+        write_text(note.write, title.split("#"))
+        if   indent == 0: note.write("</h1>\n")
+        elif indent == 2: note.write("</h2>\n")
+        elif indent == 4: note.write("</h3>\n")
+        else:             note.write("</h4>\n")
+class ParBlock (Block):
+    def __init__(self, note, label):
+        Block.__init__(self, note, label)
+    def open(self, label):
+        self.write("<dl class=block compact><dt>%s:</dt>\n<dd><p>\n" % label)
+    def close(self): self.write("</p></dd>\n</dl>\n")
+    def blank(self): self.write("</p>\n\n<p>\n")
+class BulletsBlock (Block):
+    def open(self, label):
+        self.write("<ul class=bullet><li><p>\n")
+    def close(self): self.write("</p></li></ul>\n")
+class NumbersBlock (Block):
+    def open(self, label):
+        self.write("<ol class=bullet><li value=\"%s\"><p>\n" % label)
+    def close(self): self.write("</p></li></ol>\n")
+class NumeralsBlock (Block):
+    def open(self, label):
+        self.write("<dl class=bullet><dt>%s</dt>\n<dd><p>\n" % label)
+    def close(self): self.write("</p></dd></dl>\n\n")
+    def blank(self): self.write("</p>\n\n<p>\n")
+    #def open(self, label):
+    #    self.write("<ol><li value=\"%s\"><p>\n" % label)
+    #def close(self): self.write("</p></li>\n</ol>\n")
+    #def blank(self): self.write("</p>\n\n<p>\n")
+class CommentBlock (Block):
+    def write(self): pass
+    def open(self, label): self.write("<div class=comment>\n")
+    def close(self): self.write("</div>\n")
+
+class TitleBlock (Block):
+    def open(self, label): self.write("<h1 class=title>\n")
+    def close(self): self.write("</h1>\n")
+class CenterBlock (Block):
+    def open(self, label): self.write("<div class=center>\n")
+    def close(self): self.write("</div>\n")
+class FootnoteBlock (Block):
+    def open(self, label): self.write("<span class=footnote>\n")
+    def close(self): self.write("</span>\n")
+class HistoryBlock (Block):
+    def open(self, label): self.write("<div class=history title='history'>\n")
+    def close(self): self.write("</div>\n")
+
+block_abbrev = {
+    "Def"   : "Definition",
+    "Thm"   : "Theorem",
+    "Pf"    : "Proof",
+    "Lem"   : "Lemma",
+    "Cor"   : "Corollary",
+    "Qstn"  : "Question",
+    "Notn"  : "Notation",
+    "Prob"  : "Problem",
+    "Html Only" : "",
+}
+def expand_block (title):
+    try: return block_abbrev[title]
+    except KeyError: return title
+
+class Note (Text):
+    def __init__(self, parser, read_indent=0):
+        Text.__init__(self, parser, 0)
+        self.read_indent = read_indent
+
+        #matching
+        self.block = re.compile("[A-Z][a-z]*( [A-Z][a-z]*)*( [0-9]+)*: ")
+        self.sec = re.compile("[A-Z][a-z',]*([- ][A-Za-z,\"']+)*\. (\([^)]*\))*")
+        self.bullet = re.compile("\* ")
+        self.number = re.compile("\([0-9]+\) ")
+        self.numeral = re.compile("\([a-z]+\) ")
+        self.uncover = re.compile("Uncover [0-9]+")
+
+        self.env = []
+
+    def __str__(self): return "note"
+
+    def close (self):
+        Text.close(self)
+        while self.env: self.pop()
+
+    #environments
+    def pop (self):
+        self.env[-1].kill()
+    def writeline (self, line):
+        "deal with indenting later"
+        self._writeline(line)
+    def setindent (self, indent):
+        while indent < self.indent:
+            self.pop()
+
+    def _writeline(self, line):
+        #pass blank lines
+        if not line.strip():
+            if self.env:  self.env[-1].blank()
+            else:         self.write("</p>\n\n<p>\n")
+            return
+
+        #pass latex comments
+        if line[0] == "%": return
+
+        #find indenting
+        (indent,line) = lstrip(line)
+        self.setindent(indent)
+
+        #lists
+        bullet = self.bullet.match(line)
+        number = self.number.match(line)
+        numeral = self.numeral.match(line)
+        if bullet:
+            line = line[bullet.end():]
+            BulletsBlock(self)
+        elif number:
+            line = line[number.end():]
+            NumbersBlock(self, number.group()[1:-2])
+        elif numeral:
+            line = line[numeral.end():]
+            NumeralsBlock(self, numeral.group())
+
+        #check for block opening
+        block = self.block.match(line)
+        if block:
+            name = expand_block(line[:block.end()-2])
+            line = line[block.end():]
+
+            if name == "":              Block(self)
+            elif name == "Title":       TitleBlock(self)
+            elif name == "Center":      CenterBlock(self)
+            elif name == "Footnote":    FootnoteBlock(self)
+            elif name == "History":     HistoryBlock(self)
+            elif name in ["Takeout","Comment","Edit","Text Only","Latex Only"]:
+                CommentBlock(self, name)
+            else:
+                ParBlock(self, name)
+        if indent == self.indent and indent in [0,2,4,6]:
+            section = self.sec.match(line)
+            if section:
+                title = section.group().replace(".","",1)
+                #title = title.replace("$","#")
+                line  = line[section.end():]
+                SectionBlock(self, title, indent + self.read_indent)
+
+        #parse the line as text
+        parts = line.split("#")
+        write_text(self.write, parts)
+        self.write("\n")
+
+#================ environment-based document parser ================
+class Parser:
+    def __init__(self, write=None):
+        self.states = []
+        self.line_num = -1
+        self.write = write
+        self.outfilename = None
+
+    #states
+    def push (self, state):
+        self.states.append(state)
+        global verbose
+        if verbose: 
+            print "%i\t%s%s" % (
+                    self.line_num, "  "*len(self.states), state)
+        self.comment("line %i: %s" % (self.line_num, state))
+    def pop (self):
+        self.states.pop().close()
+    def writeline(self, line):
+        self.states[-1].writeline(line)
+
+    #commenting
+    def comment (self, text): self.write("<!--  " + text + " -->\n")
+
+    def readfile(self, infilename):
+        #check file
+        infile = open(infilename, 'r')
+        in_dir = get_dir(infilename)
+        if not infile:
+            print "could not open " + infilename + " for reading"
+            raise IOError
+
+        #start file
+        global verbose
+        if verbose: print "begin reading file: " + infilename
+        self.comment("begin reading file: %s" % infilename)
+
+        #parse line-by-line
+        self.line_num = 0
+        for line in infile.readlines():
+            self.line_num += 1
+            try:
+                line = line.rstrip("\n")
+                #print "> " + line #DEBUG
+
+                #check for end of file
+                if len(line) >= 4:
+                    marker = line[:4]
+                    if marker == "exit": break #stop parsing on exit
+
+                #check for control commands
+                (indent,stripped) = lstrip(line)
+                if len(stripped) >= 3 and stripped[:3] == "###":
+                    self.states[-1].setindent(indent)
+                    line = stripped[3:]
+                    if not line: continue
+                    marker = line[0]
+                    line = line[1:]
+                    if marker == "#": #ignore these lines entirely
+                        continue
+
+                    #block begin and end
+                    elif marker in "{}<>[]()|=-&an":
+                        self.states[-1].transition(marker,indent)
+                        if line:
+                            self.writeline(line)
+
+                    #special treatment
+                    elif marker == "v": #verbatim output
+                        self.write(line)
+                        self.write("\n")
+
+                    #extra files
+                    elif marker == "r": #read file (actively)
+                        for filename in line.split():
+                            parser = Parser(self.write)
+                            filename = fix_fname(in_dir+filename)
+                            if get_ftype(filename) == ".jcode": Script(parser,2)
+                            else:                               Note(parser,2)
+                            if not verbose: print "  reading " + filename
+                            parser.readfile(filename)
+
+                #push parse line
+                else:
+                    self.writeline(line)
+
+            #show where any error occurs
+            except Exception, e:
+                print ("===== error %s line %i ====="
+                        % (infilename,self.line_num))
+                traceback.print_stack()
+                traceback.print_exc()
+                print "=========="
+                raise Exception("typesetting error")
+
+        #end file
+        infile.close()
+        while self.states: self.pop()
+        if verbose: print "end reading file: " + infilename
+        self.comment("end reading file: %s" % infilename)
+
+    def __call__ (self, infilename, outfilename, ftype, title):
+        "convert a document to html"
+
+        #check file
+        outfile = open(outfilename, 'w')
+        if not outfile:
+            print "could not open " + outfilename + " for writing"
+            raise IOError
+        self.outfilename = outfilename
+        self.write = outfile.write
+
+        #header
+        global VERSION
+        self.comment("this file was generated by jtext2html version %s"
+                     % VERSION)
+        if title:
+            self.write(boilerplate_header(title,rootdir))
+            self.write("<body class=jtext>\n\n")
+            self.write(boilerplate_navigator(rootdir))
+            self.write("<p class=center>(reading <a class=file href=\"%s\" title=\"view source\">%s</a>, see <a class=file href=\"%sindex.html\">index</a>)</p>\n"
+                       % (infilename.split("/")[-1], infilename, rootdir))
+        else:
+            self.write("<div class=jtext>\n")
+
+        #body
+        if ftype in [".text",".jtext"]:
+            Note(self)
+        elif ftype == ".jcode":
+            Code(self)
+        else:
+            print "unknown filetype: %s" % ftype
+            sys.exit(0)
+
+        #read file
+        self.readfile(infilename)
+
+        #footer
+        if title:
+            self.write(boilerplate_footer)
+            self.write("</body>\n</html>\n")
+        else:
+            self.write("</div>\n")
+
+        #clean up
+        self.write = None
+        outfile.close()
+
+#================ indexing ================
+class Cloud:
+    def __init__ (self, stem_link_size):
+        #print stem_link_size
+        logs = [math.log(size) for (_,_,size) in stem_link_size]
+        max_log = max(logs)
+        min_log = min(logs)
+        if max_log == min_log:
+            max_log += 0.5
+            min_log -= 0.5
+        range_log = max_log - min_log
+        #print range_log
+        def rank (size):
+            t = (math.log(size) - min_log) / range_log
+            if t < 0.2: return 0
+            if t < 0.4: return 1
+            if t < 0.6: return 2
+            if t < 0.8: return 3
+            return 4
+
+        self.items = []
+        self.link = None
+        self.size = None
+        for stem,link,size in stem_link_size:
+            if stem == "main":
+                self.link = link
+                self.size = size
+            else:
+                self.items.append((stem,link,size,rank(size)))
+        self.items.sort(key = lambda (stem,l,s,r): stem)
+
+    def write (self, write, dir):
+        write("\t<dt class=cloud>%s" % dir)
+        if self.link:
+            write(
+                " <a href=\"%s\" title=\"%ik\">main</a>"
+                % (self.link, (self.size+1023)/1024)
+            )
+        write("</dt><dd class=\"justify\">\n")
+
+        for stem,link,size,rank in self.items:
+            write("\t\t<a href=\"%s\" class=\"cloud%i\" title=\"%ik\">%s</a>\n"
+                  % (link, rank, (size+1023)/1024, stem))
+
+        write("\t</dd>\n")
+
+class Index:
+    def __init__ (self):
+        self.dirs = []
+    def add_dir (self, dir):
+        self.dirs.append((dir,[]))
+        self.dir = self.dirs[-1][1]
+    def add_file (self, stem, link, size):
+        self.dir.append((stem, link, size))
+
+    def write (self, filename, gloss=False, depends=False):
+        print "writing index"
+
+        #open file
+        file = open(filename, 'w')
+        if not file:
+            print "could not open " + filename + " for writing"
+            raise IOError
+        write = file.write
+
+        write(boilerplate_header("Documentation Index"))
+        write("<body>\n")
+        write(boilerplate_navigator())
+
+        #write index template
+        write("<div id=\"index\" class=\"jtext\"><dl>\n")
+        write("<h1>Documentation Index</h1>\n\n")
+
+        #build clouds
+        for dir,files in self.dirs:
+            if not files: continue
+            Cloud(files).write(write,dir)
+
+        write("</dl></div>\n\n")
+
+        file.write(boilerplate_footer)
+        file.write("</body></html>")
+        file.close()
+
+    def write_jindex (self, filename):
+        print "writing jtext index"
+
+        #open file
+        file = open(filename, 'w')
+        if not file:
+            print "could not open " + filename + " for writing"
+            raise IOError
+        write = file.write
+
+        write("Library Index. \n")
+
+        def is_text (d,f):
+            name = "."+d+f+".text"
+            print name
+            return os.access(name,os.F_OK)
+        for dir,files in self.dirs:
+            files = [(f,l,s) for (f,l,s) in files if not is_text(dir,f)]
+            if len(files) == 0: continue
+            write("  %s\n" % dir)
+            write("  ###<\n")
+
+            files.sort(key = (lambda (n,l,s): (-s,n)))
+            for stem,link,size in files:
+                if stem == "all": continue
+                if stem == "main": continue
+                name = (dir + stem).strip("/")
+                write("    !import %s.\n" % name)
+
+            write("  ###>\n\n")
+
+        file.close()
+
+    def write_glossary (self, filename):
+        print "writing glossary"
+
+        #open file
+        file = open(filename, 'w')
+        if not file:
+            print "could not open " + filename + " for writing"
+            raise IOError
+        write = file.write
+        
+        write(boilerplate_header("Glossary"))
+        write("<body>\n\n")
+        write(boilerplate_navigator())
+        write("<h1>Glossary of terms</h1>\n\n")
+
+        global glossary
+        glossary = [(t.lower(),t,n) for t,n in glossary]
+        glossary.sort()
+        terms = [
+            "<a href='%s'>%s</a> " % (name,term)
+            for _,term,name in glossary
+        ]
+        
+        cols = 6
+        table = [[] for _ in range(cols)]
+        I = len(terms)
+        for i in range(I):
+            table[(cols*i)/I].append(terms[i])
+
+        write("<div class=center><table>\n")
+        for r in range(len(table[0])):
+            write("<tr>\n")
+            for c in range(cols):
+                try: write("    <td> %s </td>\n" % table[c][r])
+                except: KeyError
+            write("</tr>\n")
+        write("</table></div>\n")
+
+        write("</body></html>")
+
+#================ process options & files ================
+
+def parse_file (file, indir, outdir, title=None,
+                jtext=True, jcode=True, text=True):
+    #determine file type
+    parts = file.split(".")
+    suffix = parts[-1]
+    if   suffix == "jcode":  ftype = ".jcode"
+    elif suffix == "jtext":  ftype = ".jtext"
+    elif suffix == "text":   ftype = ".text"
+    else: return (None,None,None)
+    stem = ".".join(parts[:-1])
+
+    rel_dir(indir) #sets global rootdir
+    infile = indir + file
+    outfile = outdir + stem + ".html"
+    if title == "name": title = indir + stem
+    link = indir + stem + ".html"
+
+    #compile
+    print "converting %s --> %s" % (infile, outfile)
+    Parser()(infile, outfile, ftype, title)
+    size = os.stat(outfile)[6]
+
+    return (link, stem, size)
+
+def make_index (args, destin, jindex=None, gloss=False, depends=False):
+    index = Index()
+
+    #parse and index all files in all directories
+    for dir in args:
+        outdir = fix_dirname(dir)
+        index.add_dir("/" + outdir)
+
+        for file in os.listdir(dir):
+            #print "indexing " + dir + "/" + file #DEBUG
+            if file == "defs.jtext": continue
+            link,stem,size = parse_file(file, outdir, destin + outdir,
+                    title="name", text=False)
+            if link:
+                fname = outdir + file
+                index.add_file(stem, link, size)
+                if destin:
+                    try:
+                        shutil.copy(fname, destin + fname)
+                    except IOError:
+                        print "WARNING: failed to copy file"
+
+    #check for dependency.png created by scripts/depends
+    if depends:
+      dfile = destin+'dependency.png'
+      assert os.access(dfile,os.F_OK), "missing %s" % dfile
+
+    #write an index
+    index.write(destin + "index.html", gloss=gloss, depends=depends)
+    if jindex:
+        index.write_jindex(jindex)
+    if gloss:
+        index.write_glossary(destin + "glossary.html")
+
+help_message = """Usage: jtext2html [options] file
+Synopsis: converts jtext files to html pages
+Options:
+  -o dir    Set output directory root
+  -j file   Set index location
+  -g        Write glossary
+  -d        Link to dependency graph
+  -i        Make index as well as html pages
+License: GPL 3"""
+
+if __name__ == "__main__":
+
+    args = sys.argv[1:]
+    destin = ""
+    jindex = None
+    gloss = False
+    depends = False
+
+    while args:
+        arg,args = args[0],args[1:]
+
+        if arg in ['-h','--help']: print help_message
+        elif arg == '-o':   destin,args = fix_dirname(args[0]),args[1:]
+        elif arg == '-j':   jindex,args = args[0],args[1:]
+        elif arg == '-g':   gloss = True
+        elif arg == '-d':   depends = True
+        elif arg == '-i':
+            make_index(args, destin, jindex, gloss, depends)
+        else:               parse_file(arg, '', destin)
+

@@ -1,0 +1,55 @@
+
+Tuples. \label{sec:skj/tuples}
+  ###<
+    !import skj/types skj/nats.
+  ###>
+
+  Tuples are right-associating pairs
+  ###<
+    !assert (x) = x.
+    !assert (x,y,z) = (x,(y,z)).
+  ###>
+  There are no tuples of length zero.
+
+  We define a dependent type of tuples as
+  ###<
+    Tuple := (nat->type) (\n. n:=prec n'. n' Pair any).
+  ###>
+  Clearly tuples terminating in a unit lead to more natural way of counting
+  (without needing a predecessor), but
+
+  We begin with some utilities for singletons and pairs.
+  ###<
+    mk_pair := (any->any->sgtn) (\x,y. <x,y>).
+    mk_Pair := V (/\a:V. a -> a -> Pair a) (\x,y. <x,y>).
+    !check mk_sgtn = mk_Sgtn any.
+    !check mk_pair = mk_Pair any.
+  ###>
+  The implementation for concatenation is uniform across tuple lengths:
+  ###<
+    cat := (\t,t',z. t'(t z)) ## = B'#, i.e., precomposition
+  ###>
+  but we wrap for safety
+  ###<
+    cat_11 := (sgtn->sgtn->pair) B'.
+    Cat_11 := V (/\a:V. Sgtn a -> Sgtn a -> Pair a) B'.
+  ###>
+  To concatenate longer tuples we will need a general tuple type.
+
+  General tuples. 
+    First we need semisets of tuples
+    ###<
+      emptiset_n := V (/\n:num. semiset) <Bot>.
+      semiset_n := V (\
+      tuple := (nat->V) (???).
+    ###>
+    and polymorphic variants
+    ###<
+      emptiset_n := V (/\n:num. semiset) <Bot>.
+    ###>
+
+    ???
+    ###<
+      sel := (nat -> /\m:nat. tuple m -> any) (\n,m. ???).
+    ###>
+

@@ -1,0 +1,718 @@
+
+Type inference and termination in Godel's T. \label{sec:examples/godels_T}
+  ###<
+    !import skj/tests skjo/logic.
+  ###>
+  ###g p r s t
+
+  Html Only: (see also \ref{sec:examples/system_F})
+
+  Our main theorem in this section will be a proof of termination in Goedel's T
+  (more precisely, weak termination at base type,
+  which is still enough to prove consistency of peano arithmetic).
+  Although we have not implemented this level of reasoning in SKJO,
+  the example demonstrates the potential for expressing complicated logical
+  statements in SKJO, even beyond first-order logic.
+
+  Our development of the language of Godel's T also illustrates the power
+  of join as a type inference mechanism.
+  Here terms will be Church-style combinators annotated with types at each
+  term and subterm.
+  The type-as-closure #term# has a baked-in type inference algorithm,
+  so that partially-annotated terms are automatically raised
+  to the most-annotated possible terms, given the partial information.
+  This is done by propagating type information among occurrences of
+  each type, using the join operation.
+
+  Primitive recursion over natural numbers. 
+
+    We will prove the termination of well-typed terms using primitive
+    recursion over natural numbers.
+    ###(
+      zero &: num
+      succ &: num -> num
+       rec &: /\a:V. num -> (num -> a -> a) -> a -> a
+    ###)
+    Recall that most of this has been defined already.
+    Footnote: 
+      The definitions in this section conflict with those in earlier sections.
+      This conflict could be averted using a module system or some namespace
+      management, which we have not implemented.
+      Thus this section serves as an example of what _could_ be described
+      in the system SKJO, but what has never been parsed by Johann.
+    ###<
+      !check num = V (Y\a. Maybe a).
+      zero := num none.
+      succ := (num -> num) some.
+      rec := (/\a:V. num -> (a -> num -> a) -> a -> a) (
+          Y\r. \n,f,x.  n x \n'.  r n' (f*succ) (f zero x)
+      ).
+      !check succ = Some num.
+    ###>
+    Now we can, for example, add
+    ###<
+      add := (num -> num -> num) (\m,n. rec nat_ty n (K succ) m).
+      !check add zero zero = zero.
+      !check (/\m::test_num, n::test_num. add(succ m)n = add m(succ n)).
+    ###>
+    Now to represent proofs of totality, we need simple types over #num#
+    ###<
+      pre_ty := V (Y\a. Maybe. Prod a a).
+      check_ty := Check ty (Y\t. check_Maybe. check_Prod t t).
+      !define ty := Checked pre_ty check_ty.
+      !check check_ty : Check ty.
+
+      !define test_ty := Test ty (Y\t. test_Maybe. test_Prod t t).
+    ###>
+    with introduction forms
+    ###<
+      num_ty := ty none.
+      exp_ty := (ty -> ty -> ty) (\s,t. some(s,t)).
+      !check num_ty::test_ty.
+      !check (/\s::test_ty, t::test_ty. exp_ty s t::test_ty).
+    ###>
+    and checked elimination forms
+    ###<
+      case_num := (ty -> unit) (I,T).
+      case_exp := (ty -> W Prod ty) (T,I).
+      !check case_num num_ty = I.
+      !check case_exp num_ty = error.
+      !check (/\s::test_ty, t::test_ty.
+          case_exp (exp_ty s t) = (s,t)   AND
+          case_num (exp_ty s t) = error
+      ).
+    ###>
+    We can evaluate these type codes to types-as-closures with
+    ###<
+      ty_eval := (ty -> V) (Y\e. (num, \s,t. e s -> e t)).
+      !check eval_ty num_ty = num.
+      !check (
+          /\s::test_ty, t::num_ty.
+          eval_ty (exp_ty s t) = eval_ty s -> eval_ty t
+      ).
+    ###>
+    We can also discriminate between total types,
+    with truth values #bool#, #semi#, and #unit#.
+    ###<
+      eq_ty := P C (ty -> ty -> bool) (
+          Y\e. ((true, K false), \a,b.(false, \a',b'. and (e a a') (e b b')))
+      ).
+      !check W eq_ty num_ty = K.
+      !check eq_ty t t = test_ty t K.
+      !check (/\s::test_ty, t::test_ty. eq_ty num_ty (exp_ty s t) = F).
+      !check (/\s::test_ty, t::test_ty. eq_ty (exp_ty s t) (exp_ty s t) = K).
+      !check (
+          /\s::test_ty, s'::test_ty, t::test_ty, t'::test_ty.
+          eq_ty (exp_ty s t) (exp_ty s' t') = and (eq_ty s s') (eq_ty t t')
+      ).
+
+
+      if_eq_ty := P C (ty -> ty -> semi) (
+          Y\e. ((I,_), \a,b. (_, \a',b'. and_semi(e a a')(e b b')))
+      ).
+      !check if_eq_ty s t = if (eq_ty s t).
+      !check if_eq_ty t t = test_ty t.
+
+      assert_eq_ty := P C (ty -> ty -> unit) (\s,t. check_ty (s|t)).
+      !check assert_eq_ty s t = assert (eq_ty s t).
+      !check assert_eq_ty t t = check_ty t.
+    ###>
+    Below we will often have to assert the equality of three or four terms at
+    once.
+    Thus it is convenient to use the shorthand
+    ###<
+      !check check_ty (s|t) = assert_eq_ty s t.
+      !check check_ty (r|s|t) = assert_eq_ty r s | assert_eq_ty s t.
+    ###>
+    The equality assertion also gives us an alternate representation for
+    #case_num#.
+    ###<
+      !check case_num = assert_eq_ty num_ty.
+    ###>
+    Finally we will need to join over types in proof search, so we define
+    ###<
+      Join_ty := Sset ty (Y\j. <num_ty> | j\s. j\t. <exp_ty s t>).
+      !check Join_ty test_ty = I.
+    ###>
+
+    Well-behaved terms are well-typed combinators
+    ###-
+      M:s->t   N:s
+      ------------ ap   -------------------------   ---------
+          M N:t         S:(r->s->t)->(r->s)->r->t   K:s->t->s
+
+      --------   -------------   --------------------------
+      zero:num   succ:num->num   rec:num->(num->t->t)->t->t
+    ###-
+    which are coded as Church-style (type,term) pairs that typecheck.
+    In contrast to
+    the cut-free case of reduction proofs in \ref{sec:skj/terms},
+    typability allows cut via the #(ap)# rule;
+    thus we need to annotate the types of subterms.
+    We begin with terms with possibly-incorrect typing annotations
+    ###<
+      pre_term := V (Y\a.
+          Prod ty.          #type annotation
+          Sum (Prod a a).   #application
+          3 Maybe bool      #five atoms
+      ).
+      test_pre_term := Test pre_term (Y\t.
+          test_Prod test_ty.
+          test_Sum (test_Prod t t).
+          3 test_Maybe test_bool
+      ).
+      check_pre_term := Check pre_term (Y\c.
+          check_Prod check_ty.
+          check_Sum (check_Prod c c).
+          3 check_Maybe check_Bool
+      ).
+    ###>
+
+    NEWPAGE
+    We define the type of well-typechecked terms as a closure under
+    the simple back-and-forth type-inference algorithm
+    ###<
+      !define term := P (Checked pre_term check_term) (
+          ce := case_exp.  e := exp_ty.  n := num_ty.
+
+          Y\a,(t,u). <u> (
+          #Case: #ap(f:s->t)(x:s) : t#
+              \(st,-):a,(s,-):a.  ce st \s',t'.
+              _s:= s|s'.  _t:=t|t'.
+              (_t, inl ((e _s _t, _), (_s, _)),
+          #Case: #S:(r->s->t)->(r->s)->r->t#
+              ce t \rst,rs_rt.  ce rst \r,st.  ce st \s,t.
+              ce rs_rt \rs,rt.  ce rs \r',s'.  ce rt \r'',t'.
+              _r:=r|r'|r''.  _s:=s|s'.  _t:=t|t'.
+              (e (e _r. e _s _t). e (e _r _s). e _r _t, _),
+          #Case: #K:r->s->r#
+              ce t \r,sr.  ce sr \s,r'.
+              _r:=r|r'.  _sr:=sr|e s _r.
+              (e _r _sr, _),
+          #Case: #zero:num#
+              _t:=t|n.
+              (_t, _),
+          #Case: #succ:num->num#
+              ce t \n',n''.
+              _t:=n|n'|n''.
+              (_t, _),
+          #Case: #rec:num->(num->s->s)->s->s#
+              ce t \n',nss_ss.  ce nss_ss \nss,ss.
+              ce nss \n'',ss'.  ce ss' \s,s'.  ce ss \s'',s'''.
+              _n:=n|n'|n''.  _s:=s|s'|s''|s'''.  _ss:=e _s _s.
+              (e _n. e (e _n _ss) _ss, _)
+          )
+      ).
+    ###>
+    In each case, we propagate type information by
+    (1) splitting type annotations using #ce=case_exp#,
+    (2) join together all types that should be the same, and
+    (3) building a better-typed term with the joined annotations.
+    The #ap# case also reconstruct better-typed subterms,
+    so that typing information can pass across subterms.
+    This form of type inference allows type sketching in proofs below.
+
+    NEWPAGE
+    Thm: (type inference)
+      The closures #term# raises partially-annotated terms as follows \\
+      Inferring #ap(f:s->t)(x:s) : t#
+      ###<
+        !check (/\s:ty::check_ty,t:ty::check_ty.
+            e:=exp_ty
+
+            term (_, ap _) =
+                 (_, ap(e _ _,_)(_,_)) AND
+
+            term (_, ap(e s _,_)(_,_)) =
+            term (_, ap(e _ _,_)(s,_)) =
+                 (_, ap(e s _,_)(s,_)) AND
+
+            term (t, ap(e _ _,_)(_,_)) =
+            term (_, ap(e _ t,_)(_,_)) =
+            term (_, ap(e _ _,_)(t,_)) =
+                 (t, ap(e _ t,_)(_,_))
+        ).
+      ###>
+      Inferring #S:(r->s->t)->(r->s)->r->t#
+      ###<
+        !check (/\r:ty::check_ty, s:ty::check_ty, t:ty::check_ty.
+            e:=exp_ty.  ss:=inr none.
+
+            term (_,ss) =
+                 (e (e _. e _ _). e (e _ _). e _ _, ss) AND
+
+            term (e (e r. e _ _). e (e _ _). e _ _, ss) =
+            term (e (e _. e _ _). e (e r _). e _ _, ss) =
+            term (e (e _. e _ _). e (e _ _). e r _, ss) =
+                 (e (e r. e _ _). e (e r _). e r _, ss) AND
+
+            term (e (e _. e s _). e (e _ _). e _ _, ss) =
+            term (e (e _. e _ _). e (e _ s). e _ _, ss) =
+                 (e (e _. e s _). e (e _ s). e _ _, ss) AND
+
+            term (e (e _. e _ t). e (e _ _). e _ _, ss) =
+            term (e (e _. e _ _). e (e _ _). e _ t, ss) =
+                 (e (e _. e _ t). e (e _ _). e _ t, ss) AND
+        ).
+      ###>
+      Inferring #K:r->s->r#
+      ###<
+        !check (/\s:ty::check_ty, t:ty::check_ty.
+            e:=exp_ty.  kk:=inr none.
+            
+            term (_,kk) =
+                 (e _. e _ _, kk) AND
+
+            term (e s. e _ _, kk) =
+            term (e _. e _ s, kk) =
+                 (e s. e _ s, kk) AND
+        ).
+      ###>
+      Inferring #zero:num# and #succ:num->num#
+      ###<
+        !check ( zz:=2 inr none.  term (_,zz) = (num_ty,zz)).
+        !check ( ss:=3 inr true.  term (_,ss) = (W exp_ty num_ty,ss)).
+      ###>
+      Inferring #rec:num->(num->s->s)->s->s#
+      ###<
+        !check (/\t:ty::check_ty.
+            e:=exp_ty.  n:=num_ty.  rr:=3 inr false.
+
+            term (_,rr) =
+                 (e n. e (e n. e _ _). e _ _, rr) AND
+
+            term (e n. e (e n. e t _). e _ _, rr) =
+            term (e n. e (e n. e _ t). e _ _, rr) =
+            term (e n. e (e n. e _ _). e t _, rr) =
+            term (e n. e (e n. e _ _). e _ t, rr) =
+                 (e n. e (e n. e t t). e t t, rr)
+        ).
+      ###>
+    Proof: Left as exercise for Johann. []
+
+    Now we can define types of typechecked terms
+    of both general and specific types
+    ###<
+      check_term := Check term check_pre_term.
+      !define test_term := Test term test_pre_term.
+      !check check_term = test2check test_term.
+
+      !define Term := (ty -> P term) (\t. Above (t,_)).
+      !check term = Term _.
+      !check Term t <: term.
+
+      !define test_Term := (/\t:ty. Test. Term ty) test_pre_term.
+      !check test_term = test_Term _.
+      !check test_Term t <:: test_term.
+    ###>
+    with intro forms parametric parametric in types.
+    ###<
+      ap := (term -> term -> term) (\f,x. (_, inl(f,x))).
+      _S := (ty -> ty -> ty -> term) (
+          \r,s,t. (e:=exp_ty. e (e r. e s t). e (e r s). e r t, inr none)
+      ).
+      _K := (ty -> ty -> term) (\s,t. (exp_ty r. exp_ty s r, 2 inr none)).
+      _zero := term (nat_ty, 3 inr none).
+      _succ := term (W exp_ty nat_ty, 4 inr true).
+      _rec := (ty -> term) (
+          \t. (e:=exp_ty. e num_ty. e (e num_ty. e t t). e t t, 4 inr false)
+      ).
+
+      !check (
+          /\s::test_ty, t::test_ty.
+          /\f::test_Term(exp_ty s t), x::test_Term s.
+          ap f x::test_term
+      ).
+      !check (/\r::test_ty, s::test_ty, t::test_ty. _S r s t::test_term).
+      !check (/\s::test_ty, t::test_ty. _K s t::test_term).
+      !check _zero::test_term.
+      !check _succ::test_term.
+      !check (/\t::test_ty. _rec t::test_term).
+    ###>
+    We also define compound intro forms for convenience
+    ###<
+      _B := \ap(ap _S(ap _K _S))_K.
+      compose := (\f,g. ap(ap _B f)g).
+      recurse := (\n,f,x. ap(ap(ap(_rec _)n)f)x).
+    ###>
+    where the type of #_rec# in #recurse# is inferred from #f#'s or #x#'s type.
+    Lem: #inhab(term)={T}union#"well-typed partial terms".
+    Pf: By typechecking, all type errors are raised to #T#. []
+
+    We can also evaluate terms to their proper types
+    ###<
+      eval := (term->any) (
+          Y\e,(t,x). eval_ty t. x (\y,z. (e y)(e z), S,K,zero,succ,rec)
+      ).
+      Eval := (/\t:ty. Term t -> any) (\-. eval).
+      !check eval = Eval _.
+    ###>
+    Lemma: (reduction)
+      Evaluation respects application and the reduction rules
+      ###[
+        S x y z = x z(y z)
+        K x y = x
+        rec zero f x = x
+        rec (succ n) f x = rec n (f*succ) (f zero x)
+      ###]
+      Formally checking,
+      ###<
+        !check (
+            /\s::test_ty, t::test_ty.
+            /\f::test_Term(exp_ty s t), x::test_Term s.
+            eval(ap f x) = (eval f)(eval x)
+        ).
+        !check (
+            /\r::test_ty, s::test_ty, t::test_ty.
+            /\x::test_Term(exp_ty r. exp_ty s t).
+            /\y::test_Term(exp_ty r s), z::test_Term r.
+            eval(ap(ap(ap(_S r s t)x)y)z) =
+            eval(ap(ap x z)(ap y z))
+        ).
+        !check (
+            /\s::test_ty, t::test_ty.
+            /\x::test_Term s, y::test_Term t.
+            eval(_K s t x y) =
+            eval x
+        ).
+        !check ( n:=num_ty. e:=exp_ty.
+            /\t::test_ty.
+            /\f::test_Term(e n. e t t), x::test_Term s.
+            eval(_rec t zero f x) =
+            eval x
+        ).
+        !check ( n:=num_ty. e:=exp_ty.
+            /\t::test_ty.
+            /\n::test_Term n, f::test_Term(e n. e t t), x::test_Term s.
+            eval(ap(ap( ap(_rec t)(ap _succ n) )f)x) =
+            eval(ap(ap( ap(_rec t)n ) (compose f _succ)) (ap (ap f _zero) x))
+        ).
+      ###>
+
+  Proving termination. 
+
+    The main theorem of this system is termination (weak normalization):
+    any well-typed total term of type #num_t# evaluates to a total numeral,
+    expressed as the equivalence of testing code before and after evaluation.
+    Thm: (termination)
+      ###<
+        !check (/\n::test_Term num_ty. eval n :: test_num).
+      ###>
+      or simply
+      ###<
+        !check test_Term num_ty <:: test_num*(Eval num_ty).
+      ###>
+    Pf: By a hereditary termination argument/Tait's method/logical relations...
+    Def: (hereditary termination) We say a well-typed term #m:t# is _reducible_
+      in case
+      * #t=num# and #m# evaluates to a total numeral (i.e. #eval m in nums#), or
+      * #t=r->s# and for every reducible term #x:r#, also #m x:s# is reducible.
+    Comment: Bob Harper points out that the induction over terms
+      _evaluating_to_ a total numeral is much stronger than induction over
+      numbers.
+      In particular, the terms evaluating to numbers may contain subterms of
+      arbitrarily higher type; we only assume they converge in this context.
+    Lem: Every well-typed term is reducible.
+    Pf: By induction on term structure:
+      Case: #ap#: #u v:t#, where #u,v# are reducible.
+        By inversion, #u:s->t# and #v:s# for some #s#,
+        whence #u,v# are reducible by hypothesis.
+        Hence #u v# is reducible.
+      Case: #S#: Let #x:r->s->t,y:r->s,z:r# be reducible.
+        Then #x z# and #y z# are reducible, so #x z(y z)=S x y z# is reducible.
+        Hence #S x y#, hence #S x#, hence #S# is reducible.
+      Case: #K#: Let #x:s,y:t# be reducible.
+        Then #K x y=x#, hence #K x#, hence #K# is reducible.
+      Case: #zero#,#succ#: trivial.
+      Case: #rec#: Suppose #n:num,fs:num->t->t,x:t# are reducible.
+        By hypothesis #n# reduces to a number #n'#.
+        We show by strong induction on #n'# that #rec n fs x# is reducible,
+        whence #rec n fs#, whence #rec n#, whence #rec# is reducible.
+        Subcase: #n'=zero#: #rec zero f x=x# which is reducible by hypothesis.
+        Subcase: #n'=succ n''#:
+          #rec(succ n'')f x = rec n''(f*succ)(f zero x)#.
+          By outer hypothesis and assumption,
+          #fs*succ# and #fs zero x# are reducible;
+          hence by inner hypothesis
+          also #rec n''(f*succ)(f zero x)# is reducible.
+      []
+
+  Expressing termination in SKJO. 
+
+    The logical relations proof relies on induction over types, terms, and
+    numerals, so we begin with the three induction lemmas.
+    Letting #p# be an arbitrary predicate, the induction schemata are
+    ###-
+      p zero   p n ==> p(succ n)
+      -------------------------- ind-num
+               /\n. p n
+
+      p num_ty   p s ==> p t ==> p(s->t)
+      ---------------------------------- ind-ty
+                  /\s. p s
+
+      /\r,s,t. p (_S r s t)      /\s,t. p(_K s t)
+      p(_zero)       p(_succ)      /\t. p(_rec t)
+      /\s,t,f:s->t,x:s. p f ==> p x ==> p(ap f x)
+      ------------------------------------------- ind-term
+                     /\t,x:t. p x
+    ###-
+    where the universally quantified results simply assert that
+    #p# is true for all total numerals, types, and terms, respectively.
+    All three lemmas rely on the #Simple# type theorem.
+    We need totality testers and universal quantifiers over terms and types
+    ###<
+      total_pred_num := (\{p:num -> bool}. O{test_num}{test_bool*p}).
+      total_pred_ty := (\{p:ty -> bool}. O{test_ty}{test_bool*p}).
+      total_pred_term := (\{p:term -> bool}. O{test_term}{test_bool*p}).
+
+      forall_ty := Forall_ {ty} (O {test_ty}) join_ty.
+      forall_term := Forall_ {term} (O {test_term}) join_term.
+      forall_Term := (/\{t:ty}. Quantifier{Term t}) (
+          \{t}. Forall_ {Term t} (O {test_Term t}) (join_Term t)
+      ).
+    ###>
+    Lemma: (induction over numerals)
+      ###<
+        !check (
+            /\{p:num -> bool}::total_pred_num.
+            impiles (p zero).
+            implies (forall_num {\{n}. p(succ n)}).
+            forall_num {\{n}. p n}
+        ).
+      ###>
+    Lemma: (induction over types)
+      ###<
+        !check (
+            /\{p:ty -> bool}::total_pred_ty.
+            implies (p num_ty).
+            implies (forall_ty{\{s}. forall_ty{\{t}. p. exp_ty s t}}).
+            forall_ty{\{t}. t}
+        ).
+      ###>
+    Lemma: (induction over terms)
+      ###<
+        !check (
+            /\{p:term -> bool}::total_pred_term.
+            implies (
+                forall_ty{\{s}.
+                forall_ty{\{t}.
+                forall_Term{exp_ty r s}{\{f}.
+                forall_Term{s}{\{x}.
+                    implies (p f).  implies (p x).  p (ap f x)
+                } } } }
+            ).
+            implies (
+                forall_ty{\{r}. forall_ty{\{s}. forall_ty{\{t}. p(_S r s t) }}}
+            ).
+            implies (forall_ty{\{s}. forall_ty{\{t}. p(_K s t) }}).
+            implies (p(_zero)).
+            implies (p(_succ)).
+            implies (forall_ty{\{t}. p(_rec t) }).
+            forall_term{\{t}. p(t) }
+        ).
+      ###>
+
+    Next we need to formalize convergence and reducibility.
+    At base type, the reducibility is just convergence (modulo beta-eta)
+    However, since reducibility at exponential types has high complexity,
+    we need to move to SKJO to define it.
+    Def: The _reducibility_ predicate is
+      ###<
+        !define Red := (/\t:ty. Term t -> bool) (
+            Y'{\{Red}. (
+                #Case: #num# is just convergence under evaluation
+                \n:Term num. let{n}:=quote_term n. conv {eval n},
+
+                #Case: #s -> t# is hereditary convergence
+                \s:ty.  let {s}:=quote_ty s.
+                \t:ty.  let {t}:=quote_ty t.
+                \f:Term(Exp s t).
+                forall_Term{s}{\{x}. implies (Red s x) (Red t. ap f x)}
+            ) }
+        ).
+        !check (/\t::test_ty,x::test_Term t. Red t x::test_bool).
+        
+        !define red := (term -> bool) (\x. let (t,-):=x. Red t x).
+        !check (/\x::test_term. red x::test_bool).
+
+        !check test_bool*(Red num_ty) = test_num*eval.
+      ###>
+      Our goal now is to show #true=forall_term{red}#,
+      or equivalently, #if*red=test_term#.
+
+  Expressing the termination proof in SKJO. 
+
+    The induction proof that each typeable term is reducible relies on
+    reducibility being preserved under beta-eta equality,
+    which follows from an induction on types.
+    Def: The _invariance_ predicate of reducibility at various types is
+      ###<
+        eval_eq := (term -> term -> bool) (
+            e:= quote_term;A{eval}. \x,y. equal(e x)(e y)
+        ).
+
+        Inv := (Code{ty} -> bool) (
+            \{t::test_ty}.
+            forall_Term{t}{\{x}. forall_Term{t}{\{y}.
+                implies (eval_eq x y).
+                iff (red x) (red y)
+            } }
+        ).
+        !check test_bool*Inv = test_Code {ty} test_ty.
+      ###>
+    Lemma: (invariance of reducibility under beta-eta equality)
+      ###<
+        !check true = forall_ty {Inv}.
+        !check if*Inv = test_Code {ty} test_ty.
+      ###>
+    Proof: By induction on type structure.
+      Case: Numerals.
+        ###<
+          !check true =
+              forall_Term{num_ty}{\x.
+              forall_Term{num_ty}{\y.
+                  implies (eval x = eval y). iff (red x) (red y)
+              } }.
+          !check true = Inv{num_ty}.
+        ###>
+      Case: Exponentials.
+        Equality of functions
+        ###<
+          !check true = 
+              forall_ty {\{s}.
+              forall_ty {\{t}.
+                  st:=exp_ty s t.
+                  forall_Term{st}{\{f}.
+                  forall_Term{st}{\{f'}.
+                      and (
+                          implies (eval_eq f f').
+                          forall_Term{s}{\{x}.
+                              fx := ap f x.  fx' := ap f' x.
+                              and (eval_eq fx fx').
+                              iff (red fx) (red fx') }
+                      ).
+                      iff (red f) (red f')
+              } } } }.
+          !check true = forall_ty{\{s}. forall_ty{\{t}. Inv{exp_ty s t}}}.
+        ###>
+      Finally, we combine using the induction schema
+      ###<
+        !check true = forall_ty {Inv}.
+        !check if*Inv = test_Code {ty} test_ty.
+      ###>
+      []
+    Finally we verify the induction proof of hereditary termination
+    Thm: (hereditary termination)
+      ###<
+        !check true = forall_term {red}.
+        !check if*red = test_term.
+      ###>
+    Pf: By induction on term structure.
+      Case: #ap#: #u v:t#, where #u:s->t# and #v:s# are reducible.
+        Hence #u v# is reducible.
+        ###<
+          !check true =
+              forall_ty{\{s}.  forall_ty{\{t}.
+              forall_Term{exp_ty s t}{\{u}. implies (red u).
+              forall_Term{s}{\{v}. implies (red v).
+                  red(ap u v) }}}}.
+        ###>
+      Case: #S#: Let #x:a->b->c,y:a->b,z:a# be reducible.
+        Then #x z# and #y z# are reducible, and hence #x z(y z)# is reducible,
+        hence #S x y# hence #S x# hence #S# is reducible.
+        ###<
+          !check true = (
+              e := exp_ty.
+              forall_ty{\{r}. forall_ty{\{s}. forall_ty{\{t}.  S_:=_S r s t.
+                and (forall_Term{e r. e s t}{\{x}. implies (red x).  Sx:=S_ x.
+                  and (forall_Term{e r s}{\{y}. implies (red y).  Sxy:=Sx y.
+                    and (forall_Term{r}{\{z}. implies (red z).  Sxyz:=Sxy z.
+                      and (
+                        xz:=ap x z.       and (red xz).
+                        yz:=ap y z.       and (red yz).
+                        xz_yz:=ap xz yx.  and (red xz_yz).
+                        eval_eq xz_yz Sxyz
+                      ). red Sxyz
+                    }). red Sxy
+                  }). red Sx
+                }). red S_
+              }}}
+          ).
+        ###>
+      Case: #K#: Let #x:r,y:s# be reducible.  Then #K x y=x# is reducible,
+        hence #K x#, hence #K# is reducible.
+        ###<
+          !check true =
+              forall_ty{\{s}. forall_ty{\{t}.  K_:=_K s t.
+                and (forall_term{\{x}.  implies (red x).
+                  and (forall_term{\{y}. implies (red y).
+                    and (eval_eq Kxy x).
+                    red Kxy
+                  }). red Kx
+                }). red K_
+              }}.
+        ###>
+        Hence #I# is reducible.
+      Case: #zero#: trivial.
+        ###<
+          !check true = red _zero.
+        ###>
+      Case: #succ#:
+        ###<
+          !check true =
+              forall_Term{num_ty}{\{n}. implies (red n). red(_succ n)}.
+        ###>
+      Case: #rec#: We show by induction on #n:num#
+        that #rec n# is reducible for each #n#.
+        ###<
+          !check true = (
+              forall_ty{\{t}.
+                rec_t := _rec t.
+                forall_n := forall_Red num_ty.
+                forall_f := forall_Red(exp_ty num_ty(exp_ty t t)).
+                forall_x := forall_Red t.
+
+                #Case: zero
+                and (
+                  rz := ap rec_t _zero.
+                  and (forall_f {\{f}.  rfz:=rz f.
+                    and (forall_x {\{x}.  rzfx:=ap rzf x.
+                      and (eval_eq rzfx x) (red rzfx)
+                    }). red rzf
+                  }). red rz
+                ).
+
+                #Case: successor
+                and (forall_n {\{n}.  n':=ap _succ n.  and (red n').
+                  rn := ap rec_t n.
+                  rN := ap rec_t n'.
+                  and (forall_f {\{f}.  f':=ap(ap _B _succ)f.  and (red f').
+                      rnF := ap rn f'.
+                      rNf := ap rN f.
+                      and (forall_x {\{x}.  x':=ap(ap f _zero)x.  and (red x').
+                          rnFX := ap rnF x'.
+                          rNfx = ap rNf x.
+                          and (eval_eq rnFX rNfx).
+                          implies (red rnFX) (red rNfx)
+                      }). implies (red rnF) (red rNf)
+                  }). implies (red rn) (red rN)
+                }).
+
+                #Finally, conclude
+                red rec_t
+              }).
+        ###>
+      []
+
+  Takeout: Formally verifying the termination proof. 
+
+    LATER
+    Question: are Johann's reasoning principles (axiom schemata) strong enough
+      to verify the proof?
+      If not, what else is needed?
+    Question: Should all the inductive datatypes be factored as
+      binary #Prod#ucts, binary #Sum#s, #Maybe#s, and #bool#eans?
+
+  ###u p r s t
+

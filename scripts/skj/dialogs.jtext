@@ -1,0 +1,34 @@
+
+Dialogs. \label{sec:skj/dialogs}
+  ###<
+    !import skj/tests skj/streams.
+  ###>
+  
+  The polymorphic type of dialogs
+  ###<
+    Dialog := (V->V->V) (\i,o. Y\a. Prod o. i->a).
+    dialog := V (Y\a. Prod any. any->a).
+    !check dialog = Dialog any any.
+  ###>
+  with intro and elim forms
+  ###<
+    const_Dialog := (/\i:V,o:V. o -> Dialog i o) (\-,-,x. Y\xs. (x,K xs)).
+
+    write_Dialog := (/\i:V,o:V. o-> i -> Dialog a) (\-,-,y,ds. (y,ds)).
+
+    read_Dialog := (/\i:V,o:V. Dialog i o -> o) (\-,-,(x,-). x).
+    read_dialog := (dialog->any) (\(x,-).x).
+    !check read_dialog = read_Dialog any any.
+  ###>
+
+  We can also listen to two dialogs symmetrically talking to each other
+  ###<
+    play_Dialogs := (
+        /\i:V,o:V. Dialog i o -> Dialog o i -> Stream(Prod i o)
+    ) (
+        \-,-. Y\p,(x,xs),(y,ys). ((x,y),p (xs y) (ys x))
+    ).
+    play_dialogs := play_Dialogs any any.
+    !check play_dialogs x y = map_stream swap (play_dialogs y x).
+  ###>
+

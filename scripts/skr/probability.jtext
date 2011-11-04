@@ -1,0 +1,16 @@
+
+Computable probabilities. \label{sec:skr/probability}
+  ###<
+    !read axioms/rand. #XXX update to not use #J#
+  ###>
+
+  We can define probabilities as mixtures of #K# and #F#, e.g.
+  ###<
+    always := K.
+    never := F.
+    half := R.
+    one_third := (Y\p. (p+F)+R).
+  ###>
+  TODO: define an irrational, even a transcendental...
+
+

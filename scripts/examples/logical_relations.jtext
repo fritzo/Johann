@@ -1,0 +1,685 @@
+
+Logical relations, from Tait to Girard. \label{sec:examples/logical_relations}
+  ###<
+    !import skj/logic skj/nats.
+  ###>
+
+  We will mainly be interested in proving strong normalization for various
+  languages.
+  See Girard89 and Barendregt92 for an example in system F,
+  XXX Tait's orignal paper?
+  HarperXX for an example in Goedel's T, and
+  \ref{sec:examples/proofs} for examples of proof techniques in #SKJ#.
+
+  For intersection-type theory, see
+  VanBakel92 (and refs therein pp. 20) and
+  Krivine90 (or Krivine93).
+
+  In addition to the basic logical connectives as closures,
+  ###<
+    !check Or = Sum   AND   And = Prod   And   If = Exp..
+  ###>
+  we often need conditional connectives,
+  which are inhabited only in case certain checks are valid.
+  ###<
+    Whenever := (unit -> /\a:V. P. Maybe a) (\u,-. (u none, _)).
+    Wheneither := (unit -> unit -> P bool) (\u,v,x. x u v _).
+  ###>
+  For some examples usage,
+  see \ref{sec:skj/terms} and later \ref{sec:examples/proofs}.
+
+  Simply-typed combinatory algebra with join. 
+    Consider the rules for type- and term- formation, typing judgements,
+    and small-step reduction
+    ###-
+      #type- and term- formation
+
+                    a type   b type       a type   b type
+      ------ atom   --------------- arr   --------------- ins
+      a type           a->b type              a&b type
+
+                                       M term   N term
+      ------ S   ------ K   ------ J   --------------- ap
+      S term     K term     J term         M N term
+
+      #type-assignment
+
+      ------------------------- type-S   --------- type-K   ----------- type-J
+      S:(a->b->c)->(a->b)->b->c          K:a->b->a          J:a->b->a&b
+
+      x:a->b   y:a
+      ------------ type-ap
+          x y:b
+
+      #small-step reduction
+
+      ------------------ red-S   --------- red-K   --------------------- red-J
+      S x y z->>x z(y z)         K x y->>x         J x y z->>J(x z)(y z)
+
+        M->>M'               N->>N'             M->>M'   N->>N'
+      ---------- red-fun   ---------- red-arg   --------------- red-con
+      M N->>M' N           M N->>M N'             M|N->>M'|N'
+    ###-
+    where we consider types up to the following equivalence
+    ###-
+      --------------------   -----------------------
+      (a->b)&(a->c)=a->b&c   (/\a.b)&(/\a.c)=/\a.b&c
+    ###-
+    ###<
+      type := V (Y\a. Or nat. Or (W Prod a). W Prod a).
+      atm := (nat->type) inl.
+      ar := Bin_op type (\l,r. inr.inl (l,r)).
+      in := Bin_op type (\l,r. 2 inr (l,r)).
+
+      term := V (Y\a. Or (W Prod a). Maybe bool).
+      ap := Bin_op term (\l,r. inl (l,r)).
+      _S := term (inr none).
+      _K := term (2 inr K).
+      _J := term (2 inr F).
+
+      #XXX could use some better pattern-matching code...
+      Typed := (term->type->V) (
+          Y\ty,x,a.
+          Or (split x \u,v. \/b:type. And (ty u. ar b a). ty v a).
+          Whenever (eq x _S.
+              split_ar a      \abc,ab_ac.
+              split_ar abc    \a,bc.
+              split_ar bc     \b,c.
+              split_ar ab_ac  \ab,ac.
+              split_ar ab     \a',b'.   eq_ty a a'.   eq_ty b b'.
+              split_ar bc     \b',c'.   eq_ty b b'.   eq_ty c c'
+          ).
+          Wheneither
+          (eq x _K.
+              split_ar a \a,ba.
+              split_ar ba \ab,a'.
+              eq_ty a a'
+          )
+          (eq x _J.
+              split_ar a \a,b_ab.
+              split_ar b_ab \b,ab.
+              split_in ab \a',b'.  eq_ty a a'.  eq_ty b b' 
+          )
+      ).
+      typing := (\/x:term,a:type. Typed x a).
+
+      Red := (term->term->V) (Y\r,u,v.  ???).
+      red := (\/x:term,y:term. Red x y).
+    ###>
+
+    ----------------------------------------------------------------------
+    OLD
+
+    Thm: (preservation)
+      ###=
+        M->>M'   M:a
+        ------------ pres
+           M':a
+      ###=
+    Pf: By induction on #M=>M'#:
+      Cases: #S0,S1,S2,K0,K1,J0,J1,J2,ap#: trivial.
+      Case: 
+        ###=
+          x=>x'   y=>y'   z=>z'   x' z'(y' z')=>w
+          --------------------------------------- red-S3
+                        S x y z=>w
+        ###=
+        ###n
+          1   x=>x'               ass
+          2   y=>y'               ass
+          3   z=>z'               ass
+          4   x' z'(y' z')=>w     ass
+          5   S x y z:c           ass
+          6   x:a->b->c           inv: 5
+          7   y:a->b              inv: 5
+          8   z:a                 inv: 5
+          9   x':a->b->c          hyp: 1,6
+          10  y':a->b             hyp: 2,7
+          11  z':a                hyp: 3,8
+          12  x' z'(y' z'):a      type-app: 9,10,11
+          13  w:a                 hyp: 4,12
+        ###n
+      Case: 
+        ###=
+          x=>x'   ???
+          ----------- red-K2
+           K x y=>x'
+        ###=
+        ###n
+          1   x=>x'               ass
+          2   K x y:a             ass
+          3   x:a                 inv: 2
+          4   x':a                hyp: 1,3
+        ###n
+      Case: 
+        ###=
+          x z=>x'   y z=>y'
+          ----------------- red-J3
+           J x y z=>J x' y'
+        ###=
+        ###n
+          1   x z=>x'             ass
+          2   y z=>y'             ass
+          3   J x y z:b&c         ass
+          4   x:a->b              inv: 3
+          5   y:a->c              inv: 3
+          6   z:a                 inv: 3
+          7   x z:b               type-app: 4,6
+          8   y z:c               type-app: 5,6
+          9   x':b                hyp: 1,7
+          10  y':c                hyp: 2,8
+          11  J x' y':b&c         type-join: 9,10
+        ###n
+      []
+    ###<
+      Pres := (/\x:term,a:type. If (Typed x a). \/x'. Red x x') 
+          ???
+      ).
+    ###>
+
+    Following Tait, define a _hereditary_termination_ relation at each type.
+    Def: (hereditary termination)
+      * for #a# atomic, #x:a conv# iff #x=>x'# for some value #x'#.
+      * for #a,b# types, #x:a->b conv# iff #x=>x'# for some value #x'#,
+        and for each #y:a conv#, #x y:b conv#.
+      ###=
+        x:a ht          x:a->b ht   y:a ht          x:a ht   y:b ht
+        ------ ht-red   ------------------ ht-app   --------------- ht-ins
+        x=>x'                x y:b ht                 J x y:a&b ht
+      ###=
+    ###<
+      Ht := (term->type->V) (
+          Y\h. ht := (\/x,a. h x a).
+          \x,a.
+          And (Typed x a).
+          And (\/x'. Red x x').
+          <a> (
+              \-. unit,
+              \a,b. /\(y,a,-):ht. h (ap x y) b,
+              \a,b. split_in x \x,y. And (h x a). h y b  #omit ???
+          )
+      ).
+    ###>
+    Lem: (ht preservation)
+      ###=
+        x:a ht   x=>y   x'=>y
+        --------------------- ht-conv
+              x':a ht
+      ###=
+    Pf: By induction on #a type#:
+      Case: #type-atom#: trivial
+      Case: #type-arr#:
+        ###n
+          1   x:a->b ht           ass
+          2   x=>x'               ass
+          3   y:b ht              ass
+          4   x y:b ht            ht-app: 1,3
+          5   x y=>z              ht-red: 4
+          6   x'=>x'              red-refl: 2
+          7   y=>y'               inv: 5
+          :   ???
+        ###n
+      Case: #type-ins#: ???
+    Thm: (hereditary termination)
+      ###=
+          x:a
+        ------ ht
+        x:a ht
+      ###=
+    Pf: By induction on the structure of #x:a#
+      Case: 
+        ###=
+          x:a->b   y:a
+          ------------ type-ap
+             x y:b
+        ###=
+        ###n
+          1   x:a->b ht           ass
+          2   y:a ht              ass
+          3   x y:b               ass
+          4   x y:b ht            ht-app: 1,2
+        ###n
+      Case: 
+        ###=
+          ------------------------- type-S
+          S:(a->b->c)->(a->b)->b->c
+        ###=
+        ###n
+          1   x:a->b->c ht                  hyp
+          2     y:a->b ht                   hyp
+          3       z:a ht                    hyp
+          4         x=>x'                   ht-red: 1
+          5         y=>y'                   ht-red: 2
+          6         z=>z'                   ht-red: 3
+          7         x' z'(y' z'):c ht       ht-app: 1,2,3
+          8         x' z'(y' z')=>w         ht-red: 7
+          9         S x y z=>w              S-red3: 4,5,6,8
+          10        S x y z:c ht            ht-conv: 7,8,9
+          11        S x y=>S x' y'          red-S2: 4,5
+          12      S x y:a->c ht             ht-def: 3/11,10
+          13      S x=>S x'                 red-S1: 4
+          14    S x:(a->b)->a->c ht         ht-def: 2/13,12
+          15    S=>S                        red-S0
+          16  S:(a->b->c)->(a->b)->a->c ht  ht-def: 1/15,14
+        ###n
+      Case: 
+        ###=
+          --------- type-K
+          K:a->b->a
+        ###=
+        ###n
+          1   K=>K                          K-red0
+          2   x:a ht                        hyp
+          3     x=>x'                       ht-red: 2
+          4     K x=>K x'                   red-K1: 3
+          5     y:b ht                      hyp
+          6       K x y=>x'                 red-K2: 3
+          7       K x y:a ht                ht-conv: 2,3,6
+          8     K x:b->a ht                 ht-def: 4,(5/7)
+          9   K:a->b->a ht                  ht-def: 1,(2/8)
+        ###n
+      Case: The most difficult case of #type-J# is when both arguments are
+        arrow types and the result has type #(a->b)&(a->c)=a->b&c#;
+        other cases are subsumed.
+        ###=
+          ------------------------ type-J
+          J:(a->b)->(a->c)->a->b&c
+        ###=
+        ###n
+          1   J=>J'                         red-J0
+          2   x:a->b ht                     hyp
+          3     x=>x'                       ht-red: 2
+          4     J x=>J x'                   red-J1: 3
+          5     y:a->c ht                   hyp
+          6       y=>y'                     ht-red: 5
+          7       J x y=>J x' y'            red-J2: 3,6
+          8       z:a ht                    hyp
+          9         x z:b ht                ht-app: 2,8
+          10        y z:c ht                ht-app: 5,8
+          11        x z=>x'                 ht-red: 9
+          12        y z=>y'                 ht-red: 10
+          13        J x y z=>J x' y'        red-J3: 11,12
+          14        x':b ht                 ht-pres: 9,11
+          15        y':c ht                 ht-pres: 10,12
+          16        J x' z':b&c ht          ht-ins: 14,15
+          17        J x y z:b&c ht          ht-conv: 13,-,16
+          18      J x y:a->b&c ht           ht-def: 7,(8/17)
+          19    J x:(a->c)->a->b&c ht       ht-def: 4,(5/18)
+          20  J:(a->b)->(a->c)->a->b&c ht   ht-def: 1,(2/19)
+        ###n
+      []
+    Cor: (strong normalization) If #x:a# then #x=>x'# for some #x'#, i.e.
+      ###=
+         x:a
+        ----- conv-type
+        x=>x'
+      ###=
+
+  Simply-typed lambda-calculus with join. 
+
+    Outline: 
+      * set up a type assignment system and small-step reduction semantics
+      * prove preservation
+      * define reduction, reducibility and red. candidates
+      * interpret types as a "logical stone dual" of normalizing terms
+      * show all types are intepreted as reducibility candidates
+      * define model-theoretic type-assignment (#G|=M:a#)
+      * prove soundness theorem #G|-M:a ==> G|=M:a#
+      * conclude strong normalization #G|-M:a ==> M SN#
+      * then show the converse, following (Krivine93 thm. 4.11, pp. 60)
+        and (VanBakel92 sec. 3.4 pp. 20): if #M SN# then #M# is typable in the
+        intersection type-system without #omega#.
+
+    Consider the rules for type- and term- formation, typing judgements,
+    and large-step reduction
+    ###l in
+    ###g G a b s
+    ###-
+      #type- and term- formation
+
+                    a type   b type       a type   b type
+      ------ atom   --------------- arr   --------------- ins
+      a type           a->b type              a&b type
+
+                   M term   N term         M term        M term   N term
+      ------ var   --------------- app   --------- abs   --------------- join
+      x term          M N term           \x.M term           M|N term
+
+      #type-assignment
+
+       G,x:a|-M:b             G|-M:a->b   G|-N:a
+      ------------ type-abs   ------------------ type-app
+      G|-\x.M:a->b                 G|-M N:b
+
+      G|-M:a   G|-N:b
+      --------------- type-join
+        G|-M|N:a&b
+
+      #small-step reduction
+
+        M->>M'                 N->N'                  M->M'
+      ---------- red-app1   ---------- red-app2   ------------ red-abs
+      M N->>M' N            M N->>M N'            \x.M->>\x.M'
+
+      M->>M'   N->>N'
+      --------------- red-join   ----------------- red-subs
+        M|N->>M'|N'              (\x.M)N->>[x:=N]M
+    ###-
+    We write #(x:=N. M)# as short-hand for #(\x.M)N#,
+    so that the red-subs rule becomes
+    ###=
+      ----------------
+      x:=N.M->>[x:=N]M
+    ###=
+
+    First a lemma for substitution
+    Lem: (substitution-preservation)
+      ###=
+        G,x:a|-M:b   N:a
+        ---------------- pres-subs
+            [x:=N]M:a
+      ###=
+    Pf: By induction on #G,x:a|-M:b#:
+      Case: #type-atom#: trivial.
+      Case: 
+        ###=
+          G,x:a|-M':c->b   G,x:a|-N':c
+          ---------------------------- term-app
+                   G,x:a|-M' N':b
+        ###=
+        ###n
+          1   G,x:a|-M':c->b            ass
+          2   G,x:a|-N':c               ass
+          3   G|-[x:=N]M':c->b          hyp: 1
+          4   G|-[x:=N]N':c             hyp: 2
+          5   G|-[x:=N]M'[x:=N]N':b     type-app: 3,4
+          6   G|-[x:=N]M:b              subs-app: 5
+        ###n
+      Case: #type-join#: similar.
+      Case: 
+        ###=
+           G,x:a,y:c|-M:d
+          ---------------- term-abs
+          G,x:a|-\y.M:c->d
+        ###=
+        We assume by alpha-conversion that the supports of #x#, #y#, and #N#
+        are all disjoint.
+        ###n
+          1   G,x:a,y:c|-M:d            ass
+          2   G,y:c|-[x:=N]M:d          hyp: 1
+          3   G|-\y.[x:=N]M:c->d        type-abs: 2
+          4   G|-[x:=N]\y.M:c->d        subs-abs: 3
+        ###n
+      []
+
+    Thm: (preservation)
+      ###=
+        G|-M:a   M->>M'
+        --------------- pres
+           G|-M':a
+      ###=
+    Pf: By induction on #M->>M'#:
+      Case: 
+        ###=
+              M->>M'
+          ------------ red-abs
+          \x.M->>\x.M'
+        ###=
+        ###n
+          1   G|-\x.M:b                 ass
+          2   \x.M->>\x.M'              ass
+          3   M->>M'                    ass
+          4   G,x:a|-M:b                inv: 1
+          5   G,x:a|-M':b               hyp: 4,3
+        ###n
+      Case: 
+        ###=
+            M->>M'
+          ---------- red-app1
+          M N->>M' N
+        ###=
+        ###n
+          1   M->>M'                    ass
+          2   M N:a                     ass
+          3   G|-M:b->a                 inv: 2
+          4   G|-N:b                    inv: 2
+          5   G|-M':b->a                hyp: 3,1
+          6   G|-M' N:a                 type-app: 5,4
+        ###n
+      Cases: red-app2, red-join: similar
+      Case: red-subs
+        ###=
+          ----------------- red-subs
+          (\x.M)N->>[x:=N]M
+        ###=
+        ###n
+          1   G|-(\x.M)N:a              ass
+          2   G|-\x.M:b->a              inv: 1
+          3   G|-N:b                    inv: 1
+          4   G,x:b|-M:a                inv: 2
+          5   G|-[x:=N]M:a              pres-subs: 4,3
+        ###n
+      []
+
+    Def: (normalization)
+      * A term is _normal_ if it cannot be reduced.
+      * A term #M# is _strongly_normalizing_, written #M in SN# or #M in SN#,
+        if every reduction path starting at #M# terminates.
+    Fact: #SN# is definable by the rules
+      ###-
+        P1 in SN   ...   Pn in SN   ([x:=N]M)P1 ... Pn in SN   N in SN
+        -------------------------   ----------------------------------
+           x P1 ... Pn in SN             (x:=N.M)P1 ... Pn in SN
+
+         M P1 ... Pn in SN      N P1 ... Pn in SN      M in SN
+        --------------------   --------------------   ----------
+        (M|N)P1 ... Pn in SN   (M|N)P1 ... Pn in SN   \x.M in SN
+      ###-
+      and satisfies the rules
+      ###-
+        M N in SN   M N in SN
+        ---------   ---------
+         M in SN     N in SN
+      ###-
+    Def: (reducibility candidates)
+      A subset #R(=SN# is a _reducibility_candidate_ as in Girard89,
+      or _saturated_ as in Barendregt92, iff it is closed under the rules
+      ###-
+        P1 in SN   ...   Pn in SN   [x:=N]M P1 ... Pn in R   N in SN
+        -------------------------   --------------------------------
+            x P1 ... Pn in R            (x:=N.M)P1 ... Pn in R
+
+          M P1 ... Pn in R      N P1 ... Pn in R
+        -------------------   -------------------
+        (M|N)P1 ... Pn in R   (M|N)P1 ... Pn in R
+      ###-
+      Note: #N,M# need not be in #SN# in the last two rules, resp. XXX right?
+      We denote by #RC# the set of all such reducibility candidates.
+    Def: Let #R,S in RC# and #A(=RC#. Define
+      ###[
+        R->S  := {M | /\N. R(N)==>S(M N)}
+        R&S   := R intersect S
+        /\A   := Intersect A
+      ###]
+    Lemma: 
+      ###-
+                      R in RC   S in RC     R in RC   S in RC      A (= RC
+        --------- 1   ----------------- 2   ----------------- 3   --------- 4
+        SN in RC         R->S in RC             R&S in RC         /\A in RC
+      ###-
+    Pf: 
+      (1) #SN# is closed under all the operations.
+      (2) We show closure under each rule.
+        * If #/\N. R(N)==>S(M N)# then #M N in SN# and hence #M in SN#.
+        * closure under variables
+          ###n
+            1   P1,...,Pn in SN                   ass
+            2   N in R                            ass
+            3     N in SN                         RC-def: 2
+            4     x P1 ... Pn N in S              RC-def: 1,3
+            5   x P1 ... Pn in R==>S              #==>#-def: 2/4
+          ###n
+        * closure under arrow
+          ###n
+            1   ([x:=N]M)P1 ... Pn in R==>S       ass
+            2   P in R                            ass
+            3     ([x:=N]M)P1 ... Pn P in S       #==>#-def: 1,2
+            4     (x:=N.M)P1 ... Pn P in S        RC-def: 3
+            5   (x:=N.M)P1 ... Pn in R==>S        #==>#-def: 2/4
+          ###n
+        * closure under join (only one direction shown)
+          ###n
+            1   M P1 ... Pn in R==>S              ass
+            2   P in R                            ass
+            3     M P1 ... Pn P in S              #==>#-def: 1,2
+            4     (M|N)P1 ... Pn P in S           ass
+            5   (M|N)P1 ... Pn in R==>S           #==>#-def: 2/4
+          ###n
+      (4) The consraints are closure conditions; closure under intersection
+        follows.
+      (3) a special case of (4)
+      []
+    Def: (types-as-candidates) 
+      * for #a# atomic, #[a] := SN#;
+      * for #a,b# types, #[a->b] := [a]->[b]#;
+      * for #a,b# types, #[a&b](M) <==> [a]&[b]#;
+      * for #b# a type, #[/\a.b] := /\{[a:=R.b] | R in RC}#.
+    Lemma: For any type #a#, #[a] in RC#.
+    Pf: By induction on types using the previous lemma.
+      []
+    Def: A _substitution_ is a map #:Var-->Term#.
+      A substitution #s# _satisfies_ a type assignment
+      #s|=M:a# iff #[a](s M)#, and satisfies a context
+      #G=x_1:a_1,...,x_n:a_n# iff it satisfies each typing in the context.
+      If #s=[]# is the identity substitution, we write simply #|=M:a#.
+      A context _satisfies_ a typing #G|=M:a# iff #/\s. s|=G ==> s|=M:a#.
+      Thus we have a preorder #|=# on contexts.
+    Def: Define a join operation on contexts via
+      * #x:a+x:b = x:a&b#
+      * #x:a+y:b = x:a,y:b#
+    Fact: Contexts form a join semi-lattice with #+# and #|-#.
+
+    How does logical entailment #|-# relate to semantic entailment #|=#?
+    Thm: (soundness) #G|-M:a ==> G|=M:a#.
+    Pf: By induction on #M:a#.
+      Case: 
+        ###=
+           G,x:a|-M:b
+          ------------ type-abs
+          G|-\x.M:a->b
+        ###=
+        ###n
+          1   G,x:a|=M:b            hyp
+          2   s|=G                  ass
+          3     ???
+          ?     s|=\x.M:a->b        ???
+          ?   G|=\x.M:a->b          #|=#-def: 2/?
+        ###n
+        LATER
+      Case: 
+        ###=
+          G|-M:a->b   G|-N:a
+          ------------------ type-app
+               G|-M N:b
+        ###=
+        ###n
+          1   G|=M:a->b             hyp
+          2   G|=N:a                hyp
+          3   s|=G                  ass
+          4     s M in [a->b]       #|=#-def: 1,3
+          5     s N in [a]          #|=#-def: 2,3
+          6     (s M)(s N) in [b]   #[-]#-def: 4,5
+          7     s(M N) in [b]       subs-def: 6
+          8   G|=M N:b              #|=#-def: 3/7
+        ###n
+      Case: 
+        ###=
+          G|-M:a   G|-N:b
+          --------------- type-join
+            G|-M|N:a&b
+        ###=
+        ###n
+          1   G|=M:a                hyp
+          2   G|=N:b                hyp
+          3   s|=G                  ass
+          4     s M in [a]          #|=#-def: 1,3
+          5     s N in [b]          #|=#-def: 2,3
+          6     s M|s N in [a&b]    #[-]#-def: 4,5   
+          7     s(M|N) in [a&b]     subs-def: 6
+          8   G|=M|N:a&b            #|=#-def: 3/7
+        ###n
+      []
+
+    Thm: (strong normalization of typed terms) If #G|-M:a# then #M in SN#.
+    Pf: Let #G|-M:a# be given.
+      Since #G# assigns types #a_i# to variables #x_i# and each #[a_i]# is
+      saturated, #|=G#.
+      But then #|=M:a#, and so #[a](M)# and hence #M in SN#.
+      []
+    Thm: (typability of strongly normalizing terms) If #M in SN# then for some
+      context #G# and and some type #a#, #G|-M:a#.
+    Pf: By induction on #M in SN#.
+      Case: 
+        ###=
+          P1 in SN   ...   Pn in SN
+          -------------------------
+             x P1 ... Pn in SN
+        ###=
+        ###n
+          1     P1 in SN                                  ass
+          :
+          n     Pn in SN                                  ass
+          n+1   G1|-P1:a1                                 hyp
+          :
+          n+n   Gn|-Pn:an                                 hyp
+          2n+1  G1+...+Gn+x:a1->...->an->b|x P1 ... Pn:b  rule: n+1,...,n+n
+        ###n
+      Case: 
+        ###=
+          ([x:=N]M)P1 ... Pn in SN   N in SN
+          ----------------------------------
+               (x:=N.M)P1 ... Pn in SN
+        ###=
+        In step 5, we note that in the typing of #[x:=N]M#, each occurrence of
+        #N# must be typed by #G#, say as #bi#.
+        ###n
+          1   ([x:=N]M)P1 ... Pn in SN        ass
+          2   N in SN                         ass
+          3   G|-([x:=N]M)P1 ... Pn:a         hyp: 1
+          4   G'|-N:b                         hyp: 2
+          5   G|-N:b1, ..., G|-N:bk
+          6   G|-[x:=N]M:c                    inv: 3
+          7   G+G',x:b&b1,...,bk|-M:c         ind. on #M#
+          8   G+G'|-\x.M:b&b1&...&bk->c       type-abs: 7
+          9   G+G'|-(x:=N.M)                  type-app: 8
+          10  G+G'|-(x:=N.M)P1 ... Pn:a       type-app: 9
+        ###n
+      Case: 
+        ###=
+            M P1 ... Pn in SN
+          --------------------
+          (M|N)P1 ... Pn in SN
+        ###=
+        ###n
+          1   M P1 ... Pn in SN               ass
+          2   G|-M P1 ... Pn:a                hyp: 1
+          3   G|-P1:b1, ..., G|-Pn:bn         inv: 2
+          4   G|-M:c                          inv: 2
+          5   G|-N|M:c                        ??? LATER
+          6   G|-(M|N)P1 ... Pn:a             type-arr: 5,3
+        ###n
+      Case: 
+        ###=
+            M in SN
+          ----------
+          \x.M in SN
+        ###=
+        ###n
+          1   M in SN             ass
+          2   G|-M:a              hyp
+          3   G+x:b|-M:a          weaken,2
+          4   G',x:b&b'|-M:a      factoring #G#
+          5   G'|-\x.M:b&b'->a    type-abs: 4
+        ###n
+      []
+

@@ -1,0 +1,21 @@
+
+(2006:06-07)
+  * Most of the simple types are wrong
+    (they use the false assumption x:t <==> x:V t)
+    Rewrite tye type libraries!
+  (1) write up filter model construction
+    * SK, SKJ, SKJO
+    * characterization thms
+    * HP-completeness thms
+    * theory and computation strength thms
+    * inference techniques
+    * choose oracle language
+  (2) write up complexity calculations
+    * propagation
+    * partition types
+    * automated conjecturing
+  (3) write up language optimization
+    * basis weight optimization WRT corpus
+    * basis extension calculation
+  (4) write up todd-coxeter details
+

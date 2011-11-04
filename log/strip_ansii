@@ -1,0 +1,29 @@
+#!/usr/bin/python
+
+import re
+import sys
+
+def strip (filename):
+  ansii = re.compile("\033\[[0-9;]+[a-zA-Z]")
+
+  infile = open(filename,'r')
+  if not infile:
+    print "could not open input file"
+    sys.exit(0)
+
+  outfile = open(filename+".text",'w')
+  if not infile:
+    print "could not open output file"
+    sys.exit(0)
+
+  for line in infile.readlines():
+    outfile.write(ansii.sub("",line))
+
+if __name__ == "__main__":
+  args = sys.argv[1:]
+  if args:
+    for arg in args:
+      strip(arg)
+  else:
+    print "piping not supported"
+

@@ -1,0 +1,222 @@
+
+Axioms for join-as-ambiguity. (#J#) \label{sec:axioms/join}
+  ###<
+    !read axioms/combinators axioms/eta axioms/diverge.
+    !using J.
+  ###>
+
+  Comment: TODO address Steve Awodey's observation that there may be
+    multiple join operations
+
+  We write #J x y = x|y# for the ambiguous join operation.
+  This follows Dijkstra's notation for guarded commands, as we can write, e.g.
+  ###[
+    fun := (\x. cond1 x action1 | cond2 x action2 | ... | condN x actionN).
+  ###]
+  where the conditions either succeed (with value #I#)
+  or fail (with value #_#).
+
+  Axioms and axiom schemata. 
+
+    The following axiom shemata are enforced for the atom #J#:
+    ###-
+      ----- idem   ------- comm   --------------- assoc
+      x|x=x        x|y=y|x        x|(y|z)=(x|y)|z
+
+                                      z=]x   z=]y
+      ------ join-L   ------ join-R   ----------- subconvex
+      x|y=]x          x|y=]y            z=]x|y
+
+      -------------- distrib-R
+      (x|y)z=x z|y z
+    ###-
+
+    We first assume the semilattice axioms and schemata
+    #(idem)#, #comm#, and #(assoc)#.
+    ###<
+      !assume x|x = x            AND  J x x = x.              #idempotence
+      !assume x|y = y|x          AND  J x y = J y x.          #commutativity
+      !assume x|(x|y) = x|y      AND  J x(J x y) = J x y.     #idempotence+assoc
+      !assume x|(y|z) = (x|y)|z  AND  J x(J y z) = J(J x y)z. #associativity
+      !assume Y(J x) = x.                               #idempotence+fixedpoint
+    ###>
+    Next we relate join to the partial order with schemata #(join)# and
+    #(subconvex)# and axioms
+    ###<
+      !assume ( x,y [= x|y ).
+      !assume _|x = x  AND  J _ x = x  AND  J x _ = x.
+      !check T|x = T   AND  J T x = T  AND  J x T = T.
+    ###>
+    Finally we assume that join is almost a combinatory algebra homomorphism,
+    in that application right-distributes and almost left-distributes over
+    joins.
+    ###<
+      !assume (x|y)z = x z|y z    AND  J x y z=J(x z)(y z).      
+      !assume (x|y)*z = x*z|y*z   AND  B(J x y) = J(B x)(B y).   
+      !assume x(y|z) =] x y|x z   AND  x(J y z) =] J(x y)(x z).  
+      !assume x*(y|z) =] x*y|x*z  AND  B'(J y z) =] J(B' y)(B' z).
+    ###>
+    Note that left-distributivity and left-composition are only one-sided:
+    ###<
+      !check (K|F) T _ = (K|F) _ T = T.
+      !check (
+          probe_bool := (\x. x (x _ T) (x T _)).
+          probe_bool K = _   AND
+          probe_bool F = _   AND
+          probe_bool (K|F) = T
+      ).
+      !check x(y|z) ![= x y|x z.      #left-distributivity
+      !check B'(x|y) ![= B' x|B' y.   #left-composition-distributivity
+    ###>
+
+    Lem: #T# can be obtained by joining over all #S,K#-terms
+      ###<
+        !assume T = Y(\t.S|K|t t).  #simpler is just #Y J#, as below
+      ###>
+    Pf: We need to show #/\x.Y(\t.S|K|t t)=]x# for each #x#.
+      First note that #K#, #F#, and hence #J# are in the join
+      ###<
+        !check ( F,K,J [= Y(\t.S|K|t t) ).
+      ###>
+      so that we're really joining over SKJ-terms
+      ###<
+        !check Y(\t.S|K|t t) = Y(\t.S|K|J|t t).
+      ###>
+      whence every SKJ term is below the join.
+      []
+    Lem: 
+      ###<
+        !assume T = Y(J I)*K. #the ambiguous Ogre
+      ###>
+    Pf: This uses the representation of #T# as the join of all its arguments
+      ###(
+        T &= I|K I|K*K I|K*K*K I|...
+          &= Y\x.I|K x
+          &= Y (J I)*K
+      ###)
+      []
+
+    Join is injective and has two simple left-inverses
+    ###<
+      !check Y*J = I = <_>*J.
+      !check Y(J x) = x = J x _.
+    ###>
+    The basic combinators distribute over #J#.
+    ###<
+      !assume K(x|y) = K x|K y.
+      !assume F(x|y) = F x|F y.
+      !assume C(x|y) = C x|C y.
+      !assume B(x|y) = B x|B y.
+      !assume W(x|y) = W x|W y.
+      !assume S(x|y) = S x|S y.
+      !assume J(x|y) = J x|J y.
+    ###>
+    (these are all easily provable, but we want them in the core theory,
+    so we #!assume# rather than #!check#).
+    The parametrized binary join operation will be especially important
+    ###<
+      !define J' = (\f,x,y. f x|f y).
+    ###>
+
+  Theorems conjectured by Johann. 
+
+    Lem: 
+      ###<
+        !assume Y J = T.
+      ###>
+    Pf: Expanding, #Y J = J(Y J) =] I#,
+      so #Y J = J(Y J) =] J I ]] I#.
+      Continuing this way,
+      ###[
+        Y J = I|J I|J*J I|...|n J I|...
+      ###]
+      Now observing #Y J# under any trace #<x1, ..., xn>#
+      ###(
+        Y J x1 ... xn &=] (n+1) J I x1 ... xn
+                      &=] J I
+                      &]] I
+      ###)
+      whence #Y J=T#.
+      []
+
+  Bohm trees and Scott topology in the presence of join. 
+
+    Def: A _join_ is a J-term (closure under J), defined by the language
+      ###c M
+      ###-
+        m term         m join   n join          M set(terms)
+        ------ unary   --------------- binary   ------------ infinitary
+        m join             m|n join              Join M join
+      ###-
+      ###u M
+    For example the nullary join is #_=Join {}#.
+    Def: A lambda-#Join#-term #M# is in _head_normal_form_ (h.n.f.) 
+      if it is of the form
+      ###[
+        M = \x1,...,xm. h M1 ... Mn
+      ###]
+      for #m => 0# variables and #n => 0# terms.
+      The variable #h# is called the _head_variable_ of #M#.
+    Requiring the #M1,...,Mn# to also be in head normal form gives rise
+    to the notion of a Bohm tree.
+    Def: A _J-Bohm_tree_ (J-BT or just BT) is the SKJ notion of Bohm tree,
+      defined by limits in the language
+      ###-
+        x var       _x vars   h var   _m join(BT)s
+        ----- var   ------------------------------ abs-app
+        x BT                 \_x. h _m BT
+      ###-
+      A _finite_ BT consists of only finite joins and finitely many
+      applications of rule abs-app.
+
+    Thm: (Bohm Tree) Every SKJ term is Hstar-equivalent to a join of J-BTs.
+    Pf: By straightforward extension of the BT-theorem of SK. []
+    The Bohm tree theorem is crucial to our type-definability theorem below,
+    but fails in Scott's Dinfty and Pomega models.
+    Cor: If #q# converges then #q# extends a h.n.f.
+    Cor: (interpolation) if #q[!=q'# then #q=]m[!=q'# for some h.n.f. #m#.
+    Cor: (approximation) Every SKJ term is equivalent to a directed join of
+      some sequence of finite J-BTs (with finite joins).
+
+    SKJ is a much better-behaved algebra than SK, as evidenced by the following.
+    First, SKJ avoids the range property (Barendregt93a, Barendregt08).
+    Thm: [Myhill,Barendregt] (range property)
+      In SK, every non-constant term has infinite range.
+    Thm: (all ranges) In SKJ, every finite cardinality
+      is achieved by the range of some closure.
+
+    Second, SKJ avoids the indefinability of compact points.
+    Def: (compactness) An element #x# of a complete join-semilattice #L#
+      is a _compact_point_ iff
+      ###[
+                /\Y(=L. x[=Join Y ==> \/finite Y'(=Y. x[=Join Y'
+      ###]
+    Thm: (noncompactness) In SK, no term is a compact point.
+    Pf: By example: consider the infinite eta-expansion of the identity.
+      ###[
+        I = \x_0. \x_1. x_0 \x_2. x_1 \x_3. x_2 ... 
+      ###]
+      and its truncations at the #n#th level
+      ###[
+        I_n = \x_0. \x_1. x_0 \x_2. x_1 \x_3. x_2 ... \x_n. _
+      ###]
+      Then #I=Join_n I_n#,
+      but #I# is not below any finite join of the #I_n#s.
+      []
+    By contrast in SKJ, the #Simple# type constructor defined in
+    \ref{sec:skj/simple} furnishes closures with definable compact points.
+    Thm: (compactness) In SKJ,
+      there is a closure whose range is a partial numeral system,
+      and every of whose inhabitants is a definable compact point
+      (except for a single limit point #omega#).
+    Pf: Consider #nat# defined in \ref{sec:skj/nats}. []
+
+    Def: Let #M# be an SKJ-term.
+      An SKJ-term #q# is _M-_solvable_ iff we can solve the equation
+      #q M1 ... Mn = M# for some sequence of arguments #M1,...,Mn#.
+      A term is _solvable_ iff it is #T#-solvable.
+    Contrasting solvability in SK,
+    there are #T#-solvable SKJ-terms terms that are not #I#-solvable.
+    Example: #div=V<T># has range #{_,T}#, and since #_ x=_# and #T x=T#,
+      div cannot be solved for #I#.
+

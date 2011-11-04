@@ -1,0 +1,148 @@
+
+Reflected axiom schemata. \label{sec:axioms/schemata}
+  ###<
+    !read axioms/code.
+    !import skjo/codes.
+  ###>
+
+  In this section we reflect the hard-coded axiom schemata from
+  cpp/axiom_enforcement.C to achieve the strong transitivity principle
+  "if #|-phi# then #|-pr{phi}#" (used in \ref{sec:skjo/provability}).
+  Note that axiom schemata without hypotheses such as #K x y=x#
+  are deducible from equations;
+  these schemata were hard-coded for efficiency rather than logical strength.
+  Since we have already in \ref{sec:axioms/code}
+  #!assume#d equations implying these principles,
+  we only #!assume# schemata with hypotheses here.
+
+  First we define some derived provability semipredicates,
+  extending those from \ref{sec:skjo/codes}.
+  ###<
+    if_pr_of_type := (code->code->semi) (\{x},{a}. if_pr_equal{x}{V a x}).
+    if_pr_subtype := (code->code->semi) (\{a},{b}. if_pr_equal{V a}{P a b}).
+    if_pr_passes  := (code->code->semi) (\{x},{t}. if_pr_equal{I}{test t x}).
+    if_pr_subtest := (code->code->semi) (
+        \{s},{t}. if_pr_equal{test s}{P_test s t}
+    ).
+    !check (
+        if_pr_of_type x y,
+        if_pr_subtype x y,
+        if_pr_passes x y,
+        if_pr_subtest x y [= test_code x | test_code y
+    ).
+  ###>
+  In the language of semibooleans and tests,
+  we can express reasoning principles using #and_semi# to conjoin hypotheses
+  and #[=# to indicate implication between checked statements #:semi#
+  (ie semiboolean values #phi[=I#).
+  Similarly, reversible rules use equality for biimplication.
+
+  Order scheamata from \ref{sec:axioms/order}.
+  ###<
+    !assume (/\{f},{x},{y}. if_pr_less{x}{y} [= if_pr_less{f x}{f y}).
+    !assume (/\{f},{g},{x}. if_pr_less{f}{g} [= if_pr_less{f x}{g x}).
+  ###>
+  Fixed-point schemata from \ref{sec:axioms/combinators}
+  ###<
+    !assume (/\{y}. if_pr_equal{y}{S I y} [= if_pr_equal{Y}{y}).
+    !assume (/\{f},{x}. if_pr_less{f x}{x} [= if_pr_less{Y f}{x}).
+  ###>
+  Join schemata from \ref{sec:axioms/join}.
+  ###<
+    !assume (/\{f},{x},{y}. if_pr_less{x}{y} [= if_pr_less{f x}{f y}).
+    !assume (/\{f},{g},{x}. if_pr_less{f}{g} [= if_pr_less{f x}{g x}).
+  ###>
+  Universal retract schemata from \ref{sec:axioms/idem}.
+  ###<
+    !assume (/\{x}.  if_pr_equal{x}{U x} = if_pr_equal{x}{x*x}).
+    !assume (/\{x},{f}. if_pr_less{f x}{x} [= if_pr_equal{U f x}{x}).
+  ###>
+  Universal closure schemata from \ref{sec:axioms/close}.
+  ###<
+    !assume (/\{x}.
+        if_pr_of_type{x}{V} = and_semi (if_pr_equal{x}{x*x}) (if_pr_less{I}{x})
+    ).
+    !assume (/\{x},{f}. if_pr_less{f x}{x} [= if_pr_equal{V f x}{x}).
+  ###>
+  Schemata for the types #div,unit,semi# from \ref{sec:axioms/types}.
+  ###<
+    !assume (/\{x}.
+        if_pr_nless{x}{_} [= if_pr_equal{div x}{T}  AND
+        if_pr_equal{x _}{_} [= if_pr_less{div}{x}
+    ).
+
+    !assume (/\{x}.
+        if_pr_nless{x}{I} [= if_pr_equal{unit x}{T}  AND
+        if_pr_equal{x I}{I} [= if_pr_less{unit}{x}
+    ).
+
+    !assume (/\{x}.
+        if_pr_nless{x}{_} [= if_pr_less{I}{semi x}  AND
+        if_pr_nless{x}{I} [= if_pr_equal{T}{semi x} AND
+        and_semi (if_pr_equal{x _}{_})
+                 (if_pr_equal{x I}{I}) [= if_pr_less{semi}{x}
+    ).
+  ###>
+  A test intersection schema from \ref{sec:axioms/tests}.
+  ###<
+    !assume (/\{p},{q}.
+        and_semi (if_pr_less{check q}{check p})
+                 (if_pr_less{ div p }{ div q }) [= if_pr_subtest{p}{q}
+    ).
+  ###>
+  Code schemata from \ref{sec:axioms/code}.
+  ###<
+    !assume (/\{x},{y}.
+        and_semi (if_pr_passes{x}{test_code})
+                 (if_pr_passes{y}{test_code}) [= if_pr_equal{E(A x y)}{E x(E y)}
+    ).
+
+    !assume (/\{c},{c'}. (
+        and_semi (if_pr_of_type{c}{code}).
+        and_semi (if_pr_passes{c}{test_code}).
+        and_semi (if_pr_of_type{c'}{code}).
+        and_semi (if_pr_passes{c'}{check_code}).
+                 (if_pr_equal{E c}{E c'}))      [= if_pr_less{c'}{c}
+    ).
+
+    !assume (/\{c},{c'}. (
+        and_semi (if_pr_of_type{c}{code}).
+        and_semi (if_pr_passes{c}{test_code}).
+        and_semi (if_pr_of_type{c'}{code}).
+                 (if_pr_nless{E c'}{E c}))    [= if_pr_equal{code(c|c')}{T}.
+    )
+  ###>
+  Schemata for the oracle #O# from \ref{sec:axioms/oracle}.
+  ###<
+    !assume (/\{p},{q}.
+        and_semi (if_pr_passes{{p}}{test_skj})
+                 (if_pr_subtest{p}{q})        [= if_pr_equal{O{p}{q}}{I}
+    ).
+
+    !assume (/\{p},{p'}.
+        and_semi (if_pr_passes{{p}}{test_skj})
+                 (if_pr_subtest{p}{p'})       [= if_pr_subtest{O{p'}}{O{p}}
+    ).
+
+    !assume (/\{q},{q'}.
+        if_pr_subtest{q}{q'} [= if_pr_subtest{C O{q}}{C O{q'}}
+    ).
+
+    !assume (/\{p},{q],{q'}.
+        and_semi (if_pr_passes{p}{test_skj})
+                 (if_pr_less{q}{q'})        [= if_pr_less{O{p}{q}}{O{p}{q'}}
+    ).
+
+    !assume (/\{p},{q},{x}. (
+        and_semi (if_pr_tested{{p}}{test_skj}).
+        and_semi (if_pr_passes{x}{p}).
+                 (if_pr_equal{q x}{T}))         [= if_pr_equal{O{p}{q}}{T}
+    ).
+
+    !assume (/\{p},{q},{x}. (
+        and_semi (if_pr_tested{{p}}{test_skj}).
+        and_semi (if_pr_passes{x}{p}).
+                 (if_pr_equal{q x}{_}))         [= if_pr_of_type{O{p}{q}}{div}
+    ).
+  ###>
+

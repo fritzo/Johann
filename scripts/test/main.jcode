@@ -1,0 +1,13 @@
+
+!read test/lang_optim.
+#!read test/notation.
+#!read test/reading.
+#!read test/map.
+#!read test/contract.
+#!read test/quoting.
+#!read test/type_of.
+#!read test/context.
+#!read test/reading.
+
+!listen
+

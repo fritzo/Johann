@@ -1,0 +1,1961 @@
+#!/usr/bin/python
+#command: jtext2latex
+#synopsis: a simple typesetting front-end : ascii --> latex
+#associated files: jtext.sty
+#author: Fritz Obermeyer
+LICENSE = """\
+This file is a part of Johann.
+Copyright 2004-2009 Fritz Obermeyer.
+
+Johann is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.
+
+Johann is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Johann.  If not, see <http://www.gnu.org/licenses/>.\
+"""
+VERSION = "2010:04:22"
+
+#TODO
+# * undefine ###d-efined variables at end of file, except from defs.text
+# * finish definable symbol syntax
+
+import re, os, sys, time, exceptions, traceback
+
+verbose = False
+chapters = False
+
+#================ matching utils ================
+
+def fix_fname(name):
+    if name[-5:] in ["jtext","jcode",".text"]:  return name
+    if os.access(name+".text",os.F_OK):         return name+".text"
+    if os.access(name+".jtext",os.F_OK):        return name+".jtext"
+    if os.access(name+".jcode",os.F_OK):        return name+".jcode"
+    if os.access(name+"/main.text",os.F_OK):    return name+"/main.text"
+    if os.access(name+"/main.jtext",os.F_OK):   return name+"/main.jtext"
+    if os.access(name+"/main.jcode",os.F_OK):   return name+"/main.jcode"
+    raise exceptions.IOError("file %s??? not found" % name)
+def get_ftype(name):
+    return re.search(".[a-z]*$",name).group()
+def get_dir(name):
+    match = re.match(".*\/", name)
+    if match: return match.group()
+    else:     return ""
+def lstrip (line):
+    "returns (indentation, stripped)"
+    stripped = line.lstrip()
+    indent = len(line) - len(stripped)
+    return (indent, stripped)
+def re_searchall(patt,line):
+    "returns list of all ranges of matches"
+    m = re.compile(patt)
+    bounds = []
+    match = m.search(line)
+    while match:
+        beg = match.start()
+        end = match.end()
+        bounds.append((beg,end))
+        match = m.search(line,end)
+    return bounds
+def mush_spaces (line):
+    return re.sub("\s+"," ",line)
+def get_date ():
+  return ':'.join(['%02i'%i for i in list(time.localtime())[:3]])
+
+#================ math notation ================
+Greek = [
+    "alpha","beta","gamma","delta","del","epsilon",
+    "zeta","eta","theta","iota","kappa","lambda",
+    "mu","nu","xi",#omicron",
+    "pi","rho","sigma","tau",#"upsilon",
+    "phi","chi","psi","omega",
+    #"Alpha","Beta",
+    "Gamma","Delta", "Del", #"Epsilon", "Zeta","Eta",
+    "Theta", #"Iota","Kappa",
+    "Lambda",#"Mu","Nu",
+    "Xi",#omicron",
+    "Pi",#"rho",
+    "Sigma",#"Tau","Upsilon",
+    "Phi",#"Chi",
+    "Psi","Omega"
+]
+Greek = dict([(a, "\\%s " % a) for a in Greek])
+FakeGreek = {
+    "a" : "alpha",
+    "b" : "beta",
+    "c" : "gamma",
+    "g" : "gamma",    "G" : "Gamma",
+    "d" : "delta",    "D" : "Delta",
+    "e" : "epsilon",
+    "o" : "theta",    "O" : "Theta",
+    "h" : "eta",
+    "l" : "kappa",
+    "l" : "lambda",   "L" : "Lambda",
+    "m" : "mu",
+    "n" : "nu",
+    "r" : "rho",
+    "s" : "sigma",    "S" : "Sigma",
+    "t" : "tau",
+    "p" : "phi",      "P" : "Phi",
+    "q" : "psi",      "Q" : "Psi",
+    "w" : "omega",    "W" : "Omega",
+}
+Atoms = {
+    #"Bot"   : "\\bot ",
+    #"Top"   : "\\top ",
+    "infty" : "\\infty ",
+    #"join"  : "\\join",
+    #"meet"  : "\\meet ",
+    #"both"  : "\\both ",
+    "Join"  : "\\bigsqcup",
+    "Meet"  : "\\bigsqcap",
+    "Union" : "\\bigcup",
+    #"union" : "\\cup",
+    #"inhab" : "\\inhab",
+    #"rng"   : "\\rng",
+    #"dom"   : "\\dom",
+    #"_"     : "\\blank ",
+    "_"     : "\\bot ",
+}
+for a in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+    Atoms[a+a] = "\\mathbb{%s}" % a
+Symb = [ #these must be in a particular order
+    ( "::="     , "$61" ),
+    ( ":="      , "$62" ),
+    ( "=:"      , "$63" ),
+    ( "!=>"     , "$64" ),
+    ( "!<="     , "$65" ),
+    ( "!<::"    , "$66" ),
+    ( "!::>"    , "$67" ),
+    ( "<::"     , "$68" ),
+    ( "::>"     , "$69" ),
+    ( "!<:"     , "$6A" ),
+    ( "!:>"     , "$6B" ),
+    ( "<:"      , "$6C" ),
+    ( ":>"      , "$6D" ),
+    ( "<|:"     , "$6E" ),
+    ( ":|>"     , "$6F" ),
+    ( "<|"      , "$6G" ),
+    ( "|>"      , "$6H" ),
+    ( "-:-"     , "$6I" ),
+    ( "!<"      , "$6J" ),
+    ( "!>"      , "$6K" ),
+    ( "::"      , "$6L" ),
+    ( ":"       , "$6M" ),
+    ( "**"      , "\\!\\times\\!" ),
+    ( "-*"      , "\\multimap " ),
+    ( "*"       , "\\!\\circ\\!" ),
+    ( "&"       , "\\cap " ),
+    ( "[|"      , "\\ldenote " ),
+    ( "|]"      , "\\rdenote " ),
+    ( "||"      , "\\mid\\!\\mid " ),
+    ( "|->"     , "\\mapsto " ),
+    ( "<-|"     , "\\mapsfrom " ),
+    ( "-|"      , "\\dashv " ),
+    ( "|-"      , "\\vdash " ),
+    ( "|="      , "\\models " ),
+    ( " | "     , "\\mid " ),
+    ( "|"       , "\\mid " ),
+    ( "<-->"    , "\\leftrightarrow " ),
+    ( "-->"     , "\\longrightarrow " ),
+    ( "<--"     , "\\longleftarrow " ),
+    ( "--"      , "\\NS-\\NS "),
+    ( "->>"     , "\\tto " ),
+    ( "<<-"     , "\\ffrom " ),
+    ( "->"      , "\\!\\to\\! " ),
+    ( "<-"      , "\\from " ),
+    ( ">-"      , "\\redto " ),
+    ( "-<"      , "\\redfrom " ),
+    ( "<~>"     , "\\leftrightsquigarrow " ),
+    ( "~>"      , "\\rightsquigarrow " ),
+    #( "<~"      , "\\leftsquigarrow " ),
+    ( "<=>"     , "\\iff " ),
+    ( "<==>"    , "\\iff " ),
+    ( "==>"     , "\\implies " ),
+    ( "<=="     , "\\impliedby " ),
+    ( "=>"      , "\\ge " ),
+    ( "<="      , "\\le " ),
+    ( "<"       , "\\langle " ),
+    ( ">"       , "\\rangle " ),
+    ( "[]"      , "\\Box " ),
+    ( "![="     , "\\nboxleq " ),
+    ( "!=]"     , "\\nboxgeq " ),
+    ( "?[="     , "\\qboxleq " ),
+    ( "?=]"     , "\\qboxgeq " ),
+    ( "[="      , "\\boxleq " ),
+    ( "=]"      , "\\boxgeq " ),
+    ( "![="     , "\\nboxleq " ),
+    ( "!=]"     , "\\nboxgeq " ),
+    ( "[!="     , "\\nboxleq " ),
+    ( "[!!="    , "\\nnboxleq "),
+    ( "[["      , "\\boxlneq "),
+    ( "]]"      , "\\boxgneq "),
+    #( "[["      , "[\\![ "),
+    #( "]]"      , "]\\!] "),
+    ( "[?="     , "\\qboxleq " ),
+    ( "=?]"     , "\\qboxgeq " ),
+    ( "(="      , "\\subseteq " ),
+    ( "=)"      , "\\supseteq " ),
+    ( "(!="     , "\\nsubseteq " ),
+    ( "=!)"     , "\\nsupseteq " ),
+    ( "!!="     , "\\hash " ),
+    ( "!="      , "\\neq " ),
+    ( "?="      , "\\qeq " ),
+    ( "=?="     , "\\qeq " ),
+    ( "=="      , "\\equiv " ),
+    ( "=~="     , "\\cong " ),
+    ( "~="      , "\\simeq " ),
+    ( "~~"      , "\\propto " ),
+    ( "~"       , "\\sim " ),
+    ( "..."     , "\\dots " ),
+    ( "-"       , "-" ),
+    ( "%"       , "\\%" ),
+]
+def wrap_sub(match):
+    return "$0%s$2" % match.group()[2:-1]
+def wrap_super(match):
+    return "%s$1%s$2" % (match.group()[0],match.group()[3:-1])
+def wrap_string(code):
+    "makes string safe"
+    code = re.sub("_\([^)]+\)", wrap_sub, code)
+    code = re.sub("[^^]\^\([^)]+\)", wrap_super, code)
+    code = code.replace("$",  "$0")
+    code = code.replace("\\", "$11")
+    code = code.replace("{",  "$12")
+    code = code.replace("}",  "$13")
+    return code
+
+#user-defined name mappings
+AtomDefs = {}
+SymbDefs = {}
+def math_def(line):
+    "redefines a variable"
+    parts = line.strip().split(None,1) #at most 1 split
+    assert len(parts) == 2, ("invalid math definition %s" % parts)
+    global AtomDefs
+    #print "DEF %s := %s" % (parts[0],parts[1]) #DEBUG
+    AtomDefs[parts[0]] = parts[1]
+def math_alg(algs):
+    "declares list of variables as algebra symbols"
+    global AtomDefs
+    for x in algs:
+        #print "ALG %s % x #DEBUG
+        AtomDefs[x] = x
+def math_cal(cals):
+    "declares list of variables as math caligraphic"
+    global AtomDefs
+    for x in cals:
+        #print "CAL %s % x #DEBUG
+        AtomDefs[x] = "\\mathcal{%s}" % x
+def math_ops(ops):
+    "declares list of variables as operator symbols"
+    global AtomDefs
+    for op in ops:
+        #print "OPS %s % x #DEBUG
+        AtomDefs[op] = "\\operatorname{%s}" % op
+def math_kwd(kwds):
+    "declares list of variables as keywords"
+    global AtomDefs
+    for kw in kwds:
+        #print "KWD %s % kw #DEBUG
+        AtomDefs[kw] = "\\ATM{%s}" % kw
+def math_bb(kwds):
+    "declares list of variables as blackboard bold"
+    global AtomDefs
+    for kw in kwds:
+        #print "KWD %s % kw #DEBUG
+        AtomDefs[kw] = "\\mathbb{%s}" % kw[0]
+def math_greek(gs):
+    "declares list of latex keywords"
+    global AtomDefs
+    for g in gs:
+        #print "GREEK %s % g #DEBUG
+        try:
+            AtomDefs[g] = "\\%s" % FakeGreek[g]
+        except KeyError:
+            print "WARNING unknown fake greek name: " + g
+def math_latex(lats):
+    "declares list of latex keywords"
+    global AtomDefs
+    for lat in lats:
+        #print "LATEX %s % lat #DEBUG
+        AtomDefs[lat] = "\\" + lat
+def math_subscript(subs):
+    "declares list of subscripted pairs"
+    global AtomDefs
+    for xi in subs:
+        #print "SUBS %s % xi #DEBUG
+        assert len(xi) > 1, "subscripting keyword is too short"
+        x = _fix_font(xi[:-1])
+        i = _fix_font(xi[-1])
+        AtomDefs[xi] = "{\VAR{%s}_\VAR{%s}}" % (x,i)
+def math_undef(vars):
+    "undefines a list of variables"
+    global AtomDefs
+    for name in vars:
+        if name in AtomDefs:
+            #print "UNDEF %s" % name
+            del AtomDefs[name]
+        else:
+            print "WARNING: undefined unknown name: %s" % name
+def math_undef_all():
+    "undefines all variable"
+    #print "UNDEF-ALL" #DEBUG
+    global AtomDefs
+    AtomDefs = {}
+
+console_markers = { #LATER: add color
+    "(U) " : "{\\texttt{(U)}\\quad}",
+    "(J) " : "{\\texttt{(J)}\\quad}",
+    "(!) " : "{\\texttt{(!)}\\quad}",
+    "(w) " : "{\\texttt{(w)}\\quad}",
+}
+
+#================ font fixing for variable names ================
+def _fix_font(name):
+    #parse known atoms
+    global AtomDefs
+    if name in AtomDefs: return AtomDefs[name]
+    global Atoms
+    if name in Atoms: return Atoms[name]
+    global Greek
+    if name in Greek: return Greek[name]
+
+    #parse underlining as in "_underlined_variable"
+    if len(name) > 1 and name[0] == "_":
+        return "\ubar{%s}" % _fix_font(name[1:])
+
+    #parse double-under as subscripts, as in "fixedpoint__tau"
+    parts = name.split("__",1)
+    if len(parts) > 1:
+        return "{%s}_{%s}" % (_fix_font(parts[0]), _fix_font(parts[1]))
+
+    #parse one-letter suffixes/prefixes as subscripts, as in "indexed_at_i" 
+    if len(name) > 2 and name[1] == "_" and name[0] != "_":
+        return "%s_{%s}" % (_fix_font(name[0]), _fix_font(name[2:]))
+    if len(name) > 2 and name[-2] == "_" and name[-1] != "_":
+        return "%s_{%s}" % (_fix_font(name[:-2]), _fix_font(name[-1]))
+
+    #parse suffixes as modifiers
+    if len(name) > 4 and name[-4] == "_":
+        marker = name[-3:]
+        if marker == "bar":
+            return "\\bar{%s}" % _fix_font(name[:-4])
+        if marker == "hat":
+            return "\\widehat{%s}" % _fix_font(name[:-4])
+        if marker == "til":
+            return "\\widetilde{%s}" % _fix_font(name[:-4])
+
+    #otherwise, just fix underscores
+    return "\\VAR{%s}" % name.replace("_","\\_")
+def fix_font(match): return _fix_font(match.group())
+def fix_exps (match): return "^{~{%s}}" % match.group()[2:].strip("()")
+def fix_equality (match): return "$3{%s}" % match.group()[2:-2]
+def l_quote (m):  return m.group().replace("\"","$56")
+def r_quote (m):  return m.group().replace("\"","$57")
+class ConvertMath:
+    def __init__ (self):
+        self.vars = re.compile("[a-zA-Z_][a-zA-Z0-9_]*")
+        self.symb = re.compile("[a-zA-Z_][a-zA-Z0-9_]*|[(<[]*[~`!?@%&*-+=|\\\\/^]|\$[0123][)>\]]*")
+        self.exps = re.compile("\^\^([^(]|\([^)]+\))")
+        self.equality = re.compile(" =[a-zA-Z_][a-zA-Z0-9_]*= ")
+        self.fwd_q  = re.compile("([ ({[,.?!/\\\\0-9]|^)\"")
+        self.bwd_q  = re.compile("\"([ )}\],;.:?!/\\\\]|$)")
+
+    def __call__(self, code):
+        #fix quantifiers, lambdas, and {}'s first since they conflict with latex
+        code = wrap_string(code)
+
+        #exponents
+        code = self.exps.sub(fix_exps, code)
+        #equality symbols like "M =beta= N"
+        code = self.equality.sub(fix_equality, code)
+
+        #fix quotes
+        code = self.bwd_q.sub(r_quote, code)
+        code = self.fwd_q.sub(l_quote, code)
+
+        #spaces
+        code = code.replace(" < ",  "$51") #less than and
+        code = code.replace(" > ",  "$52") #greater signs
+        code = code.replace(" PAUSE ", "$55")
+        code = code.replace(" PAUSE", "$55")
+        (indn,code) = lstrip(code)
+        if indn: code = "$2"*indn + code
+        code = code.replace(" * ",    "*")  #ignore spaces around \circ
+        code = code.replace(" ** ",   "**") #ignore spaces around \times
+        code = code.replace(" = ",    "=")  #ignore spaces around equals
+        code = code.replace(" ~ ",    "~")  #ignore spaces around \sim
+        if "in" not in AtomDefs:
+            code = code.replace(" not in ", "$53")
+            code = code.replace(" in ",     "$54")
+        code = code.replace(" ",    "$2")  #spaces
+    
+        #variables
+        #code = self.symb.sub(fix_font, code)
+        code = self.vars.sub(fix_font, code)
+
+        #misc symbols, ascii->latex
+        global Symb
+        for (a,l) in Symb:
+            code = code.replace(a,l)
+
+        #respect existing spaces
+        code = code.replace("$2$2$2$2", "\\TAB ")
+        code = code.replace("$2",       "\\SPC ")
+
+        #sensitive symbols
+        code = code.replace("$00", "_{")
+        code = code.replace("$01", "^{")
+        code = code.replace("$02", "}")
+        code = code.replace("$03", "\\frac{")
+        code = code.replace("$04", "}{")
+        code = code.replace("$05", "}")
+        code = code.replace("$0",  "\\$ ")
+        code = code.replace("$11/",   "\\exists ")
+        code = code.replace("/$11",   "\\forall ")
+        code = code.replace("$11$11", "\\Lambda ")
+        code = code.replace("$11",    "\\lambda ")
+        code = code.replace("$12",    "\\{")
+        code = code.replace("$13",    "\\}")
+        code = code.replace("$3",  "=_")
+        code = code.replace("$4",  "*")
+        code = code.replace("$51", "<")
+        code = code.replace("$52", ">")
+        code = code.replace("$53", "\\notin ")
+        code = code.replace("$54", "\\in ")
+        code = code.replace("$55", "\\pause ")
+        code = code.replace("$56", "\\lquote ")
+        code = code.replace("$57", "\\rquote ")
+
+        code = code.replace("$61", "::=")
+        code = code.replace("$62", ":=")
+        code = code.replace("$63", "=:")
+        code = code.replace("$64", ">")
+        code = code.replace("$65", "<")
+        code = code.replace("$66", "!\\!<::")
+        code = code.replace("$67", "!\\!::>")
+        code = code.replace("$68", "<::")
+        code = code.replace("$69", "::>")
+        code = code.replace("$6A", "!\\!<:")
+        code = code.replace("$6B", "!\\!:>")
+        code = code.replace("$6C", "<:")
+        code = code.replace("$6D", ":>")
+        code = code.replace("$6E", "\\coerceto ")
+        code = code.replace("$6F", "\\coercefrom ")
+        code = code.replace("$6G", "\\triangleleft ")
+        code = code.replace("$6H", "\\triangleright ")
+        code = code.replace("$6I", "\\div ")
+        code = code.replace("$6J", "\\notless")
+        code = code.replace("$6K", "\\notmore")
+        code = code.replace("$6L", "\\!::\\!")
+        code = code.replace("$6M", "\\!:\\!")
+
+        return code
+__convert_math = ConvertMath()
+
+def convert_math (text):
+    "converts math symbols"
+    global __convert_math
+    return __convert_math(text)
+
+#================ text notation ================
+def doc_string (args):
+    "converts dclass,opts string into documentclass spec"
+    args = args.split(",",1)
+    dclass = args[0]
+    packs = ""
+    if len(args) > 1:
+        if args[1]:
+            dopts = "[fleqn,%s]" % args[1]
+            if "fullpage" in args[1].split(","):
+                packs += "\usepackage{fullpage}\n"
+        else:       dopts = ""
+    else:           dopts = "[fleqn,10pt,letterpaper,fullpage]"
+    return "\\documentclass%s{%s}\n%s" % (dopts,dclass,packs)
+defining = False
+def emphasize (m):
+  global defining
+  term = m.group()[1:-1].replace("_"," ")
+  if defining: return "\\emph{%s}\\index{%s}" % (term,term)
+  else:        return "\\emph{%s}" % term
+def fwd_quote (m):  return m.group().replace("\"","``")
+def bwd_quote (m):  return m.group().replace("\"","''")
+def cite (m):       return "\\cite{%s}" % m.group()
+def fileref (m):    return "\\texttt{%s}" % m.group().replace("_","\\_")
+TextDefs = {
+    "PAUSE"   : "\\pause",
+    "SPACE"   : "\\hspace{2ex}",
+    "BREAK"   : "\\vspace{1em}",
+    "NEWPAGE" : "\\newpage",
+    "eg"    : "e.g.",
+    "ie"    : "i.e.",
+}
+def text_def(line):
+    "redefines a text word"
+    parts = line.strip().split(None,2)
+    if len(parts) < 2: parts.append("") #un-definition
+    global TextDefs
+    #print "DEF %s := %s" % (parts[0],parts[1]) #DEBUG
+    TextDefs[parts[0].strip()] = parts[1].strip()
+def fix_text(match):
+    global TextDefs
+    if match in TextDefs:
+        return TextDefs[match]
+    global Greek
+    if match in Greek:
+        return "$%s$" % Greek[match]
+    #XXX this jacks latex math
+    #if len(match) == 1 and match not in ["A","I","a"]:
+    #    return "{\\M{%s}}" % match
+    return match
+def fix_text1(match): return fix_text(match.group())
+def fix_text2(match):
+  text = match.group()
+  return text[0]+fix_text(text[1:])
+def fix_text3(match):
+  text = match.group()
+  return "\\\\"+fix_text(text[2:])
+def hrule (m): return "\\hrulefill "
+def special (m): return "\\%s\\index{(-)\\fbox{XXX}}" % m.group()
+class ConvertText:
+    def __init__ (self):
+        self.emph   = re.compile("_([-a-zA-Z0-9()']+_)+")
+        self.fwd_q  = re.compile("([ ({[,.?!/]|^)\"")
+        self.bwd_q  = re.compile("\"([ )}\],;.:?!/]|$)")
+        self.cite   = re.compile("\\b[A-Z][a-z]+[0-9][0-9][a-z]*\\b")
+        self.file   = re.compile("\\b[a-zA-Z_/]+\.(text|jtext|jcode|l|y|C|h)\\b")
+        self.hrule  = re.compile("----+")
+        self.word1  = re.compile("^\\b[A-Za-z]+\\b")
+        self.word2  = re.compile("[^\\\\]\\b[A-Za-z]+\\b")
+        self.word3  = re.compile("\\\\\\\\\\b[A-Za-z]+\\b")
+        self.xxx    = re.compile("\\b(XXX|OLD|ALT|TODO|LATER|FIXME|WORKING)\\b")
+        self.date   = re.compile("\\bDATE\\b")
+    def __call__(self, text):
+        #font stuff
+        text = self.emph.sub(emphasize, text)
+        text = self.bwd_q.sub(bwd_quote, text)
+        text = self.fwd_q.sub(fwd_quote, text)
+        text = self.cite.sub(cite, text)
+        text = self.file.sub(fileref, text)
+        text = self.hrule.sub(hrule, text)
+        text = self.word1.sub(fix_text1, text)
+        text = self.word2.sub(fix_text2, text)
+        text = self.word3.sub(fix_text3, text)
+        text = self.xxx.sub(special, text)
+        text = text.replace("???","\\LABEL{???}\\index{(-)\\fbox{XXX}}")
+        text = self.date.sub(get_date(), text)
+        text = text.replace("[]","\\Endpf")
+        text = text.replace("H*","\\M{\\mathcal H^*}")   #HACK for thesis
+        text = text.replace(" a la "," \\`{a} la ")
+
+        return text
+__convert_text = ConvertText()
+
+def convert_text (text):
+    "converts text symbols"
+    global __convert_text
+    return __convert_text(text)
+
+#================ writers ================
+def write_math(write, text):
+    write("{\\M{")
+    write(convert_math(text))
+    write("}}")
+
+def write_text(write, parts):
+    "writes an alternating sequence of text, math, text, ..."
+    #print parts #DEBUG
+    is_math = False
+    for part in parts:
+        if is_math:
+            write_math(write, part.strip())
+            #write_math(write, part)
+        else:
+            write(convert_text(part))
+        is_math = not is_math
+
+def write_comment(write, parts):
+    "writes an alternating sequence of comment, math, comment, ..."
+    if not parts: return
+    is_math = False
+    write("\\textcomment{")
+    for part in parts:
+        if part:
+            if is_math: write_math(write, part)
+            else:       write(convert_text(part))
+        is_math = not is_math
+    write("}")
+
+def write_long_comment(write, parts):
+    write("\\LCOM{\n  ")
+    write_comment(write, parts)
+    write("}")
+
+def write_ascii_file (write, filename):
+    try:
+        file = open(filename)
+        write("\\begin{verbatim}\n")
+        for line in file.readlines(): write(line)
+        write("\\end{verbatim}\n")
+    except IOError:
+        self.write("\\edit{Missing File: %s}\\\n" % filename)
+
+#================ environment errors ================
+class TransitionError(Exception):
+    def __init__(self, state, marker):
+        self.state = state
+        self.marker = marker
+    def __str__(self):
+        return "%s[\"%s\"]" % (self.state, self.marker)
+class IndentError(Exception):
+    def __init__(self, line, indent):
+        self.line = line
+        self.indent = indent
+    def __str__(self):
+        return ( "bad indentation (line too far to left):"
+               + "\n" + self.line[:self.indent]
+               + "\n" + " " * self.indent + self.line[self.indent:] )
+
+#================ environments ================
+class State:
+    def __init__ (self, parser, indent=0):
+        self.parser = parser
+        self.indent = indent
+        self.write = parser.write
+        parser.push(self)
+        self.open()
+    def open (self): pass
+    def close (self): pass
+    def setindent (self,indent): pass
+    def writeline (self, line):
+        assert not line[:self.indent].rstrip(), IndentError(line,self.indent)
+        self._writeline(line[self.indent:])
+    def _writeline (self, line): pass
+    def transition (self, marker, indent):
+        if   marker == "{": Text(self.parser, indent)
+        elif marker == "<": Code(self.parser, indent)
+        elif marker == "[": Math(self.parser, indent)
+        elif marker == "(": Aligned(self.parser, indent)
+        elif marker == "&": Align(self.parser, indent)
+        elif marker == "-": Rules(self.parser, indent)
+        elif marker == "=": InlineRules(self.parser, indent)
+        elif marker == "|": Program(self.parser, indent)
+        elif marker == "a": Ascii(self.parser, indent)
+        elif marker == "n": Numbered(self.parser, indent)
+        else: raise TransitionError(self, marker)
+
+class Script (State):
+    def __str__ (self): return "script"
+
+    def _writeline (self, line):
+        #pass blank lines
+        if not line:
+            self.write("\n")
+            #self.write("\n\\vspace{3mm}\n")
+            return
+
+        parts = line.split("#")
+        if parts[0]:
+            #start of code block
+            OpenCode(self.parser, self.indent).writeline(line)
+        else:
+            #parse line as text
+            write_text(self.write, parts[1:])
+            self.write("\n")
+
+class Text (State):
+    def __str__(self): return "text"
+
+    def transition (self, marker, indent):
+        if   marker == "}": self.parser.pop()
+        else: State.transition(self, marker, indent)
+
+    def _writeline (self, line):
+        #pass blank lines
+        if not line:
+            self.write("\n")
+            return
+
+        #parse the line as text
+        parts = line.split("#")
+        write_text(self.write, parts)
+        self.write("\n")
+
+class Align (State):
+    "latex align block"
+    def __str__(self): return "align"
+
+    def open (self):  self.write("\\begin{align*}\n")
+    def close (self): self.write("\n\\end{align*}\n")
+
+    def transition (self, marker, indent):
+        if marker == "&": self.parser.pop()
+        else: raise TransitionError(self, marker)
+
+    def _writeline (self, line):
+        #pass blank lines
+        if not line: return
+
+        #write first column
+        cols = first_part.split("&")
+        write_math(self.write, cols[0].strip().split("#"))
+
+        #write remaining columns
+        for col in cols[1:]:
+            self.write(" & ")
+            write_text(self.write, col.strip().split("#"))
+
+        #parse rest of line as comment
+        if parts:
+            self.write(" & ")
+
+        self.write("\\\\\n")
+
+class _Noncode(State):
+    def __init__(self, parser, indent):
+        State.__init__(self, parser, indent)
+        self.newline = False
+
+    def open (self): raise NotImplementedError
+    def close (self): raise NotImplementedError
+
+    def nextline(self):
+        if self.newline:
+            self.write("\\\\\n")
+        self.newline = True
+
+class Math (_Noncode):
+    def __str__(self): return "math"
+
+    def open (self):  self.write("\\begin{jmathblock}\n")
+    def close (self): self.write("\n\\end{jmathblock}\n")
+
+    def transition (self, marker, indent):
+        if marker == "]": self.parser.pop()
+        else: raise TransitionError(self, marker)
+
+    def _writeline (self, line):
+        #pass blank lines
+        self.nextline()
+        if not line: return
+
+        #split into left and right parts
+        parts = line.split("#")
+        first_part = parts[0]
+        parts = parts[1:]
+ 
+        #try to read first part
+        if first_part:
+            #check for console markers
+            global console_markers
+            if len(first_part) > 4:
+                marker = first_part[:4]
+                global console_markers
+                if marker in console_markers:
+                    self.write(console_markers[marker])
+                    first_part = first_part[4:]
+
+            #parse first section of line as math
+            write_math(self.write, first_part)
+
+            #parse rest of line as comment
+            if parts:
+                if not first_part.isspace():
+                    self.write(" & ")
+                write_comment(self.write, parts)
+        elif parts:
+            #parse line as long comment
+            write_long_comment(self.write, parts)
+
+class Aligned (_Noncode):
+    "jtext align block"
+    def __str__(self): return "aligned"
+
+    def open (self):  self.write("\\begin{jalignblock}\n")
+    def close (self): self.write("\n\\end{jalignblock}\n")
+
+    def transition (self, marker, indent):
+        if marker == ")": self.parser.pop()
+        else: raise TransitionError(self, marker)
+
+    def _writeline (self, line):
+        #pass blank lines
+        self.nextline()
+        if not line: return
+
+        #split into left and right parts
+        parts = line.split("#")
+        first_part = parts[0]
+        parts = parts[1:]
+ 
+        #try to read first part
+        if first_part:
+
+            #parse first section of line as math
+            cols = first_part.split("&")
+            write_math(self.write, cols[0].strip())
+            for col in cols[1:]:
+                self.write(" & ")
+                write_math(self.write, " "+col.strip())
+
+        #parse rest of line as comment
+        if parts:
+            self.write(" & ")
+            write_comment(self.write, parts)
+
+def write_frac (p,b,e, line, numer_line, denom_line):
+    prefix = line[p:b]
+    numer = numer_line[b:e]
+    denom = denom_line[b:e]
+    return "%s$3%s$4%s$5" % (prefix, numer, denom)
+class Program (State):
+    "on-level indented program with fractions"
+    def __init__(self, parser, indent):
+        State.__init__(self, parser, indent)
+        self.lines = []
+    def __str__(self): return "program"
+
+    def close (self):
+        "write buffered lines"
+        lines = [line.rstrip() for line in self.lines if line.strip()]
+        if not lines: return
+
+        #process fractions
+        valid = [True for line in lines]
+        I = xrange(len(lines))
+        for i in I:
+            if not valid[i]: continue
+            line = lines[i]
+            bars = re_searchall("---+", line)
+            if not bars: continue
+            assert 0<i, "bar at first line of program"
+            assert i<I, "bar at final line of program"
+            assert valid[i-1], "bar already used"
+            numer_line = lines[i-1];  valid[i-1] = False
+            denom_line = lines[i+1];  valid[i+1] = False
+            p = 0
+            newline = ""
+            for (b,e) in bars:
+                newline += write_frac(p,b,e, line, numer_line, denom_line)
+                p = e
+            newline += line[p:]
+            lines[i] = newline
+        I = [i for i in I if valid[i]]
+
+        if len(I) == 1:
+            #for one-liners
+            indent = 0
+        else:
+            second = lines[I[1]]
+            indent = len(second) - len(second.lstrip())
+
+        #write lines
+        self.write("\n\n\\begin{jalignblock}\n")
+        for i in I:
+            if i>0: self.write("\\\\\n")
+            self.write("    ")
+
+            line = lines[i]
+            write_math(self.write, mush_spaces(line[:indent]))
+            self.write("&")
+            line = mush_spaces(line[indent:])
+            if line:
+                parts = line.split("#")
+                if parts[0]:
+                    write_math(self.write, parts[0])
+                    self.write("&")
+                    parts = parts[1:]
+                if parts:
+                    write_comment(self.write, parts)
+        self.write("\\end{jalignblock}\n")
+
+        #clean up
+        self.lines = []
+
+    def transition (self, marker, indent):
+        if marker == "|": self.parser.pop()
+        else: raise TransitionError(self, marker)
+
+    def _writeline (self, line):
+        "add line to buffer, or dump buffer"
+        if line.strip():  self.lines.append(line)
+        else:             self.close()
+
+class HSeparator:
+    def write(self, write, open, mathpar=True):
+        if open and mathpar: write("\\end{mathpar}")
+        write("\n\\hrulefill")
+        return False
+class Comment:
+    def __init__ (self, text):
+        self.text = text
+    def write(self, write, open, mathpar=True):
+        if open and mathpar: write("\\end{mathpar}")
+        write("\n\n\\LABEL{")
+        write_text(write, self.text.split("#"))
+        write("}")
+        return False
+class MathLine:
+    def __init__(self, line): self.line = line.strip()
+    def write (self, write, open, mathpar=True):
+        if mathpar and not open: write("\\begin{mathpar}")
+        write_math(write, self.line)
+        write(" \\and\n")
+        return True
+class TextLine:
+    def __init__(self, line): self.line = line
+    def write (self, write, open, mathpar=True):
+        if mathpar and not open: write("\\begin{mathpar}")
+        write("\\text{ ")
+        write_text(write, self.line.split("#"))
+        write(" }\\and\n")
+        return True
+class Rule:
+    "inference rule object"
+    def __init__(self, name):
+        self.name = name.strip() #re.sub("-+","--",name.strip())
+        self.prems = []
+        self.conc = " "
+    def addprems(self, line):
+        prems = line.split("   ")
+        for prem in prems:
+            prem = prem.strip()
+            if prem:
+                self.prems.append(prem)
+    def addconc(self, line):
+        self.conc += line.strip() + " "
+    def write (self, write, open=True, mathpar=True):
+        if not open: write("\\begin{mathpar}")
+        if self.name: write("\n\\namedrule\n    {")
+        else:         write("\n\\inferrule\n    {")
+        if self.prems:
+            write_math(write, self.prems[0])
+        else:
+            write(" ")
+        for prem in self.prems[1:]:
+            write(" \\\\ ")
+            write_math(write, prem)
+        write("}\n    {")
+        write_math(write, self.conc.strip())
+        if self.name:
+            write("}\n    {")
+            write_math(write, self.name)
+        if mathpar: write("} \\and")
+        else:       write("}")
+        return True
+class Rules (State):
+    "a list of inference rules, only one per three lines"
+    def __init__(self, parser, indent):
+        State.__init__(self, parser, indent)
+        self.rules = []
+        self.reset()
+    def __str__(self): return "rules"
+    def reset (self):
+        self.premlines = []
+        self.conclines = []
+        self.newrules = [] #(start,stop,name)
+        self.state = 0 #0:prems, 1:name, 2: concs
+
+    def clear_buffer (self):
+        if self.state == 2:
+            if not self.conclines:
+                assert not self.premlines, (
+                        "empty conclusion line in rule #%i"
+                        % (1+len(self.rules)))
+                self.rules.append(HSeparator())
+            else:
+                self.finish()
+        else:
+            for line in self.premlines:
+                if re.match("^\.\.\..*\.\.\.$", line):
+                    self.rules.append(TextLine(line))
+                elif re.match("^\(.*\)$", line):
+                    self.rules.append(TextLine(line))
+                else:
+                    self.rules.append(MathLine(line))
+        self.reset()
+    def finish (self):
+        #TODO: make sure no symbols leak into whitespace
+        for (start,end,rule) in self.newrules:
+            for p in self.premlines:
+                rule.addprems(p[start:end])
+            for c in self.conclines:
+                rule.addconc(c[start:end])
+            self.rules.append(rule)
+        self.reset()
+    def close (self):
+        self._writeline("") #to clean up
+        self.write("%\n\\vspace{-1em}\\begin{flushleft}\\begin{mathpar}")
+        open = True
+        for rule in self.rules:
+            open = rule.write(self.write, open)
+        if open: self.write("\n\\end{mathpar}\\end{flushleft}%\n")
+
+    def transition (self, marker, indent):
+        if marker == "-": self.parser.pop()
+        else: raise TransitionError(self, marker)
+
+    def _writeline (self, line):
+        "parses only one rule at a time"
+
+        #blank lines
+        stripped = line.strip()
+        if not stripped:
+            self.clear_buffer()
+            return
+
+        #comments
+        if stripped[0] == "#": #comment
+            self.clear_buffer()
+            self.rules.append(Comment(stripped[1:]))
+            return
+
+        #check for bar
+        if re.search("---", line):
+            assert self.state in [0,1], ("bar at wrong position in rule #%i"
+                                        % (1+len(self.rules)))
+            self.state = 1
+        elif self.state == 1: #go back, there are are more premisses
+            self.state = 0
+
+        #parse line
+        if self.state == 0:
+            self.premlines.append(line)
+            self.state = 1
+        elif self.state == 1:
+            bars = re_searchall("---+", line)
+            assert bars, ("no bars found in rule #%i" % (1+len(self.rules)))
+            for start,end in bars:
+                name = line[end:].split("---",1)[0]
+                self.newrules.append((start,end,Rule(name)))
+            self.state = 2
+        elif self.state == 2:
+            self.conclines.append(line)
+
+class InlineRules (Rules):
+    def __str__(self): return "inline-rules"
+
+    def close (self):
+        self._writeline("") #to clean up
+        #assert self.state == 0, "Rules ended at wrong state: %i" self.state
+        self.write("$ ")
+        for rule in self.rules:
+            rule.write(self.write, mathpar=False)
+        self.write(" $\n")
+
+    def transition (self, marker, indent):
+        if marker == "=": self.parser.pop()
+        else: raise TransitionError(self, marker)
+
+class Code (State):
+    def __init__(self, parser, indent):
+        State.__init__(self, parser, indent)
+        self.begun = False
+        self.indented = False
+        self.newline = False
+
+        #indexing
+        self.index = []
+        self.using   = re.compile("^!using(\s[A-Za-z_][a-zA-Z_0-9']*)+[.]")
+        self.with_   = re.compile("^!(w|with|wo|without)\s[A-Za-z_]+[.]\s*")
+        self.defline = re.compile("^[a-zA-Z_][a-zA-Z_0-9']*\s*:=")
+        self.define  = re.compile("^!define\s+[a-zA-Z_][a-zA-Z_0-9']*\s*:=")
+        self.defname = re.compile("[a-zA-Z_][a-zA-Z_0-9']*")
+        self.special = re.compile("\\?\\?\\?\|XXX\|LATER\|WORKING")
+    def __str__(self): return "code"
+
+    def nextline(self):
+        if not self.begun:
+            self.begun = True
+            self.write("\\begin{jcodeblock}\n")
+        if self.newline:
+            self.write("\\\\\n")
+        self.newline = True
+
+    def open (self): self.begun = False
+    def close (self):
+        if not self.begun: return
+        for i in self.index:
+            self.write("\n\\index{%s@" % i.replace("_","-"))
+            write_math(self.write, i)
+            self.write("}")
+        self.write("\n\\end{jcodeblock}\n")
+
+    def transition (self, marker, indent):
+        if marker == ">":
+            self.parser.pop()
+        else: raise TransitionError(self, marker)
+
+    def _writeline (self, line):
+        #deal with blank lines
+        if line.isspace() or not line:
+            if self.indented: #pass
+                self.nextline()
+                self.indented = False
+            else:
+                self.newline = False
+                self.close()
+                self.open()
+            return
+        if re.match("!(read|import) ", line): return
+        self.nextline()
+
+        #split into left and right parts
+        parts = line.split("#")
+        head,parts = parts[0],parts[1:]
+        self.indented = head and head[0].isspace()
+
+        #try to read first part
+        if head:
+            if not head.isspace():
+                #parse first section of line as code
+                write_math(self.write, head)
+
+                #add definitions to index entries
+                with_ = self.with_.match(head)
+                if with_: head = head[len(with_.group()):]
+                if self.defline.match(head):
+                    self.index.append(self.defname.match(head).group())
+                if self.define.match(head):
+                    self.index.append(self.defname.match(head[8:]).group())
+                if self.using.match(head):
+                    names = self.using.match(head).group()[7:-1].split()
+                    for name in names:
+                        self.index.append(name)
+                if self.special.match(head):
+                    self.index.append("(-)\\fbox{XXX}")
+
+                #parse rest of line as comment
+                if parts:
+                    self.write(" & ")
+                    write_comment(self.write, parts)
+            else:
+                self.write("\LCOM{ ")
+                write_math(self.write, head) #only spaces
+                write_comment(self.write, parts)
+                self.write(" }")
+
+        else:
+            #parse line as long comment
+            write_long_comment(self.write, parts)
+
+class OpenCode (Code):
+    def __str__(self): return "open"
+    def transition (self, marker, indent):
+        self.parser.pop()
+        State.transition(self, marker,indent)
+    def _writeline (self, line):
+        #deal with blank lines
+        if not line:
+            if self.indented: #pass
+                self.nextline()
+                self.indented = False
+            else: #terminate
+                self.parser.pop()
+                self.parser.writeline(line)
+            return
+        if line.isspace():
+            self.nextline()
+            self.indented = False
+            return
+        self.nextline()
+
+        #split into left and right parts
+        parts = line.split("#")
+        first_part = parts[0]
+        parts = parts[1:]
+        self.indented = first_part and first_part[0].isspace()
+
+        #try to read first part
+        if first_part:
+            if not first_part.isspace():
+                #parse first section of line as code
+                write_math(self.write, first_part)
+
+                #parse rest of line as comment
+                if parts:
+                    self.write(" & ")
+                    write_comment(self.write, parts)
+            else:
+                self.write("\LCOM{ ")
+                write_math(self.write, first_part) #only spaces
+                write_comment(self.write, parts)
+                self.write(" }")
+
+        else:
+            #otherwise end the block
+            self.parser.pop()
+            self.parser.writeline(line)
+            ##parse line as long comment
+            #write_long_comment(self.write, parts)
+
+class Ascii (State):
+    "se also: write_ascii_file above"
+    def __init__(self, parser, indent):
+        State.__init__(self, parser, indent)
+    def __str__(self): return "ascii"
+
+    def open (self):
+        self.write("\\[\\begin{minipage}\\linewidth\n")
+        self.write("\\begin{verbatim}\n")
+    def close (self):
+        self.write("\\end{verbatim}\n")
+        self.write("\\end{minipage}\\]\n")
+
+    def transition (self, marker, indent):
+        if   marker == "a": self.parser.pop()
+        else: raise TransitionError(self, marker)
+
+    def _writeline(self, line):
+        self.write(line)
+        self.write("\n")
+
+class Numbered (State):
+    "numbered, aligned math block"
+    def __init__(self,*args):
+        State.__init__(self,*args)
+        self.lines = []
+    def __str__(self): return "align"
+
+    def open (self): pass
+    def close (self):
+        if not self.lines: return
+
+        #clean up lines
+        width = 0
+        for line in self.lines:
+            line = line.rstrip()
+            line=line.replace("\t","  ")  #tab is 2 spaces
+            width = max(width,len(line))
+        if not width: return
+
+        #find columns, separated by pairs of spaces
+        fill = list(" "*width)
+        for line in self.lines:
+            for i in xrange(len(line)):
+                if line[i] != " ":
+                    fill[i] = "x"
+        fill = "".join(fill)
+        fill = fill.replace(" x","xx")
+        #print fill #debug
+        assert fill, "empty fill"
+        assert fill[0] == "x", "fill started with space"
+        assert fill[-1] == "x", "fill ended with space"
+        try:
+            col1 = fill.index(" x")+1
+        except ValueError:
+            raise "couldn't find first column"
+        try:
+            col2 = fill.index(" x",col1+1)+1
+        except:
+            col2 = width #no comments
+
+        #split lines into columns
+        rows = []
+        space = " "*width
+        for line in self.lines:
+            line = line + space #soas not to 
+            num = line[:col1].strip()
+            math = line[col1:col2].rstrip()
+            comment = line[col2:].strip()
+            if comment and comment[0] == "#": comment = comment[1:]
+            rows.append((num,math,comment))
+
+        #write columns
+        write = self.write
+        write("\\begin{jnumberblock}\n")
+        i = 0
+        for num,math,comment in rows:
+            if num: write("\\textbf{%s}" % num)
+            write(" & ")
+            if math: write_math(write,math)
+            write(" & ")
+            if comment: write_comment(write,comment.split("#"))
+
+            i += 1
+            if i < len(rows): write("\\\\\n")
+            else:             write("\n")
+        write("\\end{jnumberblock}\n")
+
+    def transition (self, marker, indent):
+        if marker == "n": self.parser.pop()
+        else: raise TransitionError(self, marker)
+
+    def _writeline (self, line): self.lines.append(line)
+
+#================ Ascii-formated note class ================
+
+def notspace (line):
+    return line and not line.isspace()
+
+class Block:
+    def __init__(self, note):
+        self.note = note
+        self.write = note.write
+        note.indent += 2
+        note.env.append(self)
+        self.open()
+    def kill(self):
+        self.close()
+        self.note.env.pop()
+        self.note.indent -= 2
+    def open(self): pass
+    def close(self): pass
+    def blank(self): self.write("\n")
+
+#front matter
+class TexFunBlock (Block):
+    def __init__(self, note, fun):
+        self.fun = fun
+        Block.__init__(self, note)
+    def open(self):  self.write("\\%s{" % self.fun)
+    def close(self): self.write("}\n")
+    def blank(self): self.write("%\n")
+class TexEnvBlock (Block):
+    def __init__(self, note, fun, options=None):
+        self.fun = fun
+        self.opts = options
+        Block.__init__(self, note)
+    def open(self):
+        if self.opts: self.write("\\begin{%s}[%s]\n" % (self.fun,self.opts))
+        else:         self.write("\\begin{%s}\n" % self.fun)
+    def close(self):  self.write("\\end{%s}\n" % self.fun)
+    def blank(self):  self.write("%\n")
+#standard environments
+class ProofBlock (Block):
+    def open(self):  self.write("\\begin{Jproof}\n")
+    def close(self): self.write("\\end{Jproof}\n")
+class DefBlock (Block):
+    def open(self):
+        global defining
+        defining = True
+        self.write("\\begin{Jdefinition}\n")
+    def close(self):
+        global defining
+        defining = False
+        self.write("\\end{Jdefinition}\n")
+class TheoremBlock (Block):
+    def open(self):  self.write("\\begin{Jtheorem}\n")
+    def close(self): self.write("\\end{Jtheorem}\n")
+class LemmaBlock (Block):
+    def open(self):  self.write("\\begin{Jlemma}\n")
+    def close(self): self.write("\\end{Jlemma}\n")
+class CorBlock (Block):
+    def open(self):  self.write("\\begin{Jcorollary}\n")
+    def close(self): self.write("\\end{Jcorollary}\n")
+class ConjBlock (Block):
+    def open(self):  self.write("\\begin{Jconjecture}\n")
+    def close(self): self.write("\\end{Jconjecture}\n")
+class QstnBlock (Block):
+    def open(self):  self.write("\\begin{Jquestion}\n")
+    def close(self): self.write("\\end{Jquestion}\n")
+class PropBlock (Block):
+    def open(self):  self.write("\\begin{Jproposition}\n")
+    def close(self): self.write("\\end{Jproposition}\n")
+class StmtBlock (Block):
+    def open(self):  self.write("\\begin{Jstatement}\n")
+    def close(self): self.write("\\end{Jstatement}\n")
+class NoteBlock (Block):
+    def open(self):  self.write("\\begin{Jremark}\n")
+    def close(self): self.write("\\end{Jremark}\n")
+class NotationBlock (Block):
+    def open(self):  self.write("\\begin{Jnotation}\n")
+    def close(self): self.write("\\end{Jnotation}\n")
+class ExampleBlock (Block):
+    def open(self):  self.write("\\begin{Jexample}\n")
+    def close(self): self.write("\\end{Jexample}\n")
+class ExerciseBlock (Block):
+    def open(self):  self.write("\\begin{Jexercise}\n")
+    def close(self): self.write("\\end{Jexercise}\n")
+class ProblemBlock (Block):
+    def __init__(self, note, number="0"):
+        self.number = number
+        Block.__init__(self, note)
+    def open(self):  self.write("\subsection*{Problem %s}\n" % self.number)
+    def close(self): self.write("\n")
+class CommentBlock (Block):
+    def open(self):
+        assert not self.note.commenting, "can't nest comment blocks (in open)"
+        self.note.commenting = True
+        self.write("\\begin{comment}\n")
+    def close(self):
+        assert self.note.commenting, "can't nest comment blocks (in close)"
+        self.note.commenting = False
+        self.write("\\end{comment}\n")
+#math environments
+class AlignBlock (Block):
+    def open(self):  self.write("\\begin{align*}")
+    def close(self): self.write("\\end{align*}\n")
+    def blank(self): self.kill()
+#lists
+class BulletsBlock (Block):
+    def open(self):  self.write("\\begin{bullets}\n")
+    def close(self): self.write("\\end{bullets}\n")
+class NumbersBlock (Block):
+    def open(self):  self.write("\\begin{numbers}\n")
+    def close(self): self.write("\\end{numbers}\n")
+class NumeralsBlock (Block):
+    def open(self):  self.write("\\begin{numerals}\n")
+    def close(self): self.write("\\end{numerals}\n")
+#floats
+class FigureBlock (Block):
+    def __init__(self, note, title):
+        Block.__init__(self, note)
+        self.title = title
+    def open(self):
+        self.write("\\begin{figure}[hbt]\\begin{center}")
+    def close(self):
+        if notspace(self.title):
+            self.write("\\caption{")
+            write_text(self.write, self.title.split("#"))
+            self.write("}")
+        self.write("\n\\end{center}\\end{figure}\n")
+class CaptionBlock (Block):
+    def open(self):  self.write("\\caption{ ")
+    def close(self): self.write("}%end caption\n")
+#slides
+class SlideBlock (Block):
+    def __init__(self, note, title):
+        Block.__init__(self, note)
+        if title:
+            self.write(" \\frametitle{")
+            write_text(self.write, title.split("#"))
+            self.write("}")
+    def open(self):  self.write("%%%%%%%%%%%%%\n\\begin{frame}")
+    def close(self): self.write("\\end{frame}\n\n")
+    #def blank(self): self.write("\\vspace{1em}\n")
+class UncoverBlock (Block):
+    def __init__(self, note, num):
+        self.num = num
+        Block.__init__(self, note)
+    def open(self):  self.write("\\uncover<%s->{\n"%self.num)
+    def close(self): self.write("}\n")
+#misc
+class GenericBlock (Block):
+    def __init__(self, note, label):
+        Block.__init__(self, note)
+        self.write("\\item[%s] " % label)
+    def open(self):  self.write("\\begin{description}")
+    def close(self): self.write("\\end{description}\n")
+class SectionBlock (Block):
+    def __init__(self, note, title, indent):
+        Block.__init__(self, note)
+        global chapters
+        if not chapters: indent += 2
+        if   indent == 0: note.write("\\chapter{")
+        elif indent == 2: note.write("\\section{")
+        elif indent == 4: note.write("\\subsection{")
+        elif indent == 6: note.write("\\subsubsection{")
+        else:             note.write("\\minisection{")
+        write_text(note.write, title.split("#"))
+        note.write("}\n")
+class LatexBlock (Block):
+    def __init__(self): raise "LATER"
+
+class Note (Text):
+    def __init__(self, parser):
+        self.commenting = False
+        Text.__init__(self, parser, 0)
+
+        #matching
+        self.block = re.compile("[A-Z][a-z]*( [A-Z][a-z]*)*( [0-9]+)*: ")
+        self.sec = re.compile("[A-Z][a-z',]*([- ][A-Za-z,\"']+)*\. (\([^)]*\))*")
+        self.bullet = re.compile("\* ")
+        self.number = re.compile("\([0-9]+\) ")
+        self.numeral = re.compile("\(([ivx]+|[a-z])\) ")
+        self.uncover = re.compile("Uncover [0-9]+")
+
+        self.env = []
+
+    def __str__(self): return "note"
+
+    def close (self):
+        while self.env:
+            self.pop()
+
+    #environments
+    def pop (self):
+        self.env[-1].kill()
+    def writeline (self, line):
+        "deal with indenting later"
+        self._writeline(line)
+    def setindent (self, indent):
+        while indent < self.indent:
+            self.pop()
+
+    def _writeline(self, line):
+        #pass blank lines
+        if not line:
+            if self.env:  self.env[-1].blank()
+            else:         self.write("\n")
+            return
+
+        #find indenting
+        (indent,line) = lstrip(line)
+
+        #bullets have funny indenting
+        bullet = self.bullet.match(line)
+        number = self.number.match(line)
+        numeral = self.numeral.match(line)
+        if bullet:
+            line = "\\item " + line[bullet.end():]
+            #line = "\\item[\\M\\bullet] " + line[bullet.end():] #HACK
+            indent += 2
+            if indent > self.indent:
+                BulletsBlock(self)
+        elif number:
+            line = "\\item[%s] %s" % (number.group()[:-1], line[number.end():])
+            indent += 2
+            if indent > self.indent:
+                NumbersBlock(self)
+        elif numeral:
+            line = "\\item[%s] %s" % (numeral.group()[:-1], line[numeral.end():])
+            indent += 2
+            if indent > self.indent:
+                NumeralsBlock(self)
+        self.setindent(indent)
+
+        #check for block opening
+        block = self.block.match(line)
+        if block:
+            name = line[:block.end()-2]
+            line = line[block.end():]
+            if   name in ["Takeout",
+                          "Comment",
+                          "Exercise",                 #HACK hide exercises
+                          "Design Goals",             #HACK hide design goals
+                          "Edit",
+                          "Text Only",
+                          "Html Only"]:
+                if self.commenting:                   GenericBlock(self, name)
+                else:                                 CommentBlock  (self)
+            elif name in ["Latex Only"]:              Block         (self)
+            elif name in ["Main Only"]:
+                if self.indent == 0:                  Block         (self)
+                else:                                 CommentBlock  (self)
+
+            #blocks
+            elif name in ["Theorem","Thm"]:           TheoremBlock  (self)
+            elif name in ["Definition","Def"]:        DefBlock      (self)
+            elif name in ["Lemma","Lem"]:             LemmaBlock    (self)
+            elif name in ["Conjecture","Conj"]:       ConjBlock     (self)
+            elif name in ["Question","Qstn"]:         QstnBlock     (self)
+            elif name in ["Proposition","Prop"]:      PropBlock     (self)
+            elif name in ["Statement","Stmt"]:        StmtBlock     (self)
+            elif name in ["Corollary","Cor"]:         CorBlock      (self)
+            elif name in ["Proof","Pf"]:              ProofBlock    (self)
+            elif name in ["Remark","Note"]:           NoteBlock     (self)
+            elif name in ["Notation","Notn"]:         NotationBlock (self)
+            elif name in ["Example","Eg"]:            ExampleBlock  (self)
+            #elif name in ["Exercise","Ex"]:           ExerciseBlock (self)
+            elif name == "Align":                     AlignBlock    (self)
+
+            #latex functions
+            elif name == "Title":       TexFunBlock (self, "title")
+            elif name == "Author":      TexFunBlock (self, "author")
+            elif name == "Date":        TexFunBlock (self, "date")
+            elif name == "Footnote":    TexFunBlock (self, "jfootnote")
+
+            #latex environments
+            elif name == "Abstract":    TexEnvBlock (self, "abstract")
+            elif name == "Center":      TexEnvBlock (self, "center")
+            elif name == "Quote":       TexEnvBlock (self, "quotation")
+            elif name == "Columns":     TexEnvBlock (self, "columns", "c")
+
+            #problems HACKY
+            elif re.match("Problem [0-9]+", name):    ProblemBlock  (self, name[8:])
+
+            #figures
+            elif name == "Caption":                   CaptionBlock  (self)
+            elif name in ["Figure","Fig"]:
+                FigureBlock(self, line)
+                line = ""
+            #LATER
+            #elif name == "Latex":                     LatexBlock    (self)
+
+            #slides
+            elif self.uncover.match(name):
+                num = name[9:]
+                UncoverBlock(self, num)
+            elif name == "Slide":
+                SlideBlock(self, line)
+                line = ""
+
+            else: GenericBlock(self, name)
+
+        if indent == self.indent and indent in [0,2,4]:
+            section = self.sec.match(line)
+            if section:
+                title = section.group().replace(".","",1)
+                #title = title.replace("$","#")
+                line  = line[section.end():]
+                SectionBlock(self, title, indent + self.parser.indent)
+
+        #format line
+        #line = line.replace("$","#")
+
+        #parse the line as text
+        parts = line.split("#")
+        write_text(self.write, parts)
+        self.write("\n")
+
+#================ environment-based document parser ================
+class Parser:
+    def __init__(self, write=None, indent=0):
+        self.states = []
+        self.indent = indent
+        self.line_num = -1
+        self.write = write
+
+    #states
+    def push (self, state):
+        self.states.append(state)
+        global verbose
+        if verbose: 
+            print "%i\t%s%s" % (
+                    self.line_num, "  "*len(self.states), state)
+        self.comment("line %i: %s" % (self.line_num, state))
+    def pop (self):
+        self.states.pop().close()
+    def writeline(self, line):
+        self.states[-1].writeline(line)
+
+    #commenting
+    def comment (self, text):
+        self.write("%% " + text + "\n")
+
+    def readfile(self, infilename):
+        #check file
+        infile = open(infilename, 'r')
+        in_dir = get_dir(infilename)
+        if not infile:
+            print "could not open " + infilename + " for reading"
+            raise IOError
+
+        #start file
+        global verbose
+        if verbose: print "begin reading file: " + infilename
+        self.comment("begin reading file: %s" % infilename)
+
+        #parse line-by-line
+        self.line_num = 0
+        for line in infile.readlines():
+            self.line_num += 1
+            try:
+                line = line.rstrip("\n")
+                #print "> " + line #DEBUG
+
+                #check for end of file
+                if len(line) >= 4:
+                    marker = line[:4]
+                    if marker == "exit": break #stop parsing on exit
+
+                #check for control commands
+                (indent,stripped) = lstrip(line)
+                if len(stripped) >= 3 and stripped[:3] == "###":
+                    self.states[-1].setindent(indent)
+                    line = stripped[3:]
+                    if not line: continue
+                    marker = line[0]
+                    line = line[1:]
+                    if marker == "#": #ignore these lines entirely
+                        continue
+
+                    #block begin and end
+                    elif marker in "{}<>[]()|=-&an":
+                        self.states[-1].transition(marker,indent+2) #XXX right
+                        if line:
+                            self.writeline(line)
+
+                    #special treatment
+                    elif marker == "v": #verbatim output
+                        self.write(line)
+                        self.write("\n")
+
+                    #extra files
+                    elif marker == "i": #input file (passively)
+                        for filename in line.split():
+                            incl_file = fix_fname(in_dir+filename)
+                            self.write("\\input{%s.tex}\n" % incl_file)
+                    elif marker == "r": #read file (actively)
+                        for filename in line.split():
+                            parser = Parser(self.write, self.indent + indent)
+                            filename = fix_fname(in_dir+filename)
+                            if get_ftype(filename) == ".jcode": Script(parser)
+                            else:                               Note(parser)
+                            if not verbose: print "  reading " + filename
+                            parser.readfile(filename)
+                    elif marker == "A": #input ascii file
+                        for filename in line.split():
+                            filename = in_dir + filename
+                            write_ascii_file(self.write, filename)
+
+                    #definitions
+                    elif marker == "d": math_def(line)
+                    elif marker == "u": math_undef(line.split())
+                    elif marker == "D": text_def(line)
+                    elif marker == "U": text_undef(line.split())
+
+                    #declarations
+                    elif marker == "m": math_alg(line.split())
+                    elif marker == "c": math_cal(line.split())
+                    elif marker == "k": math_kwd(line.split())
+                    elif marker == "b": math_bb(line.split())
+                    elif marker == "g": math_greek(line.split())
+                    elif marker == "o": math_ops(line.split())
+                    elif marker == "s": math_subscript(line.split())
+                    elif marker == "l": math_latex(line.split())
+                    elif marker == "t": raise NotImplementedError
+
+                #push parse line
+                else:
+                    self.writeline(line)
+
+            #show where any error occurs
+            except Exception, e:
+                print ("===== error %s line %i ====="
+                        % (infilename,self.line_num))
+                traceback.print_stack()
+                traceback.print_exc()
+                print "=========="
+                raise Exception("typesetting error")
+
+        #end file
+        infile.close()
+        while self.states: self.pop()
+        if verbose: print "end reading file: " + infilename
+        self.comment("end reading file: %s" % infilename)
+
+    def __call__ (self, infilename, outfilename, ftype, defs,
+                  documentclass=None, hasbib=False, hasidx=False, hasgls=False):
+        "convert a document to latex"
+
+        #check file
+        outfile = open(outfilename, 'w')
+        if not outfile:
+            print "could not open " + outfilename + " for writing"
+            raise IOError
+        self.write = outfile.write
+
+        #header
+        global VERSION
+        self.comment("this file was generated by jtext2latex version %s"
+                     % VERSION)
+
+        #body
+        global chapters
+        if documentclass and documentclass.split(',')[0] in ["amsbook","memoir"]:
+            chapters = True
+        else:
+            chapters = False
+        if ftype in [".text",".jtext"]:   Note(self)
+        elif ftype == ".jcode":           State(self)
+        else:
+            print "unknown filetype: %s" % ftype
+            sys.exit(1)
+
+        #front matter
+        if documentclass:
+            self.write(doc_string(documentclass))
+            self.write("\\usepackage{jtext}\n")
+            #self.write("\\usepackage{fancyhdr}\n")
+            if hasidx or hasgls:
+                self.write("\\usepackage{index}\n")
+            if hasgls: self.write("\\makeglossary\n")
+            if hasidx: self.write("\\makeindex\n")
+        if defs:
+            parser = Parser(self.write)
+            Text(parser)
+            try:
+                parser.readfile(fix_fname(defs))
+            except IOError:
+                print "(no definitions)"
+        if documentclass:
+            #user must do this...
+            #self.write("\\maketitle\n")
+            self.write("\\begin{document}\n")
+
+        #body
+        self.readfile(infilename)
+
+        #back matter
+        if documentclass:
+            if hasgls:
+                self.write("\\addcontentsline{toc}{chapter}{Glossary}\n")
+                self.write("\\printglossary\n")
+            if hasidx:
+                #self.write("\\addcontentsline{toc}{chapter}{Index}\n")
+                self.write("\\printindex\n")
+            if hasbib:
+                self.write("\\bibliographystyle{amsalpha}\n")
+                self.write("\\bibliography{fho_refs}\n\n")
+            self.write("\\end{document}\n")
+        
+        #clean up
+        self.write = None
+        outfile.close()
+        math_undef_all()
+
+#================ help ================
+help_message = """Usage: jtext2latex [options] file.jtext
+Synopsis: converts jtext files (latex with ascii art math) to latex
+Options: (order matters)
+  -c                    Convert jtext --> latex & compile (latex) to dvi
+  -C DOCUMENTCLASS      Wraps in document, converts, & compiles
+  -b                    Include bibliography with bibtex
+  -i                    Include index with makeindex
+  -g                    Include glossary with makeindex
+  -p                    Convert to pdf (dvipdf) after compiling
+  -P                    Compile to pdf (pdflatex)
+  -d                    DO NOT try to read ./defs.jtext
+  -D DEF-FILE           Read specified defs instead of ./defs.jtext
+  -o FILENAME           Write to specified filename
+  -v                    Verbose mode
+  -h, --help            Print this message
+  -l                    Print license
+  -s                    Print syntax help message
+Environments ###_ ... ###_
+  < ... >               Code inside Text
+  { ... }               Text inside Code
+  [ ... ]               Math
+  ( ... )               Aligned math
+  | ... |               Aligned latex
+  - ... -               Inference rules
+  = ... =               Inline inference rule
+  a ... a               Ascii art
+  n ... n               Line-numbered proof
+Syntax markers ###_
+  #                     Comment
+  i  filename           Inputs a file (passivly calls latex command)
+  r  filename           Reads a file (actively parses file)
+  A  filename           Reads file verbatim as ascii (for program listings)
+  v  ...something...    Prints line verbatim
+  d/D  name  def        Defines math/text syntax
+  u/U  name1 name2 ...  Undefines math/text syntax
+  u/U  <no args>        Undefines all math/text syntax
+Font declarations ###_
+  m  w1 w2 ... wn       Algebraic variables (serif italic)
+  c  w1 w2 ... wn       Caligraphic variables (math caligraphic)
+  k  w1 w2 ... wn       Keywords (roman bold)
+  b  w1 w2 ... wn       Blackboard Bold, eg RR --> \mathbb{R}
+  g  w1 w2 ... wn       Fake greek names, eg a --> \\alpha
+  o  w1 w2 ... wn       Operator names
+  s  w1 w2 ... wn       Short subscripts, eg x1 --> x_1
+  l  w1 w2 ... wn       Latex commands, eg in --> \\in
+License: GPL 3,         Version: """ + VERSION
+
+#================ process options & files ================
+
+def run_cmd(command):
+  print command
+  if os.system(command): exit(1)
+
+if __name__ == "__main__":
+    parse = Parser()
+    outfile = None
+    compile = "tex"
+    documentclass = None
+    defs = None
+    hasbib = False
+    hasidx = False
+    hasgls = False
+    pdf = False
+    state = "file"
+    for arg in sys.argv[1:]:
+        if state == "file":
+            if arg in ["-h","--help"]: print help_message
+            elif arg == "-l": print LICENSE
+            elif arg == "-c":
+                compile = "dvi"
+                if defs == None: defs = "defs"
+            elif arg == "-C":
+                compile = "dvi"
+                if defs == None: defs = "defs"
+                state = "class"
+            elif arg == "-b": hasbib = True
+            elif arg == "-i": hasidx = True
+            elif arg == "-g": hasgls = True
+            elif arg == "-p": compile = "dvipdf"
+            elif arg == "-P": compile = "pdf"
+            elif arg == "-d": defs = None
+            elif arg == "-D": state = "defs"
+            elif arg == "-o": state = "output"
+            elif arg == "-v": verbose = True
+            else:
+                #determine file type
+                arg = fix_fname(arg)
+                suffix = re.search(".[a-zA-Z0-9]*$",arg)
+                if suffix:
+                    suffix = suffix.group()
+                    infile = arg
+                    if   suffix == ".jcode":  ftype = ".jcode"
+                    elif suffix == ".jtext":  ftype = ".jtext"
+                    elif suffix == ".text":   ftype = ".text"
+                    else: #default
+                        ftype = ".jtext"
+                        infile += ftype
+                else: #default
+                    ftype = ".jtext"
+                    infile = arg + ftype
+
+                #name output
+                if outfile: outfile = outfile + ftype
+                else: outfile = infile
+
+                #compile
+                print "compiling to %s" % compile
+                if compile in ["tex","dvi","pdf","dvipdf"]:
+                    texfile = outfile + ".tex"
+                    print "converting %s --> %s" % (infile, texfile)
+                    parse(infile, texfile, ftype, defs, documentclass,
+                          hasbib, hasidx, hasgls)
+                if compile in ["dvi","dvipdf"]:
+                    if verbose or True:
+                        run_cmd("latex %s" % texfile)
+                    else:
+                        run_cmd("latex %s | grep -i 'warning\\|error' | grep -v hyperref" % texfile)
+                    if hasbib:
+                        run_cmd("bibtex " + outfile)
+                    if hasidx or hasgls:
+                        run_cmd("makeindex " + outfile+".idx")
+                    dvifile1 = outfile + ".dvi"
+                    dvifile2 = dvifile1.replace(ftype,"")
+                    run_cmd("mv %s %s" % (dvifile1,dvifile2))
+                if compile == "dvipdf":
+                    run_cmd("dvipdf " + dvifile2)
+                if compile == "pdf":
+                    run_cmd("pdflatex " + texfile)
+                    if hasbib:
+                        run_cmd("bibtex " + outfile)
+                    if hasidx or hasgls:
+                        run_cmd("makeindex " + outfile)
+                    pdffile1 = outfile + ".pdf"
+                    pdffile2 = pdffile1.replace(ftype,"")
+                    run_cmd("mv %s %s" % (pdffile1,pdffile2))
+                #reset state
+                outfile = None
+                compile = "tex"
+                documentclass = None
+                defs = None
+                hasbib = False
+                pdf = False
+                verbose = False
+        elif state == "class":
+            documentclass = arg
+            state = "file"
+        elif state == "defs":
+            defs = arg
+            state = "file"
+        elif state == "output":
+            outfile = arg
+            state = "file"
+        else: exit(0)
+

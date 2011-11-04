@@ -1,0 +1,47 @@
+
+Statistics with imprecise probabilities. \label{sec:skrj/stats}
+  ###<
+    !import skrj/types skrj/nats skrj/reals.
+  ###>
+
+  #TODO discuss bayesian networks and the lambda-def calculus
+
+  Statistical Inference. 
+    ###<
+      prob := type (\f,x,y,z.f(x z)(y z)).
+      Infer := (/\a:type. (a->prob) -> Rand a -> Rand a) (
+          \a:type.
+          \cond:a->prob.
+          \prior:Rand a.
+          Y \try_again.
+              prior. \x:a. sample cond x <x>
+          try_again
+      ).
+    ###>
+
+  Standard Distributions. 
+    probabilities
+    ###<
+      one_in_two      := R.
+      one_in_three    := (\x,y.Y \z.R x.R y z).
+      one_in_four     := (\x,y.R x.R x y).
+      one_in_pow_two  := (\n,x,y.n(R x)y).
+    ###>
+
+    Bernoulli RVs
+    ###<
+      bern_1_2 := one_in_two   <T> <F>.
+      bern_1_3 := one_in_three <T> <F>.
+      bern_1_4 := one_in_four  <T> <F>.
+    ###>
+
+    random numbers
+    ###<
+      rand_geom := (prob ->Rand nat) (\p.Y \r. p(<0>, map succ r)).
+      rand_pois := (prob ->Rand nat) ???.
+    ###>
+
+    ###<
+      random_std_unif := ???.
+    ###>
+

@@ -1,0 +1,498 @@
+
+Syntactic algorithms. \label{sec:algorithms/expressions}
+
+  ###k A B C E F I J K O P Q R S U V W Y 
+  ###s M1 M2 Mn N1 N2 Nn D1 D2 Dn x1 x2 xn p1 p2 pn
+
+  Html Only: 
+    See cpp/expressions.h and cpp/expressions.C for expressions implementation.
+    See cpp/statements.h and cpp/statements.C for statements implementation.
+
+  Term syntax. \label{sec:algorithms/expressions:terms}
+    We first present a relatively large language of terms,
+    and then show how to compile terms down to a small combinatory fragment.
+    ###-
+      #Algebraic Terms
+      x var
+      ------
+      x term
+
+      ------   ------   ------   ------   ------   ------   ------
+      I term   K term   B term   C term   W term   S term   J term
+
+      ---------   ----------   ---------
+      code term   quote term   eval term
+
+      M term   N term   M term   N term   M term   N term   M term   N term
+      ---------------   ---------------   ---------------   ---------------
+         M N term          M|N term           M*N term         M->N term
+
+      M1 term   ...   Mn term         M term     phi stmt
+      ----------------------- n=>0   --------   ----------
+           <M1,...,Mn> term          {M} term   {phi} term
+
+      #Patterns and Binding
+
+       x var    p1 patt   ...   pn patt    p patt
+      -------   -----------------------   ---------
+      x patt'      <p1,...,pn> patt'      {p} patt'
+
+      p patt'   p patt'   M term   p patt'   M term   p patt'   M term   N term
+      -------   ----------------   ----------------   -------------------------
+      p patt        p:M patt          p::M patt             p:M::N patt
+
+      p patt   M term   N term
+      ------------------------
+           p:=M.N term
+
+      p patt   M term   p patt   M term   p patt   M term
+      ---------------   ---------------   ---------------
+         \p.M term         /\p.M term        \/p.M term
+    ###-
+
+  NEWPAGE
+  Compiling to combinators. \label{sec:algorithms/expressions:compiling}
+    (large step; #R# is similar to #J#; quoting is handled separately)
+    ###-
+      #Algebraic
+      M |-> M'   N |-> N'
+      ------------------ J
+        M|N |-> J M' N'
+
+                    M |-> M'      M |-> M'   <N1,...,Nn> |-> N'
+      --------   --------------   ----------------------------- n=>1
+      <> |-> I   <M> |-> C I M'     <M,N1,...,Nn> |-> C M' N'
+
+      #Abstraction
+
+       x apart M
+      ------------ K   ---------- I
+      \x.M |-> K x     \x.x |-> I
+
+        x apart M        x apart M  \x.N |-> N'       \x.M |-> M'
+      ------------ eta   ---------------------- B   --------------- W
+      \x.M x |-> M          \x.M N |-> B M N'       \x.M x |-> W M'
+
+      x apart N  \x.M |-> M'     \x.M |-> M'   \x.N |-> N'
+      ---------------------- C   ------------------------- S
+        \x.M N |-> C M' N           \x.M N |-> S M' N'
+
+      \x.M |-> M'   \x.N |-> N'
+      ------------------------ J
+          \x.M|N |-> J M' N'
+
+      \x.M |-> M'   V a |-> a'   \x.M |-> M'   test t |-> t'
+      ------------------------   ---------------------------
+         \x:a.M |-> B M' a'          \x::t.M |-> S t' M'
+
+      \x.M |-> M'   V a |-> a'   test t |-> t'
+      ----------------------------------------
+             \x:a::t.M |-> B (S t' M') a'
+
+        \p1,...,pn.M |-> M'
+      -------------------------
+      \<p1,...,pn>.M |-> C I M'
+
+      #Definitions
+       x apart M     x apart M   x:=D.N |-> N'   x apart N   x:=D.M |-> M'
+      ------------   -------------------------   -------------------------
+      x:=D.N |-> M        x:=D.M N |-> M N'           x:=D.M N |-> M' N
+
+          \x.M |-> M'       \x.M |-> M'   \x.N |-> N'
+      -------------------   ------------------------
+      x:=D.M x |-> W M' D    x:=D.M N |-> S M' N' D
+
+          x1:=D1....xn:=Dn.M |-> M'           \x1,...,xn.M |-> M'
+      ---------------------------------   -------------------------
+      <x1,...,xn>:=<D1,...,Dn>.M |-> M'   <x1,...,xn>:=D.M |-> D M'
+
+      #Quantifiers / Polymorphism
+
+      V \x,y.V M(y x) |-> M'   V \x:N,y.V M(y x) |-> M'
+      ----------------------   ------------------------
+            /\x.M |-> M'            /\x:N.M |-> M'
+
+      \<x,y>:pair.<x,V M y> |-> M'   \<x,y>:pair.<V N x,V M y> |-> M'
+      ----------------------------   --------------------------------
+             \/x.M |-> M'                     \/x:N.M |-> M'
+    ###-
+
+    NEWPAGE
+    Quoting is more delicate, as it involves the #code# comonad.
+    We need to define two types of compiling:
+    one inside quotes, and one outside.
+    Within a quoted environment, we can #quote# variables.
+    Also, all compilation is done at the outer-most environment, so that, eg,
+    the abstraction algorithm works with #I,K,B,C,W,S#
+    instead of the more complicated quoted versions #_I,_K,_B,_C,_W,_S#.
+    ###-
+      #Quoting
+
+      {M} |-> M'   {N} |-> N'       {M} |-> M'
+      -----------------------   ------------------
+         {M N} |-> _A M' N'     {{M}} |-> quote M'
+
+      #Code Comonad
+
+      -----------------   ----------------------
+      \{x}.{x} |-> code   \{x:a}.{x} |-> Code{a}
+
+      ------------   ----------------------
+      \{x}.x |-> E   \{x:a}.{x} |-> Eval{a}
+
+      ----------------   -------------------------
+      \{x}.{{x}} |-> Q   \{x:a}.{{x}} |-> Quote{a}
+
+      {x} apart M   x not apart M   \x.M |-> M'
+      -----------------------------------------
+                 \{x}.M |-> B M' E
+
+       x apart M
+      ------------ {K}
+      \{x}.M = K M
+
+      \{x}.M |-> K M'   \{x}.N |-> B N' code
+      -------------------------------------- {B}
+             \{x}.M N |-> B(B M' N')code
+
+      \{x}.M |-> B M' code   \{x}.N |-> K N'
+      -------------------------------------- {C}
+            \{x}.M N |-> B(C M' N')code
+
+      \{x}.M |-> B M' code   \{x}.N |-> B N' code
+      ------------------------------------------- {S}
+               \{x}.M N |-> B(S M' N')code
+
+      {M} |-> M'   \{x}.M' |-> M''
+      ---------------------------- {code}
+            \{x}.M |-> M''
+
+      ---------------------------------------------------
+      \{x}. M |-> \c:code. [x:=E c, {x}:=c, {{x}}:=Q c] M
+    ###-
+    Note that the #{K}# rule prevents us from testing with #test_code#;
+    we need to abstract partial terms as well.
+
+  Decompiling. \label{sec:algorithms/expressions:decompiling}
+    One of the advancements of this is a successful decompiling algorithm
+    from combinators SKJ to lambda-let-terms.
+    Although this is theoretically banal,
+    it has major practical significance in allowing people to read combinators
+    (and foiling the obfuscatory attempts of languages like unlambda, and Iota).
+
+    The main idea is to simplify (with Johann's database),
+    translate left-linear terms to lambda abstraction,
+    translate left-copying terms (#W,S#) to let-expressions,
+    decompile vectors #\f.f M1 ...Mn <-| <M1,...,Mn>#,
+    and eta-reduce whenever possible.
+    ###-
+      #Abstraction
+                    M _N <-| M'
+      ----------   -------------
+      I <-| \x.x   I M _N <-| M'
+
+                       M <-| M'        M _O <-| M'
+      ------------   -------------   ---------------
+      K <-| \x,y.x   K M <-| \_.M'   K M N _O <-| M'
+
+                              M(y z) <-| M'     M(N z) <-| M'    L(M N) <-| M'
+      --------------------   ---------------   ---------------   --------------
+      B <-| \x,y,z.x(y z)    B M <-| \y,z.M'   B M N <-| \z.M'   B L M N <-| M'
+
+                             M z y <-| M'      M z N <-| M'     L N M <-| M'
+      ------------------   ---------------   ---------------   --------------
+      C <-| \x,y,z.x z y   C M <-| \y,z.M'   C M N <-| \z.M'   C L M N <-| M'
+
+                         M y y <-| M'
+      ----------------   -------------
+      W <-| \x,y.x y y   W M <-| \y.M'
+
+                              M z(y z) <-| M'   M z(N z) <-| M'
+      ---------------------   ---------------   ---------------
+      S <-| \x,y,z.x z(y z)   S M <-| \y,z.M'   S M N <-| \z.M'
+
+      #Definitions
+          M x _N <-| M'         M x(N x)_O <-| M'
+      --------------------   ----------------------
+      W M D _N <-| x:=D.M'   S M N D _O <-| x:=D.M'
+
+      M x <-| M'   N x <-| N'   _L <-| _L'
+      ------------------------------------
+         J M N _L <-| (x:=D. M'|N') _L
+
+      #Join (Rand is identical)
+                           M <-| M'
+      --------------   ---------------
+      J <-| \x,y.x|y   J M <-| \x.M'|x
+
+      M x <-| M'   x apart M'   M x <-| M'   x apart M'
+      N x <-| N'   x apart N'   N x <-| N'
+        J M' N' _L <-| L'       J M' (N D) _L <-| L'
+      -----------------------   -----------------------
+        J M N D _L <-| L'         J M N D _L <-| L'
+
+      M x <-| M'
+      N x <-| N'   x apart N'
+       J (M D) N' _L <-| L'
+      -----------------------
+        J M N D _L <-| L'
+
+      #Vectors and Tuples
+         M <-| M'      M <-| M1   N <-| C <N2,...,Nn>
+      --------------   ------------------------------ n=>2
+      C I M <-| <M'>       C M N <-| <M,N1,...,Nn>
+
+       M <-| M'   N <-| <N1,N2>              N <-| <N1,N2>
+      -------------------------   ----------------------------------- n=>2
+      <M,<N1,N2>> <-| (M,N1,N2)   (M1,...,Mn,N) <-| (M1,...,Mn,N1,N2)
+
+      #Codes
+      M <-| {M'}   N <-| {N'}   M <-| {M'}     M <-| {M'}
+      -----------------------   ----------   --------------
+          A M N <-| {M N}       E M <-| M'   Q M <-| {{M'}}
+    ###-
+
+  Reduction Strategies. \label{sec:algorithms/expressions:reduction}
+
+    Html Only: These are implemented in cpp/ecpressions.C .
+
+    We consider both affine/linear reduction #->># and bounded reduction #~>#.
+    Since affine reduction is size-reducing (and hence terminates),
+    we count only nonlinear steps towards the bound in arbitrary reduction.
+
+    ###-
+      #Affine
+
+      ---------   ---------   ---------   ---------   ---------
+      _ x ->> _   T x ->> T   I x ->> x   J T ->> T   J _ ->> I
+
+      ---------   --------------   ---------   --------------
+      V V ->> V   V(V x) ->> V x   U U ->> U   U(U x) ->> U x
+
+      -----------   -----------   -----------   -----------
+      K x y ->> x   F x y ->> y   J x T ->> T   J x _ ->> x
+
+      -----------   -----------
+      J x x ->> x   R x x ->> x
+
+      ------------------   -----------------
+      B x y z ->> x(y z)   C x y z ->> x z y
+
+      #Nonaffine
+
+      -------------   ----------------   ----------------
+      Y x ~> x(Y x)   V f ~> I|f*(V f)   U f ~> f*(U f)|f
+
+      --------------   ----------
+      W x y ~> x y y   W W W ~> _
+
+         y z ->> u       x z ->> u   y z ->> v   x z ->> u   y z ->> v
+      ----------------   ---------------------   ---------------------
+      S x y z ~> x z u     J x y z ~> J u v        R x y z ~> R u v
+
+      -----------------------------
+      R x(J y z) ~> J(R x y)(R x z)
+    ###-
+
+    Comment: LATER sampling strategies for SKRJ (search files for #m_sampling#)
+
+  Statements. \label{sec:algorithms/expressions:statements}
+
+    Statements are based on equations and Scott's information ordering.
+    In SKJ and extensions we can also reason about
+    types-as-closures (\ref{sec:axioms/close:notation}) and
+    types-as-tests (\ref{sec:skj/tests:notation}).
+    ###-
+      #Statement Formation
+
+      -----   ------   ------   -------   ------   -------   ------   ------
+      = rel   != rel   [= rel   ![= rel   =] rel   !=] rel   [[ rel   ]] rel
+
+      -----   ------   ------   -------   ------   -------
+      : rel   !: rel   <: rel   !<: rel   :> rel   !:> rel
+
+      ------   -------   -------   --------   -------   --------
+      :: rel   !:: rel   <:: rel   !<:: rel   ::> rel   !::> rel
+
+      M term   ~ rel   N term   x patt   p stmt   x patt   M term   p stmt
+      -----------------------   ---------------   ------------------------
+             M ~ N stmt           /\x. p stmt           x:=M. p stmt
+
+        p stmt     p stmt   q stmt   p stmt   q stmt
+      ----------   ---------------   ---------------
+      NOT p stmt     p AND q stmt      p ==> q stmt
+    ###-
+
+    In SKJ and extensions, we can eliminate universal quantifiers, universal
+    quantifiers, and implications where the hypothesis is a testable assertion
+    #x::t# or #M=I#.
+    
+    Let #~# denote one of the basic relations #=#, #[=#, or #=]#.
+    ###-
+      #Derived Relations
+
+      -----------------------
+      M[[N |-> M[=N AND M!=]N
+
+      ---------------   ----------------
+      M:N |-> V M N=M   M<:N |-> V M:P N
+
+      -------------------   ----------------------
+      M::N |-> test N M=I   M<::N |-> M=P_test N M
+
+      #Universal Quantification
+
+            p |-> M~N                    p |-> M~N
+      -----------------------   -----------------------------
+      /\x.p |-> (\x.M)~(\x.N)   /\x:a.p |-> (\x:a.M)~(\x:a.N)
+
+                 p |-> M~N
+      --------------------------------
+      /\x::t.p |-> (\x::t.M)~(\x::t.N)
+      
+      #Hypotheses
+
+        q |-> M=I     p |-> N~N'
+      ------------------------------
+      q==>p |-> semi M N~semi M N'
+    ###-
+    We also use the notation #x:a|-p# and #x::t|-p# to denote #x# being bound
+    as a term inhabiting a type or passing a test;
+    these have the same semantics as universal quantification.
+    ###[
+      x:a::t|-M~N  |->  (\x:a::t.M)x~(\x:a::t.N)
+    ###]
+
+  Takeout: LATER ------------------------------------------------------------
+    Reasoning Principles.
+
+    We consider two logics: the boolean first-order logic of equality of SKJ
+    terms, and the semi-valued notation-free logic of convergence SKJO terms.
+    ###g p q s t
+    ###-
+      #General Statements
+      -----   ------   ------   -------   ------   -------
+      = rel   != rel   [= rel   ![= rel   =] rel   !=] rel
+
+      -----   ------   ------   -------   ------   -------
+      : rel   !: rel   <: rel   !<: rel   :> rel   !:> rel
+
+      ------   -------   -------   --------   -------   --------
+      :: rel   !:: rel   <:: rel   !<:: rel   ::> rel   !::> rel
+
+      M SKJ   ~ rel   N SKJ     p stmt_2
+      ---------------------   ------------
+           M ~ N stmt_2       NOT p stmt_2
+
+      p stmt_2   q stmt_2   p stmt_2   q stmt_2   p stmt_2   q stmt_2
+      -------------------   -------------------   -------------------
+        p AND q stmt_2        p OR q stmt_2         p ==> q stmt_2
+
+           p stmt_2            p stmt_2       p SKJO   p:bool::test_bool
+      -----------------   -----------------   --------------------------
+      /\_(2)x. p stmt_2   \/_(2)x. p stmt_2          p stmt_2
+
+          t stmt_1            t stmt_1        t SKJO   t:semi::unit
+      -----------------   -----------------   ---------------------
+      /\_(1)x. t stmt_1   \/_(1)x. t stmt_1         t stmt_1
+
+      #Queryable Statements
+
+      -----------   ------------   -------------
+      M = N query   M [= N query   M ![= N query
+
+      p query   q query   p query   q query
+      -----------------   -----------------
+        p AND q query        p OR q query
+
+      #Compiling to Queries
+
+      -------------   ---------------   -----------------
+      M=N? |-> M=N?   M[=N? |-> M[=N?   M![=N? |-> M![=N?
+
+      phi |-> M~N   \p.M |-> M'   \p.N |-> N'
+      ---------------------------------------
+                /\p. phi |-> M'~N'
+
+      ...what else?...
+
+      #Assumable Statements
+                                                   p query   q query
+      -----------   ------------   -------------   -----------------
+      M = N query   M [= N query   M ![= N query     p AND q query
+
+      #Compiling Statements to SKJO terms
+
+                               M[=N |-> p     M[=N |-> p_1   N[=M |-> p_2
+      -------------------   ---------------   ---------------------------
+      M[=N |-> less{M}{N}   M![=N |-> not p       M=N |-> and p_1 p_2
+
+      ...other basic relations...
+
+          p |-> p'       p |-> p'    q |-> q'
+      ----------------   --------------------
+      NOT p |-> not q'    p OR q |-> OR p' q'
+
+      p |-> p'    q |-> q'      p |-> p'    q |-> q'
+      ---------------------   ------------------------
+      p AND q |-> and p' q'   p ==> q |-> or(not p')q'
+
+      /\_(1)x. if p |-> t   \/_(1)x. if(not p) |-> t'
+      ----------------------------------------------- /\_(2)
+               /\_(1)x. p |-> t K|t' F
+
+      \/_(1)x. if p |-> t   /\_(1)x. if(not p) |-> t'
+      ----------------------------------------------- \/_(2)
+               \/_(1)x. p |-> t K|t' F
+
+                p |-> p'                           p |-> p'
+      --------------------------- \/_(1)  -------------------------- /\_(1)
+      \/_(1)x. p |-> Join {x}. p'         /\_(1)x. p |-> O{\{x}. p'}
+    ###-
+    where #less# is defined in terms of #O# via
+    ###[
+      if_less := SKJ->SKJ->semi (???).
+      if_nless := SKJ->SKJ->semi (???).
+      less := (\m,n. if_less m n K)
+            | (\m,n. if_nless m n F).
+    ###]
+
+    (1) Basic relations: equations #M=N#, order relations #M[=N#,
+      and NOTated order relations #M![=N# among SKJ-terms #M,N#.
+      This kind is #Pi02#-complete, or #Sigma01#.
+    (2) Test assertions #semi M=I# for SKJO-terms M
+      Subject to syntactic correctness #semi M[=T|-semi M=I#,
+      or equivalently #semi(M)=]I# or #div M![=_# or simply #conv(M)#,
+      this kind is #Pi11#-complete.
+    We then define a translation of higher-order logic of (1) into (2),
+    based on closure of (1) under NOTation
+    and closure of (2) under quantification.
+
+    Note: in universally closing statements,
+      we differentiate between two classes of free variables:
+      those that appear quoted, and those that do not.
+      Unquoted closure is compiled simply as abstraction, e.g.
+      ###[
+        M = N <==> \x. M = \x. N    #whenever #x# free in #M# or #N#
+      ###]
+      For quoted free variables, we instead quantify over corresponding codes,
+      and add a correctness check.
+      ###[
+        M --> \c:code. check_code c. [x:=E c, {x}:=c, {{x}}:=Q c] M
+      ###]
+
+    In SKJO we can use the #code# oracle to eliminate all of first-order logic
+    (actually higher-order logic, and even #Lomega1CKomega#).
+    ###-
+      #Reflection
+
+       p stmt      p true     p false
+      --------   ---------   ---------
+      "p" term   "p" |-> K   "p" |-> F
+
+      {M} |-> M'   {N} |-> N'   {M} |-> M'   {N} |-> N'
+      -----------------------   -----------------------
+       "M=N" |-> equal M' N'     "M[=N" |-> less M' N'
+    ###-
+
+  ###u p q s t

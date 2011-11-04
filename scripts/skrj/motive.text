@@ -1,0 +1,24 @@
+
+Lambda-join-calculus with randomness. \label{skrj.text}
+
+  Design Goals: 
+    * express random/probabilistic structures
+    * fit the random monad into type system
+    * formulate complexity of higher-order structure in Bayesian networks
+
+  Approach: 
+    * extend SKJ with randomness (random coin flip #R=K+F#)
+    * reconcile randomness with ambiguity (join distributes over mixtures)
+    * relate Bayes nets to definitions in SKRJ
+
+  #TODO add primer on imprecise probabilities
+
+  Randomness and ambiguity. 
+
+  Definable random types. 
+    #INSERT randomness talk
+    #INSERT skjr/*.jtext
+
+  Higher-order structure in Bayesian Networks. 
+    #TODO maybe move to kolmogorov complexity section?
+

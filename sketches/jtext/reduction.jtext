@@ -1,0 +1,25 @@
+
+By searching the tree
+###[
+  atom_indices := Enum index {S,K,J,Top}.
+  Rules := nat->(Sub enum) (\n. Enum. n (exp term) (Enum term)).
+  rules0 := Rules 0 {}.
+  rules1 := Rules 1 (\"x". {{},{},{},{"Top"}}).
+  rules2 := Rules 2 (\"x","y". {{}, {"x"}, {}, {}}).
+  rules3 := Rules 3 (\"x","y","z". {{"x z(y z)"}, {}, {"J(x z)(y z)"}, {}}).
+  reduce := term->(Enum term) (
+      {},  #no reduction possible
+      \"l","r". "l" (
+          \a. is_Top a {"Top"} {},
+          \"ll","lr". "ll" (
+              \a. is_K a {"Top"} {},
+              \"lll","llr". "lll" {}
+###]
+By putting in Curried form
+###[
+  Curry := Prod atom (List term).
+  curry := term->Curry (
+      <<<>>>. Y\c,args. (\f. (f,args), \l,r. c (r,args) l)
+  ).
+###]
+

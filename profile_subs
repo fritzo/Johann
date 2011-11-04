@@ -1,0 +1,39 @@
+#!/usr/bin/python
+
+while True:
+  try: e = raw_input()
+  except EOFError: break
+
+  #e = e.replace("","")
+
+  #namespaces
+  e = e.replace("Equivalence","E")
+  e = e.replace("Order","OR")
+  e = e.replace("CombinatoryStructure","CS")
+  e = e.replace("Complexity","C")
+  e = e.replace("Expressions","EX")
+  e = e.replace("Thought","T")
+  e = e.replace("Measures","M")
+  e = e.replace("RandomChoice","RC")
+  e = e.replace("TheBrain","TB")
+  e = e.replace("LambdaTheories::","")
+  e = e.replace("_private::","")
+  e = e.replace("nonstd::","")
+
+  #templates
+  e = e.replace("E::Indexing<1, 2, 0>","ALR")
+  e = e.replace("E::Indexing<2, 1, 1>","ARL")
+  e = e.replace("_Heap::_Pos<Nodes::ObSignature>","Ob")
+  e = e.replace("_Heap::_Pos<Nodes::EqnSignature>","Eqn")
+  e = e.replace("_Heap::_Handle<Nodes::ObSignature>","ObHdl")
+  e = e.replace("EX::Expr","Expr")
+  e = e.replace("Handling::Handle<Expr>","ExprHdl")
+  e = e.replace("Handling::Handle<Statements::Statement>","StmtHdl")
+  e = e.replace("OR::Ord","Ord")
+
+  #parens
+  e = e.replace(" >",">")
+  e = e.replace("("," (")
+
+  print e
+

@@ -1,0 +1,35 @@
+
+\usepackage{fullpage}
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{latexsym}
+\usepackage{mathpartir}
+%\usepackage{pxfonts}
+%\usepackage{jtext}
+
+%%%%%%%%%%%%%%%% documentation stuff %%%%%%%%%%%%%%%%%%%
+
+%line-numbered proofs
+\newcommand{\hyp}[1]{\overline{#1}.\quad&}
+\newcommand{\num}[1]{#1.\quad&}
+\newcommand{\fin}[1]{\underline{#1}.\quad&}
+\newcommand{\cuz}[1]{&&\text{#1}}
+
+%misc commands
+\newcommand{\kw}[1]{\ensuremath{\;\mathsf{#1}\;}}
+\newcommand{\as}[1]{\ensuremath{\;\mathsf{#1}}}
+\newcommand{\eqa}{=_\alpha}
+\newcommand{\eqb}{=_\beta}
+\newcommand{\lam}[1]{\lambda #1.\;}
+\newcommand{\denote}[1]{{[\![#1]\!]}}
+\newcommand{\fromto}{\leftrightarrow}
+\newcommand{\swap}[2]{{[#1\!\fromto\!#2]}}
+\newcommand{\ml}[1]{\ensuremath{\mathsf{#1}}}
+\newcommand{\mc}[1]{{\ensuremath{\mathcal{#1}}}}
+
+%inference rules
+\newcommand{\axiom}[1]{\inferrule{\mathstrut}{#1}}
+\newcommand{\namedaxiom}[2]{\inferrule{ }{#1}\ \text{({\sc #2})}}
+%\newcommand{\namedrule}[3]{\inferrule{#1}{#2}\ \text{({\sc #3})}}
+\newcommand{\rulename}[1]{\textsc{#1}}
+\newcommand{\rname}{\textsc}
+

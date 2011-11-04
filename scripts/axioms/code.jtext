@@ -1,0 +1,434 @@
+
+Axioms for an extensional code type. (#code,A,E,Q,{-}#) \label{sec:axioms/code}
+  ###<
+    !read axioms/types.
+    !import skj/tests skj/numerals.
+  ###>
+
+  In this section
+  we axiomatize a comonadic type for codes modulo provable equality.
+  We start with a definable type for free codes in a language #CC# defined by
+  ###[
+    CC ::= CC CC                  #binary application
+        | S | K | J | O | code    #and five atoms
+  ###]
+  Next we axiomatize a quotient type #code<:code_0#,
+  modulo Johann's theory of equality.
+  This quotient type is then extensional in that provably equal terms
+  have provably equal codes.
+  But the type is also intensional in that the order of terms is neutralized
+  by quoting, so that we can discriminate codes with a predicate
+  #equal_code : code->code->bool#,
+  total up to Johann's theory of equality.
+  Thus we achieve a good balance between intensionality
+  (which is required to discriminate between codes),
+  and extensionality (which is desired for space efficiency).
+
+  It turns out that
+  the quotient type #code# and introduction form for application #A{-}#
+  together form a functor from the category of unityped terms
+  under composition to the category of codes under quoted composition.
+  Moreover the evaluation and quotation operators #E,Q# form a comonadic pair
+  of natural transformations between 1 and the #(code,A{-})# functor.
+  Finally, the quoting operation #{-}# on closed terms
+  provides a third natural transformation.
+  This combined structure #<code,A{-},E,Q,{-}>#,
+  together with a few equations, constitutes a _computational_comonad_
+  (as observed in a similar setting by Brookes and Geva Brookes92).
+  Weaker forms of quoting, with the same signature but missing some equations,
+  are well-studied in the programming languages literature
+  (eg, Davies96, Wickline98).
+  However, those equations --the computational comonad conditions--
+  are exactly what makes extensional codes attractive for our purposes,
+  and seem only to hold in the presence of some extensionality principle.
+
+  Axioms for a quotient type of codes. 
+
+    We start with a closure,test pair for free codes
+    ###<
+      code_0 := P (Y\a. Sset. Sum (Prod a a) (num_below 5)).
+      test_code_0 := Test code_0 (
+          Y\t. test_Sset. test_Sum (test_Prod t t) test_num
+      ).
+      !check code_0 = Sset (Sum (W Prod code_0) (num_below 5)).
+      !check code_0 <: Sset (Sum (W Prod code_0) num).
+    ###>
+    The type #code# will be a similar but undefinable type
+    ###<
+      !using code test_code.
+      !assume code : V.
+      !assume code <: Sset (Sum (W Prod code) num).
+      !assume test_code = Test code test_code_0.
+    ###>
+    which is a quotient of the #code_0# type
+    ###<
+      !assume code <: code_0.
+      !assume test_code <:: test_code_0.
+    ###>
+    For introduction forms,
+    we need codes for combinators (application, #S#, #K#, and #J#),
+    a code for the oracle #O#
+    (which will be axiomatized later in \ref{sec:axioms/oracle}),
+    and access to the code comonad itself (via #code#).
+    Note that Johann's theory is #Sigma01# at any time,
+    so the atom #code# has no extra logical power
+    beyond the Turing-complete language SKJ.
+    However, to allow Johann's theory to change over time,
+    we must refrain from statically _defining_ #code# as an SKJ term;
+    having access to #code# in the basis allows us to be agnostic
+    about its SKJ-definition.
+    Thus we introduce atoms
+    ###<
+      atom_code := (nat -> code) (\n. <inr. nat2num n>).
+      !using O.
+      !assume atom_code 0 = {S}.
+      !assume atom_code 1 = {K}.
+      !assume atom_code 2 = {J}.
+      !assume atom_code 3 = {O}.
+      !assume atom_code 4 = {code}.
+      !check atom_code 5 = T.
+      !assume ( {S},{K},{J},{O},{code} :: test_code ).
+    ###>
+    and applications
+    ###<
+      !define A := Bin_op code (\x,y. <inl(x,y)>).
+      !assume test_code (A x y) = and_semi (test_code x) (test_code y).
+      !assume A{x}{y} :: test_code.
+      !check {x y} = A{x}{y}.         #just checking notation
+    ###>
+    (We will explain the semantics for quoted quantification
+    #/\{x}. phi(x,{x})# shortly.)
+
+    We define evaluation and quoting operations #E,Q#
+    by simultaneous recursion, using only the atoms #S,K,J,O,code#
+    and the quoting operation #{-}# on various closed terms.
+    ###<
+      let (eval_code,quote_code) := (
+          Y\(e,q). (
+              (code -> any) <(
+                  \(x,y). (e x)(e y),
+                  S,K,J,O,code,
+                  error
+              )>,
+              (code -> code) <(
+                  \(x,y). A (A {A} (q x)) (q y),
+                  {{S}},{{K}},{{J}},{{O}},{{code}},
+                  error
+              )>
+          )
+      ).
+
+      !define E := eval_code.
+      !check E = (code -> any) <(\(x,y). (E x)(E y), S,K,J,O,code, error)>.
+
+      !check E{S} = S.
+      !check E{K} = K.
+      !check E{J} = J.
+      !check E{O} = O.
+      !check E{code} = code.
+      !check E{x y} = (E{x})(E{y}).
+
+      !define Q := quote_code.
+      !check Q = (code->code) <(
+          \(x,y). A (A {A} (Q x)) (Q y),
+          {{S}},{{K}},{{J}},{{O}},{{code}},
+          error
+      )>.
+
+      !check Q{S} = {{S}}.
+      !check Q{K} = {{K}}.
+      !check Q{J} = {{J}}.
+      !check Q{O} = {{O}}.
+      !check Q{code} = {{code}}.
+      !check Q{x y} = A (A {A} (Q{x})) (Q{y}).
+    ###>
+
+    Next we assume a very natural set of 15 equations that
+    turn out to axiomatize #<code,A{-},E,Q,{-}># being a computational monad.
+    Because the definition of a comonad is clearer in a typed theory
+    (ie, in a category with more than one object),
+    we will delay the definition until we introduce an type-indexed comonad
+    #<Code,Apply,Eval,Quote># in \ref{sec:skjo/codes}.
+    For now, simply observe that the following equations are all natural
+    assumptions that are desirable for a type of extensional codes.
+    ###<
+      #functoriality
+      !assume code : V.
+      !assume A{f} : code->code.
+      !assume A{I} = code.
+      !assume A{f} ; A{g} = A{f;g}.
+
+      #naturality
+      !assume E : code->any.
+      !assume Q : code->code.
+      !assume A{f} ; E = E ; f.
+      !assume A{f} ; Q = Q ; A{A{f}}.
+
+      #comonad conditions
+      !assume Q ; E = code.
+      !assume Q ; A{E} = code.
+      !assume Q ; Q = Q ; A{Q}.
+
+      #computation conditions
+      !assume {x} : code.
+      !assume A{f}{x} = {f x}.
+      !assume E{x} = x.
+      !assume Q{x} = {{x}}.
+    ###>
+
+  Axioms and axiom schemata for extensionality. 
+
+    Ideally we would like a fully extensional 1-1 coding of terms,
+    so that each H* equivalence class corresponded to a unique code;
+    that way there would be as few as possible
+    codes taking up space in Johann's database.
+    This ideal is captured by the reasoning principles
+    ###-
+      #ideal coding
+
+        M=N              M!=N      
+      ------- 1-1   --------------- flat
+      {M}={N}       code({M}|{N})=T
+
+      c::test_code   c'::test_code   E c=E c'
+      --------------------------------------- flat-test
+                     c = c'
+    ###-
+    where the #(1-1)# rule guarantees that codes cost as few obs as possible,
+    and the #(flat)# rules guarantee that every term #c:code::test_code#
+    is the quotation #{M}# of some term #M#.
+    However these rules are inconsistent.
+    An example of terms #M,N# for which #M=N# but #{M}={N}# is inconsistent
+    will be provided by Godel's second incompleteness theorem
+    (discussed in detail later in \ref{sec:skjo/provability}).
+    To achieve consistent coding principles that are still dense (nearly 1-1),
+    we avoid self-referential terms by restricting the hypotheses in the ideal
+    reasoning principles to _provable_ equality and inequality.
+
+    The following axiom schemata will be enforced for
+    the quoting operation #{-}# and the atoms #code#, #test_code#, #A#, #E#.
+    Note that since #E# is a left inverse for #Q# on codes,
+    we do not need explicit axiom schemata regarding #Q#.
+    ###- 
+      #quoting
+
+      ------ E-{-}   -------- {-}-code   -------------- {-}-test
+      M=E{M}         {M}:code            {M}::test_code
+
+      #code
+
+      x::test_code     y::test_code
+      ----------------------------- E-A
+          E(A x y)=(E x)(E y)
+
+      c:code::test_code   c':code::check_code   E c' = E c
+      ---------------------------------------------------- flat-=
+                              c =] c'
+
+      c:code::test_code   c':code   E c' ![= E c
+      ------------------------------------------ flat-![=
+                     code(c|c') = T
+    ###-
+    The quoting axioms #({-})# simply ensure that quoted terms are codes
+    and evaluate to the terms they quote (so #E# is a left inverse for #{-}#).
+    The #(E-A)# axiom maintains consistency between the code for a term and the
+    codes for its subterms, relating them by application #A#.
+    The (#flat)# axioms ensure flatness of the code type,
+    up to provable equality.
+
+    The quoting axioms describe exactly what we need to interpret
+    universal quantification over codes, as in #/\{x}. x=E{x}# above.
+    We generally want to interpret a sentence #/\{x}.phi(x,{x})#
+    depending on both #x# and #x#'s code
+    Footnote: higher codes can be attained by quoting.
+    as a sentence #/\c.psi(c)# quantifying over codes #c#.
+    The quoting axioms require #x=E c#, #c:code#, and #c::test_code#,
+    so it is enough to interpret
+    ###[
+          /\{x}. phi(x,{x})   <==>   /\c:code::test_code. phi(E c,c)
+    ###]
+    This provides semantics for universal quantification codes above,
+    and allows us to universally close equations with variables that appear
+    in quotes.
+
+    To ensure provable extensionality,
+    we need to reflect each of Johann's equational reasoning principles
+    to a corresponding principle for quoted terms.
+    We begin by explicitly identifying #code#s of beta-equivalent terms.
+    ###<
+      !assume {_ x} = {_}.    #ie, #/\c:code::test_code. A{_}c = {_}#
+      !assume {T x} = {T}.
+      !assume {I x} = {x}.
+      !assume {K x y} = {x}.
+      !assume {F x y} = {y}.
+      !assume {W x y} = {x y y}.
+      !assume {B x y z} = {x(y z)}.
+      !assume {C x y z} = {x z y}.
+      !assume {S x y z} = {x z(y z)}.
+    ###>
+    We also assume the bounded semilattice axioms for #join#
+    ###<
+      !assume {J x x} = {x}.
+      !assume {J x y} = {J y x}.
+      !assume {J x(J y z)} = {J(J x y)z}.
+    ###>
+    and the defining properties of #Y# and #V#.
+    ###<
+      !assume {Y f} = {f(Y f)}.
+      !assume {V a} = {I|(V a)*a}.
+    ###>
+    Finally we need to reflect the axiom schemata hard-coded into Johann.
+    These reflected axiom schemata are listed in Appendix
+    \ref{sec:axioms/schemata}.
+
+  Characterization weakly extensional codes. 
+
+    What does does the #code# closure look like
+    in this weaker theory of provable extensionality?
+    By relaxing extensionality to only provable equality,
+    we gave up true flatness, so that the ideal #(flat)# rules fail.
+    To see the local effects of the relaxation,
+    observe that for distinct #M,N# whose equality is unknown to Johann,
+    the following are all distinct inhabitants of #code#.
+    Html Only: 
+      ###a
+                                     Top
+                                      |
+                                   {M}|{N}
+                                    / | \
+                                   /  |  \
+                                {M} {M|N} {N}
+                                   \  |  /
+                                    \ | /
+                                     Bot
+      ###a
+    Latex Only: 
+      Center: 
+        $\xymatrix@C=12mm@R=6mm{
+          &{#T#} \ar@{-}[d] \\
+          &{#{M}|{N}#} \ar@/_/@{-}[dl] \ar@{-}[d] \ar@/^/@{-}[dr]\\
+          {#{M}#} \ar@/_/@{-}[dr]
+          &{#{M|N}#} \ar@{-}[d]
+           &{#{N}#} \ar@/^/@{-}[dl] \\
+          &{#_#}
+        }$
+
+    Lem: If Johann can prove neither #M=N# nor #M!=N#, then
+      (a) the codes #{M}#, #{N}#, #{M|N}#, and #{M}|{N}#
+        are distinct total inhabitants of #code#, and
+      (b) they obey the order relations in the diagram above.
+    Pf: In acquiring information, Johann can only join equivalence classes of
+      #code#.
+      Consider the four possibilities of acquiring information
+      (1) If #M=N# then #{M}={N}={M|N}={M}|{N}#.
+      (2) If #M[[N# then #{M}#, #{N}={M|N}# and #{M}|{N}=T# are distinct.
+      (3) If #M]]N# then #{M}={M|N}#, #{N}# and #{M}|{N}=T# are distinct.
+      (4) If #M!=N# are incomparable, then all four codes are distinct.
+      In all cases of complete knolwedge, #{M|N}[={M}|{N}#,
+      so this relation also holds under incomplete knowledge.
+      However, since in case (4) all four codes are distinct,
+      they must also be distinct in the partial information case.
+      []
+    The minimal tested codes all arise as quotations of terms #{M}#;
+    thus inhabitants like \\
+    #{M}|{N}:code::test_code# are pathological.
+    Def: A term #c:code::test_code# is _standard_
+      iff it arises as the quotation of some term #M#,
+      and _nonstandard_ otherwise.
+    Lem: #c:code::test_code# is nonstandard iff
+      there is another #c':code::test_code# strictly below #c#.
+
+    Even within standard codes,
+    unbounded beta-expansion leads to noncompact codes
+    below every compact code, but evaluating to the same thing.
+    Eg: An infinite #I#-expansion of any term
+      ###[
+        x = I x = I(I x) = I(I(I x)) = ...
+      ###]
+      will evaluate to #_#,
+      but #code# can't raise it to a tested semiset.
+      ###<
+        III = Y(A{I}).
+        !check III : code.
+        !check test_code III = _.
+        !check (/\c::test_code. III|c :: test_code).
+      ###>
+
+    Nonstandard codes pose a potential problem to our
+    interpretation of statements universally quantifying quoted variables
+    ###[
+      /\{x}. phi{x}  <==>  /\c:code::test_code. phi(c)
+    ###]
+    For example the flatness statement
+    ###[
+      /\{x},{y}. {x}|{y}::test_code ==> x=y
+    ###]
+    fails even though there are no provable witnesses of this failure.
+    We can manually avoid such problems
+    by never mentioning nonstandard codes like #code({x}|{y})#.
+    Comment: XXX right?
+
+    In addition to allowing term discrimination,
+    the flatness rules allow Johann to re-use the application indexing
+    data structure to index also quoted terms.
+    To see how this works, first consider the ideal situation.
+    Under the ideal #(flat)# rules above,
+    we could define #{M}# in terms of #M#, as the unique solution #c# to
+    ###[
+      E c=M       c:code       c::test_code
+    ###]
+    Then Johann could avoid explicitly indexing quoting,
+    and instead search for a solution to the above equations.
+    In weaker extensionality with only provable equality,
+    there will be additional nonstandard solutions #c# at any time.
+    However only the standandard solution will be the only _provable_ solution,
+    so we can still use the ideal indexing scheme.
+
+  Subalgebras of SKJO as subtypes of code. 
+
+    Later we will need to restrict some functions and quantifiers
+    from SKJO codes to SKJ codes
+    (eg the oracle inputs two codes #O{p}{q}#,
+    but we will require #{p}# to be SKJ-definable).
+    To achieve a uniform quoting mechanism #{-}# across multiple subalgebras,
+    we will re-use the #code# closure, and vary only the #test# semipredicate
+    for definability.
+    Abstractly, we implement a definability test parametric in the subset \\
+    #BB(={S,K,J,O,code}# generating the subalgebra
+    (so a term is #BB#-definable iff
+    it can be expressed using only atoms from #BB#).
+    ###<
+      test_subcode := (Test num -> Test code) (
+          \basis.
+          Y\t. test_Sset. test_Sum (test_Prod t t) (P_test test_num basis)
+      ).
+
+      !check test_subcode b <:: test_code.
+      !check test_code = test_subcode _.
+      !check test_code = test_subcode (I,I,I,I,I, T).
+    ###>
+    Thus the whole algebra SKJO is given by the closure,test pair
+    ###<
+      skjo := code.
+      test_skjo := test_subcode (I,I,I,I,_, T).
+    ###>
+    In fact at any time #code# is SKJ-definable, hence SKJO-definable,
+    so we have
+    ###<
+      !assume test_skjo = test_code.
+    ###>
+
+    Now for #SKJ# codes, we test whether there is an #O#-free form.
+    ###<
+      skj := code.
+
+      !define test_skj = test_subcode (I,I,I,_,_, T).
+      !assume test_skj := test_subcode (I,I,I,_,I, T).
+      !assume ( {S},{K},{J},{code} :: test_skj ).
+      !assume test_skj (A x y) = and_semi (test_skj x) (test_skj y).
+    ###>
+    To express that #O# is not SKJ-definable, we assume that
+    ###<
+      !assume test_skj {O} = _.
+    ###>
+

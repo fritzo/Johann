@@ -1,0 +1,58 @@
+
+Currying. \label{sec:skj/currying}
+
+  ###<
+    !import skj/types skj/tests skj/nats skj/tuples.
+  ###>
+
+  Currying and the S-m-n Theorem. 
+
+    Functions of pairs can be curried via
+    ###<
+      curry_pair := (prod->any)->any (\f,x,y. f<x,y>).
+      curry_Pair := (/\a:V,b:V. (Prod a b -> any) -> a -> b -> any) (
+          \f,x,y. f<x,y>
+      ).
+      uncurry_pair := (any->prod->any) (\f,<x,y>. f x y).
+      uncurry_Pair := (/\a:V,b:V. any -> Prod a b -> any) (
+          \f,<x,y>. f x y)
+      ).
+      !check curry_pair * uncurry_pair = any.
+      !check (\a. (curry_Pair a)*(uncurry_Pair a) = V.
+      !check uncurry_pair * curry_pair = Fun_of pair.
+      !check (\a. (uncurry_Pair a)*(curry_pair a) = (\a. Fun_of. Pair a).
+    ###>
+    Generalizing to tuples,
+    ###<
+      curry_tuple := (/\n:num. ((tuple n)->any)->any (
+          \f. f * (mk_tuple n)
+      ).
+      curry_Tuple := (/\a:V. ((Tuple a)->any)->(a->a->any)) (
+          \f,x,y. f<x,y>
+      ).
+      uncurry_tuple := (any->tuple->any) (\f,<x,y>. f x y).
+      uncurry_Tuple :=(/\a:V. any -> Tuple a ->any) (\f,<x,y>. f x y).
+      !check (curry_tuple n)*(uncurry_tuple n) = test_num n.
+      !check (curry_Pair a b)*(uncurry_Pair a b) = Prod a b.
+      !check uncurry_pair * curry_pair = Fun_of pair.
+      !check (uncurry_Pair a b)*(curry_Pair a b) = Fun_of (Prod a b).
+    ###>
+
+    Curried functions of tuples can be converted via
+    ###<
+      curry_mn := (
+          /\m:num, n:num.
+          (tuple(add m n) -> any) -> tuple m -> tuple n -> any
+      ) (
+          \-,-.  #implementation is uniform in #m,n#
+          \f,x,y. f (cat x y)
+      ).
+      uncurry_mn := (
+          /\m:num, n:num.
+          (tuple m -> tuple n ->any) -> tuple(add m n) -> any
+      ) (
+          \-,-.  #implementation is uniform in #m,n#
+          \f,x,y. f (cat x y)
+      ).
+    ###>
+

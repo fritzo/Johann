@@ -1,0 +1,171 @@
+
+Notation: 
+  * primes denote time derivatives
+  * |V| denotes the 2-norm of the vector V
+  * Da denotes a partial derivative WRT a
+
+Geodesics in the free magma. 
+  Information geometry. 
+    Def: probability and entropy on the free magma.
+      Let
+      ###a
+        h(p) = -p log p
+        Hbern(p) = h(p) + h(1-p)
+      ###a
+      Define the recursions for probability and entropy
+      ###a
+        P = (1-a) P0 + a P*P
+        H = (1-a)(H0 -log(1-a)) + a (2 H -log a)
+            (1-a) H0 + Hbern(a)
+          = -------------------
+                 1 - 2 a
+      ###a
+    Def: _Fisher_metric_. 
+      Let p(x) be a probability distribution and c(x) = -log(p(x)) be the cost.
+      ###a
+        g(i,j) = <Di,Dj>  =  -E x. Di Dj c(x)  =  -Sum x. p(x) Di Dj c(x)
+      ###a
+    Def: The _Christoffel_symbols_ G(i;j,k) (or G^i_jk) are defined by
+      ###a
+                 g^ij
+        G^i_kl = ---- ( g_jk,l + g_jl,k - g_kl,j )
+                  2
+      ###a
+    Def: In terms of the Christoffel symbols, the apparent _acceleration_
+      of a point travelling along a geodesic at constant speed is
+      ###a
+        x''(i) = - G(i;j,k) x'(j) x'(k)
+      ###a
+  Affine coords. 
+    First parametrize by
+    ###a
+      b_i = (1-a) P0(i)
+    ###a
+    so that
+    ###a
+      a = 1 - Sum i. b_i
+    ###a
+    The metric is given by
+    ###a
+                                           b^-1 + a^-1
+      g_bb = b^-1 + a(2 g(b,b) + a^-2)  =  -----------
+                                             1 - 2 a
+                                     a^-1
+      g_bc = a(2 g(b,c) + a^-2)  =  -------
+                                    1 - 2 a
+    ###a
+    Overparametrize by [a,b1,...,bn] so that the speed s' satisfies
+    ###a
+                1      a'^2   b1'^2         bn'^2
+      s'^2 = ------- ( ---- + ----- + ... + ----- )
+             1 - 2 a    a     b1^2          bn^2
+    ###a
+    wouldn't it be nice if this sum were the norm of d/dt [a,b1,...,bn] ?
+
+
+  Spherical coords I. (overparametrized)
+    Reparametrize to "spherical coords" by
+
+    ###a
+      u = sqrt(a)     v = -log(b)     b = exp(-v)
+              1              -1
+      Da u = ---      Db v = ---      b' = -v' exp(-v)
+             2 u              b
+    ###a
+    so that the constraints are
+ #XXX wrong beyond here ---------------------------------------------------
+    ###a
+      a = u^2 = 1 - |V|^2 < 1/2
+      |V| < sqrt(2)
+    ###a
+    Define the expansion factor M
+    ###a
+      M = 1/(1 - 2 a)  =  1/(1 - 2 u^2)        Du M  =  -2 u M^2
+    ###a
+    In overparametrized coords w = [u,V], g becomes a multiple of the identity
+    ###a
+      g = M I      g^-1 = I/M       Du g = -2 M g u      Dv g = 0
+    ###a
+    The Christoffel symbols evaluated at the unconstrained velocity w' are
+    ###a
+                 1                                           |w'|^2
+      G w' w' = --- (2 g,u u' x' - M |w|^2 |u> )  =  u'|x> - ------ |u>
+                2 M                                             2
+    ###a
+    Along an unconstrained path, the acceleration is thus
+    ###a
+                                                            |w'|^2
+      w'' = -G w' w'   :   v'' = -u' v'   ,   u'' = -u'^2 + ------
+                                                              2
+    ###a
+    The unconstrained radial acceleration is
+    ###a
+      <w''|w> = -u'<w'|w> + u <w'|w'>/2
+              =  <w'| (u/2 |w'> - u'|w>)
+    ###a
+    Forcing this to be exactly <w',w'>, we correct the acceleration via
+    ###a
+      wc'' = w'' - (1 + <w''|w>) w
+
+      vc'' = -u' v' - v + v <w'| (u/2 |w'> - u'|w>)
+    ###a
+
+  Spherical Coords II. (exact)
+    Now Project back down to V coords with
+    ###a
+                                      -v                            1    2 v
+      u = sqrt(1 - |V|^2)      Dv u = ---     Dv u^2 = -2 v     Dv --- = ---
+                                       u                           u^2   u^4
+                        1
+      Dv M  =  Dv -----------  =  4 v M^2
+                  2 |V|^2 - 1
+    ###a
+    Letting
+    ###a
+          <V|V>                2 v u - 2 u Dv u      4 v
+      w = -----       Dv w  =  ----------------  =  -----
+           u^2                       u^3             u^2
+          |V><V|               2 v W  +  |v><V|  +  |V><v|
+      W = ------      Dv W  =  ---------------------------
+           u^2                            u^2
+    ###a
+    the metric becomes
+    ###a
+                                (1+w) I - W                       
+      g = M (I + W)      g^-1 = -----------
+                                   M(1+w)
+      Di g  =  4 M g v_i  + M/u^2 [ 2 v_i W  +  |i><V|  +  |V><i| ]
+    ###a
+
+    Using the corrected acceleration above, we have the acceleration
+    ###a
+           -<V|V'>
+      u' = -------      w' = u'^2 + <V'|V'>
+              u
+                                                          <V'|V>^2
+      <w'|w> = u u' + <V|V'> = 0      <w'|w'> = <V'|V'> + --------
+                                                            u^2
+
+      v'' = -u' v' - v + v <w'| (u/2 |w'> - u'|w>)
+                         u v
+          = -u' v' - v + --- <w'|w'>
+                          2
+                            u v            <V'|V>^2
+          = -v'<V'|V> - v + --- (<V'|V'> + -------- )
+                             2               u^2
+    ###a
+
+  Acceleration. 
+    The acceleration along a path v(t),v'(t) is then
+    ###a
+
+      v''_i = 2 g^ij ( g_kl,j - g_lj,k - g_jk,l) v'_k v'_l
+                     4 v <v'|g|v'>
+      v'' = 2 g^-1 ( ------------- + ... )
+                          U^2
+    ###a
+    Whence Christoffel symbols
+    ###a
+      G_ijk = 
+    ###a
+              

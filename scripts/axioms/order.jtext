@@ -1,0 +1,53 @@
+
+Axioms for Scott's information order relation. (#[=# and #![=#)
+  \label{sec:axioms/order}
+  ###<
+    !using _ T.
+  ###>
+
+  We enforce the following partial order and monotonicity axiom schemata
+  for the ordering relation.
+  ###-
+    #partial order
+                  x [= y   y [= x
+    ------ refl   --------------- antisym
+    x [= x             x = y
+
+    x [= y   y [= z         x [= y   x ![= z           x ![= y   y [= z       
+    --------------- trans   ---------------- trans-R   ---------------- trans-L
+        x [= z                   y ![= z                    x ![= z            
+    
+    #monotonicity
+
+      f [= g        f x ![= g x         x [= y         f x ![= f y
+    ---------- mu   ----------- mu'   ----------- nu   ----------- nu'
+    f x [= g x        f ![= g         f x [= f y         x ![= y
+  ###-
+  We had originally implemented the stronger monotonicity schema
+  ###-
+    f [= g   x [= y
+    --------------- mu+nu
+      f x [= g y
+  ###-
+  whose enforcement takes quartic time
+  (searching through four variables #f,g,x,y#;
+  see Mcallester99 for complexity analysis techniques).
+  However this was very slow,
+  taking far more time than all other schemata combined.
+  Thus we split the rule #(mu+nu)# into two cubic-time schemata,
+  #(mu)# and #(nu)# above.
+
+  We also assume that the Scott ordering has least- and greatest elements
+  ###<
+    !assume _ [= x [= T.
+    !assume _ !=] T.      #for absolute consistency
+  ###>
+  This latter is the only negative axiom we assume;
+  two terms #M,N# are distinct modulo H* iff #M=N|-_=]T#.
+  
+  Both ends are constant
+  ###<
+    !assume _ x = _.
+    !assume T x = T.
+  ###>
+

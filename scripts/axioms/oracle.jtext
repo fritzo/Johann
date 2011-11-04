@@ -1,0 +1,304 @@
+
+Axioms for a hyperarithmetic oracle. (#O#) \label{sec:axioms/oracle}
+  ###<
+    !read axioms/code.
+    !import skjo/codes.
+  ###>
+
+  In this section we implicitly define an oracle #O#
+  that answers hyperarithmetic questions with boolean values.
+  The purpose of adding such an oracle to Johann's language
+  is to gain expressiveness.
+  The language SKJ can express computable functions,
+  and equations in SKJ essentially express totality of computable functions.
+  By allowing access to a hyperarithmetic oracle,
+  we can express essentially arbitrary statements in predicative set theory
+  (Feferman05).
+  With a language complete for implicit definability,
+  the task of verifying more complex problems is limited to
+  the question of what inference rules to add.
+
+  The study of computability WRT oracles has a long history
+  (eg Rogers' comprehensive Rogers67)
+  but is often confused by the definition of oracles
+  as sets with two-sided membership decidability
+  (the exception being enumeration degrees).
+  This approach leads to various hierarchy theorems,
+  which obfuscate the purpose of adding an oracle:
+  to find a system closed under stronger notions of computability.
+
+  For example, it is classical theorem that
+  the boolean implicit-definability operation has not fixedpoint
+  Thm: The operation #jump:(Pred skj -> Pred skj)# defined
+    ###[
+      jump o = (Pred skj -> Pred skj) (
+          \{p:(Pred skj -> Pred skj) -> pred}::test_skj.
+          p_o := p o.                           #let #p# use the oracle
+          (Join_skj \x. check_bool(p_o x)).     #check #p# for errors
+          [/\{x}:test_skj. p_o {x}]             #quantify over codes
+      )
+    ###]
+    has no total well-tested fixedpoint.
+  Pf: Consider the term
+    ###[
+      p := (Y'\{q},o,{x}. implies (eq_skj{x}{q}). not(o {q})).
+    ###]
+    Then #jump o {p} = not(o {p})#.
+    []
+  However, our order-conscious approach embraces a variety of truth values
+  #bool,semi,unit,div#.
+  We show in this section that,
+  formulating the same problem with #semi#boolean truth values,
+  the implicit-definability operation does have a fixedpoint,
+  a language closed under implicit semidefinability.
+  This language is SKJO.
+
+  In posing the implicit definability problem,
+  we used a flat domain of codes.
+  The definition of #O# works with any old flat type of codes,
+  eg Godel numerals.
+  But since #O# respects equivalence of codes modulo their evaluation,
+  it would waste space for codes to be perfectly intensional.
+  This observation is the motivation for our extensional flat codes.
+
+  Implicit definition of the hyperarithmetic oracle. 
+
+    Statements in brackets #[phi]# are taken at meta-mathematical value,
+    with bool truth values: true = #K#, false = #F#.
+    Later in section \ref{sec:skjo/logic},
+    we will show how to compile a fragment of this informal logic to SKJO terms.
+
+    We define an oracle #O# as the least fixed point of the meta-equation
+    ###[
+      O = (skj -> code -> semi) (
+              \{s:test}::test_skj.      #contravariant, so SKJ-definable
+              \{t:test}::test_skjo.     #covariant, so allow self-reference
+                if [\/x::s. t x=]T] T
+              | if [/\x::s. t x=]I] I
+          )
+    ###]
+    Takeout: WARNING this sloppily omits an #and_semi (...{s}) (...{t}# test.
+      The safer but less wieldy version is
+      ###[
+        O = P (skj -> code -> semi) (\c,d. check_code c | check_code d) (
+                \{s:test}::test_skj.      #contravariant, so SKJ-definable
+                \{t:test}::test_skjo.     #covariant, so allow self-reference
+                  if [\/x::s. t x=]T] T
+                | if [/\x::s. t x=]I] I
+            )
+      ###]
+    where #O# appears implicitly on the right hand side in evaluating
+    the SKJO-code #t:test#, and the meta-level statements
+    #[\/x::s. t x=]T]# and #[/\x::s. t x=]I]# are interpreted as a booleans.
+    Note since the first argument #s:test# is #O#-free,
+    the right hand side is increasing in #O#,
+    so by the Tarski-Knaster fixed-point theorem, #O# is well-defined.
+    Moreover, since #O# operates on codes, it is a join of SKJ-terms.
+    Hence the Bohm-tree approximation theorem from \ref{sec:skjo} carries over,
+    and with it the correctness proofs of #Simple# and all closures from SKJ.
+
+    What is the logical strength of #O#?
+    At each step, #O# transforms a #Pi02#-complete problem #s<::t#
+    to a #Delta02# problem #O{s}{t}=I# (see \ref{sec:skj/logic}),
+    but since #O# may occur in #t#,
+    this step can be iterated arbitrarily often.
+
+    Takeout: XXX redefine this:
+    Def: A predicate #phi:nat->bool# is _bool-hard_ (or just _hard_)
+      for a problem class #X(=NN#
+      iff #X# can be #bool#-decided by phi,
+      i.e.  #phi n = (if n in X then K else F)#.
+      A semipredicate #psi:nat->semi# _semi-hard_ for a problem class #X#
+      if every #X# can be #semi#-decided by psi,
+      i.e. #psi n = (if n in X then I else _)#.
+    Thm: #O# is #Pi11#-semi-complete.
+    Pf: (upper-bound) Let #phi(-)# be the #Pi02# predicate
+      for satisfaction of the above fixed-point equation.
+      Then #O# is the unique solution to the #Pi11# predicate defining the
+      _least_ solution of #phi(-)#, WRT the #Pi02# ordering problem #o[=o'#
+      ###[
+        phi(o) AND /\o'. phi(o') ==> o[=o'
+      ###]
+      Comment: XXX this is implicity definability
+      (hardness) It is enough to semidecide the well-foundedness of
+      recursive (SKJ-definable) countably-branching trees:
+      ###[
+        if_wfdd_tree := (skj -> semi) (
+            \{phi:Test(Test num)}. [      #given an SKJ-code phi,
+                /\s:Test num.             #for each semipredicate #s#,
+                /\n::test_num. n::s ==>   #if #s# is total
+                s::phi                    #then #s::phi#
+            ]
+        ).
+      ###]
+      In particular, it suffices to show that the meta-statement #[...]#
+      can be interpreted as an SKJO term.
+      Thus, working with SKJ-codes,
+      ###[
+        if_wfdd_tree := (skj -> semi) (
+            Y'\{t}. {
+                \{phi:(num->semi)->semi}::test_skj.
+                or_semi (phi _).
+                O {test_num} {t {(I,phi*succ)}}
+            }
+        ).
+      ###]
+      []
+
+    Question: How hard is equality in SKJO?
+
+    Lemma: SKJO equality is #Delta12#.
+    Pf: By simply expanding the definitions of #[=# and #O#, we can put each
+      relation #x[=y# between SKJO terms in the form
+      \[
+        \forall_1 #z#.\; \bigl(\exists_2 #o#.\; #phi_x(o,z)#\bigr)
+                \implies \bigl(\exists_2 #o#.\; #phi_y(o,z)#\bigr)
+      \]
+      where the second-order existentials quantifiers range over Bohm trees #o#
+      approximating the oracle #O#,
+      and the #phi# are arithmetic relations encoding statements
+      "#o# satisfies the fixed point eqation for #O#,
+      and particular #<S,K,J,o>#-term converges".
+      Reducing to Kleene normal form yields a #Delta12# formula.
+      []
+
+  Axioms and axiom schemata. 
+
+    We start with some typing and testing axioms
+    ###<
+      !using O.
+      !assume O : skj -> code -> semi.
+      !assume O : (/\p:Code{test}. Code{P_test p} -> semi).
+      !assume O p q = and_semi (test_skj p) (test_code q) (O p q).
+    ###>
+    and some properties
+    ###<
+      !assume O p p = test_skj p.         #regardless of whether #E p:test#
+      !assume O{p}{q} = O{p}{P_test p q}.
+    ###>
+    Following \ref{sec:skjo/codes},
+    we consider as special cases the most commonly used flat domains:
+    #num#, #nat#, #term#.
+    Eg: Subtests of coalgebraic numerals.
+      ###<
+        O_num := O {test_num}.
+        !assume O_num {test_num} = I.
+        !assume (
+            div_at := (\m,n. if*not (equal_num m n)).  #converges except at #m#
+            /\{n:nat}. O_num {div_at n} = _
+        ).
+      ###>
+    Eg: Subtests of Church numerals.
+      ###<
+        O_nat := O {test_nat}.
+        !assume O_nat {test_nat} = I.
+      ###>
+    Eg: Subtests of SKJ terms.
+      ###<
+        O_term := O {test_term}.
+        !assume O_term {test_term} = I.
+      ###>
+    Eg: Subtests of codes.
+      ###<
+        O_code := O {test_code}.
+        !assume O_code {test_code} = I.
+      ###>
+    Eg: Subtests of indexed #Code#s.
+      ###<
+        O_Code := (\{a:V},{t:Test a}. O {test_Code{a}t}).
+        !assume (/\{a:V},{t:Test a}. O_Code {test_code{a}t} = I).
+      ###>
+    Eg: Subtests of SKJ-codes.
+      ###<
+        O_skj := O {test_skj}.
+        !assume O_skj {test_skj} = I.
+        !check O_skj ::> O_code.
+      ###>
+
+    To prove properties of general tests,
+    we need more general reasoning principles.
+    Thus the following axiom schemata will be enforced for the atom #O#:
+    Footnote: 
+      These schemata leverage the schemata for #-:div# in
+      \ref{sec:axioms/types},
+      and the schemata for #P_test# and the subtest relation #<::#
+      in \ref{sec:axioms/tests}.
+    ###-
+      #pass/fail/error
+
+      {p}::test_skj   p<::q
+      --------------------- O-I
+            O{p}{q} = I
+
+      {p}::test_skj   x::p   q x=_
+      ---------------------------- O-_
+                 O{p}{q} : div
+
+      {p}::test_skj   x::p   q x![=I
+      ------------------------------ O-T
+                 O{p}{q} = T
+
+      #variance
+
+      {p}::test_skj   p<::p'               q<::q'
+      ---------------------- O-::>   ----------------- C O-<::
+           O{p}::>O{p'}              C O{q}<::C O{q'}
+
+           p[=p'                  q[=q'
+      --------------- O-=]   --------------- O-[=
+      C O{p}=]C O{p'}        C O{q}[=C O{q'}
+    ###-
+    The pass/fail/error rules reflect Johann's knowledge of subtesting #p<::q#
+    to the oracle, as a quoted truth values:
+    #O{p}{q}=I# for subtests,
+    either #_# or #T# (ie some value #:div#) for failed subtests.
+    and #T# for subtesting errors.
+    The variance rules #(O-::>)# and #(O-<::)# rules
+    state that #O# is contravariant and covariant in its first and second
+    arguments, both with respect to the subtest ordering #<::#
+    and the information ordering #[=#.
+
+    Are these axioms and schemata enough for successful verification?
+    How much do we need to assume to "reasonably" approximate #O#?
+    It turns out that we can axiomatize #Delta11#-much of #O#
+    using only induction (via the above schemata) and H*.
+    Thm: (hardness) The partial axiomatization above,
+      together with the locally #Pi02#-complete H* is #Delta11#-bool-hard.
+    Pf: By classic theorem of Kleene (Kleene55),
+      the #Delta11# predicates are exactly the hyperaritmetic functions
+      from a countable domain to booleans.
+      The hyperarithmetic functions are exactly those functions
+      definable by induction over recursively well-orderings.
+      If we can locally decide H*,
+      then each stage of the oracle #O#'s definition can be decided by the
+      #O#-axiom schemata.
+      By induction over computable well-orderings,
+      this allows us to compute arbitrary hyperarithmetic functions.
+      []
+    Knowing this strength result of our #O# axioms
+    allows us to focus scientific effort (finding new axioms) on H*.
+
+    In fact this is all of #O# that is meaningfully observable,
+    in the sense of refutation in the limit.
+    The following adapt the work of Kelly and Schulte Kelly95
+    to our setting of equational theories of SKJO.
+    Def: Let a _hypothesis_ be a set of equational theories (of say SKJO).
+      A singleton hypothesis is called _emprically_complete_.
+      A hypothesis is _refutable_in_the_limit_ iff,
+      as a set of sets of equations, it is #Pi02#.
+    A problem is reducible to a hypothesis iff
+    it is uniformly reducible to the theories in the hypothesis;
+    thus we can speak of the logical strength of an hypothesis as if it were a
+    single partial theory.
+    Thm: (limit of observability)
+      No refutable-in-the-limit hypothesis with #Pi11#-hard conclusions
+      can be empirically complete.
+    As a corollary of the completeness of axiomatization,
+    we also have
+    Cor: There is a refutable-in-the-limit hypothesis
+      that has #Delta11#-hard predictions.
+
+    Qstn: Is SKJO the full Bohm-tree model of SKJ in predicative set theory?
+      (I.e, the model of Bohm trees whose nodes are
+      arbitrary joins of head normal forms)
+

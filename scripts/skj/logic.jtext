@@ -1,0 +1,463 @@
+
+Various-valued logics. \label{sec:skj/logic}
+  ###<
+    !import skj/types.
+  ###>
+
+  In this section we develop logical calculi with four different truth values:
+  boolean truth values for (two-sided) decidability,
+  semiboolean truth values for positive semidecidability
+  (eg convergence testing),
+  and unit and divergent truth values for negative decidability
+  (eg error checking).
+  The four types turn out to have pracitcal utility for "programming" in SKJ,
+  but there is also motivation from descriptive complexity theory.
+
+  In the theory H*,
+  raw equality and information ordering between SKJ terms is #Pi02#-complete.
+  But some verification problems are naturally of lower complexity,
+  eg converge testing (a result can be found),
+  or divergence testing (no errors can be found).
+  The logical types #div,unit,semi,bool# provide restricted domains
+  over which questions of lower complexity class,
+  respectively #Pi01,Pi01,Delta02,Delta01#.
+  For example determining whether #x=I# is #Pi02#-complete,
+  but restricted to the type #unit#,
+  the question #x:unit|-x:I# is #Pi01#-complete.
+
+  In stating and proving the following motivational theorems,
+  use some material from later sections,
+  eg #P_test# below and #Join_nat# and #test_nat# from \ref{sec:skj/nats}.
+  Thm: The following complexity characterizations hold for raw problems in SKJ.
+    Html Only: 
+      ###a
+              Problem    Complexity
+        -----------------------------
+        (a)     x=_     Pi01-complete
+        (b)     x=I     Pi02-complete
+        (c)     x=T     Pi02-complete
+      ###a
+    Latex Only: 
+      \setlength \extrarowheight {0.3em}
+      \begin{center}\large
+      \begin{tabular}{ c @{\hspace{2em}} c @{\hspace{3em}} l }
+           &  Problem   & Complexity      \\
+      \hline
+        (a)&  #x=_#     & #Pi01#-complete \\
+        (b)&  #x=I#     & #Pi02#-complete \\
+        (c)&  #x=T#     & #Pi02#-complete \\
+      \bottomrule
+      \end{tabular}
+      \end{center}
+      \setlength \extrarowheight {0em}
+  Pf: SPACE
+    Upper Bounds: SPACE
+      (a) #x=_# iff #div x=_# iff no beta-eta reduction shows #div x=T#.
+      The remaining cases reduce to information ordering, which is #Pi02#.
+    Hardness: Let #phi:nat->bool# be a total recursive predicate.
+      ###s y0 y1 y2 y3 y4 u0 u1 u2 u3
+      (a) #/\n. phi(n)# iff #(Join_nat \n. phi n _ I) = _#.
+      (b) By negating (a), #\/m. phi(m)# can be posed as a problem #x=I#,
+        where we further know #x in {_,I}#.
+        Now consider an infinite eta-expansion of
+        ###[
+                I = \x,y0. x\y1. y0\y2. y1\y3. y2\y4. ...
+        ###]
+        Let #psi(m)# be a #Sigma01# predicate where for each #m#, \\
+        #u_m=I <==> psi(m)# and #u_m in {_,I}#.
+        Then inserting #u_m#'s into the expansion of #I#,
+        ###[
+          /\m.psi(m)  <==>  I = \x,y0. x\y1. u0 y0\y2. u1 y1\y3. u2 y2\y4. ...
+        ###]
+      (c) Consider a definition of #T# as
+        ###[
+          T = Join_(n) K^n
+        ###]
+        Note that any finite such join is not #T#.
+        Let #psi(m)# be a #Sigma01# predicate where for each #m#,
+        #u_m=I <==> psi(m)# and #u_m in {_,I}#.
+        Note that
+        ###[
+          /\m < 1+n. psi(m)  <==>  I = u0*u1*...*u_n
+        ###]
+        so let us define #v_n = u0*u1*...*u_n#,
+        so that if #psi(m)# fails, then #v_n=_# for all #n => m#.
+        Now 
+        ###[
+          /\m. psi(m)  <==>  T = Join_(m) v_n K^n
+        ###]
+    []
+
+  The situation is much nicer in typed or typed-and-tested contexts.
+  Our semantics for contexts #Gamma|-M=N# is the same as that
+  for universal quantifers and hypothetical tests.
+  Letting #a:V# and #t:test#, we localize via
+  ###(
+       (x:a |- f x=g x) &<==> f*a x=g*a x
+      (x::t |- f x=g x) &<==> (t x)(f x)=(t x)(g x)
+    (x:a::t |- f x=g x) &<==> (t*a x)(f*a x)=(t*a x)(f*a x)
+  ###)
+  Thm: The following complexity characterizations hold
+    for local problems in SKJ.
+    Html Only: 
+      ###a
+                       Context |- Problem   Complexity
+        ----------------------------------------------------
+        (a)              x:div |- x=_       Pi01-complete
+        (b)              x:div |- x=T       Sigma01-complete
+        (c)             x:unit |- x=I       Pi01-complete
+        (d)             x:semi |- x=I       complete for differences
+                                                between Sigma01 sets
+        (e)       x:semi::unit |- x=I       Sigma01-complete
+        (f)  x:bool::test_bool |- x=K       Delta01-complete
+        (g)                    |- s<::t     Pi02-complete
+      ###a
+    Latex Only: 
+      \setlength \extrarowheight {0.3em}
+      \begin{center} \large \setlength\extrarowheight{0.1em}
+      \begin{tabular}{ c @{\hspace{2em}} r @{\;#|-#\;} l @{\hspace{3em}} l }
+           &             Context  & Problem & Complexity         \\
+      \hline
+        (a)&              #x:div# & #x=_#   & #Pi01#-complete    \\
+        (b)&              #x:div# & #x=T#   & #Sigma01#-complete    \\
+        (c)&             #x:unit# & #x=I#   & #Pi01#-complete    \\
+        (d)&             #x:semi# & #x=I#   & complete for differences
+                                              between #Sigma01# sets \\
+        (e)&       #x:semi::unit# & #x=I#   & #Sigma01#-complete \\
+        (f)&  #x:bool::test_bool# & #x=K#   & #Delta01#-complete \\
+        (g)&                      & #s<::t# & #Pi02#-complete    \\
+      \bottomrule
+      \end{tabular}
+      \end{center}
+      \setlength \extrarowheight {0em}
+  Note that testing #x::t# is equivalent to #semi(t x)=I#,
+  corresponding to case (c).
+  Pf: We can WLOG restrict terms #x:a# for closures #a#,
+    by raising incomplete #x# via #x|->a x#.
+    (a) The problem #x=_# does not depend on #x:div#,
+      so apply the previous theorem.
+    (b) Suppose #x:div#, ie, #x in {_,T}#.  Then #div x=T# iff #x!=_#.
+    (c) Suppose #x:unit#, ie, #x in {_,I,T}#.
+      Then #x=I# iff #div x=_#.
+    (d) Suppose #x:semi#, ie, #x in {_,I,T}#.
+      Then #x[=I# iff #x _=_#, which is #Pi01#-complete.
+      Also, #x=]I# iff #x T!=_#, which is #Sigma01#-complete.
+      Conjoining these two problems gives problem complete for
+      differences between #Sigma01# sets.
+    (e) Suppose #x::semi::unit#, ie, #x in {_,I}#.
+      Then #x=I# iff #div(x _)!=_#, which is #Pi01#-complete.
+    (f) Suppose #x:bool::test_bool#, ie, #x in {K,F}#.
+      Then #x=K# iff #div(x _ T)=_# iff #div(x T _)!=_#.
+      The former is #Pi01#-complete and the latter is #Sigma01#-complete.
+    (g) First we can reduce the subtest problem to #s<::t# iff #/\x::s. x::t#.
+      Now the inner testing problem is equivalent to #x::t#,
+      which is #Sigma01#-complete.
+      Letting #s=test_nat#, 
+    []
+
+  Later in \ref{sec:skjo/logic} we will extend these to hyperarithmetic analogs.
+
+  Boolean Logic. 
+
+    We begin with Boolean logic.
+    ###<
+      !check true = K = bool (\x,-. x).
+      !check false = F = bool (\-,y. y).
+
+      pred := any->bool.
+      !check Pred = (V -> V) (\a. a->bool).
+    ###>
+    we also have unit types inhabited by the truth values
+    ###<
+      unit_K := P bool (Above K).
+      unit_F := P bool (Above F).
+    ###>
+
+    The logical operations are all SKJ-definable.
+    ###<
+      not := (bool -> bool) C.
+      !check not = (F,K) * bool.
+      !check not*not = bool.
+    ###>
+    Following Plotkin, we define parallel versions of #and# and #or#,
+    initially using symmetry types
+    ###<
+      and := Comm_op bool (\x,y. x y F).
+      or := Comm_op bool (\x,y. x K y).
+      iff := Comm_op bool (\x,y. x y. not y).
+    ###>
+    The parallel implication requires a little more work.
+    For this we first define Dijkstras guarded commands
+    ###<
+      if := (bool -> semi) (I,_).
+    ###>
+    which can be joined together, as in
+    ###<
+      implies := (bool -> bool -> bool) (
+          \x,y. if y K
+              | if (not x) K
+              | if (and x (not y)) F
+      ).
+    ###>
+    and the converse
+    ###<
+      impliedby := C implies.
+    ###>
+    Exercise: 
+      ###<
+        #idempotence
+        !check and x x = bool x.
+        !check or x x = bool x.
+
+        #commutivity
+        !check iff x y = iff y x.
+        !check and x y = and y x.
+        !check or x y = or y x.
+
+        #associativity
+        !check iff x (iff y z) = iff (iff x y) z.
+        !check and x (and y z) = and (and x y) z.
+        !check or x (or y z) = or (or x y) z.
+
+        #distributivity
+        !check and x (or y z) = or (and x z) (and y z).
+        !check or x (and y z) = and (or x z) (or y z).
+
+        #types
+        !check ( unit_K,unit_F <: bool ).
+        !check P unit_K unit_F = nil.
+        !check K : unit_K.
+        !check F : unit_F.
+        !check F !: unit_K.
+        !check K !: unit_F.
+
+        #negation
+        !check not K = F.
+        !check not F = K.
+        !check not * not = bool.
+        !check (/\x:unit_K. not x:unit_F).
+        !check (/\x:unit_F. not x:unit_K).
+
+        #conjunction
+        !check and K K = K.
+        !check and F _ = F = and _ F.
+        !check (/\x:unit_K, y:unit_K. and x y:unit_K).
+        !check (/\x:unit_F, y:bool. and x y:unit_F).
+        !check (/\x:bool, y:unit_F. and x y:unit_F).
+
+        #disjunction
+        !check or K _ = K.
+        !check or _ K = K.
+        !check or F F = F.
+        !check (/\x:unit_F, y:unit_F. and x y:unit_F).
+        !check (/\x:unit_K, y:bool. and x y:unit_K).
+        !check (/\x:bool, y:unit_K. and x y:unit_K).
+
+        #biimplication
+        !check iff K K = K.
+        !check iff K F = F.
+        !check iff F K = F.
+        !check iff F F = K.
+        !check (/\x:unit_K, y:unit_K. iff x y:unit_K).
+        !check (/\x:unit_K, y:unit_F. iff x y:unit_K).
+        !check (/\x:unit_K, y:unit_F. iff x y:unit_F).
+        !check (/\x:unit_F, y:unit_K. iff x y:unit_F).
+
+        #conditional
+        !check if K = I.
+        !check if F = _.
+        !check (/\x:unit_K. if x:unit).
+        !check (/\x:unit_F. if x:div).
+
+        #implication
+        !check implies F _ = K.
+        !check implies K = bool.
+
+        #reverse implication
+        !check impliedby : Bin_op bool.
+        !check impliedby _ F = K.
+        !check impliedby K K = K.
+        !check impliedby F K = F.
+      ###>
+    Note the relation to the sequential implication
+    ###<
+      !check implies =] (\x:bool,y:bool. x y K).
+      !check implies ![= (\x:bool,y:bool. x y K).
+    ###>
+    Using this technique we can redefine #and# and #or# via
+    ###<
+      !check or = Bin_op bool (
+          \x,y. if x K
+              | if y K
+              | if (not x). if (not y) F
+      ).
+      !check and = Bin_op bool (
+          \x,y. if (not x) F
+              | if (not y) F
+              | if x. if y K
+      ).
+    ###>
+
+  Weak Logics. 
+
+    Weaker than boolean logic is _testing_logic_ with truth values #:semi#.
+    ###<
+      test := any->semi.
+      Test := (V -> V) (\a. a->semi).
+      !check test = Test _.
+      !check ( K I,K _,K T : test ).  #succeed/fail/err everywhere
+    ###>
+    Weaker still are _probing_logic_ with truth values #:div# 
+    ###<
+      probe := any->div.
+      Probe := (V -> V) (\a. a->div).
+      !check probe = Probe _.
+      !check ( K _,K T : probe ).     #the minimum and maximum probes
+    ###>
+    and _checking_logic_ with truth values #:unit#
+    ###<
+      check := any->unit.
+      Check := (V -> V) (\a. a->unit).
+      !check check = Check _.
+      !check ( K I,K T : check ).     #the minimum and maximum checks
+    ###>
+    Note that checks can easily be made into closures:
+    ###<
+      !check W*check : check->V.
+      Checked := (/\a. Check a -> P a) (\-,c,x. c x x).
+      !check Checked _ _ = I.
+      !check Checked a _ = V a.
+      !check Checked _ c x = check c x x.
+      !check Checked a c <: V a.
+      !check Check (Checked a c) <: Check a.
+      !check Check a c : Check (Checked a c).
+    ###>
+    The logics have meet and join operations, but no negation.
+    ###<
+      or_semi := Comm_op semi (\x,y. x). #i.e., #J#
+      or_unit := Comm_op unit (\x,y. x).
+      or_div := Comm_op div (\x,y. x).
+
+      and_semi := Comm_op semi (\x,y. x y).
+      and_unit := Comm_op unit (\x,y. x y).
+      and_div := Comm_op div (\x,y. x y).
+
+      !check or_semi T = T.
+      !check or_semi _ = semi.
+      !check or_semi I I = I.
+      !check and_semi T = T.
+      !check and_semi _ _ = _.
+      !check and_semi _ I = _.
+      !check and_semi I I = I.
+    ###>
+    Exercise: 
+      ###<
+        !check and_semi T = T.
+        !check and_semi _ _ = _.
+        !check and_semi _ I = _.
+        !check and_semi I I = I.
+
+        !check or_semi T = T.
+        !check or_semi _ = semi.
+        !check or_semi I I = I.
+
+        #idempotence
+        !check and_semi p p = semi p.
+        !check or_semi p p = semi p.
+
+        #commutativity
+        !check and_semi p q = and_semi q p.
+        !check or_semi p q = or_semi q p.
+        !check ( and_semi,or_semi : C ).
+
+        #associativity
+        !check and_semi p (and_semi q r) = and_semi (and_semi p q) r.
+        !check or_semi p (or_semi q r) = or_semi (or_semi p q) r.
+        
+        #distributivity
+        !check and_semi p (or_semi q r) = or_semi (and_semi p r) (and_semi q r).
+        !check or_semi p (and_semi q r) = and_semi (or_semi p r) (or_semi q r).
+      ###>
+    Note that checking logic simply checks for errors, so
+    ###<
+      !check and_unit = or_unit.
+      !check and_div = or_div.
+    ###>
+    Checking logic is used in assertions and subtyping:
+    ###<
+      assert := (bool -> unit) (I,T).
+      P_where := (/\a:V. (a->unit) -> P a) (\-,w,x. w x x).
+    ###>
+
+    Def: We refer to #bool-#, #semi-#, #unit-# and #div-# valued functions
+      as _predicates_, _tests_, _checks_, and _probes_, respectively.
+    The motivation is that a term passes a check if no error is found (as in
+    static typechecking); a term passes a test if no error is found and in
+    addition it performs some computation (as in a unit test); and a term
+    passes a probe if it doesn't blow up when mucked with.
+    Exercise: 
+      ###<
+        !check test = any->semi.
+        !check check = any->unit.
+        !check probe = any->div.
+
+        !check Test = (V -> V) (\a. a->semi).
+        !check Check = (V -> V) (\a. a->unit).
+        !check Probe = (V -> V) (\a. a->div).
+
+        !check Test x <: test.
+        !check Check x <: check.
+        !check Probe x <: probe.
+      ###>
+    We can weaken any test by forcing convergence
+    ###<
+      test2check := (test -> check) (\t,x. I | t x).
+    ###>
+    and checks are naturally tests
+    ###<
+      !check check <: test.
+    ###>
+    For each weak predicate type
+    we can define implication / subobjecthood as follows:
+    Def: (weak implication)
+      * Let #c,c':check# be checks.
+        Then #c# is a _subcheck_ of #c'# iff #c=]c'#.
+      * Let #p,p':probe# be probes.
+        Then #p# is a _subprobe_ of #p'# iff #p=]p'#.
+      * Let #t,t':test# be tests.
+        Then #t# is a _subtest_ of #t'# iff #t=P_test t t'# where
+        ###[
+          P_test = Sym_bin_op test (\s,t,x. and_test (s x) (t x)).
+        ###]
+        We use the notation #x::t <==> test t x=I# to say that #x# has passed
+        test #t#, and the notation #s<::t# to say that #s# is a subtest of #t#.
+    Thus to intersect / conjoin checks and probes we need only join them.
+    but to combine tests, we consider errors are more important than failures.
+    ###<
+      !define P_test := Comm_op test (\p,q,x. and_semi(p x)(q x)).
+      P_check := Comm_op check (\p,q,x. and_unit(p x)(q x)).
+      P_probe := Comm_op probe (\p,q,x. and_div(p x)(q x)).
+    ###>
+    Exercise: 
+      ###<
+        !check P_test  = (\p,q,x. and_semi(p x)(q x)).
+        !check P_check = (\p,q,x. and_unit(p x)(q x)).
+        !check P_probe = (\p,q,x. and_div(p x)(q x)).
+
+        #idempotence
+        !check P_test p p = test p.
+        !check P_check p p = check p.
+        !check P_probe p p = probe p.
+
+        #commutativity
+        !check P_test p q = P_test q p.
+        !check P_check p q = P_check q p.
+        !check P_probe p q = P_probe q p.
+        !check ( P_test,P_check,P_probe : C ).
+
+        #associativity
+        !check P_test p(P_test q r) = P_test(P_test p q)r.
+        !check P_check p(P_check q r) = P_check(P_check p q)r.
+        !check P_probe p(P_probe q r) = P_probe(P_probe p q)r.
+      ###>
+

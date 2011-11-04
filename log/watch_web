@@ -1,0 +1,4 @@
+#!/bin/bash
+echo -e "\033]0;Johann: apache error log\007"
+tail -n1000 -s0.02 --follow=name /usr/lib/apache2/johann-error_log
+

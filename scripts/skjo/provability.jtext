@@ -1,0 +1,230 @@
+
+Provability and reflection. \label{sec:skjo/provability}
+  ###<
+    !import axioms/schemata.
+  ###>
+  ###g p q
+
+  Previously in \ref{sec:skjo/codes} we saw how
+  to decide provable equality between quoted SKJO terms.
+  At the term #{true}# this gives us a decision procedure
+  for provability of general boolean statements.
+  ###<
+    pr := (Code{bool} -> bool) (\{x::test_bool}. pr_equal {true} {x}).
+    !check pr [= pr_equal{true}.
+    !check (/\{p::test_bool}. pr{p} :: test_bool).
+  ###>
+  Th provability predicate #pr{-}#
+  is defined by the bi-directional reasoning principle
+  ###-
+    pr{p} = true
+    ------------ pr-def
+    {p} = {true}
+  ###-
+  Soundness of #pr{-}# (as Johann's theory)
+  can be expressed by the two reasoning principles
+  ###=
+    pr{p} = true
+    ------------
+      p = true
+  ###=
+  and
+  ###=
+      p = false
+    -------------
+    pr{p} = false
+  ###=
+  .
+  While the former holds by definition
+  ###<
+    !check pr{true} = true.
+  ###>
+  the latter #pr{false}=false# cannot be proven or even #!assume#d.
+  In fact this is Godel's second incompleteness theorem.
+
+  The provability predicate #pr{-}# models the provability logic GL
+  (see Verbrugge08, Japaridze98).
+  GL is the modal logic satisfying Lob's theorem (as above),
+  the distribution rule
+  ###<
+    !check (/\{p:bool::test_bool}, {q:bool::test_bool}. true =
+        implies ( pr{implies p q} ).
+        implies ( pr{p} ).
+        pr{q}
+    ).
+  ###>
+  and the inference rule
+  ###=
+      p=true
+    ------------
+    pr{p}=true
+  ###=
+  (but not its converse).
+  This rule follows from the definition of #pr# and the extensionality
+  principle for #code#
+  ###=
+      |-p=q
+    ---------
+    |-{p}={q}
+  ###=
+  .
+
+  Transitivity is a theorem of GL; hence GL extends K4.
+  ###<
+    !check (/\{p:bool::test_bool}. true = implies (pr{p}) (pr{pr{p}})).
+  ###>
+  Having reflected Johann's hard-coded reasoning principles in
+  \ref{sec:axioms/schemata}, we can also assume the converse of transitivity
+  ###<
+    !check (/\{p:bool::test_bool}. pr{p} = pr{pr{p}}).
+  ###>
+  and justly refer to #pr{-}# as Johann's theory.
+
+  Using the provability predicate #pr{-}#,
+  we can relativize some classical incompleteness theorems from PA to #code#
+  (see Smorynski77 and Boolos07
+  for statements of the theorems in these forms).
+
+  We begin with the diagonalization lemma, which in our context is a special
+  case of Kleene's second fixed point theorem (from \ref{sec:skjo/codes}).
+  Let #|-p# denote #pr{p}=true#, and consider predicates of quoted booleans
+  ###<
+    pred_qbool := V (Code{bool} -> bool).
+    test_pred_qbool := Test pred_qbool (
+        \p. and_semi (p{true}) (p{false})
+    ).
+  ###>
+  Thm: (Diagonalization lemma)
+    (a) For every total predicate #p{-}# on codes of sentences,
+      there is a total sentence #q# satisfying #|-q<-->p{q}#
+      (ie, #pr{iff q (p{q})}=true#).
+    (b) The #q# in part (a) is uniformly definable.
+  Pf: 
+    (a) follows from (b).
+    (b) We apply #Y'# from Kleene's second fixed-point theorem
+      ###[
+        q:=Y'{p}     ==>     Y'{p}=p{Y'{p}}
+      ###]
+      And since Johann knows this, we get the stronger #pr{-}# version
+      ###<
+        !check (
+            /\{p:pred_qbool::test_pred_qbool}.  let {q}:={Y'{p}}.
+            q=p{q}   AND   pr{iff q (p{q})}=true
+        ).
+      ###>
+    []
+  An easy consequence of the diagonalization lemma is
+  Godel's first incompleteness theorem for Johann's theory.
+  Thm: (Godel's first incompleteness theorem)
+    There is a sentence #p# such that neither #|-p# nor #|-not p#.
+  In terms of decision,
+  ###<
+    decides := (Code{bool} -> semi) (if*pr | if*pr*(A{not})).
+    !check decides [= test_Code {bool} test_bool.
+    !check decides <:: test_Code {bool} test_bool.
+  ###>
+  The theorem states that Johann does not decide everything
+  ###[
+    decides !=] test_Code {bool} test_bool.
+    decides !::> test_Code {bool} test_bool.
+  ###]
+  (but Johann cannot prove these exactly;
+  this is Godel's second incompleteness theorem).
+  Pf: Applying the diagonalization lemma,
+    let #p:=Y'{not*pr}# so that #p=not*pr{p}#.
+    Then assuming either #|-p# or #|-not p# leads to contradiction
+    ###(
+        |-p  &<==>  |-pr{p}   #by strong transitivity
+             &<==>  |-not p   #by definition
+    ###)
+    Formally checking,
+    ###<
+      !check (p:=Y'{not*pr}.  pr{p} = pr{pr{p}} = pr{not p}).
+    ###>
+    and assuming consistency, we can prove the contradiction
+    ###<
+      inconsistent := pr{false}.
+      consistent := not*pr{false}.
+      !check (p:=Y'{not*pr}.  pr{p} = inconsistent = pr{not p}).
+    ###>
+    []
+  Note that it is inconsistent for Johann to #!assume consistent=true#.
+  Also, the witness #p# cannot be statically SKJO-definable;
+  since every SKJO-definable sentence can eventually be decided
+  (by #!assum#ing additional equations, eg the sentence itself).
+  Thus #p# must be theory- or time-dependent, by mentioning #code#.
+
+  Godel's second incompleteness theorem observes that
+  the final #!check# above gives us a simpler form for the witness #p#.
+  Thm: (Godel's second incompleteness theorem)
+    If Johann's theory is consistent,
+    then it cannot prove its own consistency
+    (and also the trivial converse): #consistent = not*pr{consistent}#
+  I.e., #consistent=not*pr{false}# is the fixed point of #not*pr{-}#.
+  Pf: Continuing from above,
+    ###<
+      !check (p := Y'{not*pr}.
+          inconsistent = pr{p}  AND            #by above
+          consistent = not*pr{p}               #by negation
+                     = not*pr{not*pr{p}}       #by definition of #p#
+                     = not*pr{consistent}      #by above
+      ).
+    ###>
+    []
+  To state Lob's theorem,
+  we briefly use modal logic notation, with #[]# denoting #pr{-}#.
+  Thm: (Lob's theorem) For any sentence #p#, if #|-pr{p}==>p# then #|-p#;
+    or in modal notation #[]([]p->p)->[]p#.
+    Relying on the trivial converse allows a simpler assumption
+    ###<
+      !check (/\{p:bool::test_bool}. pr{implies (pr{p}) p} = pr{p}).
+    ###>
+  I.e., #[]p# is the fixed point of #[](- --> p)#.
+  Pf: Applying the diagonalization lemma, let #q=Y'{implies (pr{q}) p}#,
+    so that #q=imples (pr{q}) p#.
+    ###n
+       1.  |-q<-->([]q->p)        #diagonalization lemma
+       2.  |-q->[]q->p            #1
+       3.  |-[](q->[]q->p)        #2: informal transitivity
+       4.  |-[]q->[]([]q->p)      #3: distributivity
+       5.  |-[]q->[][]q->[]p      #4: distributivity
+       6.  |-[]q->[][]q           #formal transitivity
+       7.  |-[]q->[]p             #5,6
+       8.  |-([]p->p)->[]q->p     #7
+       9.  |-([]p->p)->q          #8,1
+      10.  |-[]([]p->p)->[]q      #9: distributivity
+      11.  |-[]([]p->p)->[]p      #7,10
+    ###n
+    Takeout: TODO formalize...
+    []
+  Takeout: ALT proof
+    ###n
+       1.  |-[]p->p               #assumption
+       2.  |-q<-->([]q->p)        #diagonalization lemma
+       3.  |-q->[]q->p            #2: weakening to one direction
+       4.  |-[](q->[]q->p)        #3: informal transitivity
+       5.  |-[]q->[]([]q->p)      #4: distributivity
+       6.  |-[]q->[][]q->[]p      #5: distributivity
+       7.  |-[]q->[][]q           #formal transitivity
+       8.  |-[]q->[]p             #6,7: Pierce's law
+       9.  |-[]q->p               #8,1: composition
+      10.  |-q                    #2 (definition of #q#)
+      11.  |-[]q                  #transitivity
+      12.  |-p                    #9,11: modus ponens
+    ###n
+  Godel's second theorem and Lob's theorems are instances of
+  a more general fixed-point principle for #pr{-}#-guarded predicates.
+  Thm: (de Jongh, Sambin 1975)
+    Let #a:Code{bool}->bool# be a predicate expression such that in #a{p}#,
+    #p# only occurs inside #pr{-}# (ie is "guarded" by #pr{-}#).
+    Then there is a #b:Code{bool}->bool# with
+      ###[
+        /\{q:bool::test_bool}. pr{ iff (b{q}) (a{b{q}}{q}) }.
+      ###]
+  Pf: See Boolos07.
+  Note that we can achieve the general fixed-point theorem already with #Y'#,
+  so that Sambin's and de Jongh's result guarantees definability in the guarded
+  case.
+
+  ###u p q
+

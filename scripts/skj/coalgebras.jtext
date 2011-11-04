@@ -1,0 +1,182 @@
+
+Coalgebras. 
+  ###<
+    !import skj/types skj/categories.
+  ###>
+
+  First we define a few simple coalgebras.
+  Recall the sum or coproduct
+  ###<
+    Sum := (V->V->V) (
+        \a:V, b:V.
+        \<w:bool, x:w a b>.
+        <w,x>
+    ).
+  ###>
+  with operations
+  ###<
+    Which : (/\a:V,b:V. Sum a -> bool) (
+        \a:V,b:V.
+        \<w:bool, x:w a b>.
+        w
+    ).
+    Inl := (/\a:V. a-> Sum a any) (\a:V, x:a. <K,a>).
+    Inr := (/\a:V. a-> Sum a any) (\a:V, x:a. <F,a>).
+    Sum22 := (/\a:V,b:V,c:V,d:V. (a->b)->(c->d)->(Sum a c)->(Sum b d) (
+        \a,b,c,d.
+        \f:a->b, g:c->d.
+        <<f,g>>
+    ).
+  ###>
+  XXX: this needs to be updated
+  The maximal version is
+  ###<
+    sum := Prod bool any.
+    which := <K>.
+    inl := (\x.<K,x>).
+    inr := (\x.<F,x>).
+    sum22 := (\f,g. <<f,g>>).
+    !check sum = Sum any any.
+    !check which * sum = Which any any.
+    !check inl = Inl any any.
+    !check inr = Inr any any.
+    !check sum->sum sum22 = Sum22 any any any any.
+    !check which * inl = K K.
+    !check which * inr = K F.
+    !check sum22 I I =) sum.
+
+  ###>
+  Generalizing to arbitrary coproducts with #Sigma#, we can define
+  ###<
+    Witness := <K>.
+    Inject := (\A:V, t, a:A. <a,t a>).
+    Sigma22 := (/\A:V, ???).
+    inject := (\t,a. <a,t a>).
+    sigma22 := (\x. <x>).
+    !check inject = Inject any.
+
+  ###>
+  Consider the coalgebra of #a#-streams for a type #a#
+  ###<
+    Stream := (V->V) (\a:V. Y\t:V. Prod a t).
+  ###>
+  with signature #<read:stream->_, next:stream->stream>#
+  ###<
+    Read_stream := (/\a:V. Stream a -> a) <K>.
+    Next_stream := (/\a:V. str := Stream a. str->str) <F>.
+  ###>
+  As usual, we define the maximal stream type and simplified arrows
+  ###<
+    stream := (Y\t.Prod any t).
+    read := (\(h,-).h).
+    next := (\(-,t).t).
+    !check read = <K>.
+    !check next = <F>.
+    !check stream = Stream any.
+    !check read * stream := Read_stream any.
+    !check next * stream := Next_stream any.
+    build_const_stream := (\x.Y\s.<a,s>).
+
+  ###>
+  We shall call a two-way stream a #Dialog#:
+  ###<
+    Dialog := (V->V->V) (\r,w. Y\t. Prod r.Exp w t).
+  ###>
+  with signature
+  ###<
+    Read_dialog  := (/\r:V,w:V. (Dialog r w)->r) (
+        \r,w.
+        \<h:r,->.
+        h
+    ).
+    Write_dialog := (/\r:V,w:V. dlg := Dialog r w. w->dlg->dlg) (
+        \r,w.
+        \x:w.
+        \<-,f:w->Dialog r w>.
+        f x
+    ).
+  ###>
+  and simplified versions
+  ###<
+    dialog := (Y\t. Prod any.Exp any t).
+    read  := (\(h,-). h).
+    write := (\x,(-,f).f x).
+    !check read  = <K>.
+    !check write = C<F>.
+    !check dialog = Dialog any any.
+  ###>
+  LATER
+
+  Note that we have arbitrarily chosen read-first dialogs.
+  An equivalent formulation is the write-first dialog
+  ###<
+    Dialog2 := (V->V->V) (\w:V,r:V. Y\t:V. Prod r.Exp w t).
+    dialog := (Y\t. Exp any. Prod any t).
+    read2  := (\x,f.f x K).
+    write2 := (\x,f.f x F).
+  ###>
+  Indeed the #one_next# and #one_write# maps between #Dialog# and #Dialog2# are
+  ###<
+    examples of coalgebra homomorphisms
+    one_next := (\(-,f).f).
+    one_write := (\x,f.f x).
+    One_next := (/\r:V,w:V. Dialog r w -> Dialog2 w r) (\r,w. one_next).
+    One_write := (/\w:V,r:V. w -> Dialog2 w r -> Dialog r w) (\r,w. one_write).
+    !check (\x. one_next * (one_write x)) = write.
+    !check (\x. (one_write x) * one_next) = write2.
+  ###>
+
+  The coalgebra of lists over some type
+  ###<
+    List := (V->V) (\a:V. Y\t. Sum nil.Prod a t).
+  ###>
+  with signature
+  ###<
+    ???
+    Reduce := (/\a:V,b:V. b->(a->b->b)->b) (
+        \y0:b.
+        \f:a->b->b.
+        ???.
+    ).
+  ###>
+
+  Sometimes more convenient are nonempty lists
+  ###<
+    Nonempty_list := (V->V) (\a:V. Y\t. Sum a.Prod a t).
+  ###>
+  Nonempty-lists with branches are trees
+  ###<
+    Binary_tree := (V->V) (\a:V. Y\t. Sum a.Prod t t).
+  ###>
+
+  We now have sufficient motivation to define a general notion coalgebra.
+  Def: Let #f:functor# be given.  An #f#-_coalgebra_ is a pair
+    ###[
+      alpha = <a:dom f, sigma:a->(f a)>
+    ###]
+    where #a# is the _carrier_ and #sigma# is the _structure_map_.
+  The #Coalgebra# type is now parametrized on the functor #f#.
+  ###<
+    Coalgebra := (functor->V) (\f:functor. \/a:dom f. a->(f a)).
+  ###>
+  Def: Let #f# be a functor and #<a,sigma>,<a',sigma'># be #f#-coalgebras.
+    An #f#-_coalgebra_hom_ is a pair of maps #<g:a->a',h:(f a)->(f a')>#
+    commuting as follows #sigma' * g = h * sigma'#
+    Latex Only: i.e.,
+      \[\xymatrix{
+          { #a# } \ar[d]_{ #sigma# } \ar[r]^{ #g# }
+          & { #a'# } \ar[d]^{ #sigma'# } \\
+          { #f a# } \ar[r]_{ #h# }
+          & { #f a'# }
+      }\]
+  We can construct a type of coalgebra homs as follows
+  ###<
+    Coalg_hom := (/\f:functor. fc:=Coalgebra f. fc->fc->V) (
+        \f:functor.
+        fc:=Coalgebra f.
+        \<a,sigma>:fc, <a',sigma'>:fc.
+        \<g:a->a',h:(f a)->(f a')>.
+        <???, ???>
+    ).
+  ###>
+

@@ -1,0 +1,141 @@
+
+Random combinator reduction. \label{sec:examples/random_reduction}
+  ###<
+    !import skrj/types.
+  ###>
+
+  Random sampling. 
+    Reduction #=># and sampling #!># rules
+    ###-
+                    x => y   y => z
+      ------ refl   --------------- trans
+      x => x             x => z
+
+      -------------------   ----------   ----------
+      S x y z => x z(y z)   K x y => x   F x y => y
+
+      x => x'
+      -----
+      S x y
+
+      -------- eta-F
+      F _ => I
+
+      ----------------------- eta-K-R
+      K(R x y) => R(K x)(K y)
+
+      ----------------------- eta-J-R
+      J(R x y) => R(J x)(J y)
+
+      ---------------------------- eta-B-R
+      B(R x y)z => R(B x z)(B y z)
+
+      ----------------------------- eta-B2-R
+      B x(R y z) => R(B x y)(B x z)
+
+      ---------------------------- eta-C-R
+      C(R x y)z => R(C x z)(C y z)
+
+      ---------------------------- eta-S-R
+      S(R x y)z => R(S x z)(S y z)
+
+      ------------ @ 1/2   ------------ @ 1/2
+      R _x ~> K _x         R _x ~> F _x
+    ###-
+    R-sampling only happens at the head; we never sample before copying.
+    For extensionality, we thus need eta axioms to propagate R to the front
+    when used linearly.
+    Example: independent vs dependent copying
+      ###<
+        unif_bool := Rand bool (R<K><F>).
+        X_ind := (
+        x := R<K><F>.
+        <x1> := x
+      ###>
+
+  Reduction paths. 
+    A reduction path is the derivation tree of a term reduction.
+    A random reduction tree is the complete sample-enumeration of all paths.
+    Example: 
+      ###[
+        f := (bool -> Rand bool) (\x. R unif_bool <x>).
+      ###]
+      ###-
+        2<f><K> => <f>(<f><K>)
+                => <K>f f
+                => f K f
+                = (\x. R unif_bool <x>) K f
+                => R unif_bool <K> f
+                ~> unif_bool f                  ##  @ 1/2
+                  = R<K><F>f
+                  ~><K>f                        ##    @ 1/4
+                    => f K
+                      = (\x. R unif_bool <x>)K
+                      => R unif_bool <K>
+                      ~> unif_bool              ##      @ 1/8
+                         = R<K><F>
+                         ~> <K>                 ##        @ 1/16
+                         ~> <F>                 ##        @ 1/16
+                      ~> <K>                    ##      @ 1/8
+                  ~><F>f                        ##    @ 1/4
+                    => f F
+                      = (\x. R unif_bool <x>)F
+                      => R unif_bool <F>
+                      ~> unif_bool              ##      @ 1/8
+                         = R<K><F>
+                         ~> <K>                 ##        @ 1/16
+                         ~> <F>                 ##        @ 1/16
+                      ~> <F>                    ##      @ 1/8
+              ~> <K>f                           ##  @ 1/2
+                => f K
+                = (\x. R unif_bool <x>)K
+                => R unif_bool <K>
+                ~> ...
+                  ~> ...
+                  ~> ...
+                ~> ...
+      ###-
+      Note that this complete sampling path is very inefficient; we copy entire
+      trees many times.
+
+    Idea: A language-based approach to finding tractible substructure.
+      Recall
+      ###[
+        Rand := (tp->tp) (\a. ???).
+        Stoch := (tp->tp->tp) (\a,b. a -> Rand b).
+      ###]
+      and consider the following policy when evaluating programs:
+      Policy: (compile first-order structure)
+        * for terms #_x:Rand a#, and #a# enumerable,
+          compute a probability vector.
+        * for #_f : Stoch a b = a->Rand b#, and #a,b# enumerable,
+          compute a transition matrix.
+        * for terms #_x:Rand a# where #a# an infinite recursive type,
+          unroll a few levels,
+          compute a probability vector,
+          and sample the remaining tail.
+    Things become more complicated when random variables are _copied_; e.g.,
+    ###[
+      Iter_R := (/\a:tp. nat -> Endo(Stoch a a)) (\_,n,f,x. n <f> <x>).
+    ###]
+    Now #Iter_R n# is the nth-power function on transition matrices.
+    But what if #n# is random?
+    ###[
+      geom_2 := Rand nat (Y\<n>:rand. R <zero> <succ n>).
+      example := (/\a:tp. Endo. Stoch a a) (geom_2\n. iter_R n).
+    ###]
+    This example happens to be a nice functional
+    ###[
+            1 - 1/2
+      f |-> -------
+            I - f/2
+    ###]
+    mapping transition matrices to transition matrices.
+
+  Comment: TODO Impement language-based Baum-Welch and general EM-algorithm.
+    * First do simple enumeration,
+      then BP where possible,
+      then add random sampling for infinite types.
+    * First do finite-state variables,
+      then extend to recursive types.
+

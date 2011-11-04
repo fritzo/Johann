@@ -1,0 +1,7 @@
+
+The lattice of closures. \label{sec:skrj/closures}
+  ###<
+    !import axioms/random axioms/close axioms/power.
+  ###>
+  TODO: adapt closures from \ref{sec:skj/closures}
+

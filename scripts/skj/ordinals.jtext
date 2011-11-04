@@ -1,0 +1,63 @@
+
+Church-Kleene Ordinals. \label{sec:skj/ordinals}
+  ###<
+    !import skj/types skj/nats.
+  ###>
+
+  In (??? XXX reference Church's little book)
+  Church defines ordinals to have type #mu o. 1 + o + o->o#;
+  where #o->o# represent sequeces of ordinals witnessing limits.
+  Since all computable ordinals are countable
+  (indeed all continuous ordinals are countable, XXX right),
+  it is sufficient to use instead #nat->o# or even #Stream o#.
+
+
+  ###<
+    (   #constructive ordinals
+        ord : close,
+        check_ord : Check ord,
+        test_ord : Test ord,
+        zero_ord : ord,
+        succ_ord : Sub ord->ord,
+        fun_ord : Sub ord->ord,
+        less_ord : ord->ord->bool,
+        all_ords : Sset ord, #XXX this is undefinable
+        ...
+    ) := (
+        Y\(o,c,t,z,s,f,l,a, tf). (
+            #ord
+            Both (Tested test_ord).
+            Sum unit.
+            Sum ord.
+            Stream ord,
+
+            #check
+            check_Sum check_unit.
+            check_Sum test_ord.
+            check_both (check_Stream test_ord).
+            ,
+
+            #test
+            test_Pair test_unit.
+            test_Pair test_ord.
+            test_fun,
+
+            #zero
+            inl I,
+
+            #succ,
+            inr;inl,
+
+            #fun
+            Stream ord & ???
+
+            #
+            less_ord
+
+            #all
+            <z
+        )
+    ).
+  ###>
+
+

@@ -1,0 +1,12 @@
+
+Axioms. (approaching #Hstarc# with #Sigma01# theories) \label{sec:axioms}
+
+  This chapter details the hard-coded axiom shemata and provides the individual
+  axioms approximating the HP-complete theories #Hstar#....
+
+  ###r order
+  ###r combinators eta diverge
+  ###r join close power types
+  ###r random random_types
+  ###r code oracle
+

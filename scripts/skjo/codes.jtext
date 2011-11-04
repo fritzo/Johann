@@ -1,0 +1,418 @@
+
+Injective codes for reflection. \label{sec:skjo/codes}
+  ###<
+    !import axioms/code skj/numerals skj/terms.
+  ###>
+
+  In this section we extend the #<code,A{-},E,Q,{-}># structure to a rich
+  type-indexed modal type structure
+  ###[
+            <Code{-}, Apply{-}{-}{-}, Eval{-}, Quote{-}, Code{-}{-}>
+  ###]
+  combining the expressive power of codes and #Simple#-definable types.
+  We show that the two structures are [untyped and typed, resp.]
+  computational monads in the sense of Brookes and Geva Brookes92.
+
+  A computational comonad for typed codes. \label{sec:skjo/codes:comonad}
+
+    ###m F
+    Def: A (definable) _functor_ on types-as-closures is a pair
+      #F=(F_0,F_1)# of transformations of type
+      ###[
+        F_0 : V->V
+        F_1 : /\a:V,b:V. (a->b) -> F_0 a -> F_0 b
+      ###]
+      perserving identity and composition
+      ###[
+        F_1 a b 1_(a) = 1_(b)
+        F_1 a b f ; F_1 b c g = F_1 a c (f;g)
+      ###]
+    Def: A (definable) _natural_transformation_ between functors #eta:F->G#
+      is an operation
+      ###[
+        eta : /\a:V. F_0 a -> G_0 a
+      ###]
+      satisfying
+      ###[
+        F_1 a b f ; eta b = eta a ; G_1 a b f
+      ###]
+    Comonads are dual to the more familiar structure of monads,
+    in that arrows of #eta# and #mu# are reversed
+    Def: A (definable) _comonad_ is a functor #F_0,F_1# together with
+      a pair of natural transformations #eta:F->1,mu:F->F^2# satisfying
+      ###[
+        mu a ; eta(F_0 a) = 1_(F_0 a)             #left-identity
+        mu a ; F_1(eta a) = 1_(F_0 a)             #right-identity
+        mu a ; mu(F_0 a) = mu a ; F_1(mu a)       #associativity
+      ###]
+      (which are generalizations of the comonoid axioms -- just squint).
+    Monads (Wadler90, Moggi91) and comonads (Brookes92, Gehrke95),
+    with a little extra structure come up frequently in functional programming,
+    though true comonads appear only in the context of semantics.
+    Def: A (definable) _computational_comonad_ is a comonad
+      #(F_0,F_0,eta,mu,gamma)#
+      with an additional natural transformation #gamma:1->F# satisfying
+      ###[
+        gamma a ; eta a = 1_(a)
+        gamma a ; mu a = gamma a ; gamma (F_0 a)
+      ###]
+    ###k F
+
+    Brooks and Geva Brookes92 use a comonad to capture intensional semantics in
+    an extensional system.
+    There is also a history of comonadic type structure
+    in staged compilation of functional languages (eg Davies96, Wickline98)
+    In these applications, the comonad captures an idea of neutralization
+    of computations, and is often called a #code,eval,quote# comonad.
+    Def: The type-indexed _code_comonad_
+      ###[
+            <Code{-}, Apply{-}{-}{-}, Eval{-}, Quote{-}, Code{-}{-}>
+      ###]
+      now has components
+      ###<
+        Code := (code -> P code) (\a,x. A (A {V} a) x).
+        Apply := (/\{a:V},{b:V}. Code{a->b} -> Code{a} -> Code{b}) (\-,-. A).
+        Eval := (/\{a:V}. Code{a} -> a) (\-. E).
+        Quote := (/\{a:V}. Code{a} -> Code{Code{a}}) (\-. Q).
+      ###>
+      where #Code{a}# is the action of the functor on the object #a#,
+      #Apply{a}{b}{f}# is the action of the functor on the arrow #f:a->b#,
+      #Eval{-}# and #Quote{-}# form
+      the comonadic pair of natural transformations,
+      and the typed quoting operation #Code{-}{-}# constructs computations.
+    The components of the code comonad are not definable as functions,
+    so some of the arrows in the comonad conditions
+    will not be realized by SKJO-terms
+    (because of the undefinability of quoting #{-}#).
+    However the relations still hold at each objects #a,b# and arrows #f,g#.
+    This contrasts the case of, eg, the #Sset# monad,
+    where #Sset a# and the other structure is all SKJO-definable
+    (see \ref{sec:skj/types}).
+
+    Having assumed in \ref{sec:axioms/code} the computational comonad conditions
+    for the unityped, fully-definable comonad #(code,A{-},E,Q,{-})#,
+    we now verify the computational comonad conditions for the indexed version.
+    Footnote: Keep in mind the semantics of quantified variables:
+      ###[
+        /\{x}. phi(x,{x})  <==>  /\c:code::test_code. phi(E c,c)
+      ###]
+    Comment: XXX why not instead the weaker
+      ###[
+        /\{x}. phi(x,{x})  <==>  /\c:code. phi(E c,c)
+      ###]
+    These equations were arrived at by straight-forward annotation
+    of the 15 comonad axioms for the unityped theory,
+    which were in turn arrived at by reversing the arrows in
+    Wadler's very lucid exposition Wadler90 of computational monads.
+    ###<
+      #the type-indexed identity morphism
+      Id := (/\a:V. a->a) (\-. I).
+      !check Id = V.
+
+      #functoriality of #(Code{-},Apply{-}{-}{-})#
+      !check (/\{a:V}.  Code{a} : V)
+      !check (/\{a:V},{b:V},{f:a->b}.  Apply{a}{b}{f} : Code{a} -> Code{b}).
+      !check (/\{a:V}.  Apply{a}{a}{Id a} = Id(Code{a})).
+      !check (/\{a:V},{b:V},{c:V},{f:a->b},{g:b->c}.
+          Apply{a}{b}{f} ; Apply{b}{c}{g} = Apply{a}{c}{f;g}
+      ).
+
+      #naturality of #Eval{-}{-}# and #Quote{-}{-}#
+      !check (/\{a:V}.  Eval{a} : Code{a} -> a).
+      !check (/\{a:V}.  Quote{a} : Code{a} -> Code{Code{a}}).
+      !check (/\{a:V},{b:V},{f:a->b}.  Apply{a}{b}{f} ; Eval{b} = Eval{a} ; f).
+      !check (/\{a:V},{b:V},{f:a->b}.
+          Apply{a}{b}{f} ; Quote{b}
+              = Quote{a} ; Apply{Code{a}}{Code{b}}{Apply{a}{b}{f}}
+      ).
+
+      #comonad conditions
+      !check (/\{a:V}.  Quote{a} ; Eval{Code{a}} = Code{a}).
+      !check (/\{a:V}.  Quote{a} ; Apply{a}{Code{a}}{Eval{a}} = Code{a}).
+      !check (/\{a:V}.
+          Quote{a} ; Quote{Code{a}} = Quote{a} ; Apply{a}{Code{a}}{Quote{a}}
+      ).
+
+      #computation conditions
+      !check (/\{a:V},{x:a}.  Code{a}{x} : Code{a}).
+      !check (/\{a:V},{b:V},{f:a->b},{x:a}.
+          Apply{a}{b}{f}(Code{a}{x}) = Code{b}{f x}
+      ).
+      !check (/\{a:V},{x:a}.  Eval{a}(Code{a}{x}) = x).
+      !check (/\{a:V},{x:a}.  Quote{a}(Code{a}{x}) = Code{Code{a}}{Code{a}{x}}).
+    ###>
+
+    Finally, as with every polymorphic type, we also define
+    tests, checks, and joins for #Code#
+    ###<
+        test_Code := (/\{a:V}. Test a -> Test(Code{a})) (
+            \-,t,{x}::test_code. t x
+        ).
+        !check test_code = test_Code {any} I.
+
+        check_Code := (/\{a:V}. Check a -> Check(Code{a})) (
+            \-,t,{x}::check_code. t x
+        ).
+        !check check_code = check_Code {any} I.
+
+        Join_code := Sset code (
+            Y\j. (j\x. j\y. <A x y>) | <{S}> | <{K}> | <{J}> | <{O}> | <{code}>
+        ).
+        Join_Code := (/\{a:V}. Sset. Code{a}) (\a. Join_code \x. <A a x>).
+        !check Join_code = Join_Code {I}.
+
+        Join_skj := Sset skj (Join_code \c::test_skj. <c>).
+    ###>
+
+  Domain-specific quoting functions. 
+
+    As mentioned earlier,
+    the quoting arrow #a->Code{a}# is missing from general comonads,
+    but is present in computational comonads for some restricted subsets of #a#,
+    eg as #{-}# for closed terms of type #a#.
+    The arrow is also present for code types #quote_code=Q#
+    and flat domains eg numeral systems,
+    though only the total inhabitants are correctly quoted.
+    We provide quoting functions for polynomial datatypes in general.
+    Each quoter will have type
+    ###<
+      Quoter := (code -> V) (/\{a:V}. a -> Code{a}).
+    ###>
+    For example the atomic types
+    ###<
+      quote_semi := Quoter{semi} <{I}>.
+      !check test_semi = test_code*quote_semi;
+      !check quote_semi I = {I}.
+
+      quote_bool := Quoter{bool} <{K},{F}>.
+      !check test_bool = test_code*quote_bool;
+      !check quote_bool K = {K}.
+      !check quote_bool F = {F}.
+    ###>
+    and basic type constructors
+    ###<
+      quote_Maybe := (/\{a:V}. Quoter{a} -> Quoter{Maybe a}) (
+          \-,q. ({none}, inr*q_b)
+      ).
+      quote_Sum := (
+          /\{a:V},{b:V}. Quoter{a} -> Quoter{b} -> Quoter{Sum a b}
+      ) (
+          \-,-,q_a,q_b. <inl*q_a, inr*q_b>
+      ).
+      quote_Prod := (
+          /\{a:V},{b:V}. Quoter{a} -> Quoter{b} -> Quoter{Prod a b}
+      ) (
+          \-,-,q_a,q_b,(x,y). {x}:=q_a x. {y}:=q_a y. {(x,y)}
+      ).
+    ###>
+    We also provide quoters specifically for numerals, naturals and SKJ-terms.
+    ###<
+      quote_num := Quoter{num} (Y quote_Maybe).
+      !check test_num = test_code*quote_num;
+      !check quote_num none = {none}.
+      !check (/\{n::test_num}. quote_num(some n) = {some n}).
+
+      quote_nat := Quoter{nat} (A{succ}, {zero}).
+      !check test_nat = test_code*quote_nat;
+      !check quote_nat 0 = {0}.
+      !check (/\{n::test_nat}. quote_nat(succ n) = {succ n}).
+
+      quote_term := Quoter{term} (Y\q. (
+          \(x,y). A (A {ap} (q x)) (q y), {_S},{_K},{_J}
+      ).
+      !check test_term = test_code*quote_term;
+      !check quote_term _S = {_S}.
+      !check quote_term _K = {_K}.
+      !check quote_term _J = {_J}.
+      !check quote_term _T = {_T}.
+      !check (/\{x::test_term},{y::test_term}. quote_term(ap x y) = {ap x y}).
+    ###>
+
+    Since codes can be thought of as equivalence classes of terms,
+    we can define a lifting function from #term# to #skj#
+    ###<
+      term_to_code := (term -> code) (
+          Y\t2c. (\(x,y). A(t2c x)(t2c Y), {S},{K},{J},{T})
+      ).
+    ###>
+    and an inverse from #code->Sset term#.
+    Since #code# is not statically SKJ-definable,
+    we must postulate its definition as a term.
+    ###<
+      !using code_as_term
+      !assume code_as_term : term
+      !assume code_as_term :: test_term.
+      code_to_term := (skj -> Sset term) (
+          Y\c2t. <
+              \(x,y). c2t\x. ct2\y. <ap x y>,
+              _S,_K,_J, _, code_as_term, error
+          >
+      ).
+    ###>
+    Now we can relate the quoting operation on terms
+    to the quoting operations on codes
+    ###<
+      !check (\<x>. <quote_term t>) * code_to_term [= code_to_term * Q.
+    ###>
+
+  Fixed-point theorems. \label{sec:skjo/codes:fixedpoint}
+
+    Comment: 
+      * see reflection.text (2008:07:03)
+      * see types.text (2008:08:21)
+      * see Fitting8, Kleene59
+      * see constable and smith for discussion of r.e. sets
+        and closure under intersection and union.
+    
+    In this section we formulate some basic results from classical recursion
+    theory in terms of the code comonad.
+    See Rogers67, Odifreddi92, for classical presentations,
+    Footnote: Warning: our notation #{M}# for quoting terms is opposite to
+      Kleene's notation #{phi}# for _evaluating_ codes for partial recursive
+      functions.
+    Barendregt84 section 6.5 for presentation in untyped lambda-calculus,
+    and Constable88 for presentation in a typed lambda-calculus.
+
+    Kleene's first fixed-point theorem (the recursion theorem), plus uniqueness
+    Thm: (Kleene, Bohm, van der May)
+      (a) #/\f.\/x. x=f(x)#; and uniformly,
+      (b) #\/Y./\f. Y f=f(Y f)#; moreover
+      (c) the #Y# in part (b) is unique modulo H*
+    Pf: 
+      (a) follows from (b).
+      (b) Letting #Y=\f.(\x.f(x x))(\x.f(x x))#,
+        the equation follows from beta equivalence.
+      (c) Proof in Barendregt84, Lemma 6.5.3.
+      []
+
+    Kleene's second fixed point theorem, for quoted fixedpoints of SKJO terms
+    Thm: (Kleene)
+      (a) #/\f.\/{x}. x=f{x}#; and uniformly,
+      (b) #\/Y'./\{f}. Y'{f}=f{Y'{f}}#.
+    Pf: 
+      (a) follows from (b).
+      (b) We simply annotate with quotes
+        the proof from the first fixed point theorem.
+        Recall the syntactic sugar for quoting
+        ###[
+          \{x},{y}. {x y} = A
+          \{x}. {{x}} = Q
+          \{x}. x = E
+        ###]
+        Consider the following (purely mechanical) annotation steps
+        ###[
+          Y = \f. (\x. f. x x) (\x. f. x x)
+            ~> \{f}. (\x. f. x x) (\x. f. x x)        ##Y'# inputs a code
+            ~> \{f}. (\x. f{x x}) (\x. f{x x})        ##f# inputs a code
+            ~> \{f}. (\{x}. f{x x}) (\{x}. f{x x})    ##x# is quoted
+            ~> \{f}. (\{x}. f{x x}) {\{x}. f{x x}}    ##{x}# is a code
+            ~> \{f}. (\{x}. f{x{x}}) {\{x}. f{x{x}}}  ##x# inputs a code
+            =: Y'
+        ###]
+        Now checking
+        ###<
+          !define Y' := (\{f}. (\{x}. f{x{x}}) {\{x}. f{x{x}}}).
+          !check Y'{f}
+              = (\{x}. f{x{x}}) {\{x}. f{x{x}}}
+              = f{(\{x}. f{x{x}}) {\{x}. f{x{x}}} } 
+              = f{Y'{f}}.
+        ###>
+        as required.
+      []
+    Question: Does uniqueness still hold for #Y'#?
+
+    Following Davies96, we can also take a modal logic perspective.
+    Letting #[]a=Code{a}# denote the comonadic type constructor for a moment,
+    we see that the #Code# comonad's terms have types corresponding to
+    the (S4) axioms of modal logic (see \ref{sec:skjo/provability}).
+    To these we can further add a typed fixedpoint #Fix# corresponding to the
+    irreflexivity axiom or Lob's theorem,
+    Footnote: Note that these axioms are inconsistent for modal logic,
+      as reflexivity and irreflexivity together imply #[]a# for any #a#.
+    to achieve the typings
+    ###(
+      Code{a}{x} &: []a                 #necessitation
+       Apply a b &: [](a->b)->[]a->[]b  #distribution
+          Eval a &: []a->a              #reflexivity
+         Quote a &: []a->[][]a          #transivity
+           Fix a &: []([]a->a)->[]a     #irreflexivity = Lob's theorem
+    ###)
+    #Fix# is defined in terms of #Y'# by quoting the result of #Y'#.
+    ###<
+      Fix := (/\{a:V}. Code{Code{a}->a} -> Code{a}) (\-,{f}. {Y'{f}}).
+      !check (/\{a:V},{f:a}. Fix{a}{f} : Code{a}.
+      !check (/\{a:V}. Fix{a}{f} = {f{Fix{a}{f}}}.
+    ###>
+    Later in \ref{sec:skjo/provability},
+    #Fix# will be the main tool in proving Lob's theorem.
+
+  Provable equality. \label{sec:skjo/codes:provability}
+
+    Our extensional code type identifies provably equivalent terms,
+    and thus allows introspection into Johann's current theory.
+    For example, we can define semipredicates for
+    _provable_ equality and information ordering,
+    employing the (#E-=#) rule
+    ###<
+      if_pr_equal := P C (code -> code -> semi) (
+          Y\e. <(
+              \x,y. <(\x',y'. and_semi (e x x') (e y y'), _)>,
+              \n. <(_, eq_num n)>
+          )>
+      ).
+      !check if_pr_equal x y [= and_semi (test_code x) (test_code y).
+      !check ( {S},{K},{J},{O},{code},{x} :: W if_pr_equal ).
+
+      if_pr_less := (code -> code -> semi) (\{x},{y}. if_pr_equal {x|y} {y}).
+      !check if_pr_less x y [= and_semi (test_code x) (test_code y).
+      !check ( {S},{K},{J},{O},{code},{x} :: W if_pr_less ).
+      !check ( <{_},{x}>, <{x},{x}>, <{x},{x|y}>, <{x},{T}> :: <if_pr_less> ).
+    ###>
+    Negation is a little trickier, but we can define it in terms of #code#,
+    employing the rule #(E-![=)#
+    ###<
+      if_pr_nequal := P C (code -> code -> semi) (
+          \{x},{y}. if_pr_equal {T} { code({x}|{y}) }
+      ).
+      !check if_pr_nequal x y [= and_semi (test_code x) (test_code y).
+
+      if_pr_nless := (code -> code -> semi) (
+          \{x},{y}. if_pr_equal {T} { code({x|y}|{y}) }
+      ).
+      !check if_pr_nless x y [= and_semi (test_code x) (test_code y).
+      !check I = if_pr_nless {T} {_}.
+    ###>
+    Combining (positive,negative) pairs of tests,
+    we can define boolean-valued introspective predicates
+    for equality and Scott ordering.
+    ###<
+      pr_equal := P C (code -> code -> bool) (
+          \x,y. if_pr_equal x y true  |  if_pr_nequal x y false
+      ).
+      !check pr_equal x y [= and_semi (test_code x) (test_code y).
+      !check if_pr_equal x y = if (pr_equal x y).
+      !check if_pr_nequal x y = if*not (pr_equal x y).
+
+      pr_less := (code -> code -> bool) (
+          \x,y. if_pr_less x y true  |  if_pr_nless x y false
+      ).
+      !check pr_less x y [= and_semi (test_code x) (test_code y).
+      !check if_pr_less x y = if (pr_less x y).
+      !check if_pr_nless x y = if*not (pr_less x y).
+    ###>
+    At any time the value of such a predicate will be
+    provably #true# if Johann has proved the result,
+    provably #false# if Johann has disproved the result,
+    and undecidable otherwise.
+    In particular,
+    #pr_equal x y# will never be proved to be bottom (for total #x,y#);
+    that way Johann leaves room for future assumptions/axioms.
+    Comment: XXX not true for some #x,y# mentioning code.
+      If there is an inconsistency in the total version of #code#,
+      Johann may assume that #code# answers #_# to that inconsistency.
+      XXX WTF does this mean?
+    ####
+
+    We will see stronger predicates later in \ref{sec:skjo/logic},
+    including a generalized provability logic.
+

@@ -1,0 +1,7 @@
+
+!log Building the default database.
+!read build/skj.
+#!read build/skrj.
+#!read build/skjo.
+!save default
+

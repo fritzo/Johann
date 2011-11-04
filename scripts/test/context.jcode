@@ -1,0 +1,44 @@
+
+!load default
+!set loudly
+!log testing context compilation:
+
+test1 := S S S S S.
+test2 := <I,<I>,<<I>>,<<<I>>>>.
+test3 := <<S,K>,<K,S>,<I,I,I>>.
+!print context
+
+!decompile context
+!print context
+
+!review context
+!print context
+
+!decompile context
+!compile context
+!print context
+
+!0.5 compile context
+!print context
+
+!1.0 compile context
+!print context
+
+!2.0 compile context
+!print context
+
+!4.0 compile context
+!print context
+
+!8.0 compile context
+!print context
+
+!16.0 compile context
+!print context
+
+!32.0 compile context
+!print context
+
+!4.0 compile context
+!print context
+

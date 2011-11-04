@@ -1,0 +1,40 @@
+
+Lists. \label{sec:skj/lists}
+  ###<
+    !import skj/tests.
+  ###>
+
+  ###<
+    List := (V->V) (\a. Y\b. Maybe. Prod a b).
+    list := V (Y\a. Maybe. Prod any a).
+    !check list = List any.
+
+    test_List := (/\(a,-):testable. Test a) (
+        \(-,ta). Y\t'. test_Maybe (test_Prod ta t)
+    ).
+    test_list := test_List (any, test_any).
+    tb_List := Endo testable (\(a,ta). (List a, test_List a)).
+
+    check_List := (/\(a,-):checkable. Check a) (
+        \(-,ta). Y\t'. check_Maybe (check_Prod ta t)
+    ).
+    check_list := check_List (any, check_any).
+    cb_List := Endo checkable (\(a,ca). (List a, check_List a)).
+  ###>
+  with intro forms
+  ###<
+    empty_list := List nil none.
+    push_List := (/\a:V. a -> Endo(List a)) (\-,x,xs. some (x,xs)).
+    push_list := (any -> Endo list) (\x,xs. some (x,xs)).
+    !check push_list = push_List _.
+    sgtn_List := (/\a:V. a -> List a)) (\-,x. some (x,none)).
+    sgtn_list := sgtn_List _.
+  ###>
+  Recursion
+  ###<
+    Rec_List := (/\a:V,b:V. List a -> b -> (a->b->b) -> b) (
+        \-,-. Y\r. xs,e,p. xs e \(x,xs). p x (r xs)
+    ).
+    rec_list := rec_List any any.
+  ###>
+

@@ -1,0 +1,197 @@
+
+Goedel nats #(nat->a->a)->a->a# with intro forms
+###[
+  zero := nat (\_,x.x).
+  succ := nat->nat (\n,f,x.f n.n f x).
+###]
+First attempt:
+###[
+  nat := close (Y\nat.
+      both (nat->any)->any.
+      both (  #fill with #Top#s
+          \n.
+          \f. f' := (\n,x,y,_. f n (\y. x y Top)).
+          \x. x' := (\    y,_. x y).
+          \y. n f' x' y Top
+      ).
+      both (  #push out with #Top#s
+          \n.
+          \f. f' := (\n,x,_,y. f n (\y. x Top y)).
+          \x. x' := (\    _,y. x y).
+          \y. n f' x' Top y
+      ).
+      both (  #fill with #Bot#s
+          \n.
+          \f. f' := (\n,x,y,b. div b | f n (\y. x y Bot)).
+          \x. x' := (\    y,b. div b | x y).
+      ).
+      both (  #push out with #Bot#s
+          \n.
+          ...
+      ).
+      (       #repair with #(zero,succ)#
+          \f,x.x,
+          \n,f,x.f n.n f x
+      )
+  ).
+###]
+or with raising and lowering operators,
+###[
+  raise := (\x,_.x).
+  lower := (\x.x Top).
+
+  raise' := (\x,b. div b|x).
+  lower' := (\x.x Bot).
+###]
+###[
+  nat := close (Y\nat.
+      both (nat->any)->any.
+      both (  #push out with #Top#s
+          \n.
+          \f. f' := (\n,x. raise. f n (lower x)).
+          \x. x' := raise x.
+          lower. n f' x'
+      ).
+      both (  #fill in with #Top#s
+          \n.
+          \f. f' := (\n,x. I->raise. f n (I->lower x)).
+          \x. x' := (I->raise x).
+          I->lower. n f' x'
+      ).
+      ... #same with #raise', lower'#
+  ).
+###]
+or more succinctly
+###[
+  nat := close (Y\nat.
+      both (nat->any)->any.
+      both (  #push out with #Top#s
+          (\f,n,x. raise. f n (lower x)) -> raise -> lower
+      ).
+      both (  #fill in with #Top#s
+          (\f,n,x. I->raise. f n (I->lower x)) -> (I->raise) -> (I->lower)
+      ).
+      ... #same with #raise', lower'#
+  ).
+###]
+yet more succinctly
+###[
+  raise0 := (\x,_. x).
+  lower0 := (\x. x Top).
+  raise1 := (\x,y,_. x y).
+  lower1 := (\x,y. x y Top).
+
+  raise0' := (\x,b. div b|x).
+  lower0' := (\x. x Bot).
+  raise1' := (\x,y,b. div b|x y).
+  lower1' := (\x,y. x y Bot).
+###]
+whence
+###[
+  nat := close (Y\nat.
+      both (nat->lower0->raise0) -> raise0 -> lower0.
+      both (nat->lower1->raise1) -> raise1 -> lower1.
+      ... #same with #raise', lower'#
+  ).
+###]
+or more abstractly
+###[
+  nat := close (Y\nat.
+      f := (\p,n. (nat->p->n)->n->p ). #pos and neg variance
+      both f lower0 raise0.
+      both f lower1 raise1.
+      both f lower0' raise0.
+      both f lower1' raise1'.
+      (\f,x.x, \n,f,x.f n.n f x)
+###]
+
+Failure: However, this does not enforce the consistency constraint that the
+  two #n#'s must agree in the rhs of
+  ###[
+    succ n f x = f n(n f x)
+  ###]
+  e.g. for numerals #n,n'#, also #\f,x.f n(n' f x)# is fixed by the above
+  type.
+We can enforce this by reconstructing the numeral (repairing) in every
+possible way:
+###[
+  repair_nat := close (
+      zero := (\f,x.x).
+      succ := (\n,f.x.f n.n f x).
+      \n. n(\n',x. succ (n'|x)) zero
+  ).
+###]
+and check for consistency (either zero _or_ a successor) via
+###[
+  check_nat := close (
+      \n. n Bot (n Top n)
+        | n (\_,_. n (\_,_. n) Top) Bot
+  ).
+###]
+Equivalenetly, in summary, we factor out the simple type constructor of one
+argument
+###[
+  Simple := any->close (
+      \f. f I I
+        | f raise lower
+        | f raise' lower' 
+        | f I->raise I->lower
+        | f I->raise' I->lower'
+  ).
+###]
+and ensure left-right consistency
+###[
+  nat := close (
+      Y \a. (Simple \b,b'. (a->b'->b)->b->b')
+          | (\n:a,_,f,x.f n.n f x, \_,x.x)    #descend left
+          | (\_,n:a,f,x.f n.n f x, \_,x.x)    #descend right
+          | \q. q (\_,_. Bot) (q (\_,_. Top) Bot)   #if zero
+              | q (\_,_. q (\_,_. Bot) Top) Bot     #if succ
+  ).
+###]
+Note: only one of the consistency checks (if zero) or (if succ) is needed.
+
+###d N \mathbb{N}
+###d u \union
+Def: #pre_nat := close->close (\a. mu n. (n->a->a)->a->a)).#
+Thm: #inhab(nat) = {succ^n Bot | n in N} u {succ^n zero | n in N} u {Y succ}#.
+Pf: We break the proof into patching, checking, and consistency:
+  Lemma: (patching) if #n# approximates a #pre_nat#,
+    then #nat n in inhab(pre_nat)#.
+  Lemma: (checking) if #n!=Top# does not satisfy the simple typing judgement
+    ###-
+      f:(pre_nat a)->a->a   x:a
+      -------------------------
+               n f x:a
+    ###-
+    then #nat n=Top#.
+  Lemma: (consistency) if #q!=Top# is a nat then either
+    * #q=Bot#,
+    * #q=Top#,
+    * #q = \f,x.x = zero#, or
+    * #q = \f,x.f n(n' f x)# and #n=n'# are both consistent.
+  Pf: (patching) We recurse down the Bohm tree of a term #q#. uppose 
+  Pf: (checking) ???
+  Pf: (consistency)
+    Suppose #q!=Bot#.
+    By patching, at least one of #f,x# must be a head variable of #nat q f x#.
+    * If both, say
+      ###[
+        nat q =] \f,x. f M_1 ... M_j | x N_1 ... N_k
+      ###]
+      then
+      ###[
+        q Bot(q Top Bot) = (\x.x N_1 ... N_k)(q Top Bot)
+            = q Top Bot N_1 ... N_k
+            = Top M_1 ... M_j N_1 ... N_k
+            = Top
+      ###]
+      whence #q=nat q=Top#.
+    * If #q=]\f,x.x N_1 ... N_k# then by checking, #k=0#, and #q=\f,x.x=zero#.
+      XXX SKETCHY
+    * If #q=]\f,x.f M_1 ... M_j# then by checking, #j=2#,
+      the first argument #M_1=:m:nat# is a nat, and
+      the second argument is #M_2=m f x#.
+      XXX SKETCHY
+    
+

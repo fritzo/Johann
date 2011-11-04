@@ -1,0 +1,129 @@
+
+!log Testing syntax for Johann 0.8.6.
+
+!load default
+!using V semi.
+
+!log Testing abstraction.
+!assert (\x. y) = K y.
+!assert (\-. x) = K x.
+!assert (\x. x) = I.
+!assert (\x. f(g x)) = B f g.
+!assert (\x. f x y) = C f y.
+!assert (\x. f x(g x)) = S f g.
+!assert (\x. f x x) = W f.
+!assert (\x,y. f x y) = (\x. \y. f x y).
+
+!assert (\x:a. f x) = (\x. f(V a x)).
+!assert (\x::t. f x) = (\x. semi(t x). f x).
+!assert (\x:a::t. f x) = (\x:a. semi(t x). f x).
+
+!log Testing definitions.
+!assert (x:=y. x) = y.
+!assert (let (x,y) := (u,v). x) = u.
+!assert (let (x,y) := (u,v). y) = v.
+!assert (let (x,y,z) := (u,v,w). x) = u.
+!assert (let (x,y,z) := (u,v,w). y) = v.
+!assert (let (x,y,z) := (u,v,w). z) = w.
+!assert (let <x,y,z> := <u,v,w>. x) = u.
+!assert (let <x,y,z> := <u,v,w>. y) = v.
+!assert (let <x,y,z> := <u,v,w>. z) = w.
+
+!log Testing infix operators.
+!assert x*y = B x y.
+!assert a->b = (\f.b*f*a).
+!assert x|y = J x y.
+!w R. !assert x+y = R x y.
+!assert x;y = B y x.
+
+!log Testing precedence.
+!assert x*y->z = (x*y)->z.
+!assert x->y*z = x->(y*z).
+!assert x->y z = (x->y)z.
+!assert x y->z = x(y->z).
+!w R. !assert x y+z = (x y)+z.
+!w R. !assert x+y z = x+(y z).
+!w R. !assert x+y|z = (x+y)|z.
+!w R. !assert x|y+z = x|(y+z).
+!assert x|y;z = (x|y);z.
+!assert x;y|z = x;(y|z).
+
+!log Testing associativity.
+!assert x y z = (x y)z.       #associates left
+!assert a->b->c = a->(b->c).  #associates right
+!assert x*(y*z) = (x*y)*z.    #associative
+!assert x;(y;z) = (x;y);z.    #associative
+!assert x|(y|z) = (x|y)|z.    #associative
+#note that + is nonassociative
+
+!log Testing abstraction.
+!assert (\x.y|z) = (\x.(y|z)).
+!w R. !assert (\x.y+z) = (\x.(y+z)).
+!assert (\x.y;z) = (\x.(y;z)).
+
+!log Testing vectors.
+!assert <> = I.
+!assert <x> = (\f. f x).
+!assert <x,y> = (\f. f x y).
+!assert <x,y,z> = (\f. f x y z).
+
+!assert (\<x>. f x) = <\x. f x>.
+!assert (\<x,y>. f x y) = <\x,y. f x y>.
+!assert (\<x,y,z>. f x y z) = <\x,y,z. f x y z>.
+
+!assert (\<x>. f x) = (\x'. x' f).
+!assert (\<x>:a. f x) = (\x':a. x' f).
+!assert (\<x>::t. f x) = (\x'::t. x' f).
+!assert (\<x>:a::t. f x) = (\x':a::t. x' f).
+
+!assert (\<x,y>. f x y) = (\xy. xy f).
+!assert (\<x,y>:a. f x y) = (\xy:a. xy f).
+!assert (\<x,y>::t. f x y) = (\xy::t. xy f).
+!assert (\<x,y>:a::t. f x y) = (\xy:a::t. xy f).
+
+!log Testing tuples.
+!assert (x) = x.
+!assert (x,y) = <x,y>.
+!assert (x,y,z) = (x,(y,z)).
+
+!log Testing universal quantifiers.
+!assert (/\i. f i) = (\x,i. V(f i)(x i)).
+!assert (/\i:a. f i) = (\x,i:a. V(f i)(x i)).
+!assert (/\i::t. f i) = (\x,i::t. V(f i)(x i)).
+!assert (/\i:a::t. f i) = (\x,i:a::t. V(f i)(x i)).
+
+!log Testing extistential quantifiers.
+!assert (\/i. f i) = (V\(i,x:f i). (i,x)).
+!assert (\/i:a. f i) = (V\(i:a,x:f i). (i,x)).
+
+!log Testing statements.
+!assert ( /\x:a. x:a ).                               #UNKNOWN
+!assert ( /\x::t. x::t ).
+
+exit
+
+!log Testing quoting.
+!assert (/\x:a. a:V).
+!assert (/\x:a. x:a).
+
+!assert (/\{x}. {x}:code).
+!assert (/\{x}. {x}::test_code).
+
+!assert (/\{x:a}. {x}:code).
+!assert (/\{x:a}. {a}:code).
+!assert (/\{x:a}. {x}::test_code).
+!assert (/\{x:a}. {a}::test_code).
+!assert (/\{x:a}. a:V).
+!assert (/\{x:a}. x:a).
+
+!assert (\{x}. x) = eval.
+!assert (\{x}. {x}) = code.
+!assert (\{x}. {{x}}) = quote.
+
+!assert (/\{a}. (\{x:a}. x) = Eval {a}).
+!assert (/\{a}. (\{x:a}. {x}) = Code {a}).
+!assert (/\{a}. (\{x:a}. {{x}}) = Quote {a}).
+
+!assert (k:={K}. {k}) = {K}.
+!assert (k:={K}. {k k}) = {K K}.
+

@@ -1,0 +1,25 @@
+
+Information geometry of combinatory algebras. \label{sec:info_geom}
+
+  Design Goals: 
+    * fit probabilistic basis to a corpus
+    * formalize posterior complexity of equational theories
+  Approach: 
+
+  Information geometry. 
+
+  Information geometry of groups. 
+
+  An atlas of combinatory algebras. #OPTIONAL
+    #INSERT thesis/atlas_of_CAs.text
+
+  Change of basis and the lambda-def-calculus. 
+
+  Learning combinatory algebras from corpora. 
+
+  Objective functions for choosing axioms. 
+
+    Objective: minimize the posterior entropy
+    alternatively
+    Objective: maximize #Papp# subject to an enumerated mass bound.
+

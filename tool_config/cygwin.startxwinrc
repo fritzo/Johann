@@ -1,0 +1,10 @@
+
+svnserve -d -r /var/svn/ --log-file /var/svn/svnserve.log
+
+# suggested by
+# http://www.devdaily.com/blog/post/linux-unix/get-crontab-started-running-when-using-cygwin
+cygrunsrv -I cron -p /usr/sbin/cron -a -D
+net start cron
+
+xterm
+

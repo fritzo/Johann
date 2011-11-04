@@ -1,0 +1,41 @@
+
+!log Loading database for SKJ...
+!load literate skj
+!stop thinking
+!save literate
+!set loudly
+
+!log Reading literature out loud...
+!read skj/types.
+!64 think
+!recheck
+!save
+
+!read skj/tests.
+!64 think
+!recheck
+!save
+
+!read skj/tests.
+!64 think
+!recheck
+!save
+
+!read skj/nats.
+!64 think
+!recheck
+!save
+
+!read skj/tuples.
+!64 think
+!recheck
+!save
+
+!log Tidying up...
+!think about context
+!start resting
+#!start thinking
+!stats
+!params
+!listen
+

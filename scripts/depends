@@ -1,0 +1,131 @@
+#!/usr/bin/python
+#USAGE: depends [directories]
+#SYNOPSIS: assembles dependency tree for jtext files, writes dependency.eps
+
+from __future__ import with_statement
+import math, re, os, sys, traceback
+
+def build_graph (filename, dirs):
+  verts = []
+  edges = []
+  alone = {}
+
+  #filter out graph data from jtext files
+  for dir in dirs:
+    print "searching %s" % dir
+    for fname in os.listdir(dir):
+      if fname == 'all.jtext': continue
+      if fname == 'defs.jtext': continue
+      if dir is not '.':
+        fname = dir + '/' + fname
+      if re.match(".*\.j(code|text)$",fname):
+        with open(fname, 'r') as infile:
+          fname = fname[:-6]
+          print "adding %s" % fname
+          verts.append(fname)
+          alone[fname] = True
+
+          for line in infile.readlines():
+            line = line.strip()
+            reads = re.match("^!read [^.]*\.", line)
+            if reads:
+              for dep in reads.group()[5:-1].split():
+                edges.append((dep,fname))
+                alone[dep] = False
+                alone[fname] = False
+            imports = re.match("^!import [^.]*\.", line)
+            if imports:
+              for dep in imports.group()[7:-1].split():
+                edges.append((dep,fname))
+                alone[dep] = False
+                alone[fname] = False
+
+  loners = [v.replace('/','/\\n') for v in verts if alone[v]]
+  verts = [(v.replace('/','/\\n'),v+'.html',v) for v in verts]
+  edges = [(h.replace('/','/\\n'),t.replace('/','/\\n')) for h,t in edges]
+
+  #write graph
+  with open(filename+'.dot', 'w') as outfile:
+    outfile.write('digraph %s {\n' % filename)
+    #outfile.write('  rankdir=LR;\n')
+    dpi = 96.0 #graphviz default
+    w,h = 1200/dpi,1200/dpi
+    o = outfile.write
+    
+    o('  ratio=compress; size="%f,%f";\n' % (w,h))
+    o('  node [fontname=Helvetica, fontcolor=red, tooltip="file missing"];\n')
+    for v in verts: o('  "%s" [fontcolor=black, URL="%s", tooltip="%s"];\n' % v)
+
+    #o('  { rank = same;')
+    #for v,_1,_2 in verts:
+    #  if re.match("build/",v): o(' "%s";' % v)
+    #o(' }\n')
+
+    #o('  { rank = source;')
+    #for v in loners: o(' "%s";' % v)
+    #o(' }\n')
+    
+    for e in edges: o('  "%s" -> "%s";\n' % e)
+    o('}\n')
+
+map_html = """\
+<html><head>
+<title>Module Dependencies</title>
+<link rel="stylesheet" type="text/css" href="../main.css" />
+<link rel="shortcut icon" type="image/vnd.microsoft.icon" href="../favicon.ico" />
+</head><body bgcolor="#ffffff">
+
+<div id="navigator">
+<a href="../index.html"
+   title="main documentation page" class="main">Johann</a> -
+<a href="index.html"
+   title="library documentation">library</a> -
+<a href="dependency.html"
+   title="map of library modules">map</a> -
+<a href="glossary.html"
+   title="glossary of terms in library">defs</a> -
+<a href="bib.html"
+   title="references">bib</a> -
+<a href="../doxygen/index.html"
+   title="source code documentation">doxygen</a> -
+<a href="http://www.math.cmu.edu/~fho/johann/index.html"
+   title="project description page" target="_blank">[web]</a>
+<hr />
+</div>
+
+<img src="%s.png" usemap="#dependency" border=0/>
+%s
+
+<div id="copyright">
+<hr />
+copyright &copy; 2007-2009 <a href="http://www.math.cmu.edu/~fho/index.html" target="_blank">fritz obermeyer</a>
+</div>
+
+</body></html>
+"""
+
+def draw_graph (filename):
+  graphviz = (
+    'tred %s.dot | dot -Tcmapx -odependency.map -Tpng -o%s.png'
+    % (filename,filename)
+  )
+  if os.system(graphviz):
+    print "dependency drawing faied (using graphviz), command line:"
+    print graphviz
+    return
+
+  #make image map page
+  try:
+    map = open('%s.map' % filename, 'r').read()
+    open('%s.html' % filename, 'w').write(map_html % (filename,map))
+  except Exception, e:
+    print "dependency drawing failed (making imagemap):"
+    print e
+    return
+
+if __name__ == '__main__':
+  dirs = sys.argv[1:]
+  filename = 'dependency'
+  build_graph(filename,dirs)
+  draw_graph(filename)
+

@@ -1,0 +1,271 @@
+
+Notation. \label{sec:notation}
+
+  This section is a brief notational reference.
+  Syntactic algorithms are detailed in
+  Appendix \ref{sec:algorithms/expressions}, eg,
+  compilation from lambda-calculi to combinator algebras,
+  and interpretation of statements as sets of equations and order relations.
+  Html Only: See also tests/notation.jcode and tests/quoting.jcode
+    for current unit tests.
+
+  Constants. 
+    All structures will have least and greatest elements
+    ###<
+      !using _ T.
+      Top := T.
+      Bot := _.
+    ###>
+    We use an abundance of proper combinators: to keep proof length short.
+    ###<
+      !using I K B C W S.
+    ###>
+    To define a term and add it to the basis, we write
+    ###<
+      !define F := K I.   #adds #F# to basis
+    ###>
+    which abbreviates
+    ###[
+      !using F.
+      !assume F = K I.
+    ###]
+    To simply define syntax we use #:=#, eg in naming the standard booleans
+    ###<
+      true := K.    #define #true# as #K#
+      false := F.   #define #false# as #F#
+    ###>
+    Fixedpoints and other combinators are quite useful
+    (#B',Phi,Psi,Jay# are defined by Curry in CurryFeys58).
+    ###<
+      B' := (\x,y,z. y(x z)).
+      !define Y := S B B'(W I).
+      Theta := (\x,y. y(x x y))(\x,y. y(x x y)).
+      Phi := (\a,f,g,x. a(f x)(g x)).
+      Psi := (\a,f,x,y. a(f x)(f y)).
+      Jay := (\a,x,y,z. a x(a z y)).
+      S' := (\x,y,z. x y(x z)).
+      exp := (\a,b,f. b*f*a).
+      omega := B Y B.
+    ###>
+    We also use optional values and sum types with values
+    ###<
+      none := (\f,-. f).
+      some := (\x,-,g. g x).
+      !define inl := (\x,f,-. f x).
+      !define inr := (\x,-,g. g x).
+    ###>
+
+    Convergence testing has three values
+    ###<
+      fail := _.
+      success := I.
+      error := T.
+    ###>
+    Other combinators common in literature are
+    ###<
+      Delta := W I.           #the doubling combinator
+      Omega := Delta Delta.   #the cannonical unsolvable
+    ###>
+    We list equational definitions for reference
+    ###(
+      I x         &= x
+      K x y       &= x
+      F x y       &= y
+      W x y       &= x y y
+      B x y z     &= x(y z)
+      B' x y z    &= y(x z)
+      C x y z     &= x z y
+      S x y z     &= x z(y z)
+      S' x y z    &= x y(x z)
+      Phi f x y z &= f(x z)(y z)
+      Psi f x y z &= f(x y)(x z)
+      Y f         &= f(f(f(...)))
+      U f         &= f|f*f|f*f*f|...
+      V f         &= I|f|f*f|f*f*f|...
+      P x y       &= V(x|y)
+    ###)
+
+    Note: #beta#- and #eta#- reduction rules must be defined for all
+      #=:#-defined atoms.
+
+  Operators. 
+    We use the following infix operators, ordered by precedence.
+    Latex Only: 
+      \begin{quote} \begin{tabular}
+      { l @{{\hspace{5mm}}} l @{{\hspace{5mm}}} r @{{\hspace{4mm}}} l }
+      name              & associativity & syntax   & \hspace{2em}semantics \\
+      \hline
+      composition       & left (=right) & #M*M'#   & #:= \x.M(M' x) = B M M'# \\
+      type exponential  & right         & #M->M'#  & #:= \f.M'*f*M# \\
+      application       & left          & #M M'#   & #:= M(M')# \\
+      randomness        & none          & #M+M'#   & #:= R M M'# \\
+      join/ambiguity    & right (=left) & #M|M'#   & #:= J M M'# \\
+      precomposition    & right (=left) & #M;M'#   & #:= \x.M'(M x) = B M' M#\\
+      Church's dot      & right         & #(M.M')# & #:= M M'#
+      \end{tabular} \end{quote}
+    Html Only: 
+      ###a
+        name              associativity   syntax    semantics
+        ----------------------------------------------------------------
+        composition       left (=right)     M*M' := \x.M(M' x) = B M M'
+        type exponential  right            M->M' := \f.M'*f*M
+        application       left              M M' := M(M')
+        randomness        none              M+M' := R M M'
+        join/ambiguity    right (=left)     M|M' := J M M'
+        precomposition    right (=left)     M;M' := \x.M'(M x) = B M' M
+        Church's dot      right           (M.M') := M M'
+      ###a
+    Note that where operators are semantically associative,
+    their syntactic associativity is set to a default,
+    eg left for composition and right for join and precomposition..
+    Note that the comma has lowest precedence wherever it appears.
+
+  Tuples. 
+    We use the standard tuple notation
+    ###[
+      <M_1,...,M_n> := \f.f M_1 ... M_n
+      <> := \f.f  = I
+    ###]
+    As observed by Corrado Bohm,
+    in this notation, church numerals multiply tuples, e.g.,
+    ###[
+      3<M> = <M>;<M>;<M>
+          = (\f.f M);(\f.f M);(\f.f M)
+          = (\f.f M);(\f.f M M)
+          = (\f.f M M M)
+          = <M,M,M>
+    ###]
+    and the precomposition operator concatenates tuples
+    ###[
+      <M_1,...,M_m>;<N_1,...,N_n> = (\f.f M_1...M_m);(\f.f N_1...N_n)
+          = (\f.f N_1...N_n)*(\f.f M_1...M_m)
+          = (\f.f M_1...M_m N1...N_n)
+          = <M_1,...,M_m,N_1,...,N_n>
+    ###]
+    We often use this to denote long argument lists as in
+    ###[
+      f a b c M^(~m) u v N^(~n) x y z = <f>. <a,b,c>; n<M>; <u,v>; n<N>; <x,y,z>
+    ###]
+
+  Binders. 
+
+    We interpret typed abstraction (in \ref{sec:skj/types}),
+    convergence-tested abstraction (in \ref{sec:skj/tests}),
+    and patterned abstraction
+    into pure untyped lambda calculus.
+    Def: Typed, tested, and patterned abstraction.
+      ###[
+        \x:a.M  :=  (\x.M)*(V a)            #pre-compose with the closure #a#
+        \x::t.M  :=  \x. semi(t x) M        #test with #t#
+        \<x1,...,xn>.M  :=  <\x1,...,xn.M>  #sugar for currying
+      ###]
+    This allows convenient repartitioning of vector functions as in
+    ###[
+      split__mn := \f,<x1,...,xm>,<y1,...,yn>. f <x1,...,xm, y1,...,yn>
+    ###]
+    Note: An alternative definiton of patterned abstraction is as
+      ###[
+        \<x1,...,xn>.M  :=  \X.(\x1,...,xn.M) (X.sel 1 n) ... (X.sel n n)
+      ###]
+      This definiton is "safer" in the sense that a poorly-typed #M# can't
+      "crash" a program not depending on the tuple's components,
+      but translates to more complicated combinators.
+    Def: Quantification.
+      ###[
+        /\a.M  :=  \a,x.M(x a)     #where #x# is not free in #M
+        \/a.M  :=  \<a,x:M>.<a,x>  #where #x# is not free in #M  
+      ###]
+      or equivalently, letting #f# be a free variable,
+      ###[
+        /\a.f a  :=  \a,x.f a(x a)
+        \/a.f a  :=  \<a,x:f a>.<a,x>  ## = \<a,x>.<a,V(f a)x>
+      ###]
+    Both definitions are typically closed with #V#, as described in
+    \ref{sec:axioms/close} and employed in \ref{sec:skj/types}.
+
+  Relations and Statements. 
+    We use the following semantics for atomic relations:
+    Latex Only: 
+      \begin{quote}\begin{tabular}
+      { l @{{\hspace{5mm} #<==># }} l @{{\hspace{5mm}}} l}
+      #x:y#    &#x=V y x#       &#x# is a fixed-point of #V y#\\
+      #x!:y#   &#x!=V y x#      &#x# is not a fixed-point of #V y#\\
+      #x<:y#   &#V x:P y#       &#x# is a subtype of #y#\\
+      #x!<:y#  &#V x!:P y#      &#x# is not a subtype of #y#\\
+      #x::y#   &#semi(y x)=I#   &#x# passes test #y#\\
+      #x!::y#  &#semi(y x)!=I#  &#x# fails test #y#\\
+      \end{tabular} \end{quote}
+    Html Only: 
+      ###a
+          x : y  <==>   x = y x       <==>  x is a fixed-point of V y
+         x !: y  <==>  x != V y x     <==>  x is not a fixed-point of V y
+         x <: y  <==> V x : P y       <==>  x is a subtype of y
+        x !<: y  <==> V x !: P y      <==>  x is not a subtype of y
+         x :: y  <==> semi(y x) = I   <==>  x passes test y
+        x !:: y  <==> semi(y x) != I  <==>  x fails test y
+      ###a
+    In proofs of typing we will often use the (meta-level) set of inhabitants
+    of a type #inhab(a) := {x | x:a}#,
+    as a subset of whatever finitely generated algebra we are working in.
+
+    Universally quantifed statements are interpreted by lambda abstraction
+    (where #~# is one of the basic relatoins #=#, #[=#, or #=]#)
+    ###[
+      /\x. M~N <==> (\x.M)~(\x.N)
+      /\x:a. M~N <==> (\x:a.M)~(\x:a.N)
+      /\x::t. M~N <==> (\x::t.M)~(\x::t.N)
+    ###]
+    See \ref{sec:algorithms/expressions} for details of statements.
+
+  Takeout: Quoting and reflection. 
+
+    ###[
+      !check (/\x:a. a:V).
+      !check (/\x:a. x:a).
+      !check (/\x::a. a:any->semi).
+      !check (/\x::a. a x=I).
+
+      !check (/\{x}. {x}:code).
+      !check (/\{x}. {x}::test_code).
+
+      !check (/\{x:a}. {x}:code).
+      !check (/\{x:a}. {a}:code).
+      !check (/\{x:a}. test_code {x} = I).
+      !check (/\{x:a}. test_code {a} = I).
+      !check (/\{x:a}. a:V).
+      !check (/\{x:a}. x:a).
+
+      !check (\{x}. x) = E.
+      !check (\{x}. {x}) = code.
+      !check (\{x}. {{x}}) =  Q.
+      !check (\{x},{y}. {x y}) = A.
+
+      !check (/\{a}. (\{x:a}. x) = Eval{a}).
+      !check (/\{a}. (\{x:a}. {x}) = Code{a}).
+      !check (/\{a}. (\{x:a}. {{x}}) = Quote{a}).
+      !check (/\{a},{b}. (\{f:a->b},{x:a}. {f x}) = Apply{a}{b}).
+
+      !check "x=y" = equal{x}{y}.
+      !check "x[=y" = less{x}{y}.
+      !check "x![=y" = nless{x}{y}.
+      !check "x[[y" = and "x[=y" "x!=]y".
+    ###]
+
+  Naming Conventions. 
+    We will use the following naming conventions for common idioms,
+    eg types as closures in \ref{sec:skj/types},
+    convergence tests and correctness checks in \ref{sec:skj/tests}.
+    ###[
+      xxx : V                     #a type of, say, #xxx#'s
+      Xxx : any->V                #a polymorphic version of #xxx#
+
+      test_xxx : xxx->semi        #a convergence test for #xxx#'s
+      check_xxx : xxx->unit       #a correctness check for #xxx#'s
+      Join_xxx : Sset xxx         #joins over all total #xxx#'s
+      eq_xxx : xxx->xxx->bool     #equality predicate for #xxx#'s
+
+      ppp : xxx->bool             #a predicate of #xxx#'s
+      if_ppp : xxx->semi          #a test for #ppp#
+      assert_ppp : xxx->unit      #a check for #ppp#
+    ###]
+

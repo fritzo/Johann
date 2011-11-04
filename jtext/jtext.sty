@@ -1,0 +1,232 @@
+%style file for jtext2latex
+
+% This file is part of Johann.
+% Copyright 2004-2009 Fritz Obermeyer.
+%
+% Johann is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 3 of the License, or
+% (at your option) any later version.
+%
+% Johann is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+%
+% You should have received a copy of the GNU General Public License
+% along with Johann.  If not, see <http://www.gnu.org/licenses/>.
+
+%style
+%\usepackage{fullpage}
+\usepackage{amssymb,amsmath,amsthm,amsfonts}
+%this doesn't work:
+%\usepackage[amsmath,amsthm,thmmarks,hyperref]{ntheorem}
+\usepackage[all]{xy}
+%\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{stmaryrd} %for bigsqcap
+\usepackage{mathpartir} %available at http://pauillac.inria.fr/~remy/latex/
+\usepackage{verbatim}
+\usepackage{color}
+\usepackage{palatino}
+%\usepackage[dvips]{hyperref}
+\usepackage{array}
+\setlength \abovedisplayshortskip {0em}
+\setlength \belowdisplayshortskip {0em}
+\setlength \abovedisplayskip {0em}
+\setlength \belowdisplayskip {0em}
+
+%code environments
+\setlength \mathindent {0cm}
+\setlength \@mathmargin {1cm}
+\newenvironment{jcodeblock}
+  {\begin{equation*}\begin{tabular}{ | l @{{\hspace{2ex}}} l }}
+  {\end{tabular}\end{equation*}}
+\newenvironment{jmathblock}
+  {\begin{equation*}\begin{tabular}{ l @{{\hspace{2ex}}} l }}
+  {\end{tabular}\end{equation*}}
+\newenvironment{jalignblock}
+  {\begin{equation*}\begin{tabular}{ r @{} l @{{\hspace{2ex}}} l }}
+  {\end{tabular}\end{equation*}}
+\newenvironment{jnumberblock}
+  {\begin{equation*}\begin{tabular}{ r @{{\hspace{2ex}}} l @{{\hspace{2ex}}} l }}
+  {\end{tabular}\end{equation*}}
+%\newenvironment{jcode_alt}
+%  {\begin{list}{}{\setlength{\leftmargin}{4mm}
+%                  \setlength{\rightmargin}{0mm}
+%                  \setlength{\itemindent}{0mm}
+%                  \setlength{\topsep}{0mm}}\item[]
+%   \begin{tabular}{ l @{{\hspace{1cm}}} l }}
+%  {\end{tabular}
+%   \end{list}}
+\definecolor{CommentColor}{rgb}{0.2,0.2,1.0}
+%\definecolor{CommentColor}{rgb}{0.3,0.3,0.6}
+\newcommand \textcomment [1] {\color{CommentColor}{\textit{#1}}}
+\newcommand \LCOM [1] {\multicolumn{2}{| l}{#1}}
+
+%lists
+\usepackage{enumerate}
+\newenvironment{bullets}
+  {\begin{itemize}
+    \setlength \partopsep {0.2em}
+    \setlength \parsep {0.2em}
+    \setlength \parskip {0em}
+    \setlength\itemsep{0mm}
+    \setlength\itemindent{1ex}}
+  {\end{itemize}}
+%\newenvironment{bullets} %HACK
+%  {\begin{enumerate}[1] \setlength{\itemsep}{0mm}}
+%  {\end{enumerate}}
+\newenvironment{numbers}
+  {\begin{enumerate}[(1)]
+    \setlength \partopsep {0.2em}
+    \setlength \parsep {0.2em}
+    \setlength \parskip {0em}
+    \setlength \itemsep {0em}
+    \setlength \itemindent {1ex}
+  }
+  {\end{enumerate}}
+\newenvironment{numerals}
+  {\begin{enumerate}[(i)]
+    \setlength \partopsep {0.2em}
+    \setlength \parsep {0.2em}
+    \setlength \parskip {0em}
+    \setlength \itemsep {0em}
+    \setlength \itemindent {1ex}
+  }
+  {\end{enumerate}}
+
+%formatting
+\newcommand \jfont \mathsf
+\newcommand \M [1] {\mbox{\ensuremath{#1}}}
+\newcommand \TAB {\jfont{\hspace{4.0ex}}}
+\newcommand \SPC {\jfont{\hspace{1.0ex}}}
+\newcommand \NS  {\jfont{\hspace{-1.0ex}}}
+\newcommand \LAM {\pmb{\jfont\lambda}\,}
+\newcommand \VAR [1]{\jfont{#1}}
+\newcommand \ATM [1]{\mathbf{#1}}
+
+%symbols
+\newcommand   \del      \partial
+\newcommand   \Del      \bigtriangledown
+\newcommand   \ang [1]  {\langle #1\rangle }
+\newcommand   \ldenote  {{[\![}}
+\newcommand   \rdenote  {{]\!]}}
+\newcommand   \lquote   {\left.\!\!``}
+\newcommand   \rquote   {"\!\!\right.}
+%\newcommand   \lquote   {\left\ulcorner\hspace{-0.1ex}}
+%\newcommand   \rquote   {\hspace{-0.1ex}\right\urcorner}
+\newcommand   \notless  {\not<}
+\newcommand   \notmore  {\not>}
+\newcommand   \qeq      {\overset ? =}
+\newcommand   \boxleq   \sqsubseteq
+\newcommand   \boxgeq   \sqsupseteq
+\newcommand   \nboxleq  {\not\boxleq}
+\newcommand   \nboxgeq  {\not\boxgeq}
+\newcommand   \nnboxleq {\boxleq\hspace{-3.5mm}\|\hspace{1.8mm}}
+\newcommand   \nnboxgeq {\boxgeq\hspace{-3.5mm}\|\hspace{1.8mm}}
+\newcommand   \qboxleq  {\overset ? \boxleq}
+\newcommand   \qboxgeq  {\overset ? \boxgeq}
+\newcommand   \boxlneq  {{\,\boxleq\hspace{-0.9em}_/\hspace{0.4em}}}
+\newcommand   \boxgneq  {{\,\boxgeq\hspace{-0.9em}_/\hspace{0.4em}}}
+\newcommand   \blank    {\_\!\_\,}
+%\newcommand   \blank    {{\underline{\hspace{1ex}}}}
+\newcommand   \from     \leftarrow
+%\newcommand   \tto      \rightrightarrows
+%\newcommand   \ffrom    \leftleftarrows
+\newcommand   \tto      \twoheadrightarrow
+\newcommand   \ffrom    \twoheadleftarrow
+\newcommand   \monofrom \leftarrowtail
+\newcommand   \monoto   {\rightarrowtail}
+\newcommand   \redto    {{\rangle\hspace{-0.9mm}-}}
+\newcommand   \redfrom  {{-\hspace{-0.9mm}\langle}}
+\renewcommand \subsetneq {\varsubsetneq}
+\newcommand   \join     {{\scriptsize\pmb\bigsqcup}}
+\newcommand   \meet     {{\scriptsize\pmb\bigsqcap}}
+\newcommand   \both     {{\scriptsize\pmb\bigcap}}
+\newcommand   \hash     \#
+\newcommand   \coerceto {\,\triangleleft\!:}
+\newcommand   \coercefrom {:\!\triangleright\,}
+\newcommand   \Endpf     {\hfill\qedsymbol}
+
+%misc
+\newcommand \ubar \underline
+
+%%%%%%%%%%%%%%%% documentation stuff %%%%%%%%%%%%%%%%%%%
+
+%editing commands
+\newcommand \later {\fbox{LATER...}\vspace{5cm}}
+\newcommand \edit [1] {{\fbox{#1}}}
+%\newcommand \edit [1] {}
+\newcommand \takeout [1]{}
+\newcommand \LABEL [1] {{\color{CommentColor}{\fbox{\textbf{#1}}}}}
+\newcommand \XXX      {{\LABEL{XXX}}}
+\newcommand \OLD      {{\LABEL{OLD}}}
+\newcommand \ALT      {{\LABEL{ALT}}}
+\newcommand \TODO     {{\LABEL{TODO}}}
+\newcommand \LATER    {{\LABEL{LATER}}}
+\newcommand \FIXME    {{\LABEL{FIXME}}}
+\newcommand \WORKING  {{\LABEL{WORKING}}}
+\newcommand \handwave \dots
+\newcommand \jfootnote {\hspace{-0.3em}\footnote}
+
+\newcommand \minisection [1] {\textbf{#1}\\}
+
+%theorems
+\theoremstyle{plain}
+\newtheorem{Jtheorem}               {Theorem}[section]
+\newtheorem*{Jtheorem*}             {Theorem}
+\newtheorem{Jcorollary}   [Jtheorem]{Corollary}
+\newtheorem{Jlemma}       [Jtheorem]{Lemma}
+\newtheorem{Jconjecture}  [Jtheorem]{Conjecture}
+\newtheorem{Jquestion}    [Jtheorem]{Question}
+\newtheorem{Jproposition} [Jtheorem]{Proposition}
+\newtheorem{Jstatement}   [Jtheorem]{Statement}
+
+\theoremstyle{definition}
+\newtheorem{Jdefinition}  [Jtheorem]{Definition}
+\newtheorem{Jnotation}    [Jtheorem]{Notation}
+\newtheorem{Jproblem}     [Jtheorem]{Problem}
+\newtheorem{Jexample}     [Jtheorem]{Example}
+\newtheorem{Jexercise}    [Jtheorem]{Exercise}
+
+\theoremstyle{remark}
+\newtheorem*{Jremark}     {\textit{Remark}}
+\newtheorem*{Jproof}      {\textit{Proof}}
+
+%pfenning's
+%\newenvironment{proof}{\trivlist \item[\hskip \labelsep{\bf
+%Proof:}]}{\hfill$\Box$ \endtrivlist}
+%\newenvironment{attempt}{\trivlist \item[\hskip \labelsep{\bf
+%Proof attempt:}]}{\hfill$\Diamond$ \endtrivlist}
+
+%environment shortcuts
+\newcommand \Def    [1] {\begin{Jdefinition}#1\end{Jdefinition}}
+\newcommand \Defs   [1] {\begin{Jdescription}#1\end{Jdescription}}
+\newcommand \Thm    [1] {\begin{Jtheorem}#1\end{Jtheorem}}
+\newcommand \Cor    [1] {\begin{Jcorollary}#1\end{Jcorollary}}
+\newcommand \Lem    [1] {\begin{Jlemma}#1\end{Jlemma}}
+\newcommand \Prop   [1] {\begin{Jproposition}#1\end{Jproposition}}
+\newcommand \Note   [1] {\begin{Jremark}#1\end{Jremark}}
+\newcommand \Qstn   [1] {\begin{Jquestion}#1\end{Jquestion}}
+\newcommand \Notn   [1] {\begin{Jnotation}#1\end{Jnotation}}
+\newcommand \Ex     [1] {\begin{Jexample}#1\end{Jexample}}
+
+\newcommand \Block  [2] {\begin{description}\item[#1] #2\end{description}}
+\newcommand \Pf     [1] {\begin{proof}#1\end{proof}}
+\newcommand \items  [1] {\begin{itemize}#1\end{itemize}}
+\newcommand \enum   [1] {\begin{enumerate}#1\end{enumerate}}
+\newcommand \Align  [1] {\begin{align*}#1\end{align*}}
+\newcommand \case   [1] {\begin{cases}#1\end{cases}}
+\newcommand \diagram[1] {\[\xymatrix{#1}\]}
+\newcommand \Mpar   [1] {\begin{mathpar}#1\end{mathpar}}
+\newcommand \Fig    [2]
+{\begin{figure}[ht]\hrulefill{#2}\hrulefill\caption{#1}\end{figure}}
+\newcommand \Stmt   [1] {\begin{quote}\begin{center}\textrm{#1}\end{center}\end{quote}} 
+%homeworks
+\newcommand \Prob   [2] {\subsection*{Problem #1: {\small #2.}}}
+\newcommand \Next       \newpage
+
+%inference rules
+\newcommand \namedrule [3] {\inferrule{#1}{#2}\ \text{({\scshape #3})}}
+

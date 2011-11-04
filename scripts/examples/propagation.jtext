@@ -1,0 +1,39 @@
+
+Propagation algorithms. \label{sec:examples/propagation}
+
+  ###<
+    !import skj/types.
+  ###>
+
+  We study _belief_propagation_, _warning_propagation_ and _survey_propagation_
+  as applied to constraint satisfaction problems,
+  and implement all algorithms in SKJ.
+
+  Factor graphs. 
+
+    
+
+  Constraint satisfaction problems. 
+
+    ###<
+      var := idx.
+      val := idx.
+      problem := 
+      branch := (Prod var val -> Endo problem) (
+          #check for consistency
+          ???
+          #branch
+          ???
+      ).
+    ###>
+
+  Warning propagation. 
+
+    ###<
+      Warnings := (/\p:problem. ???) (???).
+      prop_warnings := (/\p:problem. Endo. Warnings p) (???).
+    ###>
+  
+  Belief propagation. LATER
+  Survey propagation. LATER
+

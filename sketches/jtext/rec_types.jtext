@@ -1,0 +1,73 @@
+
+Algebra. 
+  Define an algebra with expononentials
+  ###<
+    algebra := V (
+        \/a.
+        Prod (Prod a a->a->a).  #initial object and products
+        Prod (Prod a a->a->a).  #terminal object and sums
+        a->a->a                 #exponential
+    ).
+    object := (/\(a,_):algebra. a).
+    functor := (/\(a,_):algebra. a->a). #XXX: not sufficient
+    fix := functor->object Y. #???
+  ###>
+  and our general constructs
+  ###<
+    Prod := (/\(a,_):algebra. a->a->a) (
+        \(a,(_,prod),_):algebra. \x:a,y:a. prod x y
+    ).
+    Sum := (???).
+    Maybe := (???).
+  ###>
+  Now closures (types), inductors (intro forms) and recursors (elim forms) can
+  be defined uniformly via
+  Note: We want for products
+    ###<
+      t_prod : V->V->V
+      i_pair : /\a,b. a->b->(t_prod a b) ...
+      e_pair : /\a,b,c. (a->b->c)->((t_prod a b)->c)
+    ###>
+    for sums
+    ###<
+      t_sum   : V->V->V
+      i_sum_1 : /\a,b. a->(t_sum a b)
+      i_sum_2 : /\a,b. b->(t_sum a b)
+      e_sum   : /\a,b,c. (a->c)->(b->c)->(t_sum a b)->c
+    ###>
+    for booleans
+    ###<
+      t_bool   : V
+      i_bool_1 : t_bool
+      i_bool_2 : t_bool
+      e_bool   : /\a. a->a->a
+    ###>
+    for exponentials
+    ###<
+      t_exp : V->V->V
+      i_exp : /\a,b. (a->b)->(t_exp a b)
+      e_exp : /\a,b. (t_exp)->a->b
+    ###>
+  
+    Generally, terms should be their own elim forms.
+    recursive types are then defined by a (covariant) type operator
+    ###<
+      ftor = "code for a simple type"
+      t_rec : ftor->V
+      i_rec : /\f:ftor,a. (a->(f a))->a->(mu f)
+      e_rec : /\f:ftor,a. ((f a)->a)->(mu f)->a
+    ###>
+
+  ###<
+    rec_type := /\a
+    rec_intro := ???
+    rec_elim := ???
+  ###>
+
+  so that
+  ###<
+    Enum_functor := V->functor (\a,b. Prod (Maybe a) (Pair b)).
+    Enum := V->V (\a. Y. Enum_functor a).
+    rec_Enum := rec enum_functor
+  ###>
+

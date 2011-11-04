@@ -1,0 +1,231 @@
+
+body {
+    background-color: white;
+    color: black;
+	font-family: helvetica, arial, sans-serif;
+    text-align: center;
+}
+.jtext {
+	font-family: tahoma, verdana, helvetica, arial, sans-serif;
+    text-align: left;
+    font-size: small;
+}
+
+/*-------- boilerplate ---------*/
+#navigator {
+    font-size: medium;
+    background-color: white;
+    color: black;
+	font-family: helvetica, arial, sans-serif;
+    text-align: center;
+}
+#navigator hr { width: 23em; }
+
+#copyright,
+#copyright a {
+    font-size: x-small;
+    font-weight: normal;
+    color: #686;
+    text-align: center;
+}
+#copyright a:hover {
+    text-decoration: underline;
+}
+#copyright hr { width: 18em; }
+
+/*-------- deco --------*/
+hr {
+    border: 0;
+    color: #686;
+    background-color: #686;
+    width: 60%;
+    height: 1px;
+}
+
+a { color: #686;
+    font-weight: bold;
+    text-decoration: none; 
+}
+a.main {
+    font-size: 160%;
+    font-family: verdana, helvetica, arial, sans-serif;
+}
+a.here { font-size: 160%; }
+a.cite { color: #66f; }
+a.file {
+    font-weight: normal;
+    color: black;
+}
+a.file:hover { text-decoration: underline; }
+
+b.xxx { background-color: #ff0; }
+b.working { color: black; background-color: #fa0; }
+b.cmd { color: #b44; }
+
+div.comment { display: none; }
+
+/*-------- blocks --------*/
+dl.block,
+dt.block dt,
+dd.block dd {
+    margin: 0 0 0 0;
+    padding: 0 0 0 0;
+}
+b.block,
+dl.block dt {
+    font-weight: bold;
+    font-size: 120%;
+    color:  #00b;
+}
+dl.block dd { margin: -1em 0 -0.5em 2em; }
+
+/*-------- code --------*/
+tt,
+a.file,
+textarea,
+code.math,
+pre.math,
+pre.code,
+pre.ascii {
+    font-family: courier new, courier, monospace;
+    font-size: small;
+}
+code.math,
+pre.math,
+pre.ascii,
+pre.code {
+    color: #284;
+    font-weight: bold;
+}
+code.math { white-space: nowrap; }
+textarea.input { background-color: #fec; }
+textarea.output { background-color: #dfd; }
+code { padding: 0 0.3em 0 0.3em; }
+
+pre.math,
+pre.ascii,
+pre.code {
+    margin: 0.4ex 0 0.4ex 1em;
+    padding: 0.4ex 0 0.4ex 1em;
+}
+textarea { padding: 0.3em; }
+pre.code {
+    margin: 0.4ex 0 0.4ex 0.5em;
+    border-width: 0 0 0 0.5em;
+    border-style: solid;
+    border-color: #ccc;
+}
+
+span.comment { color: #00b; font-weight: normal; font-style: italic; }
+
+/*-------- alignment --------*/
+.center {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+.left { text-align: left; }
+
+/*-------- file navigation --------*/
+#index { text-align: left; }
+#index dt { font-weight: bold; }
+#index dd a { font-weight: normal; padding: 0 0.3em 0 0.3em; }
+#index dd a:hover { text-decoration: underline; }
+#index dt { margin: 0 1em 0 1em; }
+#index dd { margin: 0 4em 0 4em; }
+
+/*-------- point and grunt --------*/
+span.button,
+#keypad select,
+#keypad a,
+#menu tr span,
+#menu li a {
+   font: bold 11px/16px arial, helvetica, sans-serif;
+}
+
+#menu table {
+    text-align: center;
+    border: 0px;
+    padding: 0px;
+}
+
+#menu td { vertical-align: top; }
+
+#menu td,
+#menu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 5em;
+    float: left;
+}
+
+span.button,
+#keypad a {
+    border-style: solid;
+    padding: 2px 6px;
+}
+#menu span,
+#menu a {
+    border-style: solid;
+    padding: 2px 3px;
+    margin: 0;
+}
+#menu span, #menu a { display: block; }
+
+#menu tr span {
+    color: #686;
+    background: #fff;
+    padding: 0px 3px;
+    border-width: 0px 0px 1px 0px;
+}
+
+span.button,
+#keypad select,
+#keypad a,
+#menu li a {
+    color: #686;
+    background: #fff;
+}
+span.button,
+#keypad a {
+    border-width: 1px;
+}
+#menu li a { border-width: 0px 0px 0px 1px; }
+
+#keypad a:hover,
+#menu li a:hover {
+    color: #fff;
+    background: #686;
+}
+
+#menu li { position: relative; }
+
+#menu td ul ,
+#menu ul ul {
+    position: absolute;
+    z-index: 500;
+}
+
+#menu ul ul ul {
+    position: absolute;
+    top: 0;
+    left: 100%;
+}
+
+div#menu td ul,
+div#menu ul ul,
+div#menu ul li:hover ul ul,
+div#menu ul ul li:hover ul ul {
+    display: none;
+}
+div#menu td.show ul { display: block; }
+
+div#menu td:hover ul,
+div#menu ul li:hover ul,
+div#menu ul ul li:hover ul,
+div#menu ul ul ul li:hover ul {
+    display: block;
+}
+
+

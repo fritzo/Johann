@@ -1,0 +1,47 @@
+
+Title: \textbf{\Huge Automated Equational Reasoning \\[0.2em]
+        in Nondeterministic lambda-Calculi \\[0.5em]
+        Modulo Theories H* }
+Author:  {\huge by} \\[0.5em] \textbf{\huge Fritz H. Obermeyer }
+Date: DATE
+Latex Only: 
+  \maketitle
+  \begin{center} { \huge
+
+  Department of Mathematics \\
+  Mellon College of Science \\
+  Carnegie Mellon University \\
+  Pittsburgh, PA \\[2em]
+
+  Thesis Committee \\
+  \textbf{Richard Statman}, Chair \\
+  \textbf{Dana Scott} \\
+  \textbf{Kevin Kelly} \\
+  \textbf{James Cummings} \\[2em]
+
+  Submitted for partial fulfillment of the requirements \\
+  for the Degree of Doctor of Philosophy \\[2em]
+
+  } \end{center}
+
+####Latex Only: \newpage \textbf{\Large Abstract.}
+Html Only: Abstract.
+Latex Only: \newpage \begin{abstract} \normalsize
+###r abstract
+Latex Only: \end{abstract}
+Latex Only: \newpage \tableofcontents \newpage
+
+Html Only: Acknowledgements
+Latex Only: \newpage\section*{Acknowledgements}
+###r acknowledgements
+
+###r overview
+###r sk skj skrj skjo
+###r examples
+###r algorithms
+
+Latex Only: \appendix
+
+###r algorithms/expressions
+###r axioms/schemata
+

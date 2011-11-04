@@ -1,0 +1,55 @@
+
+Types using reflection. \label{sec:skjo/types}
+
+  ###<
+    !import skjo/codes skjo/logic.
+  ###>
+
+  Our main tools in SKJ were types-as-closures (in \ref{sec:skj/types})
+  and tests (in \ref{sec:skj/tests}).
+  In SKJO we have already studied a variety of newly definable tests
+  (in \ref{sec:skjo/logic}).
+  In this section we define new types-as-closures
+  that we could not define in SKJ.
+
+  Principle types. 
+
+    Recall from \ref{sec:skj/types} that
+    Def: The principle type #unit_M# of a term #M#
+      is the closure with two inhabitants #{M,T}#.
+
+    Thm: All principle types of SKJ-terms are definable in SKJO.
+      Moreover, principle types are uniformly definable by a type constructor
+      #Unit:code_SKJ->V# with #inhab(Unit{x})={x,T}#.
+    Pf: Let #x# be an SKJ-term.
+      Since #a x[=x# is uniformly semidecidable in SKJO,
+      we can join over #{a|a x[=x}#.
+      []
+    ###<
+      Unit := (skj -> V) (\{x}::test_skj. Join_skj \{a}. if_less{a x}{x} a).
+      !check (
+          /\{x}::test_skj. x:Unit{x}  AND
+          /\{y}::test_skj. Unit{x}y=x   OR   Unit{x}y=T
+      ).
+    ###>
+    For example,
+    ###<
+      !check unit = Unit{I}.
+      !check nil = Unit{T}.
+      !check div = Unit{_}.
+    ###>
+    Qstn: Which principle types of SKJO-terms are SKJO-definable?
+
+  Quotient types. 
+
+    Recall from \ref{sec:skj/types} that we can define quotient types modulo
+    #Sigma01# equational theories.
+    Now with #O# in our langauge, we can extend this to #Pi11# theories.
+    E.g. we can define a quotient of SKJ terms modulo the #Pi02# theory Hstar.
+    ###<
+      skj_Hstar := P code (\x. Join_skj \y. if_equal x y y).
+      !check {skj_Hstar} !:: test_skj.
+    ###>
+    However this is not as useful as our SKJO-codes modulo Johann's equality,
+    since Johann also has a theory of how #O# behaves.
+

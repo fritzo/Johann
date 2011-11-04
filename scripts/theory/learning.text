@@ -1,0 +1,81 @@
+
+Learning uncomputable theories. \label{sec:theory/learning}
+
+  Lusin04 describes the lattice of lambda theories, for example proving
+  Thm: (Lusin and Salibra ?)
+    (a) #Lambda# is $2^{\aleph_0}$-wide.
+    (b) #Lambda# is $2^{\aleph_0}$-broad.
+    (c) #Lambda# is $2^{\aleph_0}$-high.
+    (d) (a),(b),(c) hold locally as well.
+
+  Kelly95 relates the complexity of theories with the complexity of their
+  predictions, demonstrating that theories with very high predictive complexity
+  can have very low learning complexity (or implicit complexity).
+  For example:
+  Thm: (Kelly and Schulte) There is a #Pi02# hypothesis #H#
+    (hence refutable in the limit) whose predictions are #Pi11#-complete.
+  We prove a similar theorem related to our framework in the strength of #L'#
+  theorem below.
+  Moreover, they show that among
+
+  ###b TT SS L
+  ###s TT0
+  Def: A class of theories #_TT# is _refutable_with_certainty_ iff there is a 
+    computable consistency assertion #:_TT->div#.
+    A class of theories is _refutable_in_the_limit_ iff there is a computable
+    series of consistency tests #:_TT->(Stream semi)#.
+  Lem: (Gold and Putnam)
+    (a) refutable with certianty = #Pi01#.
+    (b) refutable in the limit = #Pi02#.
+  Def: A _theory_ is a finite set of equations extending #TT0:=beta+eta#
+    in one of the languages SKJ or SKRJ, SKJO.
+
+  Learning theories refutable with certainty. 
+
+    Def: (entailment) A theory #TT# _entails_ another theory #TT'#, written
+      #TT|-TT'#, iff each generating equation of #TT'# can be proved from
+      #TT#.
+    Lem: Entailment is a partial order.
+    Def: (strong entailment) Define #TT|=TT'# iff for every #TT''#, if
+      #TT''|-TT# then also #TT''|-TT'#.
+    Lem: (strong = weak) #TT|=TT'# iff #TT|-T#.
+    Pf: LATER
+    Def: (weak lattice) Let #L# be the lattice of theories modulo entailment.
+    Thm: (complexity of #L#)
+      (a) #L# is a #Sigma01# complete join-semilattice.
+      (b) Consistency in #L# is #Pi01#-complete
+        (and hence refutable with certainty).
+      (c) Entailment in #L# is #Sigma01#-complete.
+    Pf: LATER
+
+  Learning theories refutable in the limit. 
+
+    Def: (sensible) A theory is _sensible_ iff for any terms #M,N#,
+      if #TT|-M[=N# and #TT0|-T[=M# then #TT0|-N[=T#.
+    Lem: Sensibility is #Pi02#-complete.
+    Def: (strong entailment) Let #SS,SS'# be sensible theories.
+      The #SS# strongly entails #SS'#, written #SS|=SS'#,
+      iff for every sensible #SS''#, if #SS''|=SS# then also #SS''|-SS#.
+    Lem: Strong entailment is a parital order.
+
+    Now restricting attention to the langauge SKJO...
+    Def: Let #L'# be the lattice of theories identifying all non-sensible
+      theories, and modulo strong entailment on the remaining sensible theories.
+    Thm: (strength of #L'#)
+      (a) #L'# is a #Pi11#-complete join semilattice.
+      (b) Consistency in #L'# is #Pi02#-complete
+        (and hence refutable in the limit).
+      (c) Entailment in #L'# (ie strong entailment) is #Pi11#-complete.
+    Pf: LATER
+
+  Completeness of SKJO. 
+
+    Now we show that SKJO is has maximal logical strength among learnable
+    theories, i.e. theories refutable in the limit.
+    Thm: Let #TT0# be a #Sigma01# theory,
+      #con# be a #Pi02# consistency predicate,
+      #L'# be the lattice of #con#sistent #Sigma01# extensions of #LL#,
+      modulo strong entailment.
+      Then strong entailment in #L'# is #Pi11#.
+    Pf: LATER
+

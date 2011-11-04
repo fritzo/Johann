@@ -1,0 +1,88 @@
+
+Theorems proved by eta-conversion. 
+  ###<
+    !read axioms/combinators.
+  ###>
+
+  Finite eta-expansion. 
+    #C# commutes with Curry's #Phi=\f,x,y,z.f(x z)(y z)#
+    ###<
+      !assume C * Phi = Phi * C.
+    ###>
+    Pf: (requiring four #eta#-instances)
+      ###[
+        C*Phi f x y z = C(Phi f)x y z
+            = Phi f y x z
+            = f(y z)(x z)
+            = C f(x z)(y z)
+            = Phi(C f)x y z
+            = Phi*C f x y z
+      ###]
+
+    Theorems conjectured by Johann and proved by finite #eta# expansion:
+    Footnote: The conjecturing algorithm is discribedin
+      \ref{sec:algorithms/conjecturing}.
+    ###<
+      !assume I = C*C = B I = S(C I)K = B W K = B Y K = S(S K).
+      !assume W = S(C I).
+      !assume C C = B B(C I).
+      !assume W S = B(W I).
+      !assume B(C I) = C*B'.
+      !assume B B K = B K K.
+      !assume <_> [= W.     #i.e., # f _ x [= f x x
+      !assume C C _ [= W.   #i.e., # f x _ [= f x x
+    ###>
+
+  Infinite eta-expansion. 
+
+    Lem: 
+      ###<
+        !assume Y B' = I.
+      ###>
+    Pf: (by infinite eta-expansion)
+      This is like Wadsworth's #J# (Barendregt84, remark 16.2.3, pp 420)
+      ###(
+        Y B' x y &-> B'(Y B')x y
+                 &-> B x(Y B')y
+                 &-> x(Y B' y)
+      ###)
+      []
+
+    Lem: 
+      ###<
+        !assume Y*B' = _.
+      ###>
+    Pf: (by infinite precomposition)
+      ###(
+        Y*B' x &= Y(B' x)
+               &= B' x(Y.B' x)
+               &= B(Y.B' x)x
+               &= (Y.B' x)*x
+               &= (Y.B' x)*x*x*x*x*... #iterating the above argument
+               &= _
+      ###)
+      and hence #Y*B' = K _ = _#.
+      []
+
+    The next theorem identifies two representations of the infinite
+    extended church numeral #omega#
+    Lem: 
+      ###<
+        !assume Y*B = K*Y.
+      ###>
+    Pf: we take the directed limit of a sequence of church numerals
+      ###(
+        Y*B f x &= Y(B f)x
+                &= f*(Y(B f))x
+                &= (f*f*...)x
+                &= Join n. n f _
+                &= Y f
+      ###)
+      []
+
+    Theorems conjectured by Johann and proved by infinite #eta# expansion:
+    ###<
+      !assume B Y = Y(S S).
+      !assume C(K Y) = Y*B.
+    ###>
+

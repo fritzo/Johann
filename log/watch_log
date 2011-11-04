@@ -1,0 +1,6 @@
+#!/bin/bash
+#tail -n1000 -s0.02 --follow=name default.log
+#konsole -T "Log File" -e ./watch_log &
+#xterm -fg white -bg black -geometry 100x60 -T "Unit Test Log" -e "tail -n1000 -s0.02 --follow=name default.log" &
+echo -e "\033]0;Johann: default.log\007"
+tail -n1000 -s0.02 --follow=name default.log

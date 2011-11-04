@@ -1,0 +1,139 @@
+g++: unrecognized option '-rdynamic'
+g++: unrecognized option '-pthread'
+
+lambda_theories.o: lambda_theories.C: undefined references
+915: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+
+axiom_enforcement.o: dense_bin_fun.h: undefined references
+      in function `enforce_O_K_pos':
+149: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+
+axiom_enforcement.o: axiom_enforcement.C: undefined references
+      in function `enforce_A_commutativity_A2':
+413: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_A_commutativity_A3':
+426: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_A_distrib_rapply_A2':
+662: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_A_distrib_rapply_A7':
+792: `Apply::_private::LineIterator<1>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_A_distrib_rapply_A5':
+738: `Apply::_private::LineIterator<0>::LineIterator()'
+      in function `enforce_A_distrib_rapply_A6':
+770: `Apply::_private::LineIterator<1>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_A_distrib_rapply_A3':
+685: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+687: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_A_associativity_A4':
+537: `Apply::_private::LineIterator<1>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_A_associativity_A1':
+449: `Apply::_private::LineIterator<0>::LineIterator()'
+451: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_A_associativity_A3':
+504: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+506: `Apply::_private::LineIterator<1>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_A_associativity_A5':
+561: `Apply::_private::LineIterator<0>::LineIterator()'
+      in function `enforce_A_associativity_A2':
+483: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_A_duals_A2':
+997: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_A_duals_A1':
+983: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_A_mu_N':
+1180: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_A_nu_N':
+1221: `Apply::_private::LineIterator<1>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_A_comp_app_A1':
+1836: `Compose::_private::LineIterator<1>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_A_Join_pos1':
+1706: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_A_K_pos2':
+1950: `Apply::_private::LineIterator<1>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_A_W_A1':
+2457: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_A_V_pos2':
+2663: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_A_U_pos2':
+2575: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_C_mu_N':
+1200: `Compose::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_C_nu_N':
+1241: `Compose::_private::LineIterator<1>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_C_comp_assoc_C1':
+1754: `Compose::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_C_comp_assoc_C2':
+1768: `Compose::_private::LineIterator<1>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_C_comp_app_A':
+1822: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_A_compose_pos2':
+2212: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+2220: `Compose::_private::LineIterator<1>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_A_compose_pos1':
+2190: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+2198: `Compose::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_A_S_A2':
+2035: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_A_S_A5':
+2087: `Apply::_private::LineIterator<1>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_A_S_A4':
+2070: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_A_S_A1':
+2011: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+2013: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_A_C_A2':
+2313: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+      in function `enforce_A_C_A4':
+2352: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+2283: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)' ...
+
+axiom_validation.o: axiom_validation.C: undefined references
+352: `Apply::_private::LineIterator<0>::LineIterator()'
+354: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+286: `Apply::_private::LineIterator<0>::LineIterator()'
+289: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+261: `Apply::_private::LineIterator<0>::LineIterator()'
+264: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+236: `Apply::_private::LineIterator<0>::LineIterator()'
+239: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+1046: `Apply::_private::LineIterator<0>::LineIterator()'
+1048: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+936: `Apply::_private::LineIterator<0>::LineIterator()'
+937: `Apply::_private::LineIterator<0>::LineIterator()'
+939: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+903: `Apply::_private::LineIterator<0>::LineIterator()'
+904: `Apply::_private::LineIterator<0>::LineIterator()'
+906: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+317: `Apply::_private::LineIterator<0>::LineIterator()'
+317: `Apply::_private::LineIterator<0>::LineIterator()'
+320: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+211: `Apply::_private::LineIterator<0>::LineIterator()'
+212: `Apply::_private::LineIterator<0>::LineIterator()'
+214: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+184: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+188: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+190: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+866: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+885: `Apply::_private::LineIterator<1>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+798: `Compose::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+817: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+691: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+695: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+1345: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+1070: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+1078: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)' ...
+1242: `Apply::_private::LineIterator<1>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+1119: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+1127: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+1153: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+1157: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+970: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+974: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)' ...
+
+combinatory_structure.o: combinatory_structure.C: undefined references
+637: `Visual::_private::Image<Visual::_private::COLOR>::lighten(float)'
+661: `Visual::_private::Image<Visual::_private::COLOR>::lighten(float)'
+1222: `Apply::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+1223: `Apply::_private::LineIterator<1>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+1227: `Compose::_private::LineIterator<0>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'
+1228: `Compose::_private::LineIterator<1>::LineIterator(Heap_::Pos_<Nodes::ObSignature>)'

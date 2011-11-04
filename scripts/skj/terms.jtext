@@ -1,0 +1,449 @@
+
+Dependent types for reduction proofs. \label{sec:skj/terms}
+  ###<
+    !import skj/logic skj/tests.
+  ###>
+
+  Comment: This is based on many previous attempts
+    * examples/proofs.jtext is our main motivation,
+      developing the _category_of_reductions_
+      with objects #term#s and morphisms #Red#uctions between terms.
+      This section also develops _proof_terms_
+      and the style of type inference via closures.
+    * examples/logical_relations.jtext attempts a termination proof
+      for simply typed SKJ terms.
+    * skj/terms.jtext (up to revision 856) develops large-basis combinatory
+      algebras using the dash notation of modules (never implemented).
+    * skj/coding.jtext defines codes and the evaluation comonad for generic
+      combinatory algebras
+    * skj/codes.jtext defines basic SKJ codes.
+
+  Under the Curry-Howard correspondence, we can encode theorems as types,
+  and construct proofs as total inhabitants of the types.
+  More precisely, we can encode a theorem as a closure,test pair
+  #(a,t) : \/a:V.Test a#,
+  and prove that the theorem is true by providing a proof #p:a::t#,
+  ie an SKJ term #p:a# for which #t p=I#.
+  As mentionted before,
+  the join operation provides no new theorems under Curry-Howard,
+  but it does provide a mechanism for ambiguity in proofs,
+  eg, a convenient without-loss-of-generality construct.
+  But the join operation offers a much more powerful tool,
+  a semantic equivalent of type-inference.
+
+  To illustrate how type-inference of proof sketches works,
+  let us consider a simple example, say a theorem that there is no greatest
+  natural number
+  ###[
+    thm := /\n:nat. \/m:nat. assert_greater m n. unit
+  ###]
+  We can test a proof candidate by checking whether
+  ###[
+    /\n::test_nat.  let (-,u):=p n.  u::unit
+  ###]
+  An obvious proof would be to provide the successor function
+  ###[
+    pf := thm (\n:nat. (succ m, assert_greater m n I))
+  ###]
+  but since #assert_greater# is already built into #thm#,
+  we can achieve the same result by simply sketching
+  ###[
+    pf' := thm (\n. (succ n, _))
+  ###]
+  where the bottom element #_# is a formalization of ellipses in human proofs.
+
+  For our main example of real theorems,
+  we will prove properties of the system SKJ itself,
+  working with beta-reduction, convergence,
+  and later in \ref{sec:examples/proofs} the Scott ordering.
+  The two-category of beta-reductions has objects SKJ-terms,
+  morphisms reductions between terms,
+  and two-cells sets of reductions between terms.
+  We need to deal with two-categories since composition of reduction sequences
+  is only associative up to equivalence.
+  Identifying all reductions between terms yields a true category,
+  in fact a preorder.
+  The skeleton of this preorder is a poset, in fact the lattice SKJ.
+
+  Question: What is the higher homology of this higer-category?
+    Eg, how do transformations between reductions look?
+
+  A type for SKJ terms. \label{sec:skj/terms:terms}
+
+    Our indices for reduction proofs will be
+    terms in the language of untyped SKJ-terms with an explicit #T#
+    ###-
+      x term   y term
+      --------------- ap   ------ _S   ------ _K   ------ _J   ------ _T
+         x y term          S term      K term      J term      T term
+    ###-
+    For these SKJ terms, we define a type, test, and check
+    ###<
+      pre_term := V (Y\a. Sum (Prod a a). 2 Maybe bool).
+      check_term := Check pre_term (
+          Y\c. check_Sum (check_Prod c c). 2 check_Maybe check_bool
+      ).
+      !define term := Checked pre_term check_term.
+      !check check_term : Check term.
+
+      !define test_term := Test term (
+          Y\t. test_Sum (test_Prod t t). 2 test_Maybe test_bool
+      ).
+    ###>
+    where #2 Maybe bool# has three values, for #S,K,J,T#.
+    The atomic introduction forms are thus
+    ###<
+      _S := term (inr none).
+      _K := term (inr. some none).
+      _J := term (inr. 2 some true).
+      _T := term (inr. 2 some false).
+      !check ( _S,_K,_J,_T :: test_term ).
+    ###>
+    For convenience, we define two compound introduction forms
+    ###<
+      ap := (term -> term -> term) (\x,y. inl (x,y)).
+      join := (term -> term -> term) (\x,y. ap(ap _J x)y).
+      !check  test_term (ap x y) = and_semi (test_term x) (test_term y).
+      !check  test_term (join x y) = and_semi (test_term x) (test_term y).
+    ###>
+    One form of elimination is by evaluating a term.
+    ###<
+      eval_term := (term -> any) (
+          \x::test_term. <x>.
+          Y\e. (\(x,y). (e x)(e y), S,K,J,T)
+      ).
+      !check eval_term _S = S.
+      !check eval_term _K = K.
+      !check eval_term _J = J.
+      !check eval_term _T = T.
+      !check eval_term (ap x y)
+          = and_semi (test_term x) (test_term y) (eval_term x) (eval_term y).
+      !check eval_term (join x y)
+          = and_semi (test_term x) (test_term y) (eval_term x | eval_term y).
+    ###>
+    We can also discriminate total terms,
+    with truth values either #bool#, #semi#, or #unit#
+    ###<
+      eq_term := P C (term -> term -> bool) (
+          \x,y. and_semi (test_term x) (test_term y) <x,y>.
+          Y\e. (
+              \(l,r). (\(l',r'). and(e l l')(e r r'), F,F,F,F),
+              (\-.F, K,F,F,F),
+              (\-.F, F,K,F,F),
+              (\-.F, F,F,K,F),
+              (\-.F, F,F,F,K)
+          )
+      ).
+      !check ( _S,_K,_J,_T :: test_bool*(W eq_term) ).
+      !check W if_eq_term (ap x y) = and_semi (test_term x) (test_term y) true.
+      !check eq_term x x = test_term x true.
+
+      assert_eq_term := P C (term -> term -> unit) (
+          \x,y. (check_term x | check_term y) <x,y>.
+          Y\e. (
+              \(l,r). (\(l',r'). e l l' | e r r', T,T,T,T),
+              (T,I,T,T,T),
+              (T,T,I,T,T),
+              (T,T,T,I,T),
+              (T,T,T,T,I)
+          )
+      ).
+      !check ( _S,_K,_J,_T :: W assert_eq_term ).
+      !check W assert_eq_term (ap x y) = and_unit (check_term x) (check_term y).
+      !check assert_eq_term x x = check_term x.
+      !check assert_eq_term x y = assert(eq_term x y).
+
+      if_eq_term := P C (term -> term -> semi) (
+          \x,y. and_semi (test_term x) (test_term y) <x,y>.
+          Y\e. (
+              \(l,r). (\(l',r'). and_semi (e l l') (e r r'), _,_,_,_),
+              (_,I,_,_,_),
+              (_,_,I,_,_),
+              (_,_,_,I,_),
+              (_,_,_,_,I)
+          )
+      ).
+      !check ( _S,_K,_J,_T :: W if_eq_term ).
+      !check W if_eq_term (ap x y) = and_semi (test_term x) (test_term y).
+      !check if_eq_term x x = test_term x.
+      !check if_eq_term x y = if(eq_term x y).
+    ###>
+    As with all our algebraic datatypes,
+    these terms are their own basic elimination forms.
+    However, we will often need compound elimination forms
+    for various shapes of terms, eg, #S x y z# and #K x y#.
+    For these we define various partial elimination forms,
+    each either asserting, or testing that the particular case holds.
+    For example, when handling the case of applications #ap x y#,
+    we eliminate with one of
+    ###<
+      case_ap := (term -> (term->term->any) -> any) (I,T).
+      if_case_ap := (term -> (term->term->any) -> any) (I,_).
+    ###>
+    If we are in the right case, we can get the terms #x,y# back.
+    ###<
+      !check (/\x:term::test_term, y:term::test_term.
+          x  =  (case_ap (ap x y) \u,-. u)  =  (if_case_ap (ap x y) \u,-. u)
+      ).
+      !check (/\x:term::test_term, y:term::test_term.
+          y  =  (case_ap (ap x y) \-,u. u)  =  (if_case_ap (ap x y) \-,u. u)
+      ).
+    ###>
+    But in the wrong case (here, an atom) the elim forms either err of diverge.
+    ###<
+      !check T = case_ap _S = case_ap _K = case_ap _J = case_ap _T.
+      !check _ = if_case_ap _S = if_case_ap _K = if_case_ap _J = if_case_ap _T.
+    ###>
+    We also need elim forms for redexes #S x y z#, #K x y#, #J x y#, and #T x#.
+    ###<
+      case_S := (term -> (term->term->term->any) -> any) (
+          \sxyz. case_ap sxyz \sxy,z.
+                 case_ap sxy \sx,y.
+                 case_ap sx \s,x.
+                 assert_eq_term _S s. <x,y,z>
+      ).
+      if_case_S := (term -> (term->term->term->any) -> any) (
+          \sxyz.  if_case_ap sxyz \sxy,z.
+                  if_case_ap sxy \sx,y.
+                  if_case_ap sx \s,x.
+                  if_eq_term _S s.       <x,y,z>
+      ).
+      !check (/\x:term,y:term,z:term.  Sxyz:=ap(ap(ap _S x)y)z.
+          x  =  (case_S Sxyz \u,-,-. u)  =  (if_case_S Sxyz \u,-,-. u)  AND
+          y  =  (case_S Sxyz \-,u,-. u)  =  (if_case_S Sxyz \-,u,-. u)  AND
+          z  =  (case_S Sxyz \-,-,u. u)  =  (if_case_S Sxyz \-,-,u. u)
+      ).
+
+      case_K := (term -> (term->term->any) -> any) (
+          \kxy. case_ap kxy \kx,y.
+                case_ap kx \k,x.
+                assert_eq_term _K k. <x,y>
+      ).
+      if_case_K := (term -> (term->term->any) -> any) (
+          \kxy. if_case_ap kxy \kx,y.
+                if_case_ap kx \k,x.
+                if_eq_term _K k.    <x,y>
+      ).
+      !check (/\x:term,y:term.  Kxy:=ap(ap _K x)y.
+          x  =  (case_K Kxy \u,-. u)  =  (if_case_K Kxy \u,-. u)  AND
+          y  =  (case_K Kxy \-,u. u)  =  (if_case_K Kxy \-,u. u)
+      ).
+
+      case_J := (term -> (term->term->any) -> any) (
+          \jxy. case_ap jxy \jx,y.
+                case_ap jx \j,x.
+                assert_eq_term _J j. <x,y>
+      ).
+      if_case_J := (term -> (term->term->any) -> any) (
+          \jxy. if_case_ap jxy \jx,y.
+                if_case_ap jx \j,x.
+                if_eq_term _J j.     <x,y>
+      ).
+      !check (/\x:term,y:term.  Jxy:=ap(ap _J x)y.
+          x  =  (case_J Jxy \u,-. u)  =  (if_case_J Jxy \u,-. u)  AND
+          y  =  (case_J Jxy \-,u. u)  =  (if_case_J Jxy \-,u. u)
+      ).
+
+      case_T := (term -> (term->any) -> any) (
+          \tx. case_ap tx \t,x.
+               assert_eq_term _T t. <x>
+      ).
+      if_case_T := (term -> (term->any) -> any) (
+          \tx. if_case_ap tx \t,x.
+               if_eq_term _T t. <x>
+      ).
+      !check (/\x:term.  Tx:=ap _T x.
+          x = (case_T Tx \u. u) = (if_case_T Tx \u. u)
+      ).
+    ###>
+    Finally, we will often need to join over all total terms.
+    ###<
+      Join_term := Sset term (Y\s. (<_S>|<_K>|<_J>|<_T> | s\x. s\y. <ap x y>)).
+      !check Join_term test_term = I.
+    ###>
+
+  A dependent type for reduction paths. \label{sec:skj/terms:red}
+
+    Next we define a type for reduction paths,
+    dependent on the start and end terms.
+    Our reduction paths will capture the following inference rules,
+    notably omitting reflexivity
+    ###-
+      x ->> y   y ->> z         f ->> g   x:term       f:term   x ->> y
+      ----------------- trans   ---------------- lhs   ---------------- rhs
+           x ->> z                 f x ->> g x            f x ->> f y
+
+        x term
+      --------- T
+      T x ->> T
+
+          x,y,z:term             x,y:term        x,y:term         x,y:term
+      -------------------- S   ----------- K   ----------- J1   ----------- J2
+      S x y z ->> x z(y z)     K x y ->> x     J x y ->> x      J x y ->> y
+    ###-
+    Now the type of reductions depends on the equality of some terms in
+    the hypotheses above.
+    Eg, transitivity requires the #y# in #x->>y# and #y->>z# to agree.
+    Recalling our notation of #Or=Sum# and #And=Prod#,
+    we define a type of pre-proofs, possibly containing errors
+    ###<
+      pre_Red := (term -> term -> V) (
+          Y\r,u,v.
+          Or (\/x:term. And (r u x) (r x v)).   #transitivity
+          Or (case_ap u\f,x. case_ap v\f',x'.
+              Or (r f f') (r x x')).            #left and right monotonicity
+          3 Maybe bool                          #5 atomic reductions
+      ).
+      test_pre_Red := (/\u:term,v:term. Test. pre_Red u v) (
+          \-,-. Y\t.
+          test_Sum (test_Prod test_term. test_Prod t t).
+          test_Sum (test_Sum t t).
+          3 test_Maybe test_bool
+      ).
+    ###>
+    Next we check the pre-proofs for errors,
+    raising the entire proof to #T# if any errors are found.
+    ###<
+      check_Red := (/\u:term,v:term. Check. pre_Red u v) (
+          eq := assert_eq_term.
+          Y\c,u,v. (check_term u | check_term v) (
+              \(x,r,r'). c u x r | c x v r',
+              case_ap u\f,x. case_ap v\f',x'. ( eq x x'. c f f' ,
+                                                eq f f'. c x x' ),
+              case_T u\x. eq v _T,
+              case_S u\x,y,z. eq v (ap (ap x z) (ap y z)),
+              case_K u\x,y. eq v y,
+              case_J u\x,y. (eq v x, eq v y)
+          )
+      ).
+
+      !define Red := (/\x:term,y:term. Checked (pre_Red x y). check_Red x y).
+      !check check_Red : (/\x:term,y:term. Check. Red x y).
+    ###>
+    Once #check_Red# has eliminated possible errors,
+    totality testing is much easier, and can in fact ignore its parameters.
+    ###<
+      test_Red := (/\x:term, y:term. Test. Red x y) test_pre_Red.
+    ###>
+
+    Reduction proofs have introduction forms for each inference rule above.
+    ###<
+      Trans := (/\x,y,z. Red x y -> Red y z -> Red x z) (
+          \-,y,-,xy,yz. inl (y,xy,yz)
+      ).
+      Lhs_r := (/\f,f',x. Red f f' -> Red (ap f x) (ap f' x)) (
+          \-,-,-. inr*inl*inl
+      ).
+      Rhs_r := (/\f,x,x'. Red x x' -> Red (ap f x) (ap f x')) (
+          \-,-,-. inr*inl*inr
+      ).
+      T_R := (/\x. Red (ap _T x) _T) (\-. 2 inr none).
+      S_R := (/\x,y,z. Red (ap(ap(ap _S x)y)z) (ap(ap x z)(ap y z))) (
+          \-,-,-. 3 inr none
+      ).
+      K_R := (/\x,y. Red (ap(ap _K x)y) x) (\-,-. 4 inr none).
+      J_R1 := (/\x,y. Red (join x y) x) (\-,-. 5 inr true).
+      J_R2 := (/\x,y. Red (join x y) y) (\-,-. 5 inr false).
+    ###>
+    Now these introduction forms are dependent on the terms they deal with.
+    The join operation allows us to ignore these parameters in proof bodies,
+    simply sketching the rules we use.
+    Wrapping a proof sketch in the theorem-as-closure it proves
+    will raise the proof sketch up to a total well-indexed inhabitant.
+    Thus we can use the abbreviated introduction forms
+    ###<
+      trans_r := Trans _ _ _.
+      lhs_r := Lhs_r _ _ _.
+      rhs_r := Rhs_r _ _ _.
+      T_r := T_R _.
+      S_r := S_R _ _ _.
+      K_r := K_R _ _.
+      J_r1 := J_R1 _ _.
+      J_r2 := J_R2 _ _.
+    ###>
+    The case study in \ref{sec:examples/proofs} gives many examples of how to
+    use these proof sketches.
+
+    We can also search for reduction proofs by joining
+    ###<
+      Join_Red := (/\x:term,y:term. Sset. Red x y) (
+          eq := if_eq_term.
+          Y\j,u,v. ( Join_term \x. j u x\r. j x v\r'. <trans_r r r'> )
+                 | ( if_case_ap u \f,x.
+                     if_case_ap v \f',x'. eq x x' (j f f'\r. <lhs_r r>)
+                                        | eq f f' (j x x'\r. <rhs_r r>) )
+                 | ( if_case_T u \-. eq v _T <T_r> )
+                 | ( if_case_S u \x,y,z. eq v (ap (ap x z) (ap y z)) <S_r> )
+                 | ( if_case_K u \x,y. eq v x <K_r> )
+                 | ( if_case_J u \x,y. eq v x <J_r1>
+                                     | eq v y <J_r2> )
+      ).
+      !check (/\x::test_term,y::test_term. Join_Red x y (check_Red x y) = I).
+    ###>
+    This allows us to semidecide reduction between any two terms:
+    ###<
+      if_Red := (term -> term -> semi) (\x,y. Join_Red x y (test_pre_Red x y)).
+    ###>
+
+  Dependent types for convergence. \label{sec:skj/terms:conv}
+
+    Convergence is much easier to prove than general reduction.
+    In H*, a term converges iff there is a reduction sequence to #T#,
+    after feeding the term some number of arguments of #T#.
+    Thus we formalize this idea as the two inference rules
+    ###-
+      x ->> T        x T Conv
+      ------- done   -------- next
+      x Conv         x Conv
+    ###-
+    As with the type of reductions #Red#,
+    we define the type of convergence proofs by first defining a
+    type of possibly-erroneous pre-proofs (#conv#),
+    then defining a proof-checker (#check_Conv#),
+    and finally restricting the pre-proofs to checked proofs (#Conv#).
+    ###<
+      conv := V (Y\a. Or a. Red _ _T).
+      test_conv := Test conv (Y\t. \x. test_Sum t (test_pre_Red _ _T)).
+
+      check_Conv := (term -> Check conv) (
+          Y\c,x. check_term x. check_Sum (c (ap x _T)) (check_Red x _T)
+      ).
+      Conv := (/\x:term. Checked conv. check_Conv x).
+      !check check_Conv x : Check (Conv x).
+
+      test_Conv := (/\x:term. Test. Conv x) (\-. test_conv).
+    ###>
+    Convergence proofs have the total introduction forms
+    ###<
+      Next := (/\x. if (Conv. ap x _T). Conv x) (\-. inr).
+      Done := (/\x. if (Red x _T). Conv x) (\-. inl).
+    ###>
+    and partial proof sketches
+    ###<
+      next := Next _.
+      done := Done _.
+    ###>
+    For example each atom in the basis provably converges.
+    ###<
+      !check 3 next (done S_r) :: test_Conv _S.
+      !check 2 next (done K_r) :: test_Conv _K.
+      !check 2 next (done J_r1) :: test_Conv _S.
+      !check next (done T_r) :: test_Conv _T.
+    ###>
+
+    We can also semidecide convergence of terms
+    by joining over all total proofs
+    ###<
+      Join_Conv := (/\x:term. Sset. Conv x) (
+          Y\j,x. (Join_Red x _T \r. <done r>)
+               | (j (ap x _T) \c. <next c>)
+      ).
+      !check (/\x::test_term. Join_Conv x check_conv = I).
+    ###>
+    and testing whether any of them match a term in question
+    ###<
+      if_conv_term := (term -> semi) (\x. Join_Conv x test_conv).
+      !check ( _S,_K,_J,_T :: if_conv_term ).
+      !check (/\x,y. ap x y :: if_conv_term ==> x :: if_conv_term).
+    ###>
+

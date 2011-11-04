@@ -1,0 +1,3 @@
+#!/bin/bash
+echo -e "\033]0;Johann: cs_stats.log\007"
+tail -n1000 -s0.02 --follow=name cs_stats.log

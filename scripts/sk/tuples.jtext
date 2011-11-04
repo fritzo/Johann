@@ -1,0 +1,29 @@
+
+Tuples. \label{sec:sk/tuples}
+
+  ###<
+    !import sk/numerals.
+  ###>
+
+  construction, selection
+  ###<
+    mk_tup := (
+        z := <0,I>.
+        s := (\<n,m>. <succ n, n B C m>).
+        <s,z,F>
+    ).
+    sel := (\n,N. n K (n<Bot>)*(N K) Bot).
+  ###>
+
+  common tuple constructs
+  ###<
+    tuple_seq := (
+        \f,N.
+        N
+        (\<x,n>. n' := succ n. <x;(f n'), n'>)
+        <<>,0>
+        [1/2]
+    ).
+    !check tuple_seq f 3 = <f 0, f 1, f 2>.
+  ###>
+

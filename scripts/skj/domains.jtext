@@ -1,0 +1,57 @@
+
+Effectively presented domains. \label{sec:skj/domains}
+  ###<
+    !import skj/types skj/tests skj/enum.
+  ###>
+
+  Presentation. 
+    ###<
+      domain := (
+          \/a:type. (
+              Enum a,           #compact elements
+              idx,              #bottom
+              idx,              #top
+              Sym_bin_fun idx,  #join
+              Sym_bin_pred idx  #less
+          )
+      ).
+    ###>
+
+  Domain constructions. 
+    ###<
+      two_point_d := domain (
+          div,
+          e_sum (e_sgtn Bot, e_sgtn Top),
+          ???,
+          ???,
+          ???,
+          ???
+      ).
+
+      Prod_d := Bin_op domain (
+          \(a1,k1,b1,t1,j1,l1).
+          \(a2,k2,b2,t2,j2,l2). (
+              Prod a1 a2,
+              e_prod k1 k2,
+              ???,
+              ???,
+              ???,
+              ???
+          )
+      ).
+
+      Exp_d := Bin_op domain (
+          \(a1,k1,b1,t1,j1,l1).
+          \(a2,k2,b2,t2,j2,l2). (
+              a1->a2,
+              ???,
+              ???,
+              ???,
+              ???,
+              ???
+          )
+      ).
+    ###>
+
+  Recursive solution of domain equations. 
+

@@ -1,0 +1,442 @@
+
+Comment: copied from notes/proof/prob_logic.text
+A Probability-Valued Logic for Proof Complexity. 
+  \label{sec:algorithms/complexity}
+
+  A _probability-valued_logic_ is a logic with truth-values in the real
+  interval [0,1].
+  Many such logics have already been studied, for example Nilsson's
+  probabilistic logic Nilsson86, and real-valued fuzzy logics.
+  The intuitionistic first-order logic we develop here is particularly
+  well-suited for analyzing proof complexity.
+
+  Semantically, our probability is not _frequentist_ quantification of truth;
+  rather it is an _intuitionistic_ probability that a randomly chosen proof
+  [-candidate is valid and] shows a statement is true.
+  Naturally, since most proofs don't prove most statements, most probability
+  values will be very small.
+  In this sense, it is perhaps more intuitive to consider the
+  #-log(probability)# of a statement, which has the standard interpretation of
+  _proof_complexity_ or proof length.
+  The advantage of working with probabilities is their simple mechanics, as
+  contrasted with standard arguments of Kolmogorov complexity, with max's and
+  min's everywhere.
+  An intuitive motivation of probabilities for complexity (as we define them)
+  is the accounting for _ambiguity_ in complexity: something that can be said
+  in many complicated ways may be as simple as something with only one simple
+  statement.
+
+  Perhaps the most interesting point of divergence of our probabilistic logic
+  from, say, real linear logic, is the importance of rule names in deduction,
+  which is only evident in proof-term analysis of deductions: the (visual) size
+  of a proof term depend on the lengths of its rules' names (in letters).
+  This feature is already present in probabilistic logic programming, where a
+  horn clause is annotated with a probability.
+  Our "random proofs" will be proofs generated from a stochastic grammar, whose
+  production rules (inference rules) will be annotated with probabilities
+  (think #exp(-name length)#), such that the total proof mass is unity.
+
+  Mechanically, we deal with a real-weighted linear logic with weights in [0,1].
+  The main connectives are negation (#x|->1-x#) and conjunction (product);
+  disjunction is defined by DeMorgan's laws.
+  Our logic has three judgments: #x term# (or just #x#), #phi true#, and
+  #phi false#, with a special negation #-phi# to convert between the true and
+  false judgments.
+  In particular, negation is not failure.
+
+  We will assume throughout that our domain of individuals is endowed with an
+  everywhere-positive _probability_mass_function_ (pmf), say #P(_)#.
+  (This naturally forces the domain to be countable.)
+  Existential and universal quantifiers are then convex sums and products over
+  the domain.
+  In this paper we assume equality is axiomatizable, and ignore the complexity
+  of proving equality; however, this is not necessary, and further insight may
+  be gained by considering equality proofs.
+  In addition to pure first-order equational logic, we assume there some
+  atomic relations, e.g., a partial or linear order.
+
+  Let us survey the general syntax and semantics of this logic, before
+  examining specific examples.
+  Syntax: (terms) Here #K# is "Konstant", #J# is "Join", and #S# is
+    "Substitute".
+    ###s p1 p2 pn a1 a2 an
+    ###(
+      x ::&= ...                                 #domain-specific
+      p ::&= true | false                        #truth-values
+          &| p and q | p or q | not p            #connectives
+          &| p1 a1 + p2 a2 + ... + pn an         #convex sum
+          &| p1^a1   p2^a2   ...   pn^an         #convex product
+          &| x=y | x!=y | -p
+          &| \/x.p | /\x.p                       #quantifiers
+          &| p in db
+          &| ...                                 #domain-specific
+    ###)
+    Note: We often use convex Sums (averages),
+      ranging only over things in the database.
+  Semantics are defined relative to _database_ #db#, a
+  (typically infinite\footnote
+  {Databases are really finite sets of equivalence classes of terms,
+  together with all statements and proofs expressible with only those terms.
+  Since we allow rational terms, the number of syntactic statements and proofs
+  is infinite.})
+  set of formulae, and the proofs expressible using only those formulae.
+  Semantics: Let #P(_),F(_) : fml->[0,1]# be a pair of interpretations,
+    #P# for _provability_, and #F# for _failure_.
+    For statements #phi# not in the database #db#, #P(phi)# and #F(phi)# are
+    both zero.
+    Otherwise, #P# and #P# are defined as follows (where all Sums and Products
+    range only over terms in the database).
+    ###a
+                      P(x) = "domain specific"
+
+         P(true) = 1                         F(true) = 0
+        P(false) = 0                        F(false) = 1
+        P(not p) = 1 - P(p)                 F(not p) = 1 - F(p)
+      P(p and q) = P(p) P(q)              F(p and q) = 1-(1-F(p))(1-F(q))
+       P(p or q) = 1-(1-P(p))(1-P(q))      F(p or q) = F(p) F(q)
+          P(k p) = k P(p)                     F(k p) = k F(p)
+        P(p + q) = P(p) + P(q)              F(p + q) = F(p) + F(q)
+        P(\/x.p) = Sum  x. P(p) P(x)        F(\/x.p) = Prod x. F(p)^P(x)
+        P(/\x.p) = Prod x. P(p)^P(x)        F(/\x.p) = Sum  x. F(p) P(x)
+          P(x=y) = if x=y then 1              F(x=y) = if x=y then 0
+                          else 0                              else 1
+         P(x!=y) = P(-x=y)                   F(x!=y) = F(-x=y)
+                 = P(not x=y)                        = F(not x=y)
+      P(p in db) = if p in db then 1      F(p in db) = if -p in db then 1
+                              else 0                               else 0
+    ###a
+    (here \verb$\/x.p$ renders #\/x.p#, and \verb$/\x.p$ renders #/\x.p#)
+    Question: Should there also be a rule for implication?
+      ###a
+        P(p ==> q) = P(q)^P(p)              F(p ==> q) = ???
+      ###a
+    In general, #P+F# sums to unity iff the database is complete (contains all
+    statements).
+    Note that #--x<==>x#.
+  We also define #P'(phi) := 1-F(phi)# so that for any statement #phi#, its
+  proof probability is bounded in the interval #[P,P']#.
+  Similarly, since proof probability is proportional to #exp(-proof length)#,
+  we can bound the _proof_complexity_ of a statement  in
+  #[-log(P'),-log(P)]#.
+  Note: The upper- and lower-bounds #P# and #P'# of statements are the
+    _belief_ and _plausibility_ functions, resp., of Dempster-Shafer theory
+    (Shafer92).
+
+  Programs in this logic define rational propagation equations over statements
+  in the database.
+  Operationally, we interpret the equations in _fixed-point_semantics_,
+  where a solution is a fixed-point [0,1]-weighting of statements
+  in the database (corresponding to their provability).
+  Existence and uniqueness of fixed-points follows easily for our theories, as
+  our programs are all monotone contraction mappings.
+
+  Example 1: (ordered natural numbers)
+    As a simple example, consider natural numbers as a linear order
+    As will be usual, we abreviate the judgement #x term# by simply #x#.
+    Syntax: 
+      ###(
+        x ::&= z | s(x)              #terms
+        p ::&= ... | x | x <= y          #order
+      ###)
+    Rules: SPACE 
+      ###-
+                    N
+          --- z   ----- succ
+           z       s(N)
+
+                         N <= M
+          ------ refl   --------- incr
+          N <= N        N <= s(M)
+      ###-
+    Here we have a constant #z#, a function symbol #s#, and a binary relation
+    #<=#.
+    Note that the definition of naturals is baked in to the first two rules.
+    Along with the rules, we consider their semantics as propagation equations
+    Programs: 
+      ###a
+        P(N) = P_z P(N=z)
+             + P_s Sum N'. P(N=s(N')) P(N')
+
+        P(N<=M) = P_r P(N=M) P(N)
+                + P_i Sum M'. P(M=s(M')) P(N<=M')
+
+        F(N<=M) = P_r P(N!=M)
+                + P_i Sum M'. P(M!=s(M')) P(M')
+      ###a
+    Note that #P(x=y)# is the zero-one probability that #x# is equal to #y#;
+    since both terms are ground, unification is unnecessary.
+    Note that each application of a rule is annotated/multiplied by its name.
+    In this system, proofs are unique, so it is easy to evaluate the
+    probability of truth in terms of #N# and #M#:
+    ###m m n k
+    ###a
+      P(n<=m) = if n > m then 0
+                         else P_z P_s^n P_l^(m-n)
+    ###a
+    The normalization constraint says that
+    ###a
+      1 = Sum n,m. P(n<=m)            #where 0 <= m,n
+        = Sum n,k. P_z P_s^n P_l^k    #where 0 <= k = m-n
+                P_z
+        = ---------------             #a couple geometric series
+          (1-P_s) (1-P_l)
+    ###a
+
+  Example 2: (divisibility of natural numbers)
+    Now consider the _positive_ natural numbers ordered by _divisibility_.
+    Syntax: 
+      ###(
+        x ::&= 1 | x+y | (xy)     #terms
+        p ::&= ... | (x|y)        #divisibility
+      ###)
+    Rules: SPACE 
+      ###-
+                     N   M        N    M
+          --- unit   ----- plus   ------ times
+           1          N+M          (NM)
+
+            N          L|M   M|N         M|N   N|M
+          ----- refl   --------- trans   --------- antisym
+           N|N            L|N              M = N
+
+           N        M|N   M|N'       M|N   M'|N'
+          --- one   ---------- add   ----------- mult
+          1|N        M|(N+N')        (MN)|(M'N')
+      ###-
+    Notice that we have left implicit the equational theory, except for the
+    antisymmetry rule; this will be typical.
+    Proof probability is no longer so easy to calculate, but we can
+    nevertheless define recursive logic programs for proofs of term formation,
+    and both valid and failed proofs of ordering.
+    Programs: 
+      ###a
+        P(x) = P_unit  P(x=1)
+             + P_plus  Sum y,z. P(y and z and y+z=x)
+             + P_times Sum y,z. P(y and z and yz=x)
+
+        P(u|v) = P_refl  P(u and u=v)
+               + P_trans Sum m. P(u|m and m|v)
+               + 0                              #no rule for antisym
+               + P_one   P(u=1)
+               + P_add   Sum x,y. P(x+y=v and u|x and u|v)
+               + P_mult  Sum w,x,y,z. P(u=wx and v=yz and w|y and x|z)
+
+        F(u|v) = P_refl  P(u) F(u!=v)
+               + P_trans Sum m. F(u|m and m|v)
+               + 0                              #no rule for antisym
+               + P_one   F(u=1)
+               + P_add   Sum x,y. F(x+y=v and u|x and u|v)
+               + P_mult  Sum w,x,y,z. P(u=wx and v=yz and w|y and x|z)
+      ###a
+    For normalization, we assume that the sum of all rules with fixed
+    consequence shape sum to unity:
+    ###a
+      1 = P_unit + P_plus + P_times
+      1 = P_refl + P_trans + P_one + P_add + P_mult
+    ###a
+    Now given a subset of all proofs (a database), we can estimate the proof
+    probability of a statement by summing over the database.
+    Conversely, we can lower-bound the proof complexity of a statement by
+    summing over the database all _failed_proofs_ of the statement.
+
+    As a toy example of a query we might pose, consider primality testing:
+    ###[
+      x prime   <==>   /\n. n|x ==> n=1
+    ###]
+    To estimate the probability that a given number #x# is prime, we can count
+    the failed proofs that #x# is composite
+    ###a
+      F(x composite) = F(\/n. n|x and n!=1)
+                     = Sum n. P(n and n!=1) F(n|x)
+    ###a
+    We will take roughly the same approach to a much more difficult problem in
+    section \ref{sec:algorithms/conjecturing} below.
+  
+  ###u m n k
+
+  Now let's move on to our main example: the combinatory algebra with join,
+  partially ordered by Scott's information ordering #[=#.
+  The "true" theory we want to approximate will be the #[=#-complete theory
+  #Hstar# encoding Leibniz equality.
+  Syntax: 
+    ###a
+      x ::= K | J | S | x x       #terms
+      p ::= ... | x[=y | x![=y    #order
+    ###a
+    where #x[=y <==> -x![=y#.
+  Term Formation. 
+    We define a complexity measure #P(x)# on terms, namely as constructed from
+    a finite set of atoms and a nonassociative binary operation.
+    In this section only, we will write the formation statement #x# explicitly
+    as #x term#.
+    Semantics: (terms) Let #B : {S,J,K} -> [0,1]# be a given probability mass
+      function (pmf) on atoms, and #P(_) : term/= ->[0,1]# be a pmf on
+      _equivalence_classes_ of terms, defined by
+      ###a
+        P(x) = (1-eps) ( P(x=K) B(K) + P(x=J) B(J) + P(x=S) B(S) )
+             + eps Sum l,r. P(x=lr) P(l) P(r)
+      ###a
+      where as below, #P(x=y)# is either 0 or 1.
+    Rules: SPACE 
+      ###-
+                                         x term   y term
+        ------ K   ------ J   ------ S   --------------- app
+        K term     J term     S term         xy term
+      ###-
+    Programs: 
+      ###a
+        P(x term) = P_K P(x=K)
+                  + P_J P(x=J)
+                  + P_S P(x=S)
+                  + P_app Sum yz=x. P(y term and z term)
+      ###a
+    Note: For concreteness, we have included only the three atoms #K,J,S# in
+      the basis of atoms; it is straightforward to generalize to a basis pmf #B#
+      Rules: SPACE 
+        ###a
+          b in B
+          ------ B(b)
+          b term
+        ###a
+      Programs: 
+        ###a
+          P(a) = P_b B(a)
+              + ...
+        ###a
+
+  Equality. 
+    Proofs of term equality will not be accounted for in complexity
+    calculations; thus truth values will be either 0 or 1.
+    Rules: SPACE 
+      ###-
+        --------- beta-K   ------------------ beta-S
+        K x y = x          S x y z = x z(y z)
+
+        ------------- J-comm  ------------------ J-idem
+        J x y = J y x         J x(J x y) = J x y
+
+        ---------------------- J-assoc
+        J x(J y z) = J(J x y)z
+
+        ...others for B,C,W,Y, etc....
+
+        x [= y   y [= x
+        --------------- Antisym
+            x = y
+
+        (finitely many #eta#, etc. axioms)
+      ###-
+    Programs: 
+      ###a
+        P(x=y) = if x=y then 1 else 0
+      ###a
+
+  Partial Ordering. 
+    The relation we will study is Scott's information ordering on combinators
+    Syntax: 
+      ###a
+        p ::= ... | x[=y | x![=y    #order
+      ###a
+      where #x[=y <==> -x![=y#.
+    Although we can define a likelihood distribution on proofs of order
+    statements, the total mass of this distribution is uncomputable.
+    Thus we enlarge the space of proofs to _proof_candidates_, of which valid
+    proofs are a subset.
+    This contrasts our distribution over term proofs, where all proofs are
+    valid.
+
+    For each of the _active_ rules below, there are _inactive_ rules for
+    invalid proofs of the same shape; we list only the inactive transitivity
+    rules.
+    Rules: SPACE 
+      Takeout: an alternative version
+        ###-
+          x [= y   y   y [= z
+          ------------------- tau
+                x [= z
+
+          x ![= z   y   y [= z         x [= y   y   x ![= z
+          -------------------- tau-L   -------------------- tau-R
+                 x ![= y                      y ![= z
+        ###-
+      ###-
+        x [= y   y [= z       x ![= z   y [= z         x [= y   x ![= z
+        --------------- tau   ---------------- tau-L   ---------------- tau-R
+            x [= z                 x ![= y                  y ![= z
+
+        x   y [= y'      x   x y ![= x y'
+        ----------- mu   ---------------- mu'
+        x y [= x y'          y ![= y'
+
+        x [= x'   y      x y ![= x' y   y
+        ----------- nu   ---------------- nu'
+        x y [= x' y           x ![= x'
+
+        x   y   x [= y in db      x   y   x ![= y in db
+        -------------------- db   --------------------- db'
+                x [= y                    x ![= y
+
+        --------------------------------------------------------------------
+
+        x![=y   y[=z       x[=y   y![=z       x![=y   y![=z
+        ------------ tau   ------------ tau   ------------- tau
+          x norel y          x norel y          x norel y
+
+        ...etc...
+      ###-
+    Programs: 
+      (here #a[=b# means #P(a[=b)#, and #-a[=b# means #P'(a[=b)#)\\
+      ###a
+        Mass of valid proofs.
+          P(a[=b) = P_tau Sum y. P(a[=y and y[=b)
+                  + P_mu  Sum x,y,y'. P(a=xy and b=xy' and x and y[=y')
+                  + P_nu  Sum x,x',y. P(a=xy and b=x'y and x[=x' and y)
+                  + P_db  P(a[=b in db and a and b)
+
+          P(a![=b) = P_tau-L Sum z. P(a![=z and b[=z)
+                   + P_tau-R Sum x. P(x[=a and x![=b)
+                   + P_mu'   Sum x. P(x and xa![=xb)
+                   + P_nu'   Sum y. P(ay![=by and y)
+                   + P_db'   P(a![=b in db and a and b)
+      ###a
+      ###a
+        Mass of failed proof candidates.
+          F(a[=b) = if a![=b in db then 1 else
+                  ( P_tau Sum y. F(a[=y and y and y[=b)
+                  + P_mu  Sum x,y,y'. P(a=xy and b=xy' and x) F(y[=y')
+                  + P_nu  Sum x,x',y. P(a=xy and b=x'y and y) F(x[=x')
+                  + P_db  true )
+
+          F(a![=b) = if a[=b in db then 1 else
+                   ( P_tau-L Sum z. F(a![=z and b[=z)
+                   + P_tau-R Sum x. F(x[=a  and x![=b)
+                   + P_mu'   Sum x. F(x[=x and xa![=xb)
+                   + P_nu'   Sum y. F(ay![=by and y[=y)
+                   + P_db    true )
+      ###a
+    Note: We may also explicitly add rules for Top and Bottom; however both
+      atoms are definable and the rules follow the other rules and the lemmas:
+      ###a
+        Y K = Bot = K Bot [= I [= K Top = Top = Y J
+        Top ![= Bot
+      ###a
+      Rules: SPACE 
+        ###-
+           x [= x         x [= x
+          -------- Bot   -------- Top   ----------- con
+          Bot [= x       x [= Top       Top ![= Bot  
+        ###-
+      Programs: 
+        ###a
+          P(a[=b) = P_Bot P(a=Bot and b)
+                  + P_Top P(a and b=Top)
+                  + ...
+          P(a![=b) = P_con P(a=Top and b=Bot)
+                  + ...
+          F(a[=b) = P_Bot
+                  + P_Top
+                  + ...
+          F(a![=b) = P_con
+                  + ...
+        ###a
+

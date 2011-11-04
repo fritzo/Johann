@@ -1,0 +1,220 @@
+
+Axioms for randomness. \label{sec:axioms/random}
+  ###<
+    !read axioms/join.
+    !using R.
+  ###>
+  ###s M1 Mn
+
+  In this section we show that joins of mixtures generalize
+  convex sets of probability valuations.
+  Hence SKRJ provides a nice denotational semantics for programming languages
+  with monadic types of imprecise probabilities.
+  First let us introduce a syntax with infinitary joins and mixtures.
+  Def: A _join_ is a J-term (closure under J), defined by the language
+    ###-
+      x term             x join   y join             X sset
+      ------ singleton   --------------- binary   ----------- infinitary
+      x join                 x|y join             Join X join
+    ###-
+    A _mixture_ is an R-pmf (closure under R), defined by the language
+    ###-
+      x term             x mix   y mix          X pmf(mix)
+      ------ singleton   ------------- binary   ---------- infinitary
+      x mix                 x+y mix             EE[X] mix
+    ###-
+    A _(JR-)slurry_ is a join-mixture (closed under J,R).
+  Notation: 
+    We write #R x y = x+y# for the random choice operation.
+    Beware that #+# is commutative but not associative: we never write #x+y+z#.
+    We let #+# have higher precedence than join, so that #x+y|z = (x+y)|z#.
+
+  Our semantics for randomness will be defined in terms of traces.
+  Def: A _trace_ is a sequence
+    Footnote: Recall from \ref{sec:notation} that
+      #<M1,...,Mn>=\f. f M1 ... Mn#,
+      so that we can treat sequences as argument lists.
+    #<M1,...,Mn># of #n# terms, for some #n => 0#.
+    An _SKJ-trace_ is a sequence of terms from #SKJ#;
+    and similarly for other fragments.
+  In SK and SKJ,
+  convergence under traces provide complete information about any term.
+  Thm: Let #x,y# be SK or SKJ terms.
+    Then #x[=y# iff for every trace #t=<M1,...,Mn>#, \\
+    #t x conv ==> t y conv#.
+  In a system with randomness, convergence is probabilistic
+  so that a given term #x# will converge only _with_some_probabilty_ #p#.
+  This motivates the extension of H* from SK and SKJ to SKRJ:
+  Def: In _trace_probability_ semantics H* of the language SKRJ,
+    the order relation #x[=y# between terms #x,y# holds iff
+    under every SKJ-trace #t#, #y# is at least as likely to converge as #x#,
+    ie, #PP(t x conv) <= PP(t y conv)#.
+  Our main theorem of this section is that mixtures distribute over joins,
+
+  Thm: (distributivity) #(x|y)+z = x+z|y+z#.
+  Pf: Consider trace probability semantics.
+    At each trace #t#, we have convergence #c(-):=PP(t - conv)#
+    ###(
+      c((x|y)+z) &= (max(c(x),c(y)) + c(z))/2
+                 &= max((c(x)+c(z))/2, (c(y)+c(z))/2)
+                 &= c(x+z|y+z)
+    ###)
+    []
+  Naively slurries can be arbitrarily deep, as in #w+(x|(y+z))#,
+  however, distributivity gives us a notion of join normal form.
+  Cor: (JR-normal form) Every slurry can be written as a join of mixtures.
+
+  In contrast to join-as-concurrency,
+  our join-as-ambiguity does not distribute over mixtures
+  (#J# does not distribute over #R#).
+  This means we have no #R#-normal form,
+  and an operational semantics for random sampling fails.
+
+  Distributivity gives us a clean notion of Bohm trees in SKRJ.
+  Def: A _JR-Bohm_tree_ (JR-BT) is the SKRJ notion of Bohm tree,
+    defined by limits in the language
+    ###-
+      x var       _x,h var   _M slurry(BT)
+      ----- var   ------------------------ abs-app
+      x BT             \_x. h _M BT
+    ###-
+    A _finite_ BT consists of only finite slurries and finitely many
+    applications of rule abs-app.
+  Thm: Every SKRJ term is a join of mixtures of JR-BTs (under H*).
+  Pf: By straight-forward extension of SKJ-theorem. []
+  Finite approximation also carries over, using the following
+  Lem: Let #X# be a probability distribution over SKRJ terms.
+    Then the mixture #EE[X]#
+    is a directed join of finite mixtures of SKRJ terms.
+  Pf: Note that #X# must have countable support, since SKRJ is countable.
+    Let #X_n# be the approximation of #X# where probabilities are rounded down
+    to #n#-bit approximations, with the remaining mass given to #_#.
+    Then #EE[X]=Join_(n > 0) X_n#.
+    []
+
+  Finally, we give a semantics as convex sets of probability distributions,
+  where join is interpreted as the _convex_hull_ operation,
+  and mixture is interpreted as the _convex_combination_ operation.
+  Def: (CSPD semantics) Let the _CSPD_interpretation_ of a term #x# be the set
+    ###[
+      [x] := {(t,[0,PP(t x conv)) | t a trace}
+    ###]
+    of trace,probability pairs such that #(t,p) in x# iff #PP(t x conv) < p#.
+  Thm: Joins interpret as convex hulls
+    \[
+      #[x|y]# = #<[x],[y]># := \{(t,#[x]#t \cap #[y]#t) | t \text{ a trace}\}
+    \]
+    and mixtures interpret as convex combinations
+    \[
+      #[x+y]# = \frac{#[x]#+#[y]#} 2
+              := \left\{\left(t,\frac{#[x]#t +#[y]#t} 2 \right)
+                       \mid t \text{ a trace} \right\}
+    \]
+  Pf: By trace probability semantics,
+    joins are maxima, and mixtures are averages.
+    []
+  Distributivity has a nice visual interpretation in this semantics,
+  shown in Figure \ref{fig:distributivity}.
+  Figure: 
+    \includegraphics[width=11cm]{skrj/distributivity.eps}
+    Caption: \label{fig:distributivity}
+      Distributivity of convex-combination #+# over convex-hull #|#.
+  ###g a
+  We will use the following lemma to characterize types-as-closures
+  in \ref{sec:skrj/types}.
+  Cor: Let #x = Join_a EE[X_a]# be the JR-normal form of #x#,
+    where each #X# is a head normal form.
+    Then #x# can be interpreted as the convex hull of points
+    #X_a# in the simplex of probability distributions over
+    #Union_a support(X_a)#.
+  ###u a
+  Note that among types with a totality semipredicate,
+  we can think of #_# as a non-value and instead consider
+  convex sets of _subprobability_ distributions.
+
+  Takeout: 
+    Recall that for testable closures #a:V,test_a:a->semi#,
+    ###[
+      inhab(a,test_a) = {x:a | test_a x=I}
+    ###]
+    Thm: Let #a:V,test_a:Check a# be a flat testable closure,
+      and #x:fuzzy_a# be a total fuzzball, in that \\
+      #Lift_a test_a x[=I#.
+      Then #x# is a convex set of subprobability valuations over
+      #inhab_(SKJ)(a,test_a)#.
+    Pf: Put #x# in JR-normal form #Join_alpha p_alpha#.
+      For each mixture #p_alpha#, also #test_a p_alpha[=I#,
+      whence #p# is a probability valuation over #inhab_(SKJ)(a,test_a)#.
+      LATER
+
+  Axioms and axiom schemata. 
+
+    The following axiom shemata are enforced for the atom #R#:
+    ###-
+      ----- idem   ------- comm   -------------- distrib-R
+      x+x=x        x+y=y+x        (x+y)z=x z+y z
+
+      x[=z   y[=z             x[=y   x[=z
+      ----------- subconvex   ----------- supconvex
+        x+y[=z                  x[=y+z
+    ###-
+    We begin with negative order axioms (the first since \ref{sec:axioms/order})
+    ###<
+      !assume K+F = R.
+      !assume ( K,F ![= R ).
+      !assume ( K,F !=] R ).
+      !assume _ [[ R _ [[ I [[ R T [[ T.
+      !check R : Phi.
+      !check R : <K,F>.
+    ###>
+    algebraic properties
+    ###<
+      !assume x+x = x.            #idempotence
+      !assume (x+y)z = x z+y z.   #distributivity of right-application
+      !assume B(x+y) = B x+B y.   #distributivity of right-composition
+    ###>
+    and shallow and deep commutativity.
+    ###<
+      !assume x+y = y+x.
+      !assume (/\x. (a+x)+(b+y) = (b+x)+(a+y)).
+      !assume (/\y. (a+x)+(b+y) = (b+x)+(a+y)).
+    ###>
+    Note that we manually abstract the #x# and #y# in the last two,
+    as the cost of closing over four variables is very high
+    (see \ref{sec:axioms/combinators}).
+
+    We can express countable additivity as
+    ###<
+      !assume Y(R x) = x.
+    ###>
+    Cor: #R# is injective, with left-inverse #Y#.
+      ###<
+        !check Y*R = I.
+      ###>
+
+    The basic combinators left-distribute over mixtures
+    ###<
+      !assume K(x+y) = K x+K y.
+      !assume F(x+y) = F x+F y.
+      !assume C(x+y) = C x+C y.
+      !assume B(x+y) = B x+B y.
+      !assume W(x+y) = W x+W y.
+      !assume S(x+y) = S x+S y.
+    ###>
+    Mixture distributes over join
+    ###<
+      !assume x+(y|z) = x+y|x+z.
+      !assume (x|y)+z = x+z|y+z.
+    ###>
+    but not conversely
+    ###<
+      !check J(x+y) != J x+J y.
+    ###>
+    Some care must be taken when joining #R#-pmfs,
+    for example one might hope to join two sketches #K+_|_+F# to get #K+F#,
+    however
+    ###<
+      !check K+_|_+F = J+_ [[ K+F.
+    ###>
+
+

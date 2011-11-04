@@ -1,0 +1,173 @@
+
+Saturating a database. \label{sec:algorithms/saturation}
+
+  In this section we overview Johann's database and
+  the deterministic forward-chaining algorithms that
+  exhaustively search for equational proofs within the database.
+  The remaining sections in this chapter will discuss
+  the artificial intelligence algorithms behind shaping this database:
+  how randomly add and remove terms from the database,
+  how to conjecture or find missing equations,
+  and how to fine-tuning the probabilistic basis.
+
+  Formally, Johann's _database_ consists of the following data:
+  * a finite set of _obs_ (equivalence classes of terms), called the _support_;
+  * a small set of labelled obs, for _atoms_ (e.g., #S,K,J#);
+    Footnote: This set of constants is independent of the probabilistic basis;
+      these constants let Johann know which inference rules to enforce,
+      whereas the terms in the basis determine what obs to add to the database.
+  * a set of application equations #app=lhs rhs#,
+    for #app,lhs,rhs# in the support;
+  * a set of ordered pairs #x[=y# known to be true, for #x,y# in the support;
+  * and a similar set for the negated relation #x![=y#.
+  We would like databases to satisfy a set of inference rules,
+  eg, simple constraints like
+  ###=
+      x=y
+    -------
+    f x=f y
+  ###=
+  for maintaining well-definedness of the application function,
+  and more complicated rules like
+  ###=
+    x[=z   y[=z
+    -----------
+     J x y[=z
+  ###=
+  for the join operation #J# of \ref{sec:axioms/join}.
+  A variety of such inference rules will be developed throughout this thesis,
+  as we axiomatize various extensions of untyped lambda-calculus.
+
+  Each rule concludes with an equation or
+  an order relation between an application of obs.
+  Because there are only finitely many obs,
+  there can be only finitely many rule-firings
+  until all possible inference rules have been enforced.
+  When all applicable inference rules have been fired in a database,
+  we say the database is _saturated_.
+  Everywhere outside of this section,
+  we will assume that the database is saturated.
+  In the remainder of this section we briefly describe
+  how Johann saturates the database WRT a given set of rules.
+
+  Each time a new ob (equivalence class) is added to the support, rules for
+  equality and order relations must all be enforced until saturation.
+  Since combining equivalence classes may decrease the number of order rules
+  need to be enforced (a smaller support means fewer pairs to check),
+  it saves time to enforce first those rules most likely to induce new
+  equations,
+  only checking positive order rules
+  once the database is saturated WRT equations,
+  and only checking negative rules
+  once the database is saturated WRT positive order.
+  The inference rules roughly stratify into
+  (0) merger of equivalence classes,
+    subject to database constraints like functionality application,
+  (1) equational rules (#beta# conversion, etc.),
+  (2) positive order #x[=y#, and
+  (3) negative order #x![=y#,
+  where lower conclusions seldom fire higher rules.
+  Some exceptions are
+  the antisymmetry rule when (2) induces a merger (0),
+  and the #div# typing rules in \ref{sec:axioms/div} where apartness (3)
+  can lead to mergers (0) or new equations (1).
+
+  Saturation of (0)
+  is a generalization of the Todd-Coxeter algorithm of groups,
+  where we relax associativity and do not require inverses.
+  This involves merging of equivalence classes,
+  which in turn requires merging of the order relations.
+  The main rule being enforced is functionality of application,
+  so that each #lhs,rhs# pair defines at most one application.
+
+  Saturation of (1)
+  generalizes enforcement of group relations in the Todd-Coxeter algorithm,
+  where in our setting, equations hold between nonassociative terms.
+  The relevant inference rules are all hard-coded and hand-optimized in C++.
+
+  Saturation of (2) and (3)
+  is similar, and simply involves keeping track of newly added hypotheses
+  and checking for applicable rules.
+  Together the positive and negative tables define a partially-known
+  table with truth values #true,false,unknown#.
+  Whenever it is proved that both #x[=y# and #x![=y# (ie inconsistency),
+  then Johann aborts and we begin debugging to look for a bad assumption.
+
+  ###m O E P N
+  ###d approx \approx
+  Empirically, saturating equations (1) is the most expensive,
+  negative order (3) is the second most expensive,
+  and positive order (2) is very cheap (since not much is known).
+  Let #O,E,P,N# be the numbers of
+  Obs (equivalence classes) in the support,
+  application Equation triples,
+  Positive order relations, and
+  Negative order relations, respectively.
+  We have observed that after annealing a large database
+  (as described in \ref{sec:algorithms/annealing}),
+  the following density relations hold independently of database size:
+  ###[
+                        E/O^2 approx 0.05-0.3
+                        P/O^2 approx 0.05
+                        N/O^2 approx 0.85-0.95
+  ###]
+  where the variation in density is generally across theories or fragments.
+  Footnote: For example in SKJ, #E/O^2 approx 0.05-0.1#,
+    whereas in SK, #E/O^2 approx 0.2-0.3#.
+  Thus all three relations require space quadratic in the size of the support.
+  The worst-case time-complexity for saturation is cubic in the support size,
+  and takes about one second per new equivalence class at $O\approx 4800$
+  equivalence classes on a 2.8GHz Intel Core Duo.
+  Mcallester in Mcallester99 discusses complexity analysis techniques for
+  forward-chaining algorithms in logic programming.
+  
+  In annealing a database,
+  obs are randomly added to and removed from the database support
+  WRT sampling distributions that take quadratic time to compute.
+  What makes randomization possible here,
+  despite the high cost of calculating sampling distributions,
+  is the unusually large amount of work done between random choices,
+  in saturating the database, ie, cubic versus quadratic.
+
+  Implementation details. 
+
+    Our cache-conscious implementation uses lookup tables for the main
+    data structures,
+    with some auxiliary data structures to optimize for reading.
+    The equation table is stored as an $O\times O$ array,
+    partitioned into 8x8 blocks of 32-bit words,
+    to reduce cache misses when traversing through both rows and columns.
+    We also speed up traversal through this $\sim 5\%$ sparse table
+    by keeping tables of bits recording whether
+    there is an entry for a given #lhs,rhs# pair.
+    We keep two such "sketches", one oriented in each of row- and column- major,
+    so that an entire cache line can be fetched at once
+    (for, say, 512 table entries).
+    
+    The negative and positive tables are similarly stored as pairs of
+    bit arrays, one oriented in each of row- and column- major.
+    Because there are far more table reads (hypothesis checks)
+    than writes (rule-firings), it is cheaper to maintain consistency between
+    two read-optimized tables, than keep a single write-optimized table.
+    Storing order as bit-arrays also permits vectorized hypothesis checking,
+    where an entire machine word (say 32 hypotheses) can be checked at once.
+    We found that in our unvectorized version,
+    negative order was the most expensive rule to enforce,
+    and that after vectorization,
+    it took only a small portion of the total time.
+
+    Finally, we need to be able to traverse through,
+    for a given #(app,lhs)# pair, all #rhs# values that satisfy #lhs rhs=app#;
+    and similarly for given #(app,rhs)# pairs.
+    We implement these two data structures as sets of splay trees (Sleator85),
+    each with one tree node per proved equation #a=l r#.
+    We actually define a single node per equation, that participates in both
+    trees but keeps only one copy of the #lhs,rhs,app# keys.
+    By storing these nodes in an array,
+    we can also easily traverse through all #lhs,rhs,app# triples.
+    In practice, splay trees performed much better
+    than an alternative ad hoc tree ordering we tried,
+    possibly due to their probabilistic caching properties.
+
+  ###u O E P N
+

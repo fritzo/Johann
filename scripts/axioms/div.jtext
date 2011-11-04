@@ -1,0 +1,52 @@
+
+Axioms for the least strict closure. (#div#) \label{sec:axioms/div}
+  ###<
+    !read axioms/power.
+  ###>
+
+  The type #div# of divergent computations is the minimal strict type,
+  inhabited by only #{_,T}#.
+  ###<
+    !define div := V <T>.
+    !check _ : div.
+    !check I !: div.
+  ###>
+  Thm: #inhab(div) = {_,T}#
+  Pf: By definition of solvability in Hstar. []
+  Cor: #M# converges iff #M!=_# iff #div M!=T#.
+  The following axiom schemata are enforced for the atom #div#:
+  ###-
+     x ![= _       x _ = _
+    ---------      --------
+    div x = T      div [= x
+  ###-
+  The latter holds since #div# is the largest strict function.
+  Note: This is the first appearance of a disjunctive axiom,
+    i.e., #x[=_# _or_ #T[=div x#,
+    and thus the first axiom sensitive to language extension.
+    Indeed this axiom fails in SKRJ (see \ref{sec:skrj/simple}).
+    Comment: XXX what about #div x!=]T ==> x![=_#?
+  Cor: Every inhabitant of #div# is constant.
+  Thus we can assume
+  ###<
+    !assume div x _ = div x y = div x z = div x T.
+  ###>
+
+  Lem: 
+    ###<
+      !assume div = V K.
+    ###>
+  Pf: #_# is fixed by #K#, so let #q:div# be any convergent term,
+    say solvable by #q _M = T#. \\
+    Then #q _ =] K q _ = q#, so #q# can't be crashed.
+    []
+
+  Lem: The closures of the following combinators are strict,
+    ie, are supertypes of #div#.
+    ###<
+      !check ( B,C,W,S,S',Phi,Psi :> div ).
+    ###>
+  Pf: #div# has inhabitants #_,T#,
+    each of which is fixed by each of #B,C,W,S,S',Phi,Psi#.
+    []
+

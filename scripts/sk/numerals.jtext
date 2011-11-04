@@ -1,0 +1,26 @@
+
+Numerals. \label{sec:sk/numerals}
+  constants
+  ###<
+    zero := (\f,x. x).
+    one := (\f,x. f x).
+    two := (\f,x. f.f x).
+  ###>
+
+  successor
+  ###<
+    succ := (\n,f,x. f.n f x).
+    !check succ zero = one.
+    !check succ one = two.
+  ###>
+
+  two-sided test for zero
+  ###<
+    is_zero := <K>.
+    !check is_zero zero = true.
+    !check is_zero(succ Bot) = false.
+
+    max := (\x.???).
+  ###>
+
+

@@ -1,0 +1,61 @@
+
+Semisets. \label{sec:skj/semisets}
+  ###<
+    !import skj/types.
+  ###>
+
+  ###<
+    map_Sset := (/\a:V,b:V. (a->b) -> Sset a -> Sset b) (\-,-,f,<x>. <f x>).
+    map_sset := (\f,<x>. <f x>).
+    !check map_sset = map Sset _ _.
+    
+    sgtn_Sset := (/\a:V. a -> Sset a) (\-,x. <x>).
+    sgtn_sset := (any->sset) (\x. <x>).
+    !check sgtn_sset = sgtn_Sset _.
+    
+    join_sset := (sset->sset) (\<x>. x).
+    join_Sset := (/\a:V. Sset a -> Sset(Sset a)) (\<x>. x).
+    !check join_sset = join_Sset _.
+  ###>
+
+  ###m F
+  Def: A _functor_ on types-as-closures is
+    a pair #F=(F_0,F_1)# of transformations of type
+    ###[
+      F_0 : V->V
+      F_1 : /\a:V,b:V. (a->b) -> F_0 a -> F_0 b
+    ###]
+    perserving identity and composition
+    ###[
+      F_1 a b 1_a = 1_b
+      F_1 a b f ; F_1 b c g = F_1 a c (f;g)
+    ###]
+  Def: A _natural_transformation_ between functors #eta:F->G# is an operation
+    ###[
+      eta : /\a:V. F_0 a -> G_0 a
+    ###]
+    satisfying
+    ###[
+      F_1 a b f ; eta b = eta a ; G_1 a b f
+    ###]
+  Def: A _monad_ is a functor #F_0,F_1# together with
+    a pair of natural transformations #eta:1->F,mu:F^2->F# satisfying
+    XXX these are wrong
+    ###[
+      mu(F_0 a) ; eta a = 1_(F_0 a)             #left-identity
+      mu a ; F_1(eta a) = 1_(F_0 a)             #right-identity
+      mu (F_0 a) ; mu a = F_1 (mu a) ; mu a     #associativity
+    ###]
+    (which are generalizations of the monoid axioms -- just squint).
+  ###k F
+
+   
+  Def: The _semiset_monad_ is #(Sset,map_Sset,sgtn_Sset,join_Sset)#
+    where #Sset# is the action of the functor on the object #a#,
+    #map_Sset# is the action of the functor on the arrow #f:a->b#,
+    and #sgtn_Sset#, #join_Sset# are the natural transformations.
+  
+  We verify the monad axioms for both the unityped and indexed semiset monad.
+  LATER
+
+

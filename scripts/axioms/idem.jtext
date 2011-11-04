@@ -1,0 +1,120 @@
+
+Axioms for a universal retract. (#U#) \label{sec:axioms/idem}
+  ###<
+    !read axioms/join.
+  ###>
+
+  Comment: TODO motivate this section
+
+  Def: Let (#A,[=#) be a poset, #f:A->A# be an endomorphism.
+    Let us say that #f# is a _retract_ iff #f*f[=f#.
+
+  We can construct a universal retract operator in SKJ as
+  ###<
+    !define U := (\f. Y\y. f|y*f).
+    !check U = Y*(K|B').
+  ###>
+  An infinitary representation of #U# is
+  ###l vdots
+  ###m m n
+  ###( 
+    U f &= Y\y. f|y*f
+        &= f|(Y\y. f|y*f)*f 
+        &= f|(U f)*f
+        &= f|(f|(U f)*f)*f
+        &= f|f*f|(U f)*f*f 
+        &  vdots
+        &= f|f*f|f*f*f|...    = Join_(0 < n < omega) f^n
+  ###)
+  Thm: #U# is a universal retract, i.e.
+    (a) #U# is idempotent: #U * U = U#;
+    (b) points in the range of #U# are retracts: #x=U y ==> x*x[=x#;
+    (c) all retracts are in the image of #U#: #x*x[=x ==> U x=x#.
+  Pf: SPACE
+    (a) Using the infinitary representation, and rearranging terms of #U*U#,
+      we have
+      ###(
+        U(U f) &= Join_(n > 0) (U f)^n
+               &= Join_(n > 0) Join_(m > 0) f(n m)
+               &= Join_(n > 0) f^n
+               &= U f
+      ###)
+      whence #U*U=U#.
+    (b) Suppose #x=U y# for some #y#.
+      Since #U# is idempotent,
+      ###[
+        x = U y = (U*U)y = U(U y) = U x = x|x*x|... =] x*x
+      ###]
+    (c) If #x*x[=x# then all terms in the infinitary join
+      collapse into the first term: #U x=x#, as required.
+    []
+
+  Axioms and axiom schemata. 
+
+    The following axiom shemata are enforced for the atom #U#:
+    ###-
+       x=U x           x*x[=x             f x[=x
+      ------ retract   ------ retracts   --------- fixed
+      x*x[=x            x=U x            U f x=f x 
+    ###-
+    Note: Together the #retract,retracts# schemata imply that
+      #U# fixes exactly the retracts.
+    Question: Is the #fixed# schema necessary?
+
+    #U# is a closure
+    ###<
+      !assume I [= U = U * U.
+    ###>
+    whose images are retracts
+    ###<
+      !assume (U f)*(U f) [= (U f).
+    ###>
+
+    An algebraic characterization:
+    Lem: 
+      ###<
+        !assume U f = f|(U f)*f.
+      ###>
+    Pf: Using the infinitary representation
+      ###[
+        U f = f|f*f|f*f*f|...
+            = f|(f|f*f|...)*f
+            = f|(U f)*f
+      ###]
+      []
+    Indeed #U# is the least solution to the above, by definition.
+    However
+    ###<
+      !check U f != f|f*(U f).
+    ###>
+
+  Derived properties. 
+
+    Regarding types-as-idempotents,
+    ###<
+      !check U =] Y*B.
+      !check U = U U.         #a type of types
+      !check I = U I.         #a maximum type --everything is fixed
+      !check K x = U(K x).    #minimal types / singletons --only #x# is fixed
+    ###>
+    Lem: Expnentials of idempotents are idempotents
+      ###<
+        !assume (U a -> U b) = U (U a -> U b).
+      ###>
+    Pf: For any #a,b,f#, by definition
+      #(U a)->(U b) f = (U b)*f*(U a)#.
+      To show retraction,
+      ###(
+        2 (U a)->(U b) f &= (2. U b) * f * (2. U a)   #def of #->#
+                         &[= (U b) * f * (U a)        #since #(U a),(U b):U#
+                         &= (U a)->(U b) f            #def of #->#
+      ###)
+      []
+
+    We can now represent #J# in terms of #U#:
+    ###<
+      !check J = K|F = U C K = U C F.
+    ###>
+
+  ###u m n
+

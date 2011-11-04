@@ -1,0 +1,38 @@
+
+!log Building a database for SKJO.
+!restart
+!set size = 2400 #with ??? in core
+!set loudly
+
+!log Defining the basis...
+!using R.
+!think in
+    B                   @ 1,
+    C,R                 @ 2,
+    S,K,W,C I           @ 3,
+    0,1,2,S B           @ 4,
+    B',S I,W I          @ 5.
+
+!log Defining the theory...
+!read axioms/eta axioms/diverge.
+!validate
+!recheck
+
+!read axioms/random.
+!validate
+!recheck
+
+!mark
+!save skr
+
+!log Starting to think...
+!set density = 0.85
+!start resting
+!start thinking
+!16 think
+!recheck
+!save
+
+!listen
+
+

@@ -1,0 +1,53 @@
+
+!log Building a database for SKJO.
+!restart
+!set size = 3600 #with ??? in core
+!set loudly
+
+!log Defining the basis...
+!using J U V P div unit semi.
+!using code A Q E O.
+!think in
+    B                 @ 1,
+    B',C,C I,K,I      @ 2,
+    J,U,V,P           @ 3,
+    S,S',Y,W,W I      @ 4,
+    0,1,2,S B         @ 5,
+    div,unit,semi     @ 6,
+    code,A,Q,E        @ 7,
+    O                 @ 8.
+
+!log Defining the theory...
+!read axioms/order axioms/combinators axioms/eta axioms/diverge.
+!validate
+!recheck
+
+!read axioms/join axioms/idem axioms/close axioms/power.
+!validate
+!recheck
+
+!read axioms/div axioms/types axioms/tests.
+!validate
+!recheck
+
+!read axioms/code.
+!validate
+!recheck
+
+!read axioms/oracle.
+!validate
+!recheck
+
+!mark
+!save skjo
+
+!log Starting to think...
+!set density = 0.9
+!start resting
+!start thinking
+!16 think
+!recheck
+!save
+
+!listen
+

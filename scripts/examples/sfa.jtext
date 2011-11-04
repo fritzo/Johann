@@ -1,0 +1,39 @@
+
+Stochastic finite automata. \label{sec:examples/sfa}
+  ###<
+    !import axioms/random.
+  ###>
+  ###<
+    advance := <T>.
+    observe := <F>.
+    nth_obs := (\f,x,n. n<T>(f x). F).
+  ###>
+
+  Example: 
+    ###a
+      0 --> {1:0.5, 2:0.5}
+      1 --> {0}
+      2 --> {2:0.5, 1:0.25, 0:0.25}
+      start = {0:1.0}
+    ###a
+    we model
+    ###a
+      {0,1,2} = {[1/3],[2/3],[3/3]}
+    ###a
+    ###<
+      example1 := Y(\f,x.
+          <
+              f <
+                  R[2/3][3/3],        #{1:0.5, 2:0.5}
+                  [1/3],              #{0}
+                  R[3/3].R[1/3][2/3]  #{2:0.5, 1:0.25, 0:0.25}
+              > x),
+              x
+          >
+      ).
+      start1 := [1/3].
+      !reduce nth_obs example1 start1 0.
+      !reduce nth_obs example1 1.
+      !reduce nth_obs example1 Y.
+    ###>
+

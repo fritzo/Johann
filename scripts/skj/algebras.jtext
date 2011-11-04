@@ -1,0 +1,58 @@
+
+Algebras. 
+  ###<
+    !import skj/types.
+  ###>
+
+  Simulating a magma, i.e., an algebra with signature #<a:V,f:a->a->a>#
+  ###<
+    magma := (\t:V. t & t->t).
+    !check magma : V.
+    embed_magma := (/\a:V. (a->a) -> (\/t:magma.Prod(a->t, t->a))
+    (
+        \a:V, m:a->a.
+        t := ???.
+        embed := (\x:a. ???).
+        project := (\y:t.???)
+        <embed, project>
+    ).
+  ###>
+
+  For arbitrary single-sorted algebras we simply define the interface:
+  ###<
+    Nary := (V->num->V) (\a:V. Y\nary. \n:num. n T a a->(nary.n F)).
+    Algebra := (V->V) ( #i.e. language
+        \a:V.
+        nary := Nary a.
+        String.
+        BigSum nums. \n:num.
+        Prod (num & Only n, nary n)
+    ).
+  ###>
+
+  Another useful construction is a wrapper mapping algebras with a single binary
+  relation to algebras with that operation as application.
+  Consider an algebra #<a:V,f:a->a->a>#.
+  First, we construct an associated algebra with identity
+  #<a':V,<id:a',f':a'->a'->a'>>#:
+  ###<
+    Add_identity := ((\/a:V.a->a->a) -> (\/a':V. Prod a' (a'->a'->a'))) (
+        \<a:V,f:a->a->a>.
+        <Sum a unit,
+            <???,
+            ???>
+        >
+    ).
+  ###>
+  Notice that we could choose an arbitrary value for the unit.
+  Using the fixed point theorem (XXX this doesn't work), we can find a different constant such that
+  ###[
+    f'<K,x>(f'<K,y>) = f'<K,f x y>
+    f'<K,x>(f'<F,_>) = x
+  ###]
+  or equivalently
+  ###[
+    f' K x (f' K y) = f' K (f x y)
+    f' K x (f' F _) = x
+  ###]
+

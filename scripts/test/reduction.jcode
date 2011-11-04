@@ -1,0 +1,24 @@
+
+#theta is a fixed point combinator
+A := (\x,y.y.x x y).
+Theta := A A       #Turing's fixed point combinator
+!beta Theta.
+
+#this used to crash
+!using M
+!read axioms/meet
+!beta M I x.
+
+#reduce two ways to prove eta-equiv:
+#this proves composition is associative, i.e., Bx(Byz) = B(Bxy)z
+!beta (\x,y,z.(x*y)*z) x y z w.
+!beta (\x,y,z.x*(y*z)) x y z w.
+validate
+
+#reduce church numerals
+#!beta 7 f x
+
+#R-reduction
+#!beta R T F x y #should be R x y
+#!beta R T F x x #should be x
+

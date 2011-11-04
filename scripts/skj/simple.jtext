@@ -1,0 +1,729 @@
+
+A simple type constructor. (#Simple#) \label{sec:skj/simple}
+  ###<
+    !read axioms/div.
+  ###>
+
+  Comment: (RS)
+    Question: Is there a uniform constructor for simple _tests_?
+    * maybe the simple theorem can be factored into an equivalence between
+      _three_ things: syntactic types, fixedpoints, and types WRT Hstar?
+
+  In this section we construct for each simple type #tau# an SKJ-definable
+  closure #[tau]# whose fixedpoints (mod Hstar) are exactly the SKJ-terms
+  typable by #tau#
+  (for a suitable generalization of Curry-style typability from SK to SKJ,
+  mod Hstar).
+  The construction takes the form of (1) a translation from simple types to
+  SK-definable type codes, and (2) an SKJ-definable term #Simple# that binds
+  each free variable in the simple type.
+  For example
+  ###[
+    [(a->a)->(a->b)->a->b] = Simple\a,a'. Simple\b,b'. (a'->a)->(a'->b)->a->b'
+  ###]
+
+  We conclude this section by showing that the same #Simple# type construction
+  also works for simple recursive types, and 
+  types involving type constants for arbitrary closures #a:V#.
+
+  As a corollary to definability of simple types,
+  we would like an interpretation of typed lambda-calculus (typed SK)
+  into untyped lambda-calculus with join (SKJ).
+  However, #Simple#-definable types are inhabited not only by well-typed SK
+  terms, but also SKJ-terms.
+  We acheive the embedding theorem in \ref{sec:skj/types}
+  by "disambiguating" the #Simple#-definable closures
+  to contain only the original SK-terms we would expect.
+  Thus we can interpret a richly typed lambda-calculus (SK) in the untyped SKJ.
+    
+  Then in \ref{sec:skrj} we show how to narrow down the types to still allow
+  fuzziness, but in a well-behaved way.
+  By forcing fuzziness to the top of Bohm trees, we can define monadic types
+  whose inhabitants are joins of random SK-terms.
+  Thus we can interpret a typed lambda-calculus (SK) with a monadic type of
+  imprecise probabilities in the untyped SKRJ.
+
+  Design Goals: We want to encode types-as-closures in SKJ to achieve
+    particular sets of inhabitants-as-fixedpoints.
+    (1) The typed language should support at least:
+      * simple types,
+      * recursive types,
+      * polymorphic and dependent types, and
+      * type constants (one for each closure).
+    To prove correctness, we
+    (2) define an _interpretation_ of types as closures (terms),
+    (3) prove _raising_ properties of types as closures, and finally
+    (4) classify the inhabitants of types as fixedpoints,
+      using the Bohm tree characterization of SKJ terms.
+
+  Warning: In this section only, #x::tau# denotes a syntactic typing relation.
+
+  Interpreting simple types as closures. 
+    ###g G D
+    ###s a1 a2 an
+    ###d _M \mathcal{M}
+
+    Figure: 
+      ###g p r s t
+      ###-
+        #term formation
+                             m tm   n tm   /\m in _M. m tm
+        ----   ----   ----   -----------   ---------------
+        S tm   K tm   T tm      m n tm       Join _M tm
+
+        #type formation
+
+            a var      G|-s tp   G|-t tp               /\t in A. t tp
+        ------------   -----------------   ---------   --------------
+        G,a,G'|-a tp       G|-s->t tp      G|-any tp      Insn A tp
+
+        #typing
+
+        G|-r tp   G|-s tp   G|-t tp   G|-s tp   G|-t tp   G|-t tp
+        ---------------------------   -----------------   -------
+        S::(r->s->t)->(r->s)->r->t        K::s->t->s       T::t
+
+        m::s->t   n:s   /\m in _M. m::t    m tm    /\t in A. m::t 
+        -------------   ---------------   ------   --------------
+           m n::t         Join _M::t      m::any      m::Insn A
+      
+        #subtyping
+
+         t tp     t tp    s<:s'   t<:t'   Insn A tp   t in A   /\t in A. s<:t
+        ------   ------   -------------   ------------------   --------------
+        nil<:t   t<:any    s->t<:s'->t'        t<:Insn A        s <: Insn A
+
+        #type interpretation
+
+         G|-a tp             G,a;D|-a|>a/a            G,a;D|-b|>b/b'
+        ---------- begin   ----------------- vari   ----------------- skip
+        G;|-a|>a/a         G;a/a',D|-a|>a/a'        G;a/a',D|-b|>b/b'
+
+                           ;D|-s|>m/m'   ;D|-t|>n/n'
+        ------------ any   ------------------------- exp
+        ;D|-any|>I/I         ;D|-s->t|>m'->n/m->n'
+
+        ;D|-s|>m/m'            [s]_(D,a/a')=m
+        ----------- root   --------------------- bind
+         [s]_(D)=m'        [s]_(D)=Simple\a,a'.m
+      ###-
+      Caption: \label{fig:skj-simple}
+        Typing and type interpretation.
+        Exponential subtyping is covariant in _both_ domain and range.
+        Contexts _do_not_ commute.
+      ###u p r s t
+    Comment: Why no elim form for join?  Because it's monadic.
+    We begin with language of untyped terms #m#,
+    a language of simple types #tau#,
+    and rules for judging a term well-typed #m::tau#,
+    as in Figure \ref{fig:skj-simple}.
+    We treat infinitary joins as basic, and finitary joins as derived:
+    nullary #_:=Join {}#, and binary #J:=\x,y.Join {x,y}#.
+    This way, our correctness proof extends unaltered
+    to the join-completion of SKJ, and its subalgebras, eg SKJO.
+
+    Example: The inhabitants of the type #(a->a)->a->a# of Church numerals
+      are (up to equality) arbitrary joins of the terms
+      #_#, #T#, zero #z=\-,x.x#, and successors #s(n)=\f,x.f(n f x)# of
+      other inhabitants #n#.
+      So for example #s(s(z))|s(z|s(_))|s(s(s(T))):(a->a)->a->a#
+      is an inhabitant that cannot be further simplified.
+
+    Comment: see notes/types.text (2008:03:02-03) (Q2.Q3) for discussion.
+      here the join,copy pair was introduced.
+
+    We interpret types as functors bivariate in each atomic type.
+    The functors are implemented as SKJ-terms, where
+    constants-as-closures appear as themselves, and
+    exponentials are conjugation #a->b=\f.b*f*a# covariant in #b# and
+    contravariant in #a# (as in the Karoubi envelope; see Barendregt84).
+    For example keeping track of variance, we interpret #[-]#
+    ###(
+                   [a] &= Simple\a,a'. a'
+                [a->a] &= Simple\a,a'. a->a'
+      [(a->a)->(a->a)] &= Simple\a,a'. (a'->a)->(a->a')
+                [a->b] &= Simple\a,a'. Simple\b,b'. a->b'
+    ###)
+    Closures (as type constants) are interpreted as themselves.
+    Figure \ref{fig:skj-simple} formalizes this interpretation algorithm.
+
+    The interpretation algorithm #(begin)#s by looking at variables,
+    traversing through the context and noting the #(vari)#ance of each variable,
+    #(skip)#ping irrelevant variables,
+    and ignoring the variance of type constants for closures #:V#.
+    Since the exponential reverses variance in the domain type,
+    we build two type interpretations, one for covariant and one
+    for contravariant uses, written as #contravariant/covariant# pairs.
+
+    Having interpreted the all the leaves on a type derivation tree,
+    we next combine subtrees on each side of #(exp)#onentials,
+    preserving the variance of codomain types
+    and reversing the variance of domain types.
+
+    When we reach the #(root)# of the typing derivation tree, we #(bind)#
+    each #contravariant/covariant# pair of type variables with a type
+    constructor #Simple#, implemented as an SKJ term.
+    #Simple# inputs a type code #f=\a,a'.t# bivariate in a type variable,
+    and produces a closure
+    ###[
+      Simple f = V (f s_1 r_1 | f s_2 r_2 | ...)
+    ###]
+    by substituting for the contra- and co-variant occurrences of the variable
+    various section-retract pairs #s,r# satisfying #r*s=I# and #s*r![=I#.
+    We can generate all the section-retract pairs from just two pairs
+    ###<
+      raise := (\x,-. x).
+      lower := (\x. x T).
+      !check raise = K  AND  lower = <T>.
+      !check lower*raise = I !=] raise*lower.
+
+      pull := (\x,y. x|div y).
+      push := (\x. x _).
+      !check pull = K|K div  AND  push = <_>.
+      !check push*pull = I !=] pull*push.
+    ###>
+    and using the facts that if #s,r# and #s',r'# are section-retract pairs,
+    then so also are their composition #s*s',r'*r#
+    and their conjugation #r->s',s->r'#.
+    Joining over all compositions (via #V(...)# and #f I I#)
+    and conjugations (via #s\a,a'. s\b,b'. f (a'->b) (a->b')#)
+    gives the type interpreter for a single atomic type
+    ###<
+      !define Simple := (any->V) (
+          Y\s,f. f I I
+               | f raise lower
+               | f pull push
+               | s\a,a'. s\b,b'. f (a'->b) (a->b')
+      ).
+    ###>
+    It will also be convenient to write #Simple f# as an infinitary join
+    over a set #SS# of section-retract pairs,
+    which is by definition the smallest set such that
+    ###d in {\NS\in\NS}
+    ###-
+      -----------   -------------------   -----------------
+      <I,I> in SS   <raise,lower> in SS   <pull,push> in SS
+
+      <a,a'> in SS   <b,b'> in SS
+      ---------------------------
+          <a'->b,a->b'> in SS
+    ###-
+    We can then write
+    ###[
+      Simple = \f. V (Join_(<s,r> in SS) f s r)
+    ###]
+    Exercise: 
+      ###<
+        !check pull ]] raise.
+        !check push [[ lower.
+
+        !check Simple f = V ( f I I | f raise lower | f pull push
+                            | Simple\a,a'. Simple\b,b'. f (a'->b) (a->b') ).
+        !check Simple f = V ( f I I | f raise lower | f pull push
+                            | Simple\b,b'. Simple\a,a'. f (a'->b) (a->b') ).
+
+        !check Simple =] (any->V) ( (I,I) | (raise,lower) | (pull,push) ).
+        !check Simple =] (any->V) ( (I,I) | (raise,lower) | (pull,push) ).
+      ###>
+    Now we can show that it doesn't matter how we order the variables in the
+    noncommutative context #Gamma# of a type derivation.
+    Lem: (commutativity)
+      #(Simple\a,a'. Simple\b,b'. M) = (Simple\b,b'. Simple\a,a'. M)#.
+    Pf: By associativity and commutativity of join. []
+    Exercise: 
+      ###<
+        !check (Simple\a,a'. Simple\b,b'. f a a' b b')
+             = (Simple\b,b'. Simple\a,a'. f a a' b b').
+      ###>
+    Lem: (weakening) If #b,b'# are not free in #M#, then
+      #(Simple\a,a'. Simple\b,b'. M) = (Simple\a,a'. M)#.
+    Pf: Generalizing the property
+      ###<
+        !check V(V x|V y) = V(x|y).
+      ###>
+      to infinitary joins #V Join V=V Join# , we show
+      ###(
+        Simple\a,a'. Simple\b,b'. M &= Simple\a,a'. V M
+                                    &= V (Join_(<a,a'> in SS) V M)
+                                    &= V (Join_(<a,a'> in SS) M)
+                                    &= Simple\a,a'. M
+      ###)
+      []
+    Exercise: 
+      ###<
+        !check (Simple\-,-. a) = V a.
+        !check (Simple\a,a'. Simple\-,-. f a a') = Simple f.
+      ###>
+    We can also show that interpretation respects exponentials.
+    First a
+    Lem: (conjugation)
+      #(Simple\a,a'. Simple\b,b'. f a a' -> g b b') [= Simple f -> Simple g#.
+    Pf: Using infinitary versions of the following properties of conjugation
+      ###<
+        !check x->(y|z) = x->y|x->z.
+        !check (x|y)->z ]] x->z|y->z.
+        !check V(a->b) [[ V a -> V b.
+      ###>
+      we show
+      ###(
+        Simple\a,a'.& Simple\b,b'. f a a' -> g b b'
+            &= V Join_(<a,a'> in SS) V Join_(<b,b'> in SS) f a a' -> g b b'
+            &= V Join_(<a,a'> in SS) Join_(<b,b'> in SS) f a a' -> g b b'
+            &= V Join_(<a,a'> in SS) (f a a' -> Join_(<b,b'> in SS) g b b')
+            &[= V ( (Join_(<a,a'> in SS) f a a') -> (Join_(<b,b'> in SS) g b b') )
+            &[= (V Join_(<a,a'> in SS) f a a') -> (V Join_(<b,b'> in SS) g b b')
+            &= Simple f -> Simple g
+      ###)
+      []
+    Question: Does the converse hold?
+    Exercise: 
+      ###<
+        !check (Simple\a,a'. Simple\b,b'. f a a' -> g b b')
+             [= Simple f -> Simple g.
+      ###>
+    ###g s t
+    Now to express respect for exponentials,
+    we need a notion of equality at a type.
+    Def: Let #x,y# be arbitrary terms, and #a:V# be a closure.
+      We say #x=y mod a# iff #a x=a y#,
+      ie iff #x# and #y# are identical when seen as terms of type #a#.
+    Cor: (#[-]# respects exponentials)
+      For #s,t# simple types with disjoint sets of variables variables, \\
+      #[s->t][=[s]->[t]#,
+      and hence if #x=y mod [s->t]# then #x=y mod [s]->[t]#.
+    ###u s t
+
+    Consider the action of #Simple# on a few functions
+    Lem: 
+      ###<
+        !check (Simple\a,a'. I) = I.
+        !check (Simple\a,a'. _) = I.
+        !check (Simple\a,a'. T) = T.
+        !check (Simple\a,a'. a) = T.
+        !check (Simple\a,a'. a') = div.   #inhabited by #{_,T}#
+      ###>
+    Pf: Left as exercise for Johann.  []
+    Exercise: 
+      Solving for least fixedpoints, and noting that #Simple f=]I#,
+      ###<
+        !check (Simple\a,a'. I)
+            = V (I|I|I|Simple\a,a'. Simple\b,b'. I)
+            = (Simple\a,a'. Simple\b,b'. I)
+            = (Y\s. Simple\a,a'. s)
+            = I.
+
+        !check (Simple\a,a'. _)
+            = V (_|_|_|Simple\a,a'. Simple\b,b'. _)
+            = (Simple\a,a'. Simple\b,b'. _)
+            = (Y\s. Simple\a,a'. s)
+            = I.
+
+        !check (Simple\a,a'. T)
+            = V (T|T|T|Simple\a,a'. Simple\b,b'. T)
+            = V T
+            = T.
+
+        !check (Simple\a,a'. a)
+            = V (I|raise|pull|Simple\a,a'. Simple\b,b'. a'->b)
+            =] V (raise|pull)
+            = V (K|K div)
+            = T.
+
+        !check (Simple\a,a'. a')
+            = V (I|lower|push|Simple\a,a'. Simple\b,b'. a->b')
+            = V (<T>|Simple\a,a'. Simple\b,b'. a->b')
+            = P div (Simple\a,a'. Simple\b,b'. a->b')
+            = P div (Simple\a,a'. a -> Simple\b,b'. b')
+            = P div (I -> Simple\b,b'. b')
+            = (Y\s. P div (I -> s))
+            = (Y\s. P div (B s))
+            = div.
+      ###>
+      since #div=div*div#
+
+    ###u in
+
+  Correctness of the simple type constructor. 
+
+    ###g r s t
+
+    We need to show soundness #q::t==>q:[t]# and completeness #q:[t]==>q::t#.
+    Soundness of our #Simple# type interpretation is provable by
+    an easy induction on derivations.
+    Thm: (soundness) If #q::t# then #q:[t]#.
+    Pf: 
+      We consider the action of each generator of #Simple# on each term.
+      So letting #a/a'#, #b/b'#, and #c/c'# be section/retract pairs so that
+      #a'*a=b'*b=c'*c=I#, we show that each term is fixed under the generators
+      of simple.
+      By induction on typing derivations (ignoring for now intersection types),
+      Case: #S::(r->s->t)->(r->s)->r->t#.
+        ###[
+          ((a'->b'->c)->(a'->b)->a->c') S
+              = (a'->b'->c)->(a'->b)->a->c' \x,y,z. x z(y z)
+              = \x,y,z. c'. (a'->b'->c x) (a z) ((a'->b y) a z)
+              = \x,y,z. c'*c. x ('a*a z) (b'*b. y. a'*a z)
+              = \x,y,z. x z(y z)
+              = S
+        ###]
+      Case: #K::s->t->s#
+        ###(
+          (a->b->a') K &= (a->b->a') \x,y. x
+                       &= \x,y. a'. a x
+                       &= \x,y. a*a' x
+                       &= \x,y. x
+                       &= K
+        ###)
+      Case: #T::t# by induction on the structure of the type #t#:
+        Subcase: For #t=a# a variable, consider the atomic retracts #a' T#
+          ###[
+                lower T = T T = T
+                push T = \y.T|div y = \y.T = T
+          ###]
+        Subcase: For #t=r->s# for types #r,s#, consider the action of any
+          retract #b'# and any section #a#.
+          ###(
+            (a->b') T &= \x. b' (T (a x))
+                      &= \x. b' T
+                      &= \x. T                 #by hypothesis on #b'#
+                      &= T
+          ###)
+        Subcase: For #t=any# #I T=T#.
+      Case: #m n::t#, assuming #m::s->t# and #n::s#.
+        By hypothesis, #m:[s->t]# and #n:[s]#, so
+        ###(
+          m n &[= [t] (m n)       #since #[t]# is a closure
+              &= (any->[t]) m n
+              &[= ([s]->[t]) m n  #since #[s]# is a closure
+              &[= [s->t] m n      #by respect for exponentials
+              &= m n              #by hypothesis on #m#
+        ###)
+      Case: #Join _M::t#.  Observe that each operation of #Simple# acts
+        pointwise on joins (say by induction over type structure),
+        i.e. #Join# and #Simple# commute.
+        Hence,
+        ###(
+          [t] Join _M &= Join_(m in _M) [t] m   #by commutativity
+                      &= Join_(m in _M) m       #by hypothesis
+                      &= Join _M
+        ###)
+      Case: #m::any#.  Since #[any]=I#, anything is fixed by #[any]#.
+      []
+
+    Completeness is much more difficult,
+    and makes crucial use of the Bohm Tree theorem of \ref{sec:axioms/join}.
+    In particular, #Simple# does not work in full Dinfty models,
+    where the BT theorem fails.
+    The proof than any fixedpoint #q:[t]# is typable #q::t#
+    considers by way of contradiction any #q!::t# not typable by #t#,
+    showing that #[t]# raises #q# to something strictly larger.
+    The idea is to
+    (1) consider WLOG any badly-typed finite SK-definable BT
+      #q'=]q# extending #q#, so also #q'!::t#.
+    (2) _adapt_ the term #q'# to the type #t#
+      by specializing the type (via moves #a:>b->c#) to the term,
+      and putting the term in beta-long form down to the point of typing error.
+    (3) consider the BT node where the typing error occurs, a head normal form;
+      the error is one of: too few arguments, too many arguments,
+      or an atomic type clash.
+    (4) show that various sequences of #section->retract# operations
+      raise each error to #T#.
+    (5) bubble-up the error to the top of #q'# BT
+      and generalize the type (via moves #b->c<:a#) back to its original form.
+
+    So let us consider a badly-typed finite sequential BT #q'!::t#.
+    There are two problems we face in finding a type error:
+    ill-typed terms might look like terms of lower type,
+    or they might look like terms of higher type.
+    To deal with higher-type-looking terms, we adapt their types by
+    specializing moves #a:>b->c#.
+    For example when checking
+    ###[
+      \f,x.f (\y. x f) ?: a->a
+    ###]
+    we specialize #a->a :> (b->c)->b->c :> ((d->e)->c)->(d->e)->c#
+    where we can annotate
+    ###[
+      \f:(d->e)->c,x:d->c. f (\y:d. x f :e) :c
+    ###]
+    and observe a problem typing #f:(d->e)->c,x:d->c|-x f:e#.
+    Specialization is built into the #Simple# type constructor via conjugation
+    ###[
+      Simple f = V ( ... | Simple\a,a'. Simple\b,b'. f (a'->b) (a->b'))
+    ###]
+    Lem: (specialization) Let #s,t# be pure simple types,
+      ie, free of type constants and intersection operations.
+      If #s<:t# then #[s][=[t]#.
+    Pf: Suppose #s<:t#.
+      Then there is a sequence of types #s_0<:s_1<:...<:s_n#
+      such that each #s_i<:s_(i+1)# is the result of an elementary
+      specializing substutition #a_i<:b_i->c_i# of type variables
+      (pf: by induction on structure of subtyping derivations).
+      At each substitution,
+      the conjugation operation in #Simple# shows that #s_i=]s_(i+1)#.
+      []
+
+    To deal with lower-type looking terms, we next adapt the term by putting it
+    in long beta-eta form (Hindley97) with respect to the adapted type.
+    For example when checking
+    ###[
+      \x,y.x ?: a->a->a->a
+    ###]
+    we lengthen the term by eta-expanding and annotate to
+    ###[
+      \x:a,y:a,z:a. x z :a
+    ###]
+    to find a problem typing #x:a,z:a|-x z:a#.
+
+    After specializing a term,
+    there are three possibile kinds of typing problem:
+    variable-arrow, arrow-variable, and variable-variable type clashes.
+    When we find such a typing problem
+    we create an error by raising the conflicting subterm to #T#,
+    using one of the following #section->retract# operations.
+    Below we formally verify unary forms of each lemma,
+    and informally prove the general #n#-ary forms.
+    Lem: (one too few args) #T = [a->a] \f,-.f#.
+    Pf: #(pull->push);(raise->lower)# raises #\f,-.f# as
+      ###<
+        !check (pull->push) (\f,-.f)
+            = (\f. (\-,x.f|div x) _)
+            = (\f,x.f|div x).
+        !check (raise->lower) (\f,x.f|div x)
+            = (\f.T)
+            = T.
+      ###>
+      []
+    Exercise: 
+      ###<
+        !check T = (pull->push ; raise->lower) (\f,-.f).
+        !check (Simple \a,a'. a->a) =] push->pull.
+        !check (Simple \a,a'. a->a) =] raise->lower.
+        !check T = (Simple \a,a'. a->a) (\f,-.f).
+      ###>
+    Lem: (too few args) #T = [a->a] \f,-^^n.f#.
+    Pf: #(pull->push); n(raise->lower)# raises
+      ###(
+        \f,-^^n.f &|-> \f. (\-^^n,x. f|div x) _   #via #pull->push#
+                  &= \f,-^^(n-1),x. f|div x
+                  &|-> \f,x.(\-^^(n-1).f)|div x   #via #(n-1)(raise->lower)#
+                  &|-> \f.(\-^^n.f)|div T         #via #raise->lower#
+                  &= \f.div T
+                  &= T
+      ###)
+      []
+    Lem: (one too many args) #T = [a->a] \f.f _#.
+    Pf: #(raise->lower);(pull->push)# raises #\f.f _# as
+      ###<
+        !check (raise->lower) (\f.f _)
+            = (\f. (\-.f) _ T)
+            = (\f.f T).
+        !check (pull->push) (\f.f T)
+            = (\f. (\x.f|div x) T)
+            = (\f. f|div T)
+            = T.
+      ###>
+      []
+    Exercise: 
+      ###<
+        !check T = (raise->lower ; pull->push) (\f. f _).
+        !check T = (Simple \a,a'. a->a) (\f,-. f).
+      ###>
+    Lem: (too many args) #T = [a->a] \f.f _^^n#.
+    Pf: #n(raise->lower);(pull->push)# raises
+      ###(
+        \f.f _^^n &|-> \f. (\-^^n. f) _^^n T^^n   #via #n(raise->lower)#
+                  &= \f. f T^^n
+                  &|-> \f. (\x.f|div x) T^^n      #via #pull->push#
+                  &= \f. (f|div T) T^^(n-1)
+                  &= T T^^(n-1)
+                  &= T
+      ###)
+      []
+    Lem: (clashing) If #a,b# are distinct type variables
+      then in the interpreted type,
+      ###[
+        T = Simple\a,a'. Simple\b,b'. b'*a
+      ###]
+    Pf: We can simply mismatch two section-retract pairs
+      ###<
+        !check (Simple\a,a'. Simple\b,b'. b'*a)
+            =] lower*pull
+            = <T>*(\x,y.div y|x)
+            = (\y.div y|T)
+            = T.
+      ###>
+      []
+
+    Now after finding a type error at a specialized type,
+    we want to be able to "bubble up" the error to the most general type.
+    Lem: (close bubbling) #T = [a->a] \f,-.f T#.
+    Pf: #pull->push# raises #\f,-.f T# as
+      ###<
+        !check (pull->push) (\f,-.f T)
+            = (\f. (\-. (\x.f|div x) T) _)
+            = (\f. (\x. f|div x) T)
+            = (\f. f|div T)
+            = T.
+      ###>
+      []
+    Exercise: 
+      ###<
+        !check (pull->push) (\f,-. f T) = T.
+        !check (Simple \a,a'. a->a') (\f,-. f T) = T.
+      ###>
+    Lem: (bubbling) #T = [a->a] \f,-^^n,-.f _^^n T#.
+    Pf: #n(raise->lower);(pull->push)# raises
+      ###(
+        \f,-^^n,-.f _^^n T &|-> \f,-. f T   #via #n(raise->lower)#
+                           &|-> T           #via #pull->push#
+      ###)
+      []
+    Eg: We can show that #T = [a->a] \f,x. f f# by
+      * first specializing to #a->a :> (b->c)->b->c#;
+      * then finding an error with the too-few-args lemma,
+        raising #[(b->c)->b->c] \f,x.f f =] \f,x.f T#;
+      * and finally bubbling the error up to the more general type,
+        raising #[a->a] \f,x.f T = T#.
+
+    Next we need to show that any kind of typing error
+    can be detected with our tools for #a->a#.
+    For more complex types, we might have typing errors deep in a Bohm tree.
+    We can use #a->a# arguments to detect any single type error in a Bohm tree,
+    since we just need top-down and bottom-up types to agree.
+    But we also need to be able to simultaneously raise errors in different
+    branches of a Bohm Tree.
+    Eg: Consider the type #((a->a)->(a->a)->b)->b# of pairs of semibooleans,
+      and the non-inhabitant #\f. f (\x,-. x) (\x. x _)#,
+      where the first component has too few arguments, and the second too many.
+      The too-few-args lemma raises the first component,
+      and the too-many-args raises the second comonent, but can we raise both?
+    We gerneralize this with a sort of simultaneous raising lemma.
+    Lem: (coherence): If #Simple# raises each of a set of errors
+      in a Bohm tree, then it simultaneously raises them all.
+    Pf: By compactness we need only argue about finite sets of errors.
+      Suppose thus we are given a finite number of arguments,
+      each detecting a particular type error in a Bohm tree.
+      It is sufficient to weave them together into a single argument detecting
+      all errors.
+
+      Note that
+      each sequence of operations in the detection of the errors is one of:
+      (too-few), (too-many), (clashing), and (bubbling).
+      These are composed of elementary operations #raise->lower#, #pull->push#,
+      and their specializations #a:>b->c#.
+
+      In any of these cases, we can safely apply the specialized cases first,
+      then the #pull->push# moves, then the #raise->lower# cases.
+      Comment: XXX sketchy XXX
+      Hence there is a sequence of moves containing all
+      each of the given raising sequences as a subsequence.
+      []
+    Takeout: healing is unnecessary
+      Lem: (healing): if #q# converges then #[a->a] q=]\f.f#.
+      Pf: Since #q# converges, it extends a head normal form #\f,_x.h _M#.
+        By the euthanasia lemma, #|_x|=|_M|# and #h=f#,
+        so #q# also extends #\f,-^^n.f _^^n# where #n=|x|#.
+        Then #raise->lower# raises #q# to 
+        ###(
+          [a->a] q &=] [a->a] \f,-^^n. f _^^n
+                   &=] n (raise->lower) \f,-^^n. f _^^n
+                   &= \f.f
+        ###)
+        []
+    Finally we start back at step (1) and assemble the type checking lemmas.
+    Thm: (completeness): If #q:[t]# then #q::t#.
+    Pf: Suppose #q# extends a finite Bohm tree with typing errors,
+      ie for various subterms the top-down and bottom-up typings disagree,
+      or some subterms cannot even be typed.
+      Each of the typing errors is raised to #T# by one of the
+      (too-few), (too-many) or (clashing) lemmas.
+      The coherence lemma allows us to raise all the errors simultaneously.
+      The resulting raised #q# then has proper type.
+      []
+
+    Comment: Make this into an algorithm TODO
+      Def: (type checking)
+        ###-
+          #type checking
+
+          ((a->b)->c) \f,x.m x error
+          -------------------------- lengthen
+            ((a->b)->c) \f.m error
+        ###-
+
+    Cor: (#Simple# works) #q::tau# iff #q:[tau]#.
+    Pf: The soundness and completeness theorems each prove one direction. []
+
+  Extending to recursive types, intersection types, and type constants. 
+
+    Edit: XXX (Statman) add detail please.
+
+    Using intersection types we can construct infinite (eg recursive) types by
+    intersecting over infinite chains of approximations.
+    Then using the subtyping partial order,
+    we can prove equations among recursive types.
+    Eg: We can construct a type #mu a. b->(a->b)->b# of ambiguous numerals
+      by intersecting all the types
+      ###(
+                           any&
+                      b->( any&->b)->b
+                 b->((b->( any&->b)->b)->b)->b
+                           ...&
+      ###)
+      This can be defined as a least fixed point,
+      either outside or inside the type iterpretation
+      ###<
+        !check (
+          pre_num := (Y\a. Simple\b,b'. b->(a->b)->b').
+          pre_num = (Simple\b,b'. V (\a. b->(a->b)->b') any)
+        ).
+      ###>
+
+    We can also extend our simple type interpretation by arbitrary closures
+    without much work.
+    Consider extending the type language and interpretation by
+    ###-
+      #extended types
+
+      m tm   m:V   m tm   m:V               
+      ----------   ---------- close
+        G|-m tp    |G|-m|>m/m    
+    ###-
+    Lem: For ant #a,b:V# closures, #a->b = P (a->any) (any->b)#.
+    Pf: Simple reduction. []
+    Lem: Let #t# be a simple type with both type variables and type constants
+      (closures) as leaves, and let #r# be #t# with all _variables_ replaced by
+      #any# and #s# be #t# with all _constants_ replaced by #any#, so that
+      #[s]=s#.
+      Then #[t]=P[r][s]=P[r]s#.
+    Example: (semisets) Semisets of #a:V# are joins of terms #\f:a->any. f x#.
+      We will discuss them more at the end of \ref{sec:skj/types}
+      ###[
+        sset := V (Simple\b,b'. (any->b)->b').      ## = [(any->b)->b]
+        Sset := V->V (\a. Simple\b,b'. (a->b)->b'). ## = \a:V. [(a->b)->b]
+        !check Sset a = P sset ((V a->any) -> any).
+      ###]
+    Pf: By distributivity of right-application over join:
+      each term in the simple interpretation #SS_(a,a') ...# of #t#
+      is a conjugation of terms in #r# and closures in #s#.
+      For arbitrary terms #x# and closures #c#,
+      ###[
+        V (x->c) = P (x->I) (I->c)
+        V (c->x) = P (c->I) (I->x)
+      ###]
+      []
+
+    Takeout: Eg: (products) Products of #a,b:V# are restricted pairs
+      ###[
+        pair := P (Simple\a,a'. (any->any->a)->a') (\p. (p K,p F)).
+        Prod := (V -> V -> P pair) (\a,b. (a->b->any)->any).
+        !check (
+            /\a:V,b:V.
+            Prod a b = P (Simple\c,c'. (a->b->c)->c') (\p. (p K,p F))
+        ).
+      ###]
+  
+  ###u G r s t _M
+
+

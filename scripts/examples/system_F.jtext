@@ -1,0 +1,35 @@
+
+System F. \label{sec:examples/system_F}
+  ###<
+    !import skj/types skj/tests skj/logic.
+  ###>
+
+  (see also \ref{sec:examples/godels_T})
+
+  Our main theorem in this section will be a termination proof for Girard and
+  Reynold's System F, polymorphically typed lambda calculus.
+  Comment: should we also prove termination of #F_omega#?
+
+  Polymorphic lambda-calculus. 
+
+    Question: How to code system-F terms as combinators?
+      What are system-F types?
+
+  Proving termination. 
+
+    ...reducibility candidates...
+
+  Formally verifying the proof. 
+
+    Def: The _reducibility_candidate_ semipredicate is
+      ###<
+        RC := (/\t:ty. Test. Code {Test. Term t}) (
+            \t,{r}.
+            ???
+        ).
+        rc := Test (Code {Test term}) (???).
+
+        !check Red num_ty = test_num*eval.
+      ###>
+
+

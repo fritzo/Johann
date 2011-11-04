@@ -1,0 +1,81 @@
+
+Storage. \label{sec:lib/stores}
+  ###<
+    !skim lib/types
+    !skim lib/tests
+  ###>
+
+  Stores/Enums/Spaces are infinitely-deep internally maybe-labelled binary
+  trees, and locations/indices/points are (isomorphic to) binary strings.
+  ###<
+    Store := (/\a:type. type. Y\s. Prod (Maybe a) (Pair s)).
+    store := store any.
+  ###>
+
+  Indices are like reference/pointers, and access stores
+  ###<
+    idx := type (Y\r. Maybe. Sum r r).
+    root := idx none.
+    left := idx->idx (some * inl).
+    right := idx->idx (some * inr).
+
+    Get := (/\a:type. (Store a)->idx->(Maybe a)) (
+        \_. Y\g. \(m,s1,s2). (m, g s1, g s2)
+    ).
+    Set_maybe := (/\a:type. (Maybe a)->(Store a)->idx->(Store a)) (
+        \_,m'. Y\f. \(m,s1,s2). ((m', s1, s2), (m, f s1, s2), (m, s1, f s2))
+    ).
+    Set := (/\a:type. a->idx->(Endo. Store a)) (
+        \x,i,s. set_maybe (some x) s i
+    ).
+    get := Get any.
+    set := Set any.
+  ###>
+
+  One of the main uses of stores is enumeration
+  ###<
+    e := Store.
+    e-empty := store (Y\e. (none, e, e)).
+    e-Sgtn := (/\a:type. a->(Store a)) (\_,x. (some x, e-empty, e-empty)).
+    e-Sum := (/\a:type. Bin_op. Store a) (\_,s,s'. (none, s, s')).
+    e-sgtn := e-Sgtn any.
+    e-sum := e-sum any.
+  ###>
+
+  Example: We can define beta-reduction rules via
+    Notation: A semi, dot, or comma just before a right paren is ignored.
+    ###[
+      atom := idx.
+      atoms := Store idx (
+          add := (\i. set i i).
+          <e-empty>.
+          add (-Bot); add (-Top);
+          add (-I); add (-K); add (-B); add (-C);
+          add (-W); add (-S);
+          add (-J);
+          add (-Y);
+      ).
+
+      Rules := nat->close (\n:nat. Store. n (exp code) code).
+      beta_0 := Rules 0 e-empty.
+      beta_1 := Rules 1 (
+          <e-empty>.
+          set atoms-Top (\_. "Top");
+          set atoms-Bot (\_. "Bot");
+          set atoms-I (\"x". "x");
+          set atoms-Y (\"x". "x(Y x)");
+      ).
+      beta_2 := Rules 2 (
+          <e-empty>.
+          set atoms-K (\"x",_. "x");
+          set atoms-W (\"x","y". "x y y");
+      ).
+      beta_3 := Rules 3 (
+          <e-empty>.
+          set atoms-B (\"x","y","z". "x(y z)");
+          set atoms-C (\"x","y","z". "x z y");
+          set atoms-S (\"x","y","z". "x z(y z)");
+          set atoms-J (\"x","y","z". "J(x z)(y z)");
+      ).
+    ###]
+

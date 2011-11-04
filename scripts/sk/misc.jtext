@@ -1,0 +1,80 @@
+
+Standard Untyped Combinators. \label{sec:lib/untyped}
+  ###<
+    !read axioms/eta axioms/diverge axioms/join
+  ###>
+
+  We eventually will develop a variety of types and a large set of typed
+  programming tools, but even in the construction of types, some basic tools
+  will be needed.
+  This section gives preliminary definitions for those necessary tools, later
+  to be redefined in a type-safe manner.
+
+  Simple nonstandard logic, to be revised in section \ref{sec:lib/logic}
+  ###<
+    not := C.
+    and := (\x,y.x y F).
+    or := (\x,y.x K y).
+    if := <I,Bot>.
+    assert := <I,Top>.
+  ###>
+
+  Simple arithmetic, to be revised in section \ref{sec:lib/nats}
+  ###<
+    zero := (\s,z.z).
+    succ := (\n,f,x. f. n f x).
+    add := (\n,n',f,x. n f. n' f x).
+    J_over_nats := (Y\y,f. f zero|y f*succ).
+  ###>
+  which we often informally write
+  ###[
+    (Join n=>0. M) :== (J_over_nats \n. M).
+  ###]
+
+  Binary products
+  ###<
+    mk_pair := (\x,y,f.f x y).
+    pi_1 := (\p. p \x,-.x).     ##= <K>#
+    pi_2 := (\p. p \-,y.y).     ##= <F>#
+    !check mk_pair = (\x,y.<x,y>).
+    !check pi_1 = (\<x,->.x).
+    !check pi_2 = (\<-,y>.y).
+  ###>
+  Functions to make general tuples and select out their components,
+  to be revised in section \ref{sec:lib/tuples}
+  ###<
+    mk_tup := (
+        z := <0,I>.
+        s := (\<n,m>. <succ n, n B C m>).
+        <s,z,F>
+    ).
+    sel := (\n,N. n K (n<Bot>)*(N K) Bot).
+  ###>
+
+  Takeout: 
+    list/stack operations
+    ###<
+      emptylist := (\r,s.s).
+      push_front := (\h,t,r,s. t r. r h y).
+      push_back := (\h,t,r,s. r h. t r y).
+      top := (\t,r,s. ???).
+      pop := (\t,r,s. ???).
+    ###>
+
+  Sum operations
+  ###<
+    inl := (\x,l,-.l x).
+    inr := (\x,-,r.r x).
+  ###>
+  The exponential type
+  ###<
+    exp := (\a,b,f.b*f*a). ## = (\a,b. a->b)#
+  ###>
+
+  SK has a nice one-point basis, as observed by Scott76
+  ###<
+    X := <K,S,K>.
+    !check K = X X X.
+    !check S = X(X X).
+  ###>
+
