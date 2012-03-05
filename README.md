@@ -27,6 +27,32 @@ This repository includes
 
 __WARNING__ As of 2011-11-01, most of the code is broken
 
+From scripts/abstract.text:
+
+> ...
+> The final component of this thesis is a system, Johann, for automated
+> reasoning about equality and order in the above languages.
+> Johann was used to formally verify many of the theorems in this thesis
+> (and even conjecture some simple theorems).
+> The general design focus is on efficient knowledge representation, rather than
+> proof search strategies.
+> Johann maintains a database of all facts about a set of (say 10k) objects, or
+> terms-modulo-equivalence.
+> The database evolves in time by randomly adding or removing objects.
+> Each time an object is added, the database is saturated with facts using a
+> forward chaining algorithm.
+>
+> A specific design goal is to be able to run Johann for long periods of time
+> (weeks) and accumulate useful knowledge, subject to limited memory.
+> This requires statistical analysis of a corpus of interest (e.g.
+> the set of problems to be verified in this thesis), statistical search for
+> missing equations (from our sigma-01 approximation to a pi-02-complete
+> theory), and careful choice of sampling distributions from which to draw
+> objects to add-to and remove-from the database.
+> The (add,remove) pair of distributions is chosen to achieve a detailed balance
+> theorem, so that, at steady state, Johann (provably) remembers simple facts
+> relevant to the corpus.
+
 EigenViz
 --------
 

@@ -52,16 +52,16 @@ bool Image<type>::save (string filename) const
     png_structp p_writer = png_create_write_struct(PNG_LIBPNG_VER_STRING,
                                                    NULL, NULL, NULL);
     png_infop p_info = png_create_info_struct(p_writer);
-	png_init_io(p_writer, file);
+    png_init_io(p_writer, file);
     png_set_IHDR(p_writer, p_info,
                  m_width, m_height,
-	    	     8,                     //bit depth
+                 8,                     //bit depth
                  type::in_color ? PNG_COLOR_TYPE_RGB
                                 : PNG_COLOR_TYPE_GRAY,
                  PNG_INTERLACE_NONE,
-		         PNG_COMPRESSION_TYPE_DEFAULT,
+                 PNG_COMPRESSION_TYPE_DEFAULT,
                  PNG_FILTER_TYPE_DEFAULT);
-	png_write_info(p_writer, p_info);
+    png_write_info(p_writer, p_info);
 
     //write image row-by-row
     logger.debug() << "writing data" |0;
@@ -69,12 +69,12 @@ bool Image<type>::save (string filename) const
     for (Int y=0; y<m_height; ++y) {
         rows[y] = (png_byte*)(m_data + y * m_width * type::color_bytes);
     }
-	png_write_image(p_writer, rows);
+    png_write_image(p_writer, rows);
     delete[] rows;
 
     //finish png file
     logger.debug() << "finishing file" |0;
-	png_write_end(p_writer, NULL);
+    png_write_end(p_writer, NULL);
     fclose(file);
     return true;
 }

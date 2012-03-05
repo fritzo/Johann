@@ -15,10 +15,14 @@ lex.yy.c
 *.dvi
 *.pdf
 *.ps
+*.eps
 *.aux
 *.bbl
 *.blg
 *.toc
+*.idx
+*.ilg
+*.ind
 temp.*
 core
 core.*
