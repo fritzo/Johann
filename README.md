@@ -25,8 +25,6 @@ This repository includes
 * Some sketches of web-apps using Johann databases.
   See the html/ and cpp/ directories.
 
-__WARNING__ As of 2011-11-01, most of the code is broken
-
 From scripts/abstract.text:
 
 > ...

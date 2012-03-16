@@ -18,7 +18,7 @@ using namespace Symbols;
 //(see node_field_usage.text)
 
 //naming
-const TypedIndex<ObName*>
+const TypedIndex<SmallPtr<ObName> >
     NAME(0x0);
 
 //rep trees

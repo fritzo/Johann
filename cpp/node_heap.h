@@ -6,6 +6,7 @@
 #include <utility> //for pair
 #include <cstring> //for bzero
 #include "aligned_alloc.h" //for clear_block, alloc_blocks, free_blocks
+#include "small_ptr.h"
 
 //log levels
 #define LOG_DEBUG1(mess)
@@ -62,9 +63,9 @@ public:
 
     Pos&  nextFreeNode ()      { return reinterpret_cast<Pos*>(m_data)[0]; }
     Int&  isUsed  ()           { return reinterpret_cast<Int*>(m_data)[Signature::is_used_field]; }
-    Name* name    ()           { return reinterpret_cast<Name**>(m_data)[0]; }
-    void  setName (Name* name) { reinterpret_cast<Name**>(m_data)[0] = name; }
-    bool  isNamed ()           { return reinterpret_cast<Name**>(m_data)[0] != NULL; }
+    Name* name    ()           { return reinterpret_cast<SmallPtr<Name>*>(m_data)[0]; }
+    void  setName (Name* name) { reinterpret_cast<SmallPtr<Name>*>(m_data)[0] = SmallPtr<Name>(name); }
+    bool  isNamed ()           { return reinterpret_cast<SmallPtr<Name>*>(m_data)[0]; }
 
     //unsafe indexing
     template <class typedIndex>

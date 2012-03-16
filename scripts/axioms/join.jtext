@@ -115,7 +115,7 @@ Axioms for join-as-ambiguity. (#J#) \label{sec:axioms/join}
     so we #!assume# rather than #!check#).
     The parametrized binary join operation will be especially important
     ###<
-      !define J' = (\f,x,y. f x|f y).
+      !define J' := (\f,x,y. f x|f y).
     ###>
 
   Theorems conjectured by Johann. 

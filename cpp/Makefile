@@ -247,77 +247,78 @@ aligned_alloc.o: definitions.h aligned_alloc.h
 animator.o: animator.h definitions.h
 animator.o: definitions.h
 apply.o: apply.h definitions.h nodes.h node_heap.h aligned_alloc.h
-apply.o: dense_bin_fun.h dense_set.h splay_forest.h reorder.h obs.h symbols.h
-apply.o: combinatory_structure.h order.h dense_bin_rel.h
-apply.o: definitions.h nodes.h node_heap.h aligned_alloc.h dense_bin_fun.h
-apply.o: dense_set.h splay_forest.h reorder.h
+apply.o: small_ptr.h dense_bin_fun.h dense_set.h splay_forest.h reorder.h
+apply.o: obs.h symbols.h combinatory_structure.h order.h dense_bin_rel.h
+apply.o: definitions.h nodes.h node_heap.h aligned_alloc.h small_ptr.h
+apply.o: dense_bin_fun.h dense_set.h splay_forest.h reorder.h
 axiom_enforcement.o: axiom_tools.h lambda_theories.h definitions.h symbols.h
 axiom_enforcement.o: expressions.h large_set.h handling.h hash_map.h
-axiom_enforcement.o: statements.h nodes.h node_heap.h aligned_alloc.h order.h
-axiom_enforcement.o: dense_bin_rel.h dense_set.h obs.h reorder.h apply.h
-axiom_enforcement.o: dense_bin_fun.h splay_forest.h compose.h join.h
-axiom_enforcement.o: dense_sym_fun.h combinatory_structure.h
+axiom_enforcement.o: statements.h nodes.h node_heap.h aligned_alloc.h
+axiom_enforcement.o: small_ptr.h order.h dense_bin_rel.h dense_set.h obs.h
+axiom_enforcement.o: reorder.h apply.h dense_bin_fun.h splay_forest.h
+axiom_enforcement.o: compose.h join.h dense_sym_fun.h combinatory_structure.h
 axiom_tools.o: axiom_tools.h lambda_theories.h definitions.h symbols.h
 axiom_tools.o: expressions.h large_set.h handling.h hash_map.h statements.h
-axiom_tools.o: nodes.h node_heap.h aligned_alloc.h order.h dense_bin_rel.h
-axiom_tools.o: dense_set.h obs.h reorder.h apply.h dense_bin_fun.h
-axiom_tools.o: splay_forest.h compose.h join.h dense_sym_fun.h
-axiom_tools.o: combinatory_structure.h
+axiom_tools.o: nodes.h node_heap.h aligned_alloc.h small_ptr.h order.h
+axiom_tools.o: dense_bin_rel.h dense_set.h obs.h reorder.h apply.h
+axiom_tools.o: dense_bin_fun.h splay_forest.h compose.h join.h
+axiom_tools.o: dense_sym_fun.h combinatory_structure.h
 axiom_tools.o: lambda_theories.h definitions.h symbols.h expressions.h
 axiom_tools.o: large_set.h handling.h hash_map.h statements.h nodes.h
-axiom_tools.o: node_heap.h aligned_alloc.h order.h dense_bin_rel.h
-axiom_tools.o: dense_set.h obs.h reorder.h apply.h dense_bin_fun.h
-axiom_tools.o: splay_forest.h compose.h join.h dense_sym_fun.h
-axiom_tools.o: combinatory_structure.h
+axiom_tools.o: node_heap.h aligned_alloc.h small_ptr.h order.h
+axiom_tools.o: dense_bin_rel.h dense_set.h obs.h reorder.h apply.h
+axiom_tools.o: dense_bin_fun.h splay_forest.h compose.h join.h
+axiom_tools.o: dense_sym_fun.h combinatory_structure.h
 axiom_validation.o: axiom_tools.h lambda_theories.h definitions.h symbols.h
 axiom_validation.o: expressions.h large_set.h handling.h hash_map.h
-axiom_validation.o: statements.h nodes.h node_heap.h aligned_alloc.h order.h
-axiom_validation.o: dense_bin_rel.h dense_set.h obs.h reorder.h apply.h
-axiom_validation.o: dense_bin_fun.h splay_forest.h compose.h join.h
-axiom_validation.o: dense_sym_fun.h combinatory_structure.h
+axiom_validation.o: statements.h nodes.h node_heap.h aligned_alloc.h
+axiom_validation.o: small_ptr.h order.h dense_bin_rel.h dense_set.h obs.h
+axiom_validation.o: reorder.h apply.h dense_bin_fun.h splay_forest.h
+axiom_validation.o: compose.h join.h dense_sym_fun.h combinatory_structure.h
 axiom_validation.o: syntax_semantics.h measures.h linalg.h
 binary_relation_test.o: definitions.h dense_bin_rel.h dense_set.h
-brain.o: brain.h definitions.h nodes.h node_heap.h aligned_alloc.h measures.h
-brain.o: linalg.h languages.h symbols.h fuzzy.h context.h expressions.h
-brain.o: large_set.h handling.h hash_map.h statements.h lambda_theories.h
-brain.o: order.h dense_bin_rel.h dense_set.h thought.h version.h
-brain.o: random_choice.h complexity.h moments.h obs.h reorder.h apply.h
-brain.o: dense_bin_fun.h splay_forest.h compose.h join.h dense_sym_fun.h
-brain.o: combinatory_structure.h syntax_semantics.h sorting.h files.h
-brain.o: visual.h socket_tools.h thread_tools.h
-brain.o: definitions.h nodes.h node_heap.h aligned_alloc.h measures.h
-brain.o: linalg.h languages.h symbols.h fuzzy.h context.h expressions.h
-brain.o: large_set.h handling.h hash_map.h statements.h lambda_theories.h
-brain.o: order.h dense_bin_rel.h dense_set.h thought.h
+brain.o: brain.h definitions.h nodes.h node_heap.h aligned_alloc.h
+brain.o: small_ptr.h measures.h linalg.h languages.h symbols.h fuzzy.h
+brain.o: context.h expressions.h large_set.h handling.h hash_map.h
+brain.o: statements.h lambda_theories.h order.h dense_bin_rel.h dense_set.h
+brain.o: thought.h version.h random_choice.h complexity.h moments.h obs.h
+brain.o: reorder.h apply.h dense_bin_fun.h splay_forest.h compose.h join.h
+brain.o: dense_sym_fun.h combinatory_structure.h syntax_semantics.h sorting.h
+brain.o: files.h visual.h socket_tools.h thread_tools.h
+brain.o: definitions.h nodes.h node_heap.h aligned_alloc.h small_ptr.h
+brain.o: measures.h linalg.h languages.h symbols.h fuzzy.h context.h
+brain.o: expressions.h large_set.h handling.h hash_map.h statements.h
+brain.o: lambda_theories.h order.h dense_bin_rel.h dense_set.h thought.h
 collective.o: collective.h definitions.h
 collective.o: definitions.h
 combinatory_structure.o: combinatory_structure.h definitions.h symbols.h
-combinatory_structure.o: nodes.h node_heap.h aligned_alloc.h order.h
-combinatory_structure.o: dense_bin_rel.h dense_set.h reorder.h obs.h apply.h
-combinatory_structure.o: dense_bin_fun.h splay_forest.h compose.h join.h
-combinatory_structure.o: dense_sym_fun.h lambda_theories.h expressions.h
-combinatory_structure.o: large_set.h handling.h hash_map.h statements.h
-combinatory_structure.o: priority_queue.h syntax_semantics.h measures.h
-combinatory_structure.o: linalg.h files.h version.h visual.h
+combinatory_structure.o: nodes.h node_heap.h aligned_alloc.h small_ptr.h
+combinatory_structure.o: order.h dense_bin_rel.h dense_set.h reorder.h obs.h
+combinatory_structure.o: apply.h dense_bin_fun.h splay_forest.h compose.h
+combinatory_structure.o: join.h dense_sym_fun.h lambda_theories.h
+combinatory_structure.o: expressions.h large_set.h handling.h hash_map.h
+combinatory_structure.o: statements.h priority_queue.h syntax_semantics.h
+combinatory_structure.o: measures.h linalg.h files.h version.h visual.h
 combinatory_structure.o: definitions.h symbols.h nodes.h node_heap.h
-combinatory_structure.o: aligned_alloc.h order.h dense_bin_rel.h dense_set.h
-combinatory_structure.o: reorder.h
+combinatory_structure.o: aligned_alloc.h small_ptr.h order.h dense_bin_rel.h
+combinatory_structure.o: dense_set.h reorder.h
 complexity.o: complexity.h definitions.h symbols.h measures.h nodes.h
-complexity.o: node_heap.h aligned_alloc.h linalg.h languages.h moments.h
-complexity.o: fuzzy.h order.h dense_bin_rel.h dense_set.h thought.h
+complexity.o: node_heap.h aligned_alloc.h small_ptr.h linalg.h languages.h
+complexity.o: moments.h fuzzy.h order.h dense_bin_rel.h dense_set.h thought.h
 complexity.o: expressions.h large_set.h handling.h hash_map.h context.h
 complexity.o: statements.h optimization.h obs.h reorder.h apply.h
 complexity.o: dense_bin_fun.h splay_forest.h compose.h join.h dense_sym_fun.h
 complexity.o: combinatory_structure.h lambda_theories.h
 complexity.o: definitions.h symbols.h measures.h nodes.h node_heap.h
-complexity.o: aligned_alloc.h linalg.h languages.h moments.h fuzzy.h order.h
-complexity.o: dense_bin_rel.h dense_set.h thought.h expressions.h large_set.h
-complexity.o: handling.h hash_map.h context.h statements.h
+complexity.o: aligned_alloc.h small_ptr.h linalg.h languages.h moments.h
+complexity.o: fuzzy.h order.h dense_bin_rel.h dense_set.h thought.h
+complexity.o: expressions.h large_set.h handling.h hash_map.h context.h
+complexity.o: statements.h
 compose.o: compose.h definitions.h nodes.h node_heap.h aligned_alloc.h
-compose.o: dense_bin_fun.h dense_set.h splay_forest.h reorder.h obs.h
-compose.o: symbols.h combinatory_structure.h order.h dense_bin_rel.h
-compose.o: definitions.h nodes.h node_heap.h aligned_alloc.h dense_bin_fun.h
-compose.o: dense_set.h splay_forest.h reorder.h
+compose.o: small_ptr.h dense_bin_fun.h dense_set.h splay_forest.h reorder.h
+compose.o: obs.h symbols.h combinatory_structure.h order.h dense_bin_rel.h
+compose.o: definitions.h nodes.h node_heap.h aligned_alloc.h small_ptr.h
+compose.o: dense_bin_fun.h dense_set.h splay_forest.h reorder.h
 console.o: console.h definitions.h version.h symbols.h expressions.h
 console.o: large_set.h handling.h hash_map.h statements.h substitute.h
 console.o: kernel.h context.h
@@ -325,8 +326,8 @@ console.o: definitions.h version.h symbols.h expressions.h large_set.h
 console.o: handling.h hash_map.h statements.h substitute.h kernel.h context.h
 context.o: context.h definitions.h symbols.h expressions.h large_set.h
 context.o: handling.h hash_map.h statements.h syntax_semantics.h nodes.h
-context.o: node_heap.h aligned_alloc.h order.h dense_bin_rel.h dense_set.h
-context.o: measures.h linalg.h
+context.o: node_heap.h aligned_alloc.h small_ptr.h order.h dense_bin_rel.h
+context.o: dense_set.h measures.h linalg.h
 context.o: definitions.h symbols.h expressions.h large_set.h handling.h
 context.o: hash_map.h statements.h
 definitions.o: definitions.h
@@ -351,39 +352,42 @@ fifo_queue_test.o: definitions.h fifo_queue.h hash_map.h
 files.o: files.h definitions.h version.h
 files.o: definitions.h version.h
 fuzzy.o: fuzzy.h definitions.h symbols.h nodes.h node_heap.h aligned_alloc.h
-fuzzy.o: version.h
+fuzzy.o: small_ptr.h version.h
 fuzzy.o: definitions.h symbols.h nodes.h node_heap.h aligned_alloc.h
+fuzzy.o: small_ptr.h
 handling.o: handling.h definitions.h
 handling.o: definitions.h
 handling_test.o: handling.h definitions.h
-join.o: join.h definitions.h nodes.h node_heap.h aligned_alloc.h
+join.o: join.h definitions.h nodes.h node_heap.h aligned_alloc.h small_ptr.h
 join.o: dense_sym_fun.h dense_set.h splay_forest.h reorder.h obs.h symbols.h
 join.o: combinatory_structure.h order.h dense_bin_rel.h
-join.o: definitions.h nodes.h node_heap.h aligned_alloc.h dense_sym_fun.h
-join.o: dense_set.h splay_forest.h reorder.h
+join.o: definitions.h nodes.h node_heap.h aligned_alloc.h small_ptr.h
+join.o: dense_sym_fun.h dense_set.h splay_forest.h reorder.h
 kernel.o: kernel.h definitions.h symbols.h expressions.h large_set.h
 kernel.o: handling.h hash_map.h statements.h context.h version.h nodes.h
-kernel.o: node_heap.h aligned_alloc.h obs.h reorder.h apply.h dense_bin_fun.h
-kernel.o: dense_set.h splay_forest.h compose.h join.h dense_sym_fun.h
-kernel.o: substitute.h order.h dense_bin_rel.h brain.h measures.h linalg.h
-kernel.o: languages.h fuzzy.h lambda_theories.h thought.h syntax_semantics.h
-kernel.o: combinatory_structure.h socket_tools.h thread_tools.h
+kernel.o: node_heap.h aligned_alloc.h small_ptr.h obs.h reorder.h apply.h
+kernel.o: dense_bin_fun.h dense_set.h splay_forest.h compose.h join.h
+kernel.o: dense_sym_fun.h substitute.h order.h dense_bin_rel.h brain.h
+kernel.o: measures.h linalg.h languages.h fuzzy.h lambda_theories.h thought.h
+kernel.o: syntax_semantics.h combinatory_structure.h socket_tools.h
+kernel.o: thread_tools.h
 kernel.o: definitions.h symbols.h expressions.h large_set.h handling.h
 kernel.o: hash_map.h statements.h context.h
 lambda_theories.o: lambda_theories.h definitions.h symbols.h expressions.h
 lambda_theories.o: large_set.h handling.h hash_map.h statements.h nodes.h
-lambda_theories.o: node_heap.h aligned_alloc.h order.h dense_bin_rel.h
-lambda_theories.o: dense_set.h obs.h reorder.h apply.h dense_bin_fun.h
-lambda_theories.o: splay_forest.h compose.h join.h dense_sym_fun.h
-lambda_theories.o: combinatory_structure.h syntax_semantics.h measures.h
-lambda_theories.o: linalg.h priority_queue.h
+lambda_theories.o: node_heap.h aligned_alloc.h small_ptr.h order.h
+lambda_theories.o: dense_bin_rel.h dense_set.h obs.h reorder.h apply.h
+lambda_theories.o: dense_bin_fun.h splay_forest.h compose.h join.h
+lambda_theories.o: dense_sym_fun.h combinatory_structure.h syntax_semantics.h
+lambda_theories.o: measures.h linalg.h priority_queue.h
 lambda_theories.o: definitions.h symbols.h expressions.h large_set.h
 lambda_theories.o: handling.h hash_map.h statements.h nodes.h node_heap.h
-lambda_theories.o: aligned_alloc.h order.h dense_bin_rel.h dense_set.h
+lambda_theories.o: aligned_alloc.h small_ptr.h order.h dense_bin_rel.h
+lambda_theories.o: dense_set.h
 languages.o: languages.h definitions.h symbols.h nodes.h node_heap.h
-languages.o: aligned_alloc.h linalg.h files.h version.h
+languages.o: aligned_alloc.h small_ptr.h linalg.h files.h version.h
 languages.o: definitions.h symbols.h nodes.h node_heap.h aligned_alloc.h
-languages.o: linalg.h
+languages.o: small_ptr.h linalg.h
 large_set.o: large_set.h definitions.h handling.h
 large_set.o: definitions.h handling.h
 linalg.o: linalg.h definitions.h
@@ -397,41 +401,44 @@ meas_lite.o: meas_lite.h definitions.h files.h version.h
 meas_lite.o: definitions.h
 meas_lite_test.o: definitions.h meas_lite.h
 measures.o: measures.h definitions.h nodes.h node_heap.h aligned_alloc.h
+measures.o: small_ptr.h linalg.h
+measures.o: definitions.h nodes.h node_heap.h aligned_alloc.h small_ptr.h
 measures.o: linalg.h
-measures.o: definitions.h nodes.h node_heap.h aligned_alloc.h linalg.h
 moments_test.o: definitions.h moments.h
-node_heap.o: node_heap.h definitions.h aligned_alloc.h nodes.h
-node_heap.o: definitions.h aligned_alloc.h
-node_heap_test.o: definitions.h node_heap.h aligned_alloc.h
-nodes.o: nodes.h node_heap.h definitions.h aligned_alloc.h
-nodes.o: node_heap.h definitions.h aligned_alloc.h
+node_heap.o: node_heap.h definitions.h aligned_alloc.h small_ptr.h nodes.h
+node_heap.o: definitions.h aligned_alloc.h small_ptr.h
+node_heap_test.o: definitions.h node_heap.h aligned_alloc.h small_ptr.h
+nodes.o: nodes.h node_heap.h definitions.h aligned_alloc.h small_ptr.h
+nodes.o: node_heap.h definitions.h aligned_alloc.h small_ptr.h
 obs.o: obs.h definitions.h symbols.h nodes.h node_heap.h aligned_alloc.h
-obs.o: reorder.h apply.h dense_bin_fun.h dense_set.h splay_forest.h compose.h
-obs.o: join.h dense_sym_fun.h combinatory_structure.h order.h dense_bin_rel.h
-obs.o: definitions.h symbols.h nodes.h node_heap.h aligned_alloc.h reorder.h
+obs.o: small_ptr.h reorder.h apply.h dense_bin_fun.h dense_set.h
+obs.o: splay_forest.h compose.h join.h dense_sym_fun.h
+obs.o: combinatory_structure.h order.h dense_bin_rel.h
+obs.o: definitions.h symbols.h nodes.h node_heap.h aligned_alloc.h
+obs.o: small_ptr.h reorder.h
 optimization.o: optimization.h definitions.h moments.h linalg.h
 optimization.o: definitions.h moments.h linalg.h
 optimization_test.o: definitions.h linalg.h optimization.h moments.h
 order.o: order.h definitions.h nodes.h node_heap.h aligned_alloc.h
-order.o: dense_bin_rel.h dense_set.h obs.h symbols.h reorder.h
-order.o: definitions.h nodes.h node_heap.h aligned_alloc.h dense_bin_rel.h
-order.o: dense_set.h
+order.o: small_ptr.h dense_bin_rel.h dense_set.h obs.h symbols.h reorder.h
+order.o: definitions.h nodes.h node_heap.h aligned_alloc.h small_ptr.h
+order.o: dense_bin_rel.h dense_set.h
 param_tools.o: definitions.h
 parser.o: parser.h definitions.h expressions.h symbols.h large_set.h
 parser.o: handling.h hash_map.h substitute.h buffer.h output.h
 parser.o: definitions.h expressions.h symbols.h large_set.h handling.h
 parser.o: hash_map.h substitute.h buffer.h output.h
-parser.tab.o: stack.hh location.hh position.hh
 priority_queue.o: definitions.h
 priority_queue_test.o: definitions.h priority_queue.h
 random_choice.o: random_choice.h definitions.h measures.h nodes.h node_heap.h
-random_choice.o: aligned_alloc.h linalg.h
+random_choice.o: aligned_alloc.h small_ptr.h linalg.h
 random_choice.o: definitions.h measures.h nodes.h node_heap.h aligned_alloc.h
-random_choice.o: linalg.h
+random_choice.o: small_ptr.h linalg.h
 random_choice_test.o: measures.h definitions.h nodes.h node_heap.h
-random_choice_test.o: aligned_alloc.h linalg.h random_choice.h
-reorder.o: reorder.h definitions.h node_heap.h aligned_alloc.h nodes.h
-reorder.o: definitions.h node_heap.h aligned_alloc.h
+random_choice_test.o: aligned_alloc.h small_ptr.h linalg.h random_choice.h
+reorder.o: reorder.h definitions.h node_heap.h aligned_alloc.h small_ptr.h
+reorder.o: nodes.h
+reorder.o: definitions.h node_heap.h aligned_alloc.h small_ptr.h
 search.o: search.h definitions.h priority_queue.h
 search.o: definitions.h priority_queue.h
 server.o: definitions.h expressions.h symbols.h large_set.h handling.h
@@ -464,27 +471,28 @@ substitute.o: handling.h hash_map.h parser.h buffer.h output.h
 substitute.o: definitions.h symbols.h expressions.h large_set.h handling.h
 substitute.o: hash_map.h
 syntax_semantics.o: syntax_semantics.h definitions.h nodes.h node_heap.h
-syntax_semantics.o: aligned_alloc.h order.h dense_bin_rel.h dense_set.h
+syntax_semantics.o: aligned_alloc.h small_ptr.h order.h dense_bin_rel.h
+syntax_semantics.o: dense_set.h measures.h linalg.h expressions.h symbols.h
+syntax_semantics.o: large_set.h handling.h hash_map.h statements.h obs.h
+syntax_semantics.o: reorder.h apply.h dense_bin_fun.h splay_forest.h
+syntax_semantics.o: compose.h join.h dense_sym_fun.h combinatory_structure.h
+syntax_semantics.o: brain.h languages.h fuzzy.h context.h lambda_theories.h
+syntax_semantics.o: thought.h
+syntax_semantics.o: definitions.h nodes.h node_heap.h aligned_alloc.h
+syntax_semantics.o: small_ptr.h order.h dense_bin_rel.h dense_set.h
 syntax_semantics.o: measures.h linalg.h expressions.h symbols.h large_set.h
-syntax_semantics.o: handling.h hash_map.h statements.h obs.h reorder.h
-syntax_semantics.o: apply.h dense_bin_fun.h splay_forest.h compose.h join.h
-syntax_semantics.o: dense_sym_fun.h combinatory_structure.h brain.h
-syntax_semantics.o: languages.h fuzzy.h context.h lambda_theories.h thought.h
-syntax_semantics.o: definitions.h nodes.h node_heap.h aligned_alloc.h order.h
-syntax_semantics.o: dense_bin_rel.h dense_set.h measures.h linalg.h
-syntax_semantics.o: expressions.h symbols.h large_set.h handling.h hash_map.h
-syntax_semantics.o: statements.h
+syntax_semantics.o: handling.h hash_map.h statements.h
 thought.o: thought.h definitions.h nodes.h node_heap.h aligned_alloc.h
-thought.o: order.h dense_bin_rel.h dense_set.h expressions.h symbols.h
-thought.o: large_set.h handling.h hash_map.h context.h statements.h
+thought.o: small_ptr.h order.h dense_bin_rel.h dense_set.h expressions.h
+thought.o: symbols.h large_set.h handling.h hash_map.h context.h statements.h
 thought.o: measures.h linalg.h fuzzy.h obs.h reorder.h apply.h
 thought.o: dense_bin_fun.h splay_forest.h compose.h join.h dense_sym_fun.h
 thought.o: combinatory_structure.h lambda_theories.h syntax_semantics.h
 thought.o: brain.h languages.h complexity.h moments.h random_choice.h
-thought.o: definitions.h nodes.h node_heap.h aligned_alloc.h order.h
-thought.o: dense_bin_rel.h dense_set.h expressions.h symbols.h large_set.h
-thought.o: handling.h hash_map.h context.h statements.h measures.h linalg.h
-thought.o: fuzzy.h
+thought.o: definitions.h nodes.h node_heap.h aligned_alloc.h small_ptr.h
+thought.o: order.h dense_bin_rel.h dense_set.h expressions.h symbols.h
+thought.o: large_set.h handling.h hash_map.h context.h statements.h
+thought.o: measures.h linalg.h fuzzy.h
 thread_tools.o: thread_tools.h definitions.h
 thread_tools.o: definitions.h
 toy.o: definitions.h meas_lite.h animator.h dynamics.h
