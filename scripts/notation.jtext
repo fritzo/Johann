@@ -16,7 +16,7 @@ Notation. \label{sec:notation}
       Top := T.
       Bot := _.
     ###>
-    We use an abundance of proper combinators: to keep proof length short.
+    We use an abundance of proper combinators to keep proof length short.
     ###<
       !using I K B C W S.
     ###>
@@ -85,8 +85,8 @@ Notation. \label{sec:notation}
       P x y       &= V(x|y)
     ###)
 
-    Note: #beta#- and #eta#- reduction rules must be defined for all
-      #=:#-defined atoms.
+    Note: #beta#- and #eta#- reduction rules must be implemented in C++
+      for all atoms added with #!using# or #!define#.
 
   Operators. 
     We use the following infix operators, ordered by precedence.

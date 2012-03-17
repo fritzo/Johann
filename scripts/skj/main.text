@@ -21,7 +21,7 @@ Untyped lambda-calculus with ambiguity-as-join. (SKJ) \label{sec:skj}
   but is better modelled by meet (Dezani02).
 
   The main discovery of this thesis is that, under the theory H*,
-  that there is an interpretation of typed lambda-calculus SK into
+  there is an interpretation of typed lambda-calculus SK into
   untyped lambda-join-calculus SKJ,
   where types are interpreted as closure operations
   (SKJ-terms #a# satisfying #I[=a=a*a#).
@@ -70,7 +70,7 @@ Untyped lambda-calculus with ambiguity-as-join. (SKJ) \label{sec:skj}
   We illustrate the WLOG construct here,
   but delay discussion of semantic type inference until we
   build up some dependent type theory in \ref{sec:skj/terms}.
-  Then in \ref{sec:examples} we present two case studies makeing extensive
+  Then in \ref{sec:examples} we present two case studies making extensive
   use of proof sketching and type inference.
 
   To see how the WLOG construct works in SKJ, let us consider a simple theorem.
