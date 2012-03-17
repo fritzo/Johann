@@ -739,8 +739,8 @@ void print_conjectures_to (ostream& os, Int N)
 { PrintHead::call(os, _print_conjectures_to, N); }
 
 //lambda theory
+unsigned get_default_effort () { return LT::MAX_EFFORT; }
 Trool _query_stmt (StmtHdl* s) { return g_theory->query(*s); }
-Prob  _guess_stmt (StmtHdl* s) { return brain().guess(*s); }
 Trool _check_stmt (std::pair< std::pair<StmtHdl*,Int>, string*> args)
 {
     StmtHdl stmt = *(args.first.first);
@@ -764,12 +764,13 @@ bool _assume_stmt (std::pair<StmtHdl*,string*> args)
     }
     return success;
 }
-Trool query_stmt (StmtHdl s)
+Prob  _guess_stmt (StmtHdl* s) { return brain().guess(*s); }
+Trool query_stmt (StmtHdl stmt)
 {
     UNLOCK_SYNTAX
-    Trool result = run_syn_fun(_query_stmt, &s);
+    Trool result = run_syn_fun(_query_stmt, &stmt);
     LOCK_SYNTAX
-    s.clear();
+    stmt.clear();
     return result;
 }
 Prob guess_stmt (StmtHdl s)

@@ -640,7 +640,8 @@ input: /* empty */ { $$=true; }
             LOCK_SYNTAX
             if ($1) {
             if (StmtHdl stmt = K::expand(*$4)) {
-                switch (K::check_stmt(stmt, get_location(), not g_skimming)) {
+                unsigned effort = g_skimming ? 0 : K::get_default_effort();
+                switch (K::check_stmt(stmt, get_location(), effort)) {
                 case Symbols::TRUE: break;
                 case Symbols::FALSE:   problem_error(true,  *$4); break;
                 case Symbols::UNKNOWN: problem_error(false, *$4); break;

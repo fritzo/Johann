@@ -164,8 +164,8 @@ Tests for totality and correctness. \label{sec:skj/tests}
       !check (/\aa:testable.
           let (-,a) := aa.
           let (-,ma) := tb_Maybe aa.
-          (/\x::a. some x :: ma) AND (none :: ma) # XXX parse error
-      ).
+          (/\x::a. some x :: ma) AND (none :: ma)
+      ).  # XXX parse error: none,some are undefined
     ###>
     and more weakly-typed versions for tests and checks only
     ###<

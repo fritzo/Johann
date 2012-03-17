@@ -13,6 +13,14 @@
 namespace LambdaTheories
 {
 
+//effort:
+// 0 = only check what is already in db
+// 1 = expand db with new expressions & check
+// 2 = also try to prove by contradiction via fork-assume-wait
+// XXX proof-by-contradiction seems to never prove anything
+// XXX proof-by-contradiction spawns many processes; should be 2 at a time
+static const unsigned MAX_EFFORT = 1;
+
 const Logging::Logger logger("theory", Logging::DEBUG);
 
 using namespace Symbols;
@@ -132,16 +140,19 @@ public:
     virtual bool assume_reln
         (ExprHdl lhs, Relation reln, ExprHdl rhs, bool core);
     virtual Trool query_reln
-        (ExprHdl lhs, Relation reln, ExprHdl rhs, unsigned effort=1);
-    Trool query (StmtHdl stmt, unsigned effort=1);
-    Trool check (StmtHdl stmt, string comment, unsigned effort=1);
+        (ExprHdl lhs, Relation reln, ExprHdl rhs, unsigned effort=MAX_EFFORT);
+private:
+    Trool _query_contradiction (StmtHdl stmt);
+public:
+    Trool query (StmtHdl stmt, unsigned effort=MAX_EFFORT);
+    Trool check (StmtHdl stmt, string comment, unsigned effort=MAX_EFFORT);
     bool assume (StmtHdl stmt, string comment);
     bool _assume (StmtHdl stmt, bool core);
     void review ();
     void review  (AxmIter axm);
     void review  (ThmIter thm);
-    void recheck (unsigned effort=1);
-    void recheck (ThmIter thm, unsigned effort=1);
+    void recheck (unsigned effort=MAX_EFFORT);
+    void recheck (ThmIter thm, unsigned effort=MAX_EFFORT);
     void clear_thms () { m_thms.clear(); }
     void clear_axms () { m_axms.clear(); }
     std::vector<StmtHdl> get_axioms ();
@@ -203,7 +214,7 @@ public:
     virtual bool assume_reln
         (ExprHdl lhs, Relation reln, ExprHdl rhs, bool core=true);
     virtual Trool query_reln
-        (ExprHdl lhs, Relation reln, ExprHdl rhs, unsigned effort=1);
+        (ExprHdl lhs, Relation reln, ExprHdl rhs, unsigned effort=MAX_EFFORT);
     std::vector<Ob> solve (StmtHdl stmt, bool tryhard);
 protected:
     std::vector<Ob> solve (VarHdl var, StmtHdl stmt);

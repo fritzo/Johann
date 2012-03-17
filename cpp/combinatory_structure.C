@@ -1044,15 +1044,22 @@ bool assume_reln (Ob lhs, Relation reln, Ob rhs)
 }
 
 //enforcement tools for external enforcement
-#define AssertC(cond,mess) AssertA(cond,\
-        mess << "\nsee data/notcon.*",\
-        LT::dump("data/notcon.jcode");\
-        dump("data/notcon");)
+
+bool g_die_quietly = false;
+void die_quietly () { g_die_quietly = true; }
+#define AssertC(cond,mess) { if (!(cond)) { \
+    if (g_die_quietly) _exit(1); \
+    logger.error() << "inconsistent: " << mess << "\nsee data/notcon.*" |0; \
+    LT::dump("data/notcon.jcode"); \
+    dump("data/notcon"); \
+    abort(); \
+    }}
+
 bool ensure_equiv (Ob ob1, Ob ob2)
 {//merges two terms and processes queues; returns true if equiv already holds
     LOG_DEBUG1( "ensuring: " << expr(ob1) << " = " << expr(ob2) );
     AssertC(not (areDistinct(ob1, ob2)),
-            "inconsistent: ensuring " << expr(ob1) << " = " << expr(ob2));
+            "ensuring " << expr(ob1) << " = " << expr(ob2));
     CHECK_POS(ob1);  ob1 = O::getRep(ob1);  CHECK_POS(ob1);
     CHECK_POS(ob2);  ob2 = O::getRep(ob2);  CHECK_POS(ob2);
     if (ob1 == ob2) return true;
@@ -1066,8 +1073,7 @@ bool ensure_less (Ob smaller, Ob larger)
 {//ensures smaller [= larger; returns true if already true
     LOG_DEBUG1( "ensuring: " << expr(smaller) << " [= " << expr(larger) );
     AssertC(not isNLessThan(smaller, larger),
-            "inconsistent: ensuring " << expr(smaller) << " [= "
-                                      << expr(larger));
+            "ensuring " << expr(smaller) << " [= " << expr(larger));
     CHECK_POS(smaller);  smaller = O::getRep(smaller);  CHECK_POS(smaller);
     CHECK_POS(larger);   larger  = O::getRep(larger);   CHECK_POS(larger);
     Ord ord(smaller, larger);
@@ -1079,8 +1085,7 @@ bool ensure_nless (Ob smaller, Ob larger)
 {//ensures smaller [!= larger; returns true if already true
     LOG_DEBUG1( "ensuring: " << expr(smaller) << " [!= " << expr(larger) );
     AssertC(not isLessThan(smaller, larger),
-            "inconsistent: ensuring " << expr(smaller) << " [!= "
-                                      << expr(larger));
+            "ensuring " << expr(smaller) << " [!= " << expr(larger));
     CHECK_POS(smaller);  smaller = O::getRep(smaller);  CHECK_POS(smaller);
     CHECK_POS(larger);   larger  = O::getRep(larger);   CHECK_POS(larger);
     Ord ord(smaller, larger);

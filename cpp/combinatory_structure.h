@@ -147,6 +147,7 @@ void write_params_to (ostream& os);
 bool vis_eqn_table (Int size = 0);
 bool vis_ord_table (Int size = 0);
 bool stats_page (Int size = 0);
+void die_quietly ();
 
 }
 

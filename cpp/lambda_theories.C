@@ -9,6 +9,9 @@
 #include "priority_queue.h"
 #include <set>
 #include <algorithm>
+#include <unistd.h> //for fork
+#include <sys/wait.h> //for wait
+#include <signal.h> //for kill
 
 //log levels
 #define LOG_DEBUG1(mess);
@@ -200,6 +203,57 @@ MagmaTheory::Thm* MagmaTheory::ThmIter::operator-> ()
 {
     return &(s_unique_instance->m_thms[i]);
 }
+inline int safe_fork ()
+{
+    logger.debug() << "forking kernel" |0;
+    int pid = fork();
+    Assert(pid >= 0, "failed to fork in proof by contradiction");
+    return pid;
+}
+Trool MagmaTheory::_query_contradiction (StmtHdl stmt)
+{//proof by contradiction
+
+    int assume_pos;
+    if ((assume_pos = safe_fork()) == 0) {
+        CS::die_quietly();
+        logger.info() << "making positive assumption" |0;
+        _assume(stmt, false);
+        logger.info() << "positive assumption was consistent" |0;
+        _exit(0);
+    }
+
+    int assume_neg;
+    if ((assume_neg = safe_fork()) == 0) {
+        CS::die_quietly();
+        logger.info() << "making negative assumption" |0;
+        _assume(ST::Not(stmt), false);
+        logger.info() << "negative assumption was consistent" |0;
+        _exit(0);
+    }
+
+    while (assume_pos && assume_neg) {
+        int status;
+        int pid = wait(&status);
+        int consistent = WIFEXITED(status) && (WEXITSTATUS(status) == 0);
+        if (pid == assume_pos) {
+            if (!consistent) {
+                if (assume_neg) kill(assume_neg, 9);
+                logger.info() << "positive assumption was inconsistent" |0;
+                return FALSE;
+            }
+            assume_pos = 0;
+        } else if (pid == assume_neg) {
+            if (!consistent) {
+                if (assume_pos) kill(assume_pos, 9);
+                logger.info() << "negative assumption was inconsistent" |0;
+                return TRUE;
+            }
+            assume_neg = 0;
+        }
+    }
+
+    return UNKNOWN;
+}
 Trool MagmaTheory::query (StmtHdl stmt, unsigned effort)
 {
     StmtHdl s = stmt->query_nf();
@@ -225,6 +279,11 @@ Trool MagmaTheory::query (StmtHdl stmt, unsigned effort)
         logger.error() << "queried bad statement type: " << stmt |0;
         return UNKNOWN;
     }
+
+    if (result == UNKNOWN and effort >= 2) {
+        result = _query_contradiction(s);
+    }
+
     return result;
 }
 Trool MagmaTheory::check (StmtHdl stmt, string comment, unsigned effort)

@@ -95,6 +95,7 @@ void print_sketchiest_to (ostream& os, Int N=0);
 void print_conjectures_to (ostream& os, Int N=64);
 
 //lambda theory
+unsigned get_default_effort ();
 Trool query_stmt (StmtHdl stmt);
 Trool check_stmt (StmtHdl stmt, string comment, Int effort);
 bool assume_stmt (StmtHdl stmt, string comment);

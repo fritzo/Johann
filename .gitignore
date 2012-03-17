@@ -39,4 +39,6 @@ core.*
 *.vcproj.*
 *.suo
 *.ncb
+data/*
+stats/conjectures.text
 
