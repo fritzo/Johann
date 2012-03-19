@@ -1,14 +1,24 @@
 
 Johann
 ======
+Bayesian inference of programs = Solomonoff induction
 
-Johann is a theorem-proving system that implements data-driven
-automated-conjecturing by building and statistically analyzing
-a large database of equtations in various extensions of combinatory algebra
-(equivalently, lambda-calculus).
-This repository includes
+Johann is an equational theorem-proving system and Bayesian inference engine for various extensions of combinatory algebra (equivalently, lambda-calculus),
+making particular use of an interpretation of typed lambda-calculus in untyped concurrent lambda-calculus.
+Johann implements:
 
-* C++ code to build combinatory databases.
+* Equational theorem proving for various programming languages.
+
+* Empirical Bayes learning of nonparametric PCFG models of programming languages.
+
+* Bayesian inference of probabilistic programs (aka Solomonoff induction).
+
+* Data-driven automated-conjecturing of equations in undecidable theories.
+
+Details can be found in the Ph.D. thesis http://fritzo.org/thesis.pdf .
+This repository includes:
+
+* A C++ kernel for building and reasoning about combinatory databases.
   See the cpp/ directory.
 
 * A collection of code-as-dissertation in a literate programming style ".jtext",
@@ -19,13 +29,13 @@ This repository includes
   ( __jtext2latex___ ).
   See the jtext/ directory.
 
-* A C++ mapper to visualize johann databases.
+* A C++ mapper to visualize Johann databases.
   See the mapper/ directory.
 
 * Some sketches of web-apps using Johann databases.
   See the html/ and cpp/ directories.
 
-From scripts/abstract.text:
+From the thesis abstract (scripts/abstract.text):
 
 > ...
 > The final component of this thesis is a system, Johann, for automated
