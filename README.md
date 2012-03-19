@@ -5,6 +5,7 @@ Bayesian inference of programs = Solomonoff induction
 
 Johann is an equational theorem-proving system and Bayesian inference engine for various extensions of combinatory algebra (equivalently, lambda-calculus),
 making particular use of an interpretation of typed lambda-calculus in untyped concurrent lambda-calculus.
+Details can be found in the Ph.D. thesis http://fritzo.org/thesis.pdf .
 Johann implements:
 
 * Equational theorem proving for various programming languages.
@@ -15,7 +16,6 @@ Johann implements:
 
 * Data-driven automated-conjecturing of equations in undecidable theories.
 
-Details can be found in the Ph.D. thesis http://fritzo.org/thesis.pdf .
 This repository includes:
 
 * A C++ kernel for building and reasoning about combinatory databases.
