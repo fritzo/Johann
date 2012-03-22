@@ -38,7 +38,7 @@ void* alloc_blocks (size_t blockSize, size_t numBlocks)
                    << " blocks of size " << blockSize << 'B' |0;
     Logging::IndentBlock block;
 
-    size_t alignment = roundDown(blockSize);
+    size_t alignment = max(16u, roundDown(blockSize));
     size_t numBytes = blockSize * numBlocks;
     void* base;
 #ifdef MAC_HACKS

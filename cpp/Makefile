@@ -333,9 +333,9 @@ context.o: hash_map.h statements.h
 definitions.o: definitions.h
 dense_bin_fun.o: dense_bin_fun.h definitions.h dense_set.h aligned_alloc.h
 dense_bin_fun.o: definitions.h dense_set.h
-dense_bin_rel.o: dense_bin_rel.h definitions.h dense_set.h
+dense_bin_rel.o: dense_bin_rel.h definitions.h dense_set.h aligned_alloc.h
 dense_bin_rel.o: definitions.h dense_set.h
-dense_set.o: dense_set.h definitions.h
+dense_set.o: dense_set.h definitions.h aligned_alloc.h
 dense_set.o: definitions.h
 dense_sym_fun.o: dense_sym_fun.h definitions.h dense_set.h aligned_alloc.h
 dense_sym_fun.o: definitions.h dense_set.h
@@ -428,6 +428,7 @@ parser.o: parser.h definitions.h expressions.h symbols.h large_set.h
 parser.o: handling.h hash_map.h substitute.h buffer.h output.h
 parser.o: definitions.h expressions.h symbols.h large_set.h handling.h
 parser.o: hash_map.h substitute.h buffer.h output.h
+parser.tab.o: stack.hh location.hh position.hh
 priority_queue.o: definitions.h
 priority_queue_test.o: definitions.h priority_queue.h
 random_choice.o: random_choice.h definitions.h measures.h nodes.h node_heap.h

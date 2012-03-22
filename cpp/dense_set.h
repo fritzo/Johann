@@ -69,7 +69,7 @@ public:
           m_lines(lines),
           m_borrowing(true)
     {}
-    ~dense_set () { if (not m_borrowing) delete[] m_lines; }
+    ~dense_set ();
     void move_from (const dense_set& other, const Int* new2old=NULL);
     dense_set& init (Line* lines)
     {

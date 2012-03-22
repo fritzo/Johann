@@ -1,5 +1,6 @@
 
 #include "dense_bin_rel.h"
+#include "aligned_alloc.h"
 #include <cstring>
 
 namespace nonstd
@@ -12,10 +13,10 @@ dense_bin_rel::dense_bin_rel (int num_items, bool is_full)
       N_up(M * LINE_STRIDE),
       NUM_LINES(M * N_up),
       m_support(N),
-      m_Lx_lines(new(std::nothrow) Line[NUM_LINES]),
-      m_Rx_lines(new(std::nothrow) Line[NUM_LINES]),
+      m_Lx_lines(nonstd::alloc_blocks<Line>(NUM_LINES)),
+      m_Rx_lines(nonstd::alloc_blocks<Line>(NUM_LINES)),
       m_set(N,NULL),
-      m_temp_line(new(std::nothrow) Line[M])
+      m_temp_line(nonstd::alloc_blocks<Line>(M))
 {
     logger.debug() << "creating dense_bin_rel with " << M << " lines" |0;
     Assert (N_up <= (1<<16), "dense_bin_rel is too large");
@@ -32,9 +33,9 @@ dense_bin_rel::dense_bin_rel (int num_items, bool is_full)
 }
 dense_bin_rel::~dense_bin_rel ()
 {
-    delete[] m_Lx_lines;
-    delete[] m_Rx_lines;
-    delete[] m_temp_line;
+    nonstd::free_blocks(m_Lx_lines);
+    nonstd::free_blocks(m_Rx_lines);
+    nonstd::free_blocks(m_temp_line);
 }
 void dense_bin_rel::move_from (const dense_bin_rel& other, const Int* new2old)
 {

@@ -1,5 +1,6 @@
 
 #include "dense_set.h"
+#include "aligned_alloc.h"
 #include <cstring>
 
 namespace nonstd
@@ -9,16 +10,20 @@ namespace nonstd
 dense_set::dense_set (int num_items)
     : N(num_items),
       M((N+LINE_STRIDE)/LINE_STRIDE),
-      m_lines(new(std::nothrow) Line[M]),
+      m_lines(nonstd::alloc_blocks<Line>(M)),
       m_borrowing(false)
 {
     logger.debug() << "creating dense_set with "
         << M << " lines" |0;
     Assert (N < (1<<26), "dense_set is too large");
-    Assert (m_lines != NULL, "  line allocation failed");
+    AssertP(m_lines, sizeof(Line), "lines");
 
     //initialize to zeros
     bzero(m_lines, sizeof(Line) * M);
+}
+dense_set::~dense_set ()
+{
+  if (not m_borrowing) nonstd::free_blocks(m_lines);
 }
 void dense_set::move_from (const dense_set& other, const Int* new2old)
 {
