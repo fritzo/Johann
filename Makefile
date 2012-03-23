@@ -51,25 +51,25 @@ cachetest: kernel
 
 default: kernel
 	echo "" > log/build.log
-	bin/johann scripts/build/default.jcode -l build.log
+	bin/johann scripts/build/default.jcode -l default.log
 skr: kernel
 	echo "" > log/build.log
-	bin/johann scripts/build/skr.jcode -l build.log
+	bin/johann scripts/build/skr.jcode -l skr.log
 skj: kernel
 	echo "" > log/build.log
-	bin/johann scripts/build/skj.jcode -l build.log
+	bin/johann scripts/build/skj.jcode -l skj.log
 skrj: kernel
 	echo "" > log/build.log
-	bin/johann scripts/build/skrj.jcode -l build.log
+	bin/johann scripts/build/skrj.jcode -l skrj.log
 skjo: kernel
 	echo "" > log/build.log
-	bin/johann scripts/build/skjo.jcode -l build.log
+	bin/johann scripts/build/skjo.jcode -l skjo.log
 literate: kernel
 	echo "" > log/build.log
-	bin/johann scripts/build/literate.jcode -l build.log
+	bin/johann scripts/build/literate.jcode -l literate.log
 godels_T: kernel
 	echo "" > log/build.log
-	bin/johann scripts/build/godels_T.jcode -l build.log
+	bin/johann scripts/build/godels_T.jcode -l godels_T.log
 
 #=======[ utilities ]==========================================================
 
