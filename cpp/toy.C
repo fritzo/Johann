@@ -15,10 +15,10 @@ namespace M = MeasLite;
  */
 int main (int argc, char **argv)
 {
-    Logging::switch_to_log("test.log");
+    Logging::switch_to_log("toy.log");
     Logging::title("Johann Toy");
 
-    M::load("../data/skj-big");
+    M::load("../data/default");
 
     Dynamics::Life sys;
 

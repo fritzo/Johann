@@ -100,7 +100,7 @@ endif
 
 #main targets
 current_target: all
-all: kernel server
+all: kernel server toy
 #	$(MAKE) -C cgi-src all
 
 #tests

@@ -436,17 +436,6 @@ void MagmaTheory::save_to (ostream& os)
     }
     os << std::endl;
 }
-void dump (string filename)
-{
-    ofstream file(filename.c_str());
-    if (file) {
-        logger.info() << "dumping theory to " << filename |0;
-        theory()->save_to(file);
-        file.close();
-    } else {
-        logger.error() << "failed to dump theory to " << filename |0;
-    }
-}
 void MagmaTheory::write_stats_to (ostream& os)
 {
     os << '\t' << m_axms.size() << " axioms, "

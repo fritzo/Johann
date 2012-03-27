@@ -1,5 +1,6 @@
 kernel
 server
+toy
 console.output
 console.y.c
 location.hh

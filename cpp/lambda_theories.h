@@ -283,8 +283,6 @@ public:
 inline MagmaTheory* theory ()
 { return MagmaTheory::s_unique_instance; }
 
-void dump (string filename);
-
 }
 
 ostream& operator<< (ostream &os, const LambdaTheories::MagmaTheory::Prop& p);
