@@ -504,6 +504,11 @@ WS      [ \t]+
             yylval.nat_val = Symbols::COMP_STRUCT;
             return DUMP;
         }
+    "dump joins" {
+            BEGIN(READING);
+            yylval.nat_val = Symbols::JOIN_STRUCT;
+            return DUMP;
+        }
     "dump" { BEGIN(READING); yylval.nat_val = 0; return DUMP; }
 }
 <READING>{

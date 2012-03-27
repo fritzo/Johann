@@ -10,20 +10,19 @@ namespace nonstd
 dense_bin_fun::dense_bin_fun (int num_items)
     : N(num_items),
       M((N+ARG_STRIDE)/ARG_STRIDE),
-      m_blocks(static_cast<Block4x4W*>(
-                  nonstd::alloc_blocks(sizeof(Block4x4W), M * M))),
+      m_blocks(nonstd::alloc_blocks<Block4x4W>(M * M)),
       m_set(N,NULL),
-      m_Lx_lines(new(std::nothrow) Line[(N+1) * num_lines()]),
-      m_Rx_lines(new(std::nothrow) Line[(N+1) * num_lines()]),
-      m_temp_line(new(std::nothrow) Line[1 * num_lines()])
+      m_Lx_lines(nonstd::alloc_blocks<Line>((N+1) * num_lines())),
+      m_Rx_lines(nonstd::alloc_blocks<Line>((N+1) * num_lines())),
+      m_temp_line(nonstd::alloc_blocks<Line>(1 * num_lines()))
 {
     logger.debug() << "creating dense_bin_fun with "
         << M * M << " blocks" |0;
     Assert (N < (1<<15), "dense_bin_fun is too large");
-    Assert (m_blocks != NULL, "block allocation failed");
-    Assert (m_Lx_lines != NULL, "Lx line allocation failed");
-    Assert (m_Rx_lines != NULL, "Rx line allocation failed");
-    Assert (m_temp_line != NULL, "int line allocation failed");
+    AssertP(m_blocks, sizeof(Line), "blocks");
+    AssertP(m_Lx_lines, sizeof(Line), "Lx lines");
+    AssertP(m_Rx_lines, sizeof(Line), "Rx lines");
+    AssertP(m_temp_line, sizeof(Line), "temp line");
 
     //initialize to zero
     bzero(m_blocks, M * M * sizeof(Block4x4W));
@@ -33,9 +32,9 @@ dense_bin_fun::dense_bin_fun (int num_items)
 dense_bin_fun::~dense_bin_fun ()
 {
     nonstd::free_blocks(m_blocks);
-    delete[] m_Lx_lines;
-    delete[] m_Rx_lines;
-    delete[] m_temp_line;
+    nonstd::free_blocks(m_Lx_lines);
+    nonstd::free_blocks(m_Rx_lines);
+    nonstd::free_blocks(m_temp_line);
 }
 void dense_bin_fun::move_from (const dense_bin_fun& other)
 {//for growing

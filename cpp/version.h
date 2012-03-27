@@ -24,6 +24,6 @@ struct Version
                 << Int(v.c) << '.'
                 << Int(v.d); }
 };
-const Version VERSION(0,9,1,13);
+const Version VERSION(0,9,1,16);
 
 #endif

@@ -1316,8 +1316,7 @@ bool _load (string filename)
 bool load (string filename) { return run_syn_fun(_load, filename); }
 int _dump (std::pair<string,Int> args)
 {
-    CS::dump(args.first,args.second);
-    LT::dump(args.first + ".jcode");
+    CS::dump(args.first, args.second);
     return 0;
 }
 void dump (string filename, Int type)

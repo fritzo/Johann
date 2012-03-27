@@ -18,8 +18,7 @@ namespace LambdaTheories
 // 1 = expand db with new expressions & check
 // 2 = also try to prove by contradiction via fork-assume-wait
 // XXX proof-by-contradiction seems to never prove anything
-// XXX proof-by-contradiction spawns many processes; should be 2 at a time
-static const unsigned MAX_EFFORT = 1;
+static const unsigned MAX_EFFORT = 2;
 
 const Logging::Logger logger("theory", Logging::DEBUG);
 
@@ -283,8 +282,6 @@ public:
 
 inline MagmaTheory* theory ()
 { return MagmaTheory::s_unique_instance; }
-
-void dump (string filename);
 
 }
 

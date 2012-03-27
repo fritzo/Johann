@@ -231,24 +231,32 @@ Trool MagmaTheory::_query_contradiction (StmtHdl stmt)
         _exit(0);
     }
 
-    while (assume_pos && assume_neg) {
+    while (assume_pos or assume_neg) {
+
         int status;
         int pid = wait(&status);
-        int consistent = WIFEXITED(status) && (WEXITSTATUS(status) == 0);
+        int exited = WIFEXITED(status);
+        int exitstatus = WEXITSTATUS(status);
+        bool consistent = exited and exitstatus == 0;
+
         if (pid == assume_pos) {
+            assume_pos = 0;
+
             if (!consistent) {
                 if (assume_neg) kill(assume_neg, 9);
                 logger.info() << "positive assumption was inconsistent" |0;
                 return FALSE;
             }
-            assume_pos = 0;
+
         } else if (pid == assume_neg) {
+            assume_neg = 0;
+
             if (!consistent) {
                 if (assume_pos) kill(assume_pos, 9);
                 logger.info() << "negative assumption was inconsistent" |0;
                 return TRUE;
             }
-            assume_neg = 0;
+
         }
     }
 
@@ -427,17 +435,6 @@ void MagmaTheory::save_to (ostream& os)
         os << "!check " << prop << ", " << Symbols::TroolNames[truth] << "\n";
     }
     os << std::endl;
-}
-void dump (string filename)
-{
-    ofstream file(filename.c_str());
-    if (file) {
-        logger.info() << "dumping theory to " << filename |0;
-        theory()->save_to(file);
-        file.close();
-    } else {
-        logger.error() << "failed to dump theory to " << filename |0;
-    }
 }
 void MagmaTheory::write_stats_to (ostream& os)
 {

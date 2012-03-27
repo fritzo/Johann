@@ -17,6 +17,12 @@ void copy_blocks (void*  destin_base,
                   const void*  source_base,
                   size_t blockSize,
                   size_t numBlocks);
+
+template<class T> T * alloc_blocks (size_t numBlocks)
+{
+  return static_cast<T *>(alloc_blocks(sizeof(T), numBlocks));
+}
+
 }
 
 #endif

@@ -354,11 +354,12 @@ void dump (string filename, Int struct_type, bool verbose)
         std::ostringstream o_filename;
         o_filename << filename << ".struct.obs";
         file.open(o_filename.str().c_str());
-        file << "Title: dump of Obs\n";
-        file << "Author: Johann " << VERSION << "\n";
-        file << "Date: " << get_date() << "\n\n";
-        file << "num\tname\n";
-        file << "--------------------------------\n";
+        file << "# Title: dump of Obs\n";
+        file << "# Author: Johann " << VERSION << "\n";
+        file << "# Date: " << get_date() << "\n";
+        file << "#";
+        file << "# num\tname\n";
+        file << "#--------------------------------\n";
         for (Ob::sparse_iterator o=Ob::sbegin(); o!=Ob::send(); ++o) {
             Ob ob = *o;
             file << ob << '\t' << expr(ob) << '\n';
@@ -372,12 +373,13 @@ void dump (string filename, Int struct_type, bool verbose)
         std::ostringstream a_filename;
         a_filename << filename << ".struct.app";
         file.open(a_filename.str().c_str());
-        file << "Title: dump of App Equations\n";
-        file << "Author: Johann " << VERSION << "\n";
-        file << "Date: " << get_date() << "\n\n";
-        if (verbose) file << "num\tAPP\tLHS\tRHS\tname\n";
-        else         file << "num\tAPP\tLHS\tRHS\n";
-        file << "----------------------------------------\n";
+        file << "# Title: dump of App Equations\n";
+        file << "# Author: Johann " << VERSION << "\n";
+        file << "# Date: " << get_date() << "\n";
+        file << "#";
+        if (verbose) file << "# num\tAPP\tLHS\tRHS\tname\n";
+        else         file << "# num\tAPP\tLHS\tRHS\n";
+        file << "#----------------------------------------\n";
         for (App::sparse_iterator e=App::sbegin(); e!=App::send(); ++e) {
             App eqn = *e;
             Ob app = AE::get_app(eqn), lhs = get_lhs(eqn), rhs = get_rhs(eqn);
@@ -399,12 +401,13 @@ void dump (string filename, Int struct_type, bool verbose)
         std::ostringstream c_filename;
         c_filename << filename << ".struct.comp";
         file.open(c_filename.str().c_str());
-        file << "Title: dump of Comp Equations\n";
-        file << "Author: Johann " << VERSION << "\n";
-        file << "Date: " << get_date() << "\n\n";
-        if (verbose) file << "num\tCOMP\tLHS\tRHS\tname\n";
-        else         file << "num\tCOMP\tLHS\tRHS\n";
-        file << "----------------------------------------\n";
+        file << "# Title: dump of Comp Equations\n";
+        file << "# Author: Johann " << VERSION << "\n";
+        file << "# Date: " << get_date() << "\n";
+        file << "#";
+        if (verbose) file << "# num\tCOMP\tLHS\tRHS\tname\n";
+        else         file << "# num\tCOMP\tLHS\tRHS\n";
+        file << "#----------------------------------------\n";
         for (Comp::sparse_iterator e=Comp::sbegin(); e!=Comp::send(); ++e) {
             Comp eqn = *e;
             Ob cmp = CE::get_comp(eqn), lhs = get_lhs(eqn), rhs = get_rhs(eqn);
@@ -424,14 +427,15 @@ void dump (string filename, Int struct_type, bool verbose)
         //output eqns
         logger.info() << "printing join eqns" |0;
         std::ostringstream j_filename;
-        j_filename << filename << ".struct.comp";
+        j_filename << filename << ".struct.join";
         file.open(j_filename.str().c_str());
-        file << "Title: dump of Join Equations\n";
-        file << "Author: Johann " << VERSION << "\n";
-        file << "Date: " << get_date() << "\n\n";
-        if (verbose) file << "num\tJOIN\tLHS\tRHS\tname\n";
-        else         file << "num\tJOIN\tLHS\tRHS\n";
-        file << "----------------------------------------\n";
+        file << "# Title: dump of Join Equations\n";
+        file << "# Author: Johann " << VERSION << "\n";
+        file << "# Date: " << get_date() << "\n";
+        file << "#";
+        if (verbose) file << "# num\tJOIN\tLHS\tRHS\tname\n";
+        else         file << "# num\tJOIN\tLHS\tRHS\n";
+        file << "#----------------------------------------\n";
         for (Join::sparse_iterator e=Join::sbegin(); e!=Join::send(); ++e) {
             Join eqn = *e;
             Ob join = JE::get_join(eqn), lhs = get_lhs(eqn), rhs = get_rhs(eqn);
@@ -453,13 +457,14 @@ void dump (string filename, Int struct_type, bool verbose)
         std::ostringstream l_filename;
         l_filename << filename << ".struct.ord";
         file.open(l_filename.str().c_str());
-        file << "Title: dump of Order\n";
-        file << "Author: Johann " << VERSION << "\n";
-        file << "Date: " << get_date() << "\n\n";
-        file << "  known distinctions (x!=y) are omitted\n";
-        file << "  unknown relations are printed as blank\n";
-        file << "LHS\tRHS\t[?=\t=?]\n";
-        file << "--------------------------------\n";
+        file << "# Title: dump of Order\n";
+        file << "# Author: Johann " << VERSION << "\n";
+        file << "# Date: " << get_date() << "\n";
+        file << "#";
+        file << "# unknown relations are printed as blank\n";
+        file << "#";
+        file << "# LHS\tRHS\t[?=\t=?]\n";
+        file << "#--------------------------------\n";
         for (Ob::sparse_iterator i=Ob::sbegin(); i!=Ob::send(); ++i) {
             Ob lhs = *i;
         for (Ob::sparse_iterator j=Ob::sbegin(); j!=i; ++j) {
@@ -495,7 +500,8 @@ void dump (string filename, Int struct_type, bool verbose)
         file.open(l_filename.str().c_str());
         file << "#\\title{ " << filename << " }\n";
         file << "#\\author{ Johann " << VERSION << " }\n";
-        file << "#\\date{ " << get_date() << " }\n\n";
+        file << "#\\date{ " << get_date() << " }\n";
+        file << "#";
         LT::theory()->save_to(file);
         file.close();
     }
@@ -1050,7 +1056,6 @@ void die_quietly () { g_die_quietly = true; }
 #define AssertC(cond,mess) { if (!(cond)) { \
     if (g_die_quietly) _exit(1); \
     logger.error() << "inconsistent: " << mess << "\nsee data/notcon.*" |0; \
-    LT::dump("data/notcon.jcode"); \
     dump("data/notcon"); \
     abort(); \
     }}
