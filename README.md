@@ -1,7 +1,7 @@
 
 Johann
 ======
-Bayesian inference of programs = Solomonoff induction
+Bayesian induction of programs, à la Solomonoff induction
 
 Johann is an equational theorem-proving system and Bayesian inference engine for various extensions of combinatory algebra (equivalently, lambda-calculus),
 making particular use of an interpretation of typed lambda-calculus in untyped concurrent lambda-calculus.

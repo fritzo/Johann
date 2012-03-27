@@ -11,14 +11,14 @@ namespace Files
 const Logging::Logger logger("file", Logging::DEBUG);
 
 //utilities
-const Int BLOCK_SIZE = 256; //in bytes
+const Int BLOCK_SIZE_BYTES = 256;
 inline Int bytes2blocks (long bytes)
 {//rounds up
-    return (BLOCK_SIZE - 1 + bytes) / BLOCK_SIZE;
+    return (bytes + BLOCK_SIZE_BYTES - 1) / BLOCK_SIZE_BYTES;
 }
 inline long blocks2bytes (Int blocks)
 {
-    return blocks * BLOCK_SIZE;
+    return blocks * BLOCK_SIZE_BYTES;
 }
 void fseek_block (FILE* file, Int block);
 void fill_block (FILE* file);

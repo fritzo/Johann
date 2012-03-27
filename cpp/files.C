@@ -14,7 +14,7 @@ void fseek_block (FILE* file, Int block)
 }
 void fill_block (FILE* file)
 {
-    static const char emptyBlock[BLOCK_SIZE] =
+    static const char emptyBlock[BLOCK_SIZE_BYTES] =
     {
         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -25,7 +25,7 @@ void fill_block (FILE* file)
         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
     };
-    safe_fwrite(emptyBlock, BLOCK_SIZE, 1, file);
+    safe_fwrite(emptyBlock, BLOCK_SIZE_BYTES, 1, file);
 }
 
 //jdb files

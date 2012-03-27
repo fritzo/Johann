@@ -8,4 +8,5 @@ parser.output
 parser.y.c
 position.hh
 stack.hh
+*_test
 
