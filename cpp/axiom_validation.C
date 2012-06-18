@@ -212,7 +212,6 @@ void validate_associativity (Ob A)
     Lra_Iterator Ayz_iter; //for below
 
     for (Lra_Iterator Ax_iter(A); Ax_iter; Ax_iter.next()) {
-        Ob x  = Ax_iter.rhs();
         Ob Ax = Ax_iter.app();
 
         for (Axy_iter.begin(Ax); Axy_iter; Axy_iter.next()) {

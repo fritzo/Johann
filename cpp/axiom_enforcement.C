@@ -443,7 +443,6 @@ void enforce_A_commutativity_A (Ob A, App eqn)
 inline void enforce_A_associativity_A1 (Ob A, App eqn)
 {//Ax=A*x | Ax_Ayz=Ax*Ayz,A_Axy_z=A_Axy*z,A_Axy=A*Axy,Ayz=Ay*z,Ay=A*y,Axy=Ax*y
     if (get_lhs(eqn) != A) return;
-    Ob x  = get_rhs(eqn);
     Ob Ax = get_app(eqn);
 
     Lra_Iterator Ayz_iter; //for below
@@ -981,7 +980,6 @@ inline void enforce_A_duals_A1 (Ob A, Ob B, App eqn)
     Ob Ax = get_app(eqn);
 
     for (Lra_Iterator Bxy_iter(Bx); Bxy_iter; Bxy_iter.next()) {
-        Ob y   = Bxy_iter.rhs();
         Ob Bxy = Bxy_iter.app();
         LOG_DEBUG1( "enforcing A_duals_A1" );
         ensure_app(x, Ax,Bxy);
@@ -1007,7 +1005,6 @@ inline void enforce_A_duals_A3 (Ob A, Ob B, App eqn)
     Ob x   = find_ldiv(B,Bx); if (!x) return;
     Ob Ax  = find_app(A,x); if (!Ax) return;
     Ob Bxy = get_app(eqn);
-    Ob y = get_rhs(eqn);
     LOG_DEBUG1( "enforcing A_duals_A3" );
     ensure_app(x, Ax,Bxy);
 }
@@ -1022,7 +1019,6 @@ inline void enforce_A_duals_A4 (Ob A, Ob B, App eqn)
         Ob Bx = Bxy_iter.lhs();
         //here we assume that B injects
         Ob x_ = find_ldiv(B,Bx); if (x_!=x) continue; //x_ may be 0
-        Ob y  = Bxy_iter.rhs();
         LOG_DEBUG1( "enforcing A_duals_A4" );
         ensure_app(x, Ax,Bxy);
     }
@@ -2071,7 +2067,6 @@ inline void enforce_A_S_A4 (App eqn)
         Ob y     = Sxy_iter.rhs();
         Ob yz    = find_app(y,z); if (!yz) continue;
         Ob Sxy   = Sxy_iter.app();
-        Ob xz_yz = find_app(xz,yz);
 
         LOG_DEBUG1( "enforcing A_S_A4" );
         ensure_apps(Sxy,z, xz,yz);
@@ -2479,7 +2474,6 @@ inline void enforce_A_W_A3 (App eqn)
     for (ALr_Iterator Wx_iter(Wx,W); Wx_iter; Wx_iter.next()) {
         Ob x  = Wx_iter.rhs();
         Ob xy = find_app(x,y); if (!xy) continue;
-        Ob Wx = Wx_iter.app();
         LOG_DEBUG1( "enforcing A_W_A3" );
         ensure_app(Wxy, xy,y);
     }
@@ -2866,7 +2860,7 @@ inline void enforce_L_Unit_pos1 (Ord ord)
     for (ARl_Iterator xI_iter(xI,I); xI_iter; xI_iter.next()) {
 
         LOG_DEBUG1( "enforcing L_Unit_pos1" );
-        ensure_less(xI_iter.lhs(), *Atoms::Unit);
+        ensure_less(xI_iter.lhs(), Unit);
     }
 }
 //axiom: x![=I |- Unitx=Top

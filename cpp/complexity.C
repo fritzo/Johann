@@ -1140,7 +1140,7 @@ Vect calc_coords_alt (Lang& L, VMeas coords)
 
     //temporaries
     Tensor temp(dim,1,NULL);
-    Meas mu = Meas::alloc(), len = Meas::alloc();
+    Meas mu = Meas::alloc();
     Vect evals(dim);
     Float shift = 1.0; //so dominant eigenvalues are positive
 

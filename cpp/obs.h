@@ -60,7 +60,7 @@ void mark_all ();
 void unmark_all ();
 
 //properties
-inline bool isNamed      (Ob ob) { return ob(NAME) != NULL; }
+inline bool isNamed      (Ob ob) { return ob(NAME) != 0; }
 inline bool isDepricated (Ob ob)
 {//WARNING: REP fields must not be otherwise used
     return ob(REP) != ob;

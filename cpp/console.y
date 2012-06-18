@@ -135,13 +135,13 @@ void save_system (string name)
         file << "#\\date{ " << get_date() << " }\n";
         file << "#\\maketitle\n\n";
 
-        //LOCK_SYNTAX
+        //LOCK_SYNTAX;
         file << "#\\section{Language}\n\n";
         K::save_basis_to(file);
         context().save_to(file);
         K::save_theory_to(file);
         K::save_params_to(file);
-        //UNLOCK_SYNTAX
+        //UNLOCK_SYNTAX;
 
         file.close();
     }
@@ -426,9 +426,9 @@ input: /* empty */ { $$=true; }
             std::vector<string> &files = *$4;
             for (unsigned i=0; i<files.size(); ++i) {
                 std::ostringstream err;
-                LOCK_SYNTAX
+                LOCK_SYNTAX;
                 S::library.add_file(files[i], err);
-                UNLOCK_SYNTAX
+                UNLOCK_SYNTAX;
                 std::string err_str = err.str();
                 if (not err_str.empty()) {
                     j_error(1) << "failed to lib " << files[i] << std::endl;
@@ -456,23 +456,23 @@ input: /* empty */ { $$=true; }
     | input '!' SEND EOL { K::send_lang(); K::send_eqns(); $$=true; }
 /* expr tools */
     | input flat_expr '.' {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             j_info() << *$2 << "." << std::endl;
             clear_buffers();
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
             $$=true;
         }
     | input '!' SIZE flat_expr '.' EOL {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             Float result = K::get_symbols(*$4);
             clear_buffers();
             if (std::isnan(result)) { j_info() << "???"  << std::endl; }
             else                    { j_info() << result << std::endl; }
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
             $$=true;
         }
     | input '!' WHO EOL {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             if ($3 & 1) {
                 ostream& os = j_info() << "constants: ";
                 EX::write_consts_to(os);
@@ -481,7 +481,7 @@ input: /* empty */ { $$=true; }
             if ($3 & 2) {
                 j_info() << "definitions: " << context() << std::endl;
             }
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
             $$=true;
         }
     | input '!' SIMPLEST     EOL { K::print_simplest_to(j_info()); $$=true; }
@@ -491,10 +491,10 @@ input: /* empty */ { $$=true; }
     | input '!' SKETCHY      EOL { K::print_sketchiest_to(j_info()); $$=true; }
     | input '!' SKETCHY NAT  EOL { K::print_sketchiest_to(j_info(),$4); $$=true; }
     | input '!' THINK_ABOUT expr_set '.' EOL {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             K::think_about_exprs(*$4);
             clear_buffers();
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
             $$=true;
         }
 /* basis selection */
@@ -509,7 +509,7 @@ input: /* empty */ { $$=true; }
             $$=true;
         }
     | input '!' DEFINE ATOM DEF_EQ pure_expr '.' {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             if (not $1) clear_buffers(); else {
             string name = *((*$4)->name());
             ExprHdl meaning = *$6;
@@ -524,7 +524,7 @@ input: /* empty */ { $$=true; }
             }
             meaning.clear();
             }
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
             $$=true;
         }
 /* structure tools */
@@ -599,24 +599,24 @@ input: /* empty */ { $$=true; }
         }
 /* lambda-theory tools */
     | input flat_stmt '.' {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             j_info() << *$2 << "." << std::endl;
             clear_buffers();
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
             $$=true;
         }
     | input '!' NORMALIZE flat_stmt '.' {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             StmtHdl stmt = *$4;
             stmt = stmt->query_nf();
             j_info() << stmt << "." << std::endl;
             stmt.clear();
             clear_buffers();
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
             $$=true;
         }
     | input flat_stmt '?' {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             if (StmtHdl stmt = K::expand(*$2)) {
                 switch (K::query_stmt(stmt)) {
                 case Symbols::TRUE:    j_info() << "true."  << std::endl; break;
@@ -633,11 +633,11 @@ input: /* empty */ { $$=true; }
                                << get_location() |0;
             }
             clear_buffers();
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
             $$=true;
         }
     | input '!' CHECK flat_stmt '.' {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             if ($1) {
             if (StmtHdl stmt = K::expand(*$4)) {
                 unsigned effort = g_skimming ? 0 : K::get_default_effort();
@@ -654,11 +654,11 @@ input: /* empty */ { $$=true; }
             }
             }
             clear_buffers();
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
             $$=true;
         }
     | input '!' ASSERT flat_stmt '.' {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             if ($1) {
             if (StmtHdl stmt = K::expand(*$4)) {
                 switch (K::query_stmt(stmt)) {
@@ -674,11 +674,11 @@ input: /* empty */ { $$=true; }
             }
             }
             clear_buffers();
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
             $$=true;
         }
     | input '!' ASSUME flat_stmt '.' {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             if ($1) {
             if (StmtHdl stmt = K::expand(*$4)) {
                 if (not K::assume_stmt(stmt, get_location())) {
@@ -695,7 +695,7 @@ input: /* empty */ { $$=true; }
             }
             }
             clear_buffers();
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
             $$=true;
         }
     | input '!' RECHECK EOL { K::review(); K::recheck(); $$=true; }
@@ -743,42 +743,42 @@ input: /* empty */ { $$=true; }
     | input '!' MARK   EOL { K::mark_all(); $$=true; }
     | input '!' UNMARK EOL { K::unmark_all(); $$=true; }
     | input '!' MARK flat_expr '.' EOL {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             K::mark(*$4);
             clear_buffers();
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
             $$=true;
         }
     | input '!' UNMARK flat_expr '.' EOL {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             K::unmark(*$4);
             clear_buffers();
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
             $$=true;
         }
 /* context tools */
     /* TODO: try to avoid recompiling a context every time sth is defined */
     | input atom_patt DEF_EQ flat_expr '.' {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             if ($1) define(*$2,*$4);
             clear_buffers();
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
             K::recompile_context();
             $$=true;
         }
     | input LET raw_patt DEF_EQ flat_expr '.' {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             if ($1) define(*$3,*$5);
             clear_buffers();
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
             K::recompile_context();
             $$=true;
         }
     | input '!' UPDATE EOL { K::update(); $$=true; }
     | input '!' PRINT_CONTEXT EOL {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             context().write_to(j_info());
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
             $$=true;
         }
     | input '!' WRITE FILENAME EOL {
@@ -794,27 +794,27 @@ input: /* empty */ { $$=true; }
                 file << "#\\date{ " << get_date() << "}\n";
                 file << "#\\maketitle\n\n";
 
-                LOCK_SYNTAX
+                LOCK_SYNTAX;
                 context().write_to(file);
                 //context().save_to(file);
                 //K::save_theory_to(file);
-                UNLOCK_SYNTAX
+                UNLOCK_SYNTAX;
 
                 file.close();
             }
             $$=true;
         }
     | input '!' CLEAR_CONTEXT EOL {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             context().clear();
             K::clear_theory();
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
             $$=true;
         }
 /* language development tools */
     | input '!' LANG EOL { K::write_lang_to(j_info()); $$=true; }
     | input '!' THINK_IN expr_set '.' EOL {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             unsigned size = $4->size();
             if (size < 2) {
                 j_warning() << "thinking in small basis: size = "
@@ -824,11 +824,11 @@ input: /* empty */ { $$=true; }
                 j_error() << "I don't know all those words" << std::endl;
             }
             clear_buffers();
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
             $$=true;
         }
     | input '!' THINK_IN expr_pmf '.' EOL {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             unsigned size = $4->size();
             if (size < 2) {
                 j_warning() << "thinking in small basis: size = "
@@ -838,25 +838,25 @@ input: /* empty */ { $$=true; }
                 j_error() << "I don't know all those words" << std::endl;
             }
             clear_buffers();
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
             $$=true;
         }
     | input '!' RETRACT pure_expr EOL {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             if (not K::retract(*$4)) {
                 j_warning() << "retraction failed" << std::endl;
             }
             clear_buffers();
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
             $$=true;
         }
     | input '!' EXTEND pure_expr EOL {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             if (not K::extend(*$4)) {
                 j_warning() << "extension failed" << std::endl;
             }
             clear_buffers();
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
             $$=true;
         }
 /* saving, loading, etc. */
@@ -890,9 +890,9 @@ input: /* empty */ { $$=true; }
         }
 /* errors */
     | input error EOL {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             clear_buffers();
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
             yyerrok;
             $$=true;
         }
@@ -925,7 +925,7 @@ filenames: FILENAME {
 /*======================== patterns and binders ========================*/
 
 atom_patt: ATOM {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             Var* var = (*$1)->var();
             if (var) {
                 tempPatts.insert($$ = new PattHdl(new EX::VarPatt(var)));
@@ -936,41 +936,41 @@ atom_patt: ATOM {
                                << get_location() << ": " << *$1 |0;
                 tempPatts.insert($$ = new PattHdl(new EX::BlankPatt()));
             }
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
 
 raw_patt: DASH {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempPatts.insert($$ = new PattHdl(new EX::BlankPatt()));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | atom_patt { $$ = $1; }
     /* unnecessary:
     | '<' '>' {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempPatts.insert($$ = new PattHdl(new EX::VectPatt()));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     */
     | '<' pattern '>' {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempPatts.insert($$ = new PattHdl(new EX::VectPatt(*$2)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | '<' patt_list '>' {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempPatts.insert($$ = new PattHdl(new EX::VectPatt(*$2)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | '(' patt_list ')' {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempPatts.insert($$ = new PattHdl(EX::build_tuple(*$2)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
 
 pattern: raw_patt { $$ = $1; }
     | pattern RELATION flat_expr {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             $$ = $1;
             switch ($2) {
                 case Symbols::OF_TYPE:  (*$$)->type(*$3); break;
@@ -983,7 +983,7 @@ pattern: raw_patt { $$ = $1; }
                                << get_location() << ": "
                                << Symbols::RelationNames[$2] |0;
             }
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
 
 patt_list: pattern ',' pattern {
@@ -994,55 +994,55 @@ patt_list: pattern ',' pattern {
     | patt_list ',' pattern { $$ = $1; $$->push_back(*$3); }
 
 binder: BINDER pattern {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             Symbols::BinderType binderType = Symbols::BinderType($1);
             tempBinders.insert($$ = new Binder(binderType, *$2));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | binder ',' pattern {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             $$ = $1;
             $$->push(*$3);
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
 
 /*======================== statement syntax ========================*/
 
 reln_stmt: flat_expr RELATION flat_expr {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempStmts.insert($$ = new StmtHdl(
                 ST::build_reln(*$1, Symbols::Relation($2), *$3)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | reln_stmt RELATION flat_expr {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             ExprHdl lhs = (*$1)->rhs();
             StmtHdl reln = ST::build_reln(lhs, Symbols::Relation($2), *$3);
             tempStmts.insert($$ = new StmtHdl(ST::And(*$1, reln)));
             reln.clear();
             lhs.clear();
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
 
 flat_stmt: reln_stmt { $$ = $1; }
     | flat_stmt AND_S flat_stmt {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempStmts.insert($$ = new StmtHdl(ST::And(*$1, *$3)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | flat_stmt OR_S flat_stmt {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempStmts.insert($$ = new StmtHdl(ST::Or(*$1, *$3)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | flat_stmt IMPLIES_S flat_stmt {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempStmts.insert($$ = new StmtHdl(ST::Implies(*$1, *$3)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | '(' bound_stmt ')' { $$ = $2; }
     | '(' expr_list RELATION expr ')' {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             std::vector<ExprHdl> &lhs = *$2;
             Symbols::Relation rel = $3;
             ExprHdl &rhs = *$4;
@@ -1051,23 +1051,23 @@ flat_stmt: reln_stmt { $$ = $1; }
             for (unsigned i=0; i<lhs.size(); ++i) {
                 conj->add(ST::build_reln(lhs[i], rel, rhs));
             }
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
 
 bound_stmt: binder '.' statement %prec DOT {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempStmts.insert($$ = new StmtHdl($1->bind(*$3)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | atom_patt DEF_EQ flat_expr '.' statement %prec DOT {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempStmts.insert($$ = new StmtHdl(new ST::Definition(*$1,*$3,*$5)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | LET raw_patt DEF_EQ flat_expr '.' statement %prec DOT {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempStmts.insert($$ = new StmtHdl(new ST::Definition(*$2,*$4,*$6)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
 
 statement: flat_stmt { $$ = $1; }
@@ -1078,117 +1078,117 @@ statement: flat_stmt { $$ = $1; }
 atom_expr: ATOM { $$ = $1; }
     | '(' expr ')' %prec PAREN_TERM { $$ = $2; }
     | '[' expr ']' %prec PAREN_TERM {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl(K::simplify(*$2,INFINITY)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | BEG_QUOTE statement END_QUOTE {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl((*$2)->to_bool()));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
          }
     | NAT {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl(EX::build_nat(Int($1))));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | expr_vect {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl(EX::build_vector(*$1)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | expr_tup {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl(EX::build_tuple(*$1)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | atom_expr '*' atom_expr %prec COMPOSE {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl(EX::build_comp(*$1, *$3)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
 
 app_expr: atom_expr { $$ = $1; }
     | app_expr atom_expr %prec APPLY {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl(EX::build_app(*$1, *$2)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
 
 meta_expr: '!' COMB flat_expr %prec DOT {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl((*$3)->as_comb()));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | '!' PRETTY flat_expr %prec DOT {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl((*$3)->pretty()));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | '!' NAT PRETTY flat_expr %prec DOT {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl((*$4)->pretty($2)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | '!' REDUCE flat_expr %prec DOT {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl((*$3)->reduce()));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | '!' SAMPLE flat_expr %prec DOT {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl((*$3)->sample()));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | '!' NAT REDUCE flat_expr %prec DOT {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl((*$4)->reduce($2)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | '!' NAT SAMPLE flat_expr %prec DOT {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl((*$4)->sample($2)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | '!' EXPAND flat_expr %prec DOT {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl(K::expand(*$3)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | '!' integer EXPAND flat_expr %prec DOT {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl(K::expand(*$4, $2)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | '!' COMPRESS flat_expr %prec DOT {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl(K::compress(*$3)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | '!' integer COMPRESS flat_expr %prec DOT {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl(K::compress(*$4, $2)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | '!' SIMPLIFY flat_expr %prec DOT {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl(K::simplify(*$3)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | '!' EXPRESS flat_expr %prec DOT {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl(K::express(*$3)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | '!' number SIMPLIFY flat_expr %prec DOT {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl(K::simplify(*$4,$2)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | '!' GROK flat_expr %prec DOT {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl(K::simplify(*$3,INFINITY)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
 
  /* XXX need to differentiate between flat_join_expr and join_expr
@@ -1196,108 +1196,108 @@ meta_expr: '!' COMB flat_expr %prec DOT {
   */
 
 bound_expr: binder '.' expr %prec DOT {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl($1->bind(*$3)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | BINDER '.' expr %prec DOT { $$ = $3; } //empty binder does nothing
 
 app_bound_expr: bound_expr { $$ = $1; }
     | app_expr bound_expr %prec APPLY {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl(EX::build_app(*$1,*$2)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
 
 arrow_bound_expr: app_bound_expr { $$ = $1; }
     | app_expr ARROW arrow_bound_expr %prec ARROW {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl(EX::build_arrow(*$1, *$3)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
 
 rand_bound_expr: arrow_bound_expr { $$ = $1; }
     | arrow_expr '+' arrow_bound_expr %prec RAND {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl(EX::build_rand(*$1,*$3)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
 
 join_bound_expr: rand_bound_expr { $$ = $1; }
     | join_expr '|' rand_bound_expr %prec JOIN {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl(EX::build_join(*$1,*$3)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
 
 semi_bound_expr: join_bound_expr { $$ = $1; }
     | semi_expr ';' join_bound_expr %prec SEMI {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl(EX::build_comp(*$3,*$1)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
 
 expr: flat_expr { $$ = $1; }
     | semi_bound_expr { $$ = $1; }
     | flat_expr '.' expr %prec DOT {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl(EX::build_app(*$1,*$3)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | atom_patt DEF_EQ flat_expr '.' expr %prec DOT {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl(new EX::Definition(*$1,*$3,*$5)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | LET raw_patt DEF_EQ flat_expr '.' expr %prec DOT {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl(new EX::Definition(*$2,*$4,*$6)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
 
 arrow_expr: app_expr { $$ = $1; }
     | app_expr ARROW arrow_expr %prec ARROW {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl(EX::build_arrow(*$1, *$3)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
 
 rand_expr: arrow_expr { $$ = $1; }
     | arrow_expr '+' arrow_expr %prec RAND {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl(EX::build_rand(*$1, *$3)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
 
 join_expr: rand_expr { $$ = $1; }
     | join_expr '|' rand_expr %prec JOIN {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl(EX::build_join(*$1, *$3)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
 
 semi_expr: join_expr { $$ = $1; }
     | semi_expr ';' join_expr %prec SEMI {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl(EX::build_comp(*$3, *$1)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
 
 flat_expr: semi_expr { $$ = $1; }
     | meta_expr { $$ = $1; }
 
 pure_expr: flat_expr {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprs.insert($$ = new ExprHdl(purify(*$1)));
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
 
 expr_vect: '<' '>' { tempExprLists.insert($$ = new std::vector<ExprHdl>(0)); }
     | '<' expr '>' {
             tempExprLists.insert($$ = new std::vector<ExprHdl>());
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             $$->push_back(*$2);
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | '<' expr_list '>' { $$ = $2; }
     | '<' expr_list ',' '>' { $$ = $2; }
@@ -1307,16 +1307,16 @@ expr_tup: '(' expr_list ')' { $$ = $2; }
 
 expr_list: expr ',' expr { /* list of length at least two */
             tempExprLists.insert($$ = new std::vector<ExprHdl>());
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             $$->push_back(*$1);
             $$->push_back(*$3);
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | expr_list ',' expr {
             $$ = $1;
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             $$->push_back(*$3);
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
 
 integer: NAT { $$ = $1; } | INT { $$ = $1; }
@@ -1324,19 +1324,19 @@ number: FLOAT { $$ = $1; } | NAT { $$ = $1; } | INT { $$ = $1; }
 
 expr_set: flat_expr {
             tempExprLists.insert($$ = new std::vector<ExprHdl>());
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             $$->push_back(*$1);
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     |  expr_set ',' flat_expr {
             $$ = $1;
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             $$->push_back(*$3);
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
 
 expr_pmf: expr_set '@' number {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             tempExprPMFs.insert($$ = new ExprPMF);
             Float weight = $3;
 
@@ -1344,10 +1344,10 @@ expr_pmf: expr_set '@' number {
             for (Int i=0; i<head.size(); ++i) {
                 $$->push_back(std::make_pair(head[i],weight));
             }
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
         }
     | expr_pmf ',' expr_set '@' number {
-            LOCK_SYNTAX
+            LOCK_SYNTAX;
             $$ = $1;
             Float weight = $5;
 
@@ -1355,7 +1355,7 @@ expr_pmf: expr_set '@' number {
             for (Int i=0; i<head.size(); ++i) {
                 $$->push_back(std::make_pair(head[i],weight));
             }
-            UNLOCK_SYNTAX
+            UNLOCK_SYNTAX;
 
         }
 
