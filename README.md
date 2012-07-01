@@ -61,11 +61,48 @@ From the thesis abstract (scripts/abstract.text):
 > theorem, so that, at steady state, Johann (provably) remembers simple facts
 > relevant to the corpus.
 
-EigenViz
---------
+Installation
+------------
+On an ubuntu 12.04 system:
 
-EigenViz is a little sub-project for visualizing sparse graphs
-in 3D space + 3D color.
-It is fast, simple, and based on OpenGL.
-See the eigenvis/ directory for further information.
+* to build the johann system run requirements.sh, then make
+
+* to build documentation run pdf-requirements.sh, then make pdf
+
+Roadmap
+-------
+
+* Architecture:
+
+    * depricate pervasive use of nodes (esp, for equations)
+
+    * rearchitect to separate symbolic from probabilistic:
+      brain, combinatory structure, languages, ...
+
+    * implement finer-grained threading in kernel
+
+    * separate kernel from console
+
+    * separate jdb into generic relational database
+
+* Parallelization:
+
+    * replace splay forests with hash tables of arrays
+
+    * parallelize forward-chaining workers (dropping the saturation guarantee)
+      but run axiom validation in background
+
+    * implpement multi-kernel collaboration via equation-trading
+
+* Infrastructure:
+
+    * wrap expressions in python and move syntactic algorithms to python
+
+    * switch to better build system, e.g. cmake, jam
+
+    * switch to zeromq for kernel interface
+
+    * replace custom .jdb format with HDF5
+
+    * switch to TBB for threading library
 

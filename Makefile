@@ -83,7 +83,6 @@ clean:
 	$(MAKE) -C mapper clean
 	$(MAKE) -C scripts clean
 	$(MAKE) -C data clean
-	$(MAKE) -C devel clean
 	$(MAKE) -C html clean
 	$(MAKE) -C doxygen clean
 
