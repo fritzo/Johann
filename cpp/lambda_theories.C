@@ -845,7 +845,7 @@ std::vector<Ob> LambdaTheory::solve (StmtHdl stmt, bool tryhard)
     stmt = stmt->query_nf();
     stmt = stmt->map(EX::simplifier());
 
-    //find one free variable.  LATER: deal with multiple free vars
+    //find one free variable.  TODO deal with multiple free vars
     Expr::VarSet vars = stmt->vars();
     if (vars.empty()) {
         logger.error() << "no free variables to solve for" |0;

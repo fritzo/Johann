@@ -55,7 +55,7 @@ void StructFileHeader::validate () const
             "header.j_size is too big: " << j_size);
 
     //validate offsets
-    //LATER
+    //TODO
 }
 
 }

@@ -9,7 +9,7 @@ set formatoptions=
 syntax case match
 
 syntax keyword Todo TODO
-syntax keyword Todo LATER
+syntax keyword Todo TODO
 syntax keyword Todo XXX
 syntax keyword Todo HACK
 syntax keyword Todo FIXME

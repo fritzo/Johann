@@ -31,7 +31,7 @@ namespace S = Substitute;
 using K::context;
 
 //output tools
-//LATER: this should be moved to set_wrap.h
+//TODO this should be moved to set_wrap.h
 template <class T> ostream& operator<< (ostream& os, const std::set<T>& s)
 {
     os << '{';
@@ -44,7 +44,7 @@ template <class T> ostream& operator<< (ostream& os, const std::set<T>& s)
     }
     return os << '}';
 }
-//LATER: this should be moved to vector_wrap.h
+//TODO this should be moved to vector_wrap.h
 template <class T> ostream& operator<< (ostream& os, const std::vector<T>& v)
 {
     os << '[';

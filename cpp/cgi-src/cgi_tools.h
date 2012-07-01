@@ -40,7 +40,7 @@ void back_matter (bool bar=false);
 
 //templates
 void insert_html (string filename);
-inline void later () { cout << "<b class=xxx>LATER</b>\n"; }
+inline void todo () { cout << "<b class=xxx>TODO</b>\n"; }
 
 //input data
 inline string get_user () { return cgi.getEnvironment().getRemoteUser(); }

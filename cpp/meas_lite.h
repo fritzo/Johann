@@ -39,17 +39,17 @@
  *   rdiv(-,-,-)    right-inverse application
  * </pre>
  *
- * TODO: add inverse composition
- * TODO: add information ordering
+ * TODO add inverse composition
+ * TODO add information ordering
  *
- * TODO: add parsing, in and out
- * TODO: add dense and sparse methods .save(string filename)
+ * TODO add parsing, in and out
+ * TODO add dense and sparse methods .save(string filename)
  *   !think about
  *       S @ 0.3,
  *       K @ 0.2,
  *       ...
  *       S S(S S S) @ 0.00001 .
- * TODO: add method threshhold : Dense x Float --> Sparse
+ * TODO add method threshhold : Dense x Float --> Sparse
  */
 namespace MeasLite
 {
@@ -346,7 +346,7 @@ template<class E> struct Fix
 };
 template<class E> inline Fix<E> fix(E e, Float t=1e-6) { return Fix<E>(e,t); }
 
-/* LATER
+/* TODO
 template<class Ea,class El,class Er> struct Ldiv
 {
     Ea a; El l; Er r;
@@ -388,7 +388,7 @@ template<class O,class E>           inline O& operator<< (O&o, pow<E>& p)       
 template<class O,class E>           inline O& operator<< (O&o, call<E>& c)      { return o << "call(..., " << c.e << ')'; }
 template<class O,class E>           inline O& operator<< (O&o, Fix<E>& f)       { return o << "fix(" << f.e << ')'; }
 template<class O>                   inline O& operator<< (O&o, random& r)       { return o << "random(" << r.sigma << ')'; }
-/* LATER
+/* TODO
 template<class O,class Ea,class El,class Er> inline O& operator<< (O&o, Ldiv<Ea,El,Er>& la) { return o << "ldiv(" << la.l << ", " << la.a << ')'; }
 template<class O,class Ea,class El,class Er> inline O& operator<< (O&o, Rdiv<Ea,El,Er>& ar) { return o << "rdiv(" << ar.a << ", " << ar.r << ')'; }
 */
@@ -473,7 +473,7 @@ template<class E1,class E2> void Join<E1,E2>::eval ()
     l.eval(); r.eval();
     for_j j->data(e->j) += l[e->l] * r[e->r];
 }
-/* LATER
+/* TODO
 template<class E1,class E2> inline void iadd (D _r, Ldiv<E1,E2> la)
 {
     EXPR_DEBUG( _r << " += " << la.l << " \\ " << la.a )

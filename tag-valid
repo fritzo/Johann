@@ -17,7 +17,7 @@ if __name__ == '__main__':
         print "SYNOPSIS: svn tags a copy of the trunk that passes various tests"
         sys.exit(0)
 
-    #check that repository has no local changes (TODO: allow mixed versions)
+    #check that repository has no local changes (TODO allow mixed versions)
     svn.update(local)
     st = svn.status(local, get_all=False, ignore=True, ignore_externals=True)
     st = [s for s in st

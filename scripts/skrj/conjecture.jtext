@@ -58,7 +58,7 @@ Automated conjecturing.
   ###>
   For a fixed term #x# we can generate random convergent contexts, i.e., terms
   #f# together with proofs of #f x conv#.
-  LATER...
+  TODO...
   ###<
     conv_contexts := (/\x:term. Random. conv x) (
         ???

@@ -144,7 +144,7 @@ Untyped lambda-calculus with ambiguity-as-join. (SKJ) \label{sec:skj}
     Footnote: the problem is step-functions;
       #bool# behaves well on all Bohm-trees.
 
-    LATER others?
+    TODO others?
 
   Comment: TODO maybe factor in axiom stuff to SK/SKJ/SKR/SKRJ/SKJO ?
 

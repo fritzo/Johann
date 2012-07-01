@@ -283,10 +283,10 @@ Batch unfailing completion for search problems.
       this equation would fail to be found by naive completion.
 
   Soundness and correctness. 
-    LATER
+    TODO
 
   Fairness and completeness. 
-    LATER
+    TODO
     We need to ensure fairness in
     * branching, in both branch-P and branch-E
     * 

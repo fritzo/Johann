@@ -214,7 +214,7 @@ void remove (Ob rem)
     g_app_table->remove(Int(rem), remove_value);
 
     //remove occurrences as APP
-    std::vector<App> changed_eqns; //LATER: maybe make this static
+    std::vector<App> changed_eqns; //TODO maybe make this static
     for (Alr_Iterator iter(rem); iter; iter.next()) {
         Assert3(iter.app() == rem, "eqn has wrong APP before removing");
         changed_eqns.push_back(*iter);
@@ -235,7 +235,7 @@ void merge (Ob dep, Ob rep)
     g_app_table->merge(Int(dep), Int(rep), merge_values, move_value);
 
     //merge occurrences as APP
-    std::vector<App> changed_eqns; //LATER: maybe make this static
+    std::vector<App> changed_eqns; //TODO maybe make this static
     for (Alr_Iterator iter(dep); iter; iter.next()) {
         Assert3(iter.app() == dep, "eqn has wrong APP before rerooting");
         changed_eqns.push_back(*iter);

@@ -40,8 +40,8 @@ public:
 
     //properties
     bool empty () const { return m_map.empty(); }
-    bool operator <= (const multiset<T>& s) const { LATER(); }
-    bool operator <  (const multiset<T>& s) const { LATER(); }
+    bool operator <= (const multiset<T>& s) const { TODO(); }
+    bool operator <  (const multiset<T>& s) const { TODO(); }
 };
 
 //lengths of terms
@@ -54,15 +54,15 @@ public:
     //construction
     Length (float a) : m_atoms(a) {}    //for atoms
     Length (Name n) : m_atoms(0) { m_vars.insert(n); }
-    Length operator + (const Length& l) const { LATER(); }
+    Length operator + (const Length& l) const { TODO(); }
 
     //properties
     bool operator <= (const Length& l) const {
         return m_atoms <= l.m_atoms and m_vars <= l.m_vars;
     }
-    bool operator <  (const Length& l) const { LATER(); }
-    bool operator >= (const Length& l) const { LATER(); }
-    bool operator >  (const Length& l) const { LATER(); }
+    bool operator <  (const Length& l) const { TODO(); }
+    bool operator >= (const Length& l) const { TODO(); }
+    bool operator >  (const Length& l) const { TODO(); }
     bool ground () const { return m_vars.empty(); }
 };
 
@@ -279,7 +279,7 @@ bool cyclic_unify (UE* lhs, UE* rhs)
 }
 
 //cycle-detection
-//LATER: how to allow cycles?
+//TODO how to allow cycles?
 bool UE::is_acyclic ()
 {//tests for well-foundedness
     LOG_DEBUG1( "checking well-foundedness" )
@@ -392,22 +392,22 @@ class SubAppIterator //iterates over strict sub-apps of a term
     enum Dir { LEFT, RIGHT };
     Dir m_dir;
     std::vector<std::pair<Dir,UE*> > m_stack;
-    void leftStar () { LATER(); }
+    void leftStar () { TODO(); }
 public:
-    SubAppIterator (UE& root) { LATER(); }
+    SubAppIterator (UE& root) { TODO(); }
 
     operator bool () { return not m_stack.empty(); }
-    void next () { LATER(); }
+    void next () { TODO(); }
 
     UE& operator *  () { return *(m_stack.back().second); }
     UE* operator -> () { return m_stack.back().second; }
 
-    ExprHdl subs (ExprHdl here) { LATER(); }
+    ExprHdl subs (ExprHdl here) { TODO(); }
 };
 Apps critical_pairs (App s_t, App u_v)
 {//finds critical pairs of s<=t~u=>v
     //alpha-vary the terms to prevent collision
-    LATER();
+    TODO();
 
     //first pre-load all terms
     UE::reset();

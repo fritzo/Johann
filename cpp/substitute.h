@@ -4,7 +4,7 @@
 #include "definitions.h"
 #include "symbols.h"
 #include "expressions.h"
-//#include "statements.h" //LATER
+//#include "statements.h" //TODO
 #include <map>
 
 namespace Substitute
@@ -63,10 +63,10 @@ public:
     void define (SubsHdl subs, bool local=false);
     void import (string fname, bool local=false);
     void use    (string name, bool local=false);
-    void find   (ExprHdl expr, Location loc) { LATER(); }
-    /* LATER
-    void check  (StmtHdl stmt, Location loc) { LATER(); }
-    void assume (StmtHdl stmt, Location loc) { LATER(); }
+    void find   (ExprHdl expr, Location loc) { TODO(); }
+    /* TODO
+    void check  (StmtHdl stmt, Location loc) { TODO(); }
+    void assume (StmtHdl stmt, Location loc) { TODO(); }
     */
     bool close (ostream& err);
 

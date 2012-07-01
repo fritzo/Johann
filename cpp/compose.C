@@ -214,7 +214,7 @@ void remove (Ob rem)
     g_comp_table->remove(Int(rem), remove_value);
 
     //remove occurrences as COMP
-    std::vector<Comp> changed_eqns; //LATER: maybe make this static
+    std::vector<Comp> changed_eqns; //TODO maybe make this static
     for (Clr_Iterator iter(rem); iter; iter.next()) {
         Assert3(iter.comp() == rem, "eqn has wrong COMP before removing");
         changed_eqns.push_back(*iter);
@@ -235,7 +235,7 @@ void merge (Ob dep, Ob rep)
     g_comp_table->merge(Int(dep), Int(rep), merge_values, move_value);
 
     //merge occurrences as COMP
-    std::vector<Comp> changed_eqns; //LATER: maybe make this static
+    std::vector<Comp> changed_eqns; //TODO maybe make this static
     for (Clr_Iterator iter(dep); iter; iter.next()) {
         Assert3(iter.comp() == dep, "eqn has wrong COMP before rerooting");
         changed_eqns.push_back(*iter);

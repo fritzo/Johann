@@ -76,7 +76,7 @@ void Simple::update ()
     for (map_iter i = map_begin(); i!=map_end(); map_next(i)) {
         LOCK_SYNTAX
         Pair& p = i->second;
-        LATER(); //XXX what if p.second = p.first?
+        TODO(); //XXX what if p.second = p.first?
         p.second = simplify(p.first);
         UNLOCK_SYNTAX
     }

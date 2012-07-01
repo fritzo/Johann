@@ -311,7 +311,7 @@ def math_undef_all():
     global AtomDefs
     AtomDefs = {}
 
-console_markers = { #LATER: add color
+console_markers = { #TODO add color
     "(U) " : "{\\texttt{(U)}\\quad}",
     "(J) " : "{\\texttt{(J)}\\quad}",
     "(!) " : "{\\texttt{(!)}\\quad}",
@@ -536,7 +536,7 @@ class ConvertText:
         self.word1  = re.compile("^\\b[A-Za-z]+\\b")
         self.word2  = re.compile("[^\\\\]\\b[A-Za-z]+\\b")
         self.word3  = re.compile("\\\\\\\\\\b[A-Za-z]+\\b")
-        self.xxx    = re.compile("\\b(XXX|OLD|ALT|TODO|LATER|FIXME|WORKING)\\b")
+        self.xxx    = re.compile("\\b(XXX|OLD|ALT|TODO|FIXME|WORKING)\\b")
         self.date   = re.compile("\\bDATE\\b")
     def __call__(self, text):
         #font stuff
@@ -983,7 +983,7 @@ class Rules (State):
                     self.rules.append(MathLine(line))
         self.reset()
     def finish (self):
-        #TODO: make sure no symbols leak into whitespace
+        #TODO make sure no symbols leak into whitespace
         for (start,end,rule) in self.newrules:
             for p in self.premlines:
                 rule.addprems(p[start:end])
@@ -1069,7 +1069,7 @@ class Code (State):
         self.defline = re.compile("^[a-zA-Z_][a-zA-Z_0-9']*\s*:=")
         self.define  = re.compile("^!define\s+[a-zA-Z_][a-zA-Z_0-9']*\s*:=")
         self.defname = re.compile("[a-zA-Z_][a-zA-Z_0-9']*")
-        self.special = re.compile("\\?\\?\\?\|XXX\|LATER\|WORKING")
+        self.special = re.compile("\\?\\?\\?\|XXX\|TODO\|WORKING")
     def __str__(self): return "code"
 
     def nextline(self):
@@ -1458,7 +1458,7 @@ class SectionBlock (Block):
         write_text(note.write, title.split("#"))
         note.write("}\n")
 class LatexBlock (Block):
-    def __init__(self): raise "LATER"
+    def __init__(self): raise "TODO"
 
 class Note (Text):
     def __init__(self, parser):
@@ -1578,7 +1578,7 @@ class Note (Text):
             elif name in ["Figure","Fig"]:
                 FigureBlock(self, line)
                 line = ""
-            #LATER
+            #TODO
             #elif name == "Latex":                     LatexBlock    (self)
 
             #slides

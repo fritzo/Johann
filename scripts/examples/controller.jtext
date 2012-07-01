@@ -32,7 +32,7 @@ A stochastic controller.
 
   the rest is measure code, and is not yet handeled
   ###<
-    #LATER
+    #TODO
     exit
 
     measure mu                         #complexity measure

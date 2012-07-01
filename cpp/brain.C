@@ -200,7 +200,7 @@ void Brain::plot_funs_of_eps (Int num_points)
 }
 void Brain::calc_perturb ()
 {
-    //LATER: revise fuzzy order here
+    //TODO revise fuzzy order here
 
     //calculate relevant measures
     if (not Ob::full()) compact();

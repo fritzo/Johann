@@ -4,5 +4,5 @@ set nosmartindent
 set autoindent
 set expandtab
 set indentexpr=-1
-set Todo=\(DEBUG\|LATER\|WORKING\|DEPRICATED\)
+set Todo=\(DEBUG\|TODO\|WORKING\|DEPRICATED\)
 

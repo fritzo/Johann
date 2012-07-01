@@ -88,7 +88,7 @@ bool Subs::close (ostream& err)
     }
 
     //defs
-    //LATER: implement recursion
+    //TODO implement recursion
     for (RawDefs::const_iterator i = m_raw.begin(); i!=m_raw.end(); ++i) {
         i->patt->define(*this, i->meaning);
     }

@@ -289,12 +289,12 @@ const unsigned long MAX_SAMPLES = 1000;
 //general motive
 bool Motive::expand ()
 {
-    //XXX LATER: make this do something realistic
+    //XXX TODO make this do something realistic
     return expand_to (Ob::size() + 1);
 }
 void Motive::cleanup ()
 {
-    //XXX LATER: make this do something realistic
+    //XXX TODO make this do something realistic
     return;
 }
 bool Motive::expand_to (Int target)

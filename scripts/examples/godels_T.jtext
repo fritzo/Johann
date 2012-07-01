@@ -707,7 +707,7 @@ Type inference and termination in Godel's T. \label{sec:examples/godels_T}
 
   Takeout: Formally verifying the termination proof. 
 
-    LATER
+    TODO
     Question: are Johann's reasoning principles (axiom schemata) strong enough
       to verify the proof?
       If not, what else is needed?

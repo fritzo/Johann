@@ -188,7 +188,7 @@ Comment: OLD -----------------------------------------------------------------
     * use raising lemmas
 
     Lem: In SKRJ #inhab(a->a)={ _@p + I@q + T@r | p+q+r=1}#.
-    Pf: LATER
+    Pf: TODO
 
   OLD ------------------------------------------------------------------------
 
@@ -229,7 +229,7 @@ Comment: OLD -----------------------------------------------------------------
     of transforms such that for any finite set of finite BTs #{B_1,...,B_k}#,
     there is a finite sequence #_t# of transforms from #TT# "raising" each
     #B_i#, i.e., #B_i [= _t B_i =# a slurry of #_,I,T#.
-  Pf: ??? LATER
+  Pf: ??? TODO
   ###u t
   Lem: Any slurry of #_,I,T# is equivalent to a mixture of #_,I,T#. XXX fails
   Pf: It suffices to show #I|_+T = I+T#. XXX why?
@@ -246,7 +246,7 @@ Comment: OLD -----------------------------------------------------------------
     semi := V (???).
   ###>
 
-  More uniformly in type-code, ... LATER
+  More uniformly in type-code, ... TODO
 
 
 

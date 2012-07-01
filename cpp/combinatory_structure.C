@@ -93,7 +93,7 @@ inline EX::ExprHdl expr (Ob ob) { return EX::parse_ob(ob); }
 //properties & flags
 bool g_is_initialized(false);
 bool isInitialized () { return g_is_initialized; }
-bool isCompacted   () { LATER(); return false; }
+bool isCompacted   () { TODO(); return false; }
 
 //stats log
 ofstream stats_log;
@@ -108,7 +108,7 @@ Int num_atoms () { return g_atomTable.size(); }
 Int num_unkns () { return g_unknTable.size(); }
 
 //processing queues
-//LATER: how should these be ordered? FIFO? priority?
+//TODO how should these be ordered? FIFO? priority?
 typedef nonstd::priority_queue<Ob> ObQueue;
 //typedef nonstd::fifo_queue<App> AppQueue;
 typedef nonstd::priority_queue<App>  AppQueue;

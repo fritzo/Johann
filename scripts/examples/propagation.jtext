@@ -34,6 +34,6 @@ Propagation algorithms. \label{sec:examples/propagation}
       prop_warnings := (/\p:problem. Endo. Warnings p) (???).
     ###>
   
-  Belief propagation. LATER
-  Survey propagation. LATER
+  Belief propagation. TODO
+  Survey propagation. TODO
 

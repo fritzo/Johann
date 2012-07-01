@@ -147,8 +147,8 @@ void clear ()
 
 //======== parsing + printing ========
 
-Ob parse (std::string expr) { LATER(); }
-std::string print (Ob ob) { LATER(); }
+Ob parse (std::string expr) { TODO(); }
+std::string print (Ob ob) { TODO(); }
 void init_parse_size();
 void init_parsing ()
 {
@@ -157,7 +157,7 @@ void init_parsing ()
 
     init_parse_size();
 
-    //TODO: parse terms as strings
+    //TODO parse terms as strings
 }
 //======== measures ========
 

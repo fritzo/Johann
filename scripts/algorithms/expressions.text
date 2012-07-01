@@ -294,7 +294,7 @@ Syntactic algorithms. \label{sec:algorithms/expressions}
       R x(J y z) ~> J(R x y)(R x z)
     ###-
 
-    Comment: LATER sampling strategies for SKRJ (search files for #m_sampling#)
+    Comment: TODO sampling strategies for SKRJ (search files for #m_sampling#)
 
   Statements. \label{sec:algorithms/expressions:statements}
 
@@ -363,7 +363,7 @@ Syntactic algorithms. \label{sec:algorithms/expressions}
       x:a::t|-M~N  |->  (\x:a::t.M)x~(\x:a::t.N)
     ###]
 
-  Takeout: LATER ------------------------------------------------------------
+  Takeout: TODO ------------------------------------------------------------
     Reasoning Principles.
 
     We consider two logics: the boolean first-order logic of equality of SKJ

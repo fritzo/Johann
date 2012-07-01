@@ -478,7 +478,7 @@ Proving properties of reduction in SKJ. \label{sec:examples/proofs}
       ).
       trans := Trans _ _ _.
     ###>
-    Comment: TODO: prove these
+    Comment: TODO prove these
     We leave to the reader the proofs of motonicity.
     ###[
       Rhs : (/\f,x,y. If (Ord x y). Ord (ap f x) (ap f y))

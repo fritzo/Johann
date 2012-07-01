@@ -193,7 +193,7 @@ exit
 ###>
 
   Exponentials. 
-    LATER
+    TODO
 
     Testing and checking exponentials requires an enumerator over the domain.
     For checking, this can be a semiset over an uncountable space.

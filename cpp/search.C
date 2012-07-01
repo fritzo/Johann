@@ -20,7 +20,7 @@ public:
 Nodes Node::branch ()
 {
     Verts verts = m_vertex.neighbors();
-    LATER();
+    TODO();
 }
 
 /// A* Searcher.

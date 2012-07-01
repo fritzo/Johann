@@ -145,7 +145,7 @@ Axioms for randomness. \label{sec:axioms/random}
     Pf: Put #x# in JR-normal form #Join_alpha p_alpha#.
       For each mixture #p_alpha#, also #test_a p_alpha[=I#,
       whence #p# is a probability valuation over #inhab_(SKJ)(a,test_a)#.
-      LATER
+      TODO
 
   Axioms and axiom schemata. 
 

@@ -12,7 +12,7 @@
 #include "reorder.h"
 //#include <set>
 
-//TODO: implement sparse_sym_fun
+//TODO implement sparse_sym_fun
 
 namespace JoinEqn
 {

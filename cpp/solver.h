@@ -36,7 +36,7 @@ public:
     Problem (Simple& simple, ExprHdl root, VarHdl name);
     void add_pattern (ExprHdl patt, float cost)
     { grammar.push_back(Node(patt,cost)); }
-    /*LATER
+    /*TODO
     void add_constraint (StmtHdl statement);
     */
 

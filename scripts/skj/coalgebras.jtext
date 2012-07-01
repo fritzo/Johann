@@ -105,7 +105,7 @@ Coalgebras.
     !check write = C<F>.
     !check dialog = Dialog any any.
   ###>
-  LATER
+  TODO
 
   Note that we have arbitrarily chosen read-first dialogs.
   An equivalent formulation is the write-first dialog

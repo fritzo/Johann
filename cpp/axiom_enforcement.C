@@ -2147,23 +2147,23 @@ inline void enforce_A_S2_A1 (App eqn)
 }
 inline void enforce_A_S2_A2 (App eqn)
 {// S'xy=S'x*y | S'*x=S'x, S'xy*z=S'xyz, x*y=xy, x*z=xz, xy*xz=xy_xz
-    LATER();
+    TODO();
 }
 inline void enforce_A_S2_A3 (App eqn)
 {// S'xyz=S'xy*z | S'x=S'*x, S'x*y=S'xy, x*z=xz, x*z=xz, xy*xz=xy_xz
-    LATER();
+    TODO();
 }
 inline void enforce_A_S2_A4 (App eqn)
 {// xy=x*y | S'*x=S'x, S'x*y=S'xy, S'xy*z=S'xyz, x*z=xz, xy*xz=xy_xz
-    LATER();
+    TODO();
 }
 inline void enforce_A_S2_A5 (App eqn)
 {// xz=yxz | S'*x=S'x, S'x*y=S'xy, S'xy*z=S'xyz, x*z=xz, xy*xz=xy_xz
-    LATER();
+    TODO();
 }
 inline void enforce_A_S2_A6 (App eqn)
 {// xy*xz=xy_xz | S'x=S'*x, S'xy=S'x*y, S'xy*z=S'xyz, x*y=xy, x*z=xz
-    LATER();
+    TODO();
 }
 inline void enforce_A_S2_A (App eqn)
 {
@@ -2686,7 +2686,7 @@ inline void enforce_L_V_pos (Ord ord)
 
 //intersection axioms
 //axiom A_P_A: a,b:V, x:a,b |- x:Pab
-/* LATER();
+/* TODO();
 inline enforce_A_P_A1 (App eqn)
 {// a:V | b:V, x:a, x:b
     Ob V  = *Atoms::V; if (get_lhs(eqn) != V) return;

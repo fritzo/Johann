@@ -32,7 +32,7 @@ A Stochastic Estimator. \label{sec:examples/estimator}
     infer  := Infer any.    #this is still overcomplicated
   ###>
 
-  XXX LATER --------------------------------------
+  XXX TODO --------------------------------------
 
   non-parametric versions
   ###<

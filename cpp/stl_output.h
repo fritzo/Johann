@@ -1,5 +1,5 @@
 
-//LATER: add a header-wise include guard
+//TODO add a header-wise include guard
 #ifndef JOHANN_STL_OUTPUT_H
 #define JOHANN_STL_OUTPUT_H
 

@@ -39,14 +39,14 @@ Learning uncomputable theories. \label{sec:theory/learning}
     Def: (strong entailment) Define #TT|=TT'# iff for every #TT''#, if
       #TT''|-TT# then also #TT''|-TT'#.
     Lem: (strong = weak) #TT|=TT'# iff #TT|-T#.
-    Pf: LATER
+    Pf: TODO
     Def: (weak lattice) Let #L# be the lattice of theories modulo entailment.
     Thm: (complexity of #L#)
       (a) #L# is a #Sigma01# complete join-semilattice.
       (b) Consistency in #L# is #Pi01#-complete
         (and hence refutable with certainty).
       (c) Entailment in #L# is #Sigma01#-complete.
-    Pf: LATER
+    Pf: TODO
 
   Learning theories refutable in the limit. 
 
@@ -66,7 +66,7 @@ Learning uncomputable theories. \label{sec:theory/learning}
       (b) Consistency in #L'# is #Pi02#-complete
         (and hence refutable in the limit).
       (c) Entailment in #L'# (ie strong entailment) is #Pi11#-complete.
-    Pf: LATER
+    Pf: TODO
 
   Completeness of SKJO. 
 
@@ -77,5 +77,5 @@ Learning uncomputable theories. \label{sec:theory/learning}
       #L'# be the lattice of #con#sistent #Sigma01# extensions of #LL#,
       modulo strong entailment.
       Then strong entailment in #L'# is #Pi11#.
-    Pf: LATER
+    Pf: TODO
 

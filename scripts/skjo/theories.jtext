@@ -3,7 +3,7 @@ The lattice of theories approximating SKJO. \label{sec:skjo/theories}
 
   XXX this section needs to be updated to new definition of O
 
-  TODO: move theory/learning here
+  TODO move theory/learning here
 
   Although we have completely axiomatized SKJ by Hstar and SKJO by the #code#
   axiom, we can only verify (evern write down) a #Sigma01# fragment of these
@@ -189,12 +189,12 @@ The lattice of theories approximating SKJO. \label{sec:skjo/theories}
 
     Another nice property following from distributivity is strict refinement,
     an infinite analog of the unique factorization property.
-    Def: An algebra satisfies _strict_refinement_ iff LATER...
+    Def: An algebra satisfies _strict_refinement_ iff TODO...
     Thm: (Mckenzie87 thm. 5.17 cor. 1) If #A# is congruence distributive
       then it satisfies the strict refinement property.
     Cor: SKJO satisfies strict refinement.
 
   Learning lambda-theories. \label{sec:skjo/theories:learning}
 
-    LATER discuss Kevin Kelly's work
+    TODO discuss Kevin Kelly's work
 

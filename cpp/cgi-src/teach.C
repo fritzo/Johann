@@ -13,7 +13,7 @@ int main (void)
     front_matter("Johann's Library");   //write header
     navigator("teach");                  //navigator
 
-    later();
+    todo();
 
     back_matter();          //close document
 

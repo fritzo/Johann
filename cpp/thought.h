@@ -239,7 +239,7 @@ public:
     //ctors & dtors
     TwoLevelMemory (Int& scale, Float how_hip=0.5);
     virtual ~TwoLevelMemory ();
-    virtual void save_params_to (ostream& os) {} //LATER: set hipness
+    virtual void save_params_to (ostream& os) {} //TODO set hipness
     virtual void write_params_to (ostream& os);
 
     //meory interface

@@ -157,7 +157,7 @@ Automated Conjecturing. \label{sec:algorithms/conjecturing}
       (hence refutable in the limit) whose predictions are #Pi11#-complete.
     We prove a similar theorem related to our framework in the strength of #LL'#
     theorem below.
-    Moreover, they show that among LATER
+    Moreover, they show that among TODO
 
     ###s TT0
     Def: A class of theories #_TT# is _refutable_with_certainty_ iff there is a 
@@ -179,14 +179,14 @@ Automated Conjecturing. \label{sec:algorithms/conjecturing}
       Def: (strong entailment) Define #TT|=TT'# iff for every #TT''#, if
         #TT''|-TT# then also #TT''|-TT'#.
       Lem: (strong = weak) #TT|=TT'# iff #TT|-T#.
-      Pf: LATER
+      Pf: TODO
       Def: (weak lattice) Let #LL# be the lattice of theories modulo entailment.
       Thm: (complexity of #LL#)
         (a) #LL# is a #Sigma01# complete join-semilattice.
         (b) Consistency in #LL# is #Pi01#-complete
           (and hence refutable with certainty).
         (c) Entailment in #LL# is #Sigma01#-complete.
-      Pf: LATER
+      Pf: TODO
 
     Learning theories refutable in the limit. 
 
@@ -207,7 +207,7 @@ Automated Conjecturing. \label{sec:algorithms/conjecturing}
         (b) Consistency in #LL'# is #Pi02#-complete
           (and hence refutable in the limit).
         (c) Entailment in #LL'# (ie strong entailment) is #Pi11#-complete.
-      Pf: LATER
+      Pf: TODO
 
     Completeness of SKJO. 
 
@@ -218,5 +218,5 @@ Automated Conjecturing. \label{sec:algorithms/conjecturing}
         #LL'# be the lattice of #con#sistent #Sigma01# extensions of #LL#,
         modulo strong entailment.
         Then strong entailment in #LL'# is #Pi11#.
-      Pf: LATER
+      Pf: TODO
 

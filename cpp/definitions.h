@@ -49,7 +49,7 @@ using std::ifstream;
     << __PRETTY_FUNCTION__ << "\n" |0;\
     abort();}
 
-#define LATER() {Error("control reached unfinished code:");}
+#define TODO() {Error("control reached unfinished code:");}
 #define DEPRICATED() {Error("control reached depricated code:");}
 #define Assert(cond,mess) {if (!(cond)) Error(mess);}
 

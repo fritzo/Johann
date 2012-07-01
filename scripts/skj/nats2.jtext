@@ -22,7 +22,7 @@ Goedel Numerals. \label{sec:skj/nats2}
     succ' := (nat'->nat') (\n,f,x.f n.n f x).
   ###>
   Thm: #inhab(nats') = {Top} union {succ'^n z | n in Nats, z in {Bot, zero'}#.
-  Pf: LATER
+  Pf: TODO
   Goedel numerals enjoy built-in case-analysis and recursion,
   and a predecessor that works on partial numerals (in constant time).
 

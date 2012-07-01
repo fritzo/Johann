@@ -102,7 +102,7 @@ void forget_atom (const string name)
         return;
     }
 
-    //LATER:check to make sure no references remain
+    //TODOcheck to make sure no references remain
 }
 void _initialize ()
 {
@@ -687,7 +687,7 @@ ExprHdl VectPatt::lambda (ExprHdl in) const
         result = m_patts[i-1]->lambda(result);
     }
     result = C * I * result;
-    //LATER
+    //TODO
     //unsigned N = m_patt.size;
     //if WITH2(Vect) result = (Vect * build_nat(N)) % result;
     return wrap_in(result);
@@ -882,7 +882,7 @@ ExprHdl Expr::abstract (VarHdl var) { return as_comb()->abstract(var); }
 //======== combinator reduction ========
 
 //curried function for head beta-eta-reduction
-//TODO: fork joins into two separate reducers
+//TODO fork joins into two separate reducers
 //  this requires major refactoring:
 //    an abstract Reduce type with two subclasses: ReduceStack and ReduceJoin
 class Reduce

@@ -4,7 +4,7 @@ from scipy.linalg import cholesky,inv
 from scipy import outer
 from ode import propagate
 
-LATER = "LATER"
+TODO = "TODO"
 
 #coord transforms
 def bb2rect (b1,b2):

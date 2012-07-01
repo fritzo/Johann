@@ -1,7 +1,7 @@
 
 /** map viewer using OpenGL.
  *
- * TODO:
+ * TODO
  * (T1) add variable drag channels
  * (T2) switch from hand-multiplied matrices to OpenGL matrix projections.
  */
@@ -30,7 +30,7 @@
     << __FILE__ << " : " << __LINE__ << "\n\t" \
     << __PRETTY_FUNCTION__ << std::endl; \
     exit(0); }
-#define LATER() { ERROR("control reached unfinished code:"); }
+#define TODO() { ERROR("control reached unfinished code:"); }
 #define ASSERT(cond,mess) { if (!(cond)) ERROR(mess); }
 
 //keyboard & mouse numbers

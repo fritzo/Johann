@@ -81,7 +81,7 @@ A Filter Model.
 
     Def: A _numeral_system_ is a c.e. set for which a discriminator exists.
 
-    LATER
+    TODO
 
     Thm: \label{thm:HSKJO-strength} \HSTAR\SKJO is $\Delta^0_\omega$-complete.
 

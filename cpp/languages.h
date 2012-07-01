@@ -29,7 +29,7 @@ const Logging::Logger logger("lang", Logging::DEBUG);
 /**  Languages.
  * signature: <app:A^2->A, comp:A^2->A, join:A^2->A, c1:A,...,cn:A>
  *
- * TODO: finish updating for composition, join
+ * TODO finish updating for composition, join
  *   * entropy derivatives, etc
  *
  */

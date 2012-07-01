@@ -33,7 +33,7 @@
 !validate
 !recheck
 
-#LATER: fix this
+#TODO fix this
 #!read axioms/types.
 #!validate
 

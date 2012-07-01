@@ -411,7 +411,7 @@ Tensor Tensor::eigenvals () const
 }
 std::vector<Eig> Tensor::eigenvects (Int num) const
 {//largest few eigenvectors and eigenvalues
-    LATER();
+    TODO();
     /*
     Assert (m_rank == 2, "got eigenvals of tensor of rank != 2");
 

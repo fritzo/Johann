@@ -11,6 +11,6 @@ Computable probabilities. \label{sec:skr/probability}
     half := R.
     one_third := (Y\p. (p+F)+R).
   ###>
-  TODO: define an irrational, even a transcendental...
+  TODO define an irrational, even a transcendental...
 
 

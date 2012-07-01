@@ -15,7 +15,7 @@ Problem::Problem (Simple& s, ExprHdl r, VarHdl n);
 {
     //build grammar
     add_pattern(undef * undef, app_cost);
-    LATER(); //add variables from simple
+    TODO(); //add variables from simple
     //Note: the min cost of an atom in the grammar should be zero;
     //  this way a partial term's current cost is
 }
@@ -25,8 +25,8 @@ void Problem::get_children const (const Node& node)
     children.clear(); //result
 
     //decide which hole to branch on
-    LATER();
-    ExprHdl ready = LATER(); //with branch_pt replacing undef
+    TODO();
+    ExprHdl ready = TODO(); //with branch_pt replacing undef
 
     //try all possible replacements
     for (unsigned i=0; i<grammar.size(); ++i) {
@@ -36,8 +36,8 @@ void Problem::get_children const (const Node& node)
         if (simple(candidate) != candidiate) continue;
 
         //check consistency
-        LATER();
-        /*LATER
+        TODO();
+        /*TODO
         for lhs,rhs in constraints {
             lhs = lhs->subs(name, candidate);
             rhs = rhs->subs(name, candidate);

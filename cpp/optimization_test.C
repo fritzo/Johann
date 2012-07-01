@@ -23,7 +23,7 @@ public:
     virtual ~RosenbrockFun0 () {}
 protected:
     virtual void eval (const Vect& x);
-    virtual void eval_in_dir (const Vect& x, const Vect& dx) { LATER(); }
+    virtual void eval_in_dir (const Vect& x, const Vect& dx) { TODO(); }
 };
 RosenbrockFun0::RosenbrockFun0 (Float x0, Float y0, Float dx, Float dy, Float a)
     : OP::FunOfVect(2), m_x0(2), m_dx(2), m_a(a)
@@ -63,7 +63,7 @@ void RosenbrockFun1::eval_in_dir (const Vect& x, const Vect& dx)
     Float v = (x(1) - m_r.m_x0(1)) / m_r.m_dx(1);
     m_f = sqr(u) + m_r.m_a * sqr(v - sqr(u));
 
-    LATER();
+    TODO();
 }
 void RosenbrockFun1::eval_grad (const Vect& x)
 {

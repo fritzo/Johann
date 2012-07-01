@@ -575,7 +575,7 @@ Logical relations, from Tait to Girard. \label{sec:examples/logical_relations}
           ?     s|=\x.M:a->b        ???
           ?   G|=\x.M:a->b          #|=#-def: 2/?
         ###n
-        LATER
+        TODO
       Case: 
         ###=
           G|-M:a->b   G|-N:a
@@ -665,7 +665,7 @@ Logical relations, from Tait to Girard. \label{sec:examples/logical_relations}
           2   G|-M P1 ... Pn:a                hyp: 1
           3   G|-P1:b1, ..., G|-Pn:bn         inv: 2
           4   G|-M:c                          inv: 2
-          5   G|-N|M:c                        ??? LATER
+          5   G|-N|M:c                        ??? TODO
           6   G|-(M|N)P1 ... Pn:a             type-arr: 5,3
         ###n
       Case: 

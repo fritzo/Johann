@@ -56,6 +56,6 @@ Semisets. \label{sec:skj/semisets}
     and #sgtn_Sset#, #join_Sset# are the natural transformations.
   
   We verify the monad axioms for both the unityped and indexed semiset monad.
-  LATER
+  TODO
 
 

@@ -37,7 +37,7 @@ along with Johann.  If not, see <http://www.gnu.org/licenses/>.
     << __FILE__ << " : " << __LINE__ << "\n\t"\
     << __PRETTY_FUNCTION__ << std::endl;\
     exit(0);}
-#define LATER() {Error("control reached unfinished code:");}
+#define TODO() {Error("control reached unfinished code:");}
 #define Assert(cond,mess) {if (!(cond)) Error(mess);}
 
 #define LABEL_SIZE 256

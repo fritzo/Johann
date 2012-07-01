@@ -27,12 +27,12 @@ class Network
 public:
 
     unsigned v_size () { return m_verts.size(); }
-    class v_iterator {}; //LATER
+    class v_iterator {}; //TODO
     v_iterator v_begin () const;
     v_iterator v_end () const;
 
     unsigned e_size () { return m_edges.size(); }
-    class e_iterator {}; //LATER
+    class e_iterator {}; //TODO
     e_iterator e_begin () const;
     e_iterator e_end () const;
 };
@@ -47,10 +47,10 @@ template<class Vertex=unsigned, class Channel=char>
 RandomNetwork<Vertex,Channel>::RandomNetwork (unsigned V, unsigned C)
 {
     //add vertices
-    LATER();
+    TODO();
 
     //add edges randomly
-    LATER();
+    TODO();
 }
 
 template<class Message=char, class Channel=char>

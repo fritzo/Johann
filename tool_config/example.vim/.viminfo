@@ -140,7 +140,7 @@ $bs
 	Fritz Obermeyer
 	version 2003:11:18:08:46
 "3	LINE	0
-	    LATER
+	    TODO
 "4	CHAR	0
 	"""
 	
@@ -152,12 +152,12 @@ $bs
 	from PMF import *
 	from Linear import *
 	
-	_Map = dict #LATER: use balanced tree implementation
+	_Map = dict #TODO use balanced tree implementation
 	_Set = Set
 	_PMF = PMF
 	
 	AbstractError = "abstract function called"
-	LATER = "unfinished code in MultiLang.py"
+	TODO = "unfinished code in MultiLang.py"
 	class InvalidError(Exception):
 	  pass
 	class IrreducibleError(Exception):

@@ -1946,7 +1946,7 @@ Ob LangFitness::try_to_extend ()
     }
 
     //decide whether to extend
-    LATER();
+    TODO();
     //best_rho *= corpus_weight;
     Float Delta = m_fun.value();
     Float delta = best_rho - Delta;

@@ -185,11 +185,11 @@ expr: flat_expr { $$ = $1; }
     | subs_dot expr %prec DOT {
             driver.buffer($$ = new ExprHdl((*$1)->act(*$2)));
         }
-    /* LATER change to subs */
+    /* TODO change to subs */
     | atom_patt DEF_EQ flat_expr DOT expr %prec DOT {
             driver.buffer($$ = new ExprHdl(new EX::Definition(*$1, *$3, *$5)));
         }
-    /* LATER change to subs */
+    /* TODO change to subs */
     | LET pattern DEF_EQ flat_expr DOT expr %prec DOT {
             driver.buffer($$ = new ExprHdl(new EX::Definition(*$2, *$4, *$6)));
         }

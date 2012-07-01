@@ -174,7 +174,7 @@ inline ExprHdl parse_ob (Ob ob)
 //   should be wrapped with run_function; run_syn_fun is reserved for functions
 //   using syntax _implicitly_ (not in arguments or return type).
 //
-//   TODO: add priority, so that automatic rechecking doesn't lock out user
+//   TODO add priority, so that automatic rechecking doesn't lock out user
 
 //abstract commands
 typedef std::pair<long,long> Priority;
@@ -190,7 +190,7 @@ class Command
     };
     static std::set<Command*, prior> s_queue;
 public:
-    Command* pop () { LATER(); }
+    Command* pop () { TODO(); }
 
     //completion testing
     pthread_mutex_t m_completed;

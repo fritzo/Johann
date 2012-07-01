@@ -757,7 +757,7 @@ input: /* empty */ { $$=true; }
             $$=true;
         }
 /* context tools */
-    /* TODO: try to avoid recompiling a context every time sth is defined */
+    /* TODO try to avoid recompiling a context every time sth is defined */
     | input atom_patt DEF_EQ flat_expr '.' {
             LOCK_SYNTAX;
             if ($1) define(*$2,*$4);
@@ -1386,7 +1386,7 @@ void* start_parser (void* _init_script)
     }
 
     //bind task-cancellation to some key
-    //LATER: input replace with rl_bind_keyseq or rl_generic_bind
+    //TODO input replace with rl_bind_keyseq or rl_generic_bind
     rl_bind_key (CANCEL_TASK_KEY, cancel_task);
 
     //start parsing prompt

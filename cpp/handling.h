@@ -9,7 +9,7 @@
 //#define LOG_DEBUG1(mess) {logger.debug() << mess |0;}
 //#define LOG_INDENT_DEBUG1 Logging::IndentBlock block;
 
-//TODO: switch from reference counting to garbage collecting
+//TODO switch from reference counting to garbage collecting
 
 //DEBUG, to avoid name mangling
 extern int g_numHandledObjects;

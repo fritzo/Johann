@@ -183,7 +183,7 @@ class ConvertText:
         self.ref    = re.compile("\\\\ref{sec:[-A-Za-z0-9_:/]+}")
         self.hrule  = re.compile("----+")
         self.word   = re.compile("(^|[^\\\\])\\b[A-Za-z]+\\b")
-        self.xxx    = re.compile("(\\b(XXX|OLD|ALT|TODO|LATER|FIXME|WORKING|INSERT)\\b|\?\?\?)")
+        self.xxx    = re.compile("(\\b(XXX|OLD|ALT|TODO|FIXME|WORKING|INSERT)\\b|\?\?\?)")
         self.date   = re.compile("\\bDATE\\b")
     def __call__(self, text):
         #font stuff
@@ -224,7 +224,7 @@ def cmd_name (m): return "<b class=cmd>%s</b>" % m.group()
 def dashes (m): return "&#8212;" * len(m.group())
 class ConvertMath:
     def __init__ (self):
-        self.xxx  = re.compile("(\\b(XXX|OLD|ALT|TODO|LATER|FIXME|WORKING|INSERT)\\b|\?\?\?)")
+        self.xxx  = re.compile("(\\b(XXX|OLD|ALT|TODO|FIXME|WORKING|INSERT)\\b|\?\?\?)")
         self.read = re.compile("!(read|import|skim)( [a-zA-Z_/]+)+.$")
         self.cmd  = re.compile("![a-z]+")
         self.dashes = re.compile("--+")

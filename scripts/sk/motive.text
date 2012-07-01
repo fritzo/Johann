@@ -497,5 +497,5 @@ Extensional lambda-calculus and combinatory algebra. \label{sec:thesis/sk}
       \x,y,z. S x y z = \x,y,z. x z(y z)
       \x,y. K x y = \x,y. x
     ###]
-    #LATER
+    #TODO
 

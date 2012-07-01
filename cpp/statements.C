@@ -49,7 +49,7 @@ StmtHdl build_tested (ExprHdl term, ExprHdl test)
 StmtHdl build_element (ExprHdl term, ExprHdl pred)
 {
     //return build_equal();
-    LATER();
+    TODO();
     return StmtHdl();
 }
 StmtHdl build_subtype (ExprHdl smaller, ExprHdl larger)
@@ -453,37 +453,37 @@ StmtHdl Disjunction::negation_nf ()
 }
 StmtHdl Forall::negation_nf ()
 {
-    LATER(); //deal with non-variable patterns
+    TODO(); //deal with non-variable patterns
     return StmtHdl();
 }
 StmtHdl Exists::negation_nf ()
 {
-    LATER(); //deal with non-variable patterns
+    TODO(); //deal with non-variable patterns
     return StmtHdl();
 }
-StmtHdl Negation::negation_nf () { LATER(); return StmtHdl(); }
-StmtHdl Implication::negation_nf () { LATER(); return StmtHdl(); }
-StmtHdl Definition::negation_nf () { LATER(); return StmtHdl(); }
+StmtHdl Negation::negation_nf () { TODO(); return StmtHdl(); }
+StmtHdl Implication::negation_nf () { TODO(); return StmtHdl(); }
+StmtHdl Definition::negation_nf () { TODO(); return StmtHdl(); }
 
 ExprHdl Statement::to_semi ()
 {
     return negation_nf()->to_semi();
 }
-ExprHdl Relationship::to_semi () { LATER(); return ExprHdl(); }
-ExprHdl Conjunction::to_semi () { LATER(); return ExprHdl(); }
-ExprHdl Disjunction::to_semi () { LATER(); return ExprHdl(); }
-ExprHdl Forall::to_semi () { LATER(); return ExprHdl(); }
-ExprHdl Exists::to_semi () { LATER(); return ExprHdl(); }
+ExprHdl Relationship::to_semi () { TODO(); return ExprHdl(); }
+ExprHdl Conjunction::to_semi () { TODO(); return ExprHdl(); }
+ExprHdl Disjunction::to_semi () { TODO(); return ExprHdl(); }
+ExprHdl Forall::to_semi () { TODO(); return ExprHdl(); }
+ExprHdl Exists::to_semi () { TODO(); return ExprHdl(); }
 
 ExprHdl Statement::to_bool ()
 {
     return negation_nf()->to_bool();
 }
-ExprHdl Relationship::to_bool () { LATER(); return ExprHdl(); }
-ExprHdl Conjunction::to_bool () { LATER(); return ExprHdl(); }
-ExprHdl Disjunction::to_bool () { LATER(); return ExprHdl(); }
-ExprHdl Forall::to_bool () { LATER(); return ExprHdl(); }
-ExprHdl Exists::to_bool () { LATER(); return ExprHdl(); }
+ExprHdl Relationship::to_bool () { TODO(); return ExprHdl(); }
+ExprHdl Conjunction::to_bool () { TODO(); return ExprHdl(); }
+ExprHdl Disjunction::to_bool () { TODO(); return ExprHdl(); }
+ExprHdl Forall::to_bool () { TODO(); return ExprHdl(); }
+ExprHdl Exists::to_bool () { TODO(); return ExprHdl(); }
 
 //pretty printing
 StmtHdl Relationship::pretty ()
@@ -497,7 +497,7 @@ StmtHdl Forall::pretty ()
     //return new Forall(m_patt, m_stmt->pretty());
 }
 
-//output LATER: add parens where needed
+//output TODO add parens where needed
 ostream& Relationship::write_to (ostream& os) const
 {
     return os << m_lhs << ' ' << RelationNames[m_rel] << ' ' << m_rhs;

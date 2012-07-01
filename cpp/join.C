@@ -215,7 +215,7 @@ void remove (Ob rem)
     g_join_table->remove(Int(rem), remove_value);
 
     //remove occurrences as JOIN
-    std::vector<Join> changed_eqns; //LATER: maybe make this static
+    std::vector<Join> changed_eqns; //TODO maybe make this static
     for (Jlr_Iterator iter(rem); iter; iter.next()) {
         Assert3(iter.join() == rem, "eqn has wrong JOIN before removing");
         changed_eqns.push_back(*iter);
@@ -236,7 +236,7 @@ void merge (Ob dep, Ob rep)
     g_join_table->merge(Int(dep), Int(rep), merge_values, move_value);
 
     //merge occurrences as JOIN
-    std::vector<Join> changed_eqns; //LATER: maybe make this static
+    std::vector<Join> changed_eqns; //TODO maybe make this static
     for (Jlr_Iterator iter(dep); iter; iter.next()) {
         Assert3(iter.join() == dep, "eqn has wrong JOIN before rerooting");
         changed_eqns.push_back(*iter);

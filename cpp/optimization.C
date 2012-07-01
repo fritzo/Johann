@@ -405,7 +405,7 @@ Float dist_to_barrier_simplex (const Vect& x)
 }
 
 //minimizers
-//XXX TODO: refactor these
+//XXX TODO refactor these
 Status line_search_in_simplex (Vect& x, Vect& dx, FunOfVect& fun,
                               Float x_tol, Float f_tol)
 {
