@@ -159,15 +159,6 @@ protected:
 Float bisect_root (FunOfReal& fun, Float LB, Float UB, Float x_tol);
 Float bisect_min  (FunOfReal& fun, Float LB, Float UB, Float x_tol);
 
-//one-dimensional optimization
-Float secant_min_over_01 (
-        Float x0,
-        FunOfReal& fun,
-        Float x_tol=1e-6f,
-        Float f_rel_tol=1e-4f,
-        Float init_radius=0.5f,
-        Int max_steps=20);
-
 //polynomial optimization
 inline Float extreme_value(M::Poly2 poly)
 { return -poly.getDeriv1() / poly.getDeriv2(); }

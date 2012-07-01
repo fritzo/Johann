@@ -186,19 +186,19 @@ fifo_queue_test: fifo_queue_test.o definitions.o
 
 visual_test: visual_test.o visual.o definitions.o
 	@echo linking $@
-	@$(CXX) $(CXXFLAGS) visual_test.o visual.o definitions.o -lpng -o visual_test
+	@$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) -lpng -o visual_test
 
 linalg_test: linalg_test.o linalg.o definitions.o
 	@echo linking $@
-	@$(CXX) $(CXXFLAGS) linalg_test.o linalg.o definitions.o -llapack -lblas -o linalg_test
+	@$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) -llapack -lblas -o linalg_test
 
 moments_test: moments_test.o definitions.o
 
-meas_lite_test: meas_lite.o files.o definitions.o
+meas_lite_test: meas_lite_test.o meas_lite.o files.o definitions.o
 
 optimization_test: optimization_test.o optimization.o linalg.o definitions.o
 	@echo linking $@
-	@$(CXX) $(CXXFLAGS) optimization_test.o optimization.o linalg.o definitions.o -llapack -lblas -o optimization_test
+	@$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) -llapack -lblas -o optimization_test
 
 binary_relation_test: binary_relation_test.o dense_bin_rel.o dense_set.o aligned_alloc.o definitions.o
 

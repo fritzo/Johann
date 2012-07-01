@@ -153,10 +153,11 @@ void test_exp ()
     Float error2 = 0;
     for (int i=0; i<test_cases; ++i) {
         Quadratic x;
+        Float (*Exp)(Float) = exp;
         error2 +=
         (
             Moments::exp(FiniteDifference(x))
-            -FiniteDifference(compose(expf,x))
+            -FiniteDifference(compose(Exp,x))
         ).norm2();
     }
     bound_error(sqrt(error2/test_cases));
@@ -169,10 +170,11 @@ void test_log ()
     Float error2 = 0;
     for (int i=0; i<test_cases; ++i) {
         Quadratic x;
+        Float (*Log)(Float) = log;
         error2 +=
         (
             Moments::log(FiniteDifference(x))
-            -FiniteDifference(compose(logf,x))
+            -FiniteDifference(compose(Log,x))
         ).norm2();
     }
     bound_error(sqrt(error2/test_cases));
