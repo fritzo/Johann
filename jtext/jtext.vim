@@ -14,7 +14,7 @@ map <silent> ,u :s/^###.///teh
 map <silent> ,p :%s/^####.*\n//:ha > print.psu/teh
 
 "syntax params
-syntax sync minlines=100
+syntax sync minlines=10
 
 "edit markings
 hi XXX guibg=yellow guifg=black
@@ -23,7 +23,7 @@ syntax keyword XXX FIXME
 syntax keyword XXX WORKING
 syntax keyword XXX OLD
 syntax keyword XXX TODO
-syntax keyword XXX TODO
+syntax keyword XXX LATER
 syntax keyword XXX EDIT
 syntax match XXX "???"
 
@@ -80,7 +80,7 @@ syntax match JCkomment "####.*" contained containedin=@J_
 syntax match JCmeta "!\([0-9]\+ \)\?[a-z]\+" contained containedin=Jcode
 "syntax match JClogic "\<and\|or\|not\>" contained containedin=@J_
 syntax match JCmarker "###[<>[\]()-=an]" contained containedin=@J_,Jascii
-syntax match JCedit "#\(XXX\|FIXME\|WORKING\|TODO\|OLD\|FAILED\|UNKNOWN\).*" contained containedin=@J_
+syntax match JCedit "#\(XXX\|FIXME\|WORKING\|LATER\|OLD\|FAILED\|UNKNOWN\).*" contained containedin=@J_
 syntax match JCwarning "???\|XXX" contained containedin=Jcode
 syntax match JCbar "^ \ze[ ]*[^ #]" contained containedin=Jcode
 syntax match JNumber "^\s*[0-9.]\+[.]\s" contained containedin=Jnumb

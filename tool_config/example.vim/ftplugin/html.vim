@@ -1,3 +1,0 @@
-set indentexpr=""
-set noai
-

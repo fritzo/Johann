@@ -35,7 +35,7 @@ highlight AntiComment guifg=black gui=none
 highlight StrongComment guifg=gray gui=none
 highlight Markup guifg=darkmagenta gui=none
 highlight Ascii guifg=brown gui=none
-syntax match MARKER "\(XXX\|FIXME\|WORKING\|TODO\|OLD\|???\).*"
+syntax match MARKER "\(XXX\|FIXME\|WORKING\|LATER\|OLD\|???\).*"
 syntax region cComment start="^[ ]*###[{\])]" end="^[ ]*###[}([]" contains=Markup,MARKER,AntiComment,StrongComment,Ascii
 syntax region ShortComment start="\(^\|[^#]\)\zs#\ze[^#]" end="[#\n]" contains=Markup,MARKER containedin=ALLBUT,cComment,AntiComment,StrongComment,Ignored keepend
 syntax region AntiComment start="\(^\|[^#]\)\zs#\ze[^#]" end="[#\n]" contains=ALLBUT,ShortComment,texCommand containedin=cComment contained keepend
