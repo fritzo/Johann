@@ -113,7 +113,7 @@ FULL_PATH_NAMES        = YES
 # If left blank the directory from which doxygen is run is used as the 
 # path to strip.
 
-STRIP_FROM_PATH        = "../cpp/"
+STRIP_FROM_PATH        = "../src/"
 
 # The STRIP_FROM_INC_PATH tag can be used to strip a user-defined part of 
 # the path mentioned in the documentation of a class, which tells 
@@ -473,11 +473,11 @@ WARN_LOGFILE           = "warnings.log"
 #---------------------------------------------------------------------------
 
 # The INPUT tag can be used to specify the files and/or directories that contain 
-# documented source files. You may enter file names like "myfile.cpp" or 
+# documented source files. You may enter file names like "myfile.src" or 
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces.
 
-INPUT                  = "../cpp"
+INPUT                  = "../src"
 
 # This tag can be used to specify the character encoding of the source files that 
 # doxygen parses. Internally doxygen uses the UTF-8 encoding, which is also the default 
@@ -487,10 +487,10 @@ INPUT                  = "../cpp"
 INPUT_ENCODING         = UTF-8
 
 # If the value of the INPUT tag contains directories, you can use the 
-# FILE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp 
+# FILE_PATTERNS tag to specify one or more wildcard pattern (like *.src 
 # and *.h) to filter out the source-files in the directories. If left 
 # blank the following patterns are tested: 
-# *.c *.cc *.cxx *.cpp *.c++ *.java *.ii *.ixx *.ipp *.i++ *.inl *.h *.hh *.hxx 
+# *.c *.cc *.cxx *.src *.c++ *.java *.ii *.ixx *.ipp *.i++ *.inl *.h *.hh *.hxx 
 # *.hpp *.h++ *.idl *.odl *.cs *.php *.php3 *.inc *.m *.mm *.py
 
 FILE_PATTERNS          = *.C *.h *.l *.y
@@ -535,7 +535,7 @@ EXCLUDE_SYMBOLS        =
 EXAMPLE_PATH           = 
 
 # If the value of the EXAMPLE_PATH tag contains directories, you can use the 
-# EXAMPLE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp 
+# EXAMPLE_PATTERNS tag to specify one or more wildcard pattern (like *.src 
 # and *.h) to filter out the source-files in the directories. If left 
 # blank all files are included.
 
@@ -567,7 +567,7 @@ INPUT_FILTER           =
 # The FILTER_PATTERNS tag can be used to specify filters on a per file pattern 
 # basis.  Doxygen will compare the file name with each pattern and apply the 
 # filter if there is a match.  The filters are a list of the form: 
-# pattern=filter (like *.cpp=my_cpp_filter). See INPUT_FILTER for further 
+# pattern=filter (like *.src=my_cpp_filter). See INPUT_FILTER for further 
 # info on how filters are used. If FILTER_PATTERNS is empty, INPUT_FILTER 
 # is applied to all files.
 

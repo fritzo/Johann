@@ -5,8 +5,8 @@ Syntactic algorithms. \label{sec:algorithms/expressions}
   ###s M1 M2 Mn N1 N2 Nn D1 D2 Dn x1 x2 xn p1 p2 pn
 
   Html Only: 
-    See cpp/expressions.h and cpp/expressions.C for expressions implementation.
-    See cpp/statements.h and cpp/statements.C for statements implementation.
+    See src/expressions.h and src/expressions.C for expressions implementation.
+    See src/statements.h and src/statements.C for statements implementation.
 
   Term syntax. \label{sec:algorithms/expressions:terms}
     We first present a relatively large language of terms,
@@ -254,7 +254,7 @@ Syntactic algorithms. \label{sec:algorithms/expressions}
 
   Reduction Strategies. \label{sec:algorithms/expressions:reduction}
 
-    Html Only: These are implemented in cpp/ecpressions.C .
+    Html Only: These are implemented in src/ecpressions.C .
 
     We consider both affine/linear reduction #->># and bounded reduction #~>#.
     Since affine reduction is size-reducing (and hence terminates),

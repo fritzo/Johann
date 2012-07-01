@@ -3,11 +3,11 @@
 current_target: run_johann
 
 kernel: FORCE
-	$(MAKE) -C cpp kernel
+	$(MAKE) -C src kernel
 server: FORCE
-	$(MAKE) -C cpp server
+	$(MAKE) -C src server
 jmapper: FORCE
-	$(MAKE) -C cpp/mapper jmapper
+	$(MAKE) -C src/mapper jmapper
 doc: FORCE
 	$(MAKE) -C scripts/doc all
 pdf: FORCE
@@ -32,13 +32,13 @@ time: kernel
 	bash -c "time bin/johann scripts/test/build.jcode"
 profile: kernel
 	echo "" > log/test.log
-	gcov cpp/lambda_theories.h
-	gcov cpp/measures.C
-	gcov cpp/complexity.C
-	gcov cpp/axiom_enforcement.C
-	gcov cpp/combinatory_structure.C
+	gcov src/lambda_theories.h
+	gcov src/measures.C
+	gcov src/complexity.C
+	gcov src/axiom_enforcement.C
+	gcov src/combinatory_structure.C
 	bin/johann -l test.log scripts/test/profile.jcode
-	gprof -I cpp -l -b bin/johann | ./profile_subs > johann.prof
+	gprof -I src -l -b bin/johann | ./profile_subs > johann.prof
 	gvim johann.prof &
 memtest: kernel
 	echo "" > log/test.log
@@ -75,11 +75,11 @@ godels_T: kernel
 
 unit_test:
 	echo "" > log/test.log
-	$(MAKE) -C cpp test
+	$(MAKE) -C src test
 
 clean:
 	rm -f core core.* vgcore.* gmon.out *.prof temp.diff
-	$(MAKE) -C cpp clean
+	$(MAKE) -C src clean
 	$(MAKE) -C scripts clean
 	$(MAKE) -C data clean
 	$(MAKE) -C html clean

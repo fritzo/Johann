@@ -6,7 +6,7 @@ Reflected axiom schemata. \label{sec:axioms/schemata}
   ###>
 
   In this section we reflect the hard-coded axiom schemata from
-  cpp/axiom_enforcement.C to achieve the strong transitivity principle
+  src/axiom_enforcement.C to achieve the strong transitivity principle
   "if #|-phi# then #|-pr{phi}#" (used in \ref{sec:skjo/provability}).
   Note that axiom schemata without hypotheses such as #K x y=x#
   are deducible from equations;

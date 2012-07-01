@@ -19,7 +19,7 @@ Johann implements:
 This repository includes:
 
 * A C++ kernel for building and reasoning about combinatory databases.
-  See the cpp/ directory.
+  See the src/ directory.
 
 * A collection of code-as-dissertation in a literate programming style ".jtext",
   which develops a lambda-calculus corpus for datamining.
@@ -33,7 +33,7 @@ This repository includes:
   See the mapper/ directory.
 
 * Some sketches of web-apps using Johann databases.
-  See the html/ and cpp/ directories.
+  See the html/ and src/ directories.
 
 From the thesis abstract (scripts/abstract.text):
 
