@@ -1,33 +1,33 @@
-#makefile for johann
 
-#compile type
+current_target: all
+
+all: kernel server toy
+
+#----( params )----------------------------------------------------------------
+
 #COMPILE_TYPE = debug
 COMPILE_TYPE = fastdebug
 #COMPILE_TYPE = fast
 #COMPILE_TYPE = profile
 
-#platform
-PLATFORM = linux
+PLATFORM := $(shell uname)
+#PLATFORM = Linux
 #PLATFORM = cygwin
-#PLATFORM = mac
+#PLATFORM = Darwin
 
-#these only apply when debugging or optimizing, resp.
+# these only apply when debugging or optimizing, resp.
 DEBUG_LEVEL = 3
 OPTIM_LEVEL = 1
 
-#=======[ parameter processing ]===============================================
+#----( compile flags )---------------------------------------------------------
 
-#processing utilities
-#XXX compilation fails with g++-4.3; templates are not instantiated correctly
-CXX  = g++
-CC   = g++
-LEX  = flex
+CXX = g++
+CC = g++
+LEX = flex
 YACC = bison
 
-#warnings
 WARNINGS = -Wall -Woverloaded-virtual -Wsign-promo -Wundef -Wpointer-arith -Wcast-qual -Wcast-align -Wno-deprecated
 
-#various levels of optimization (for 'fast' and 'profile' only)
 WEAK_OPTIM = -O2 -pipe
 ifeq ($(OPTIM_LEVEL), 0)
 	OPTIM = -O1 -pipe
@@ -44,78 +44,70 @@ endif
 ifeq ($(OPTIM_LEVEL), 4)
 	OPTIM = -Winline -Wdisable-optimization -O3 -m32 -march=prescott -mmmx -msse -msse2 -msse3 -mfpmath=sse,387 -malign-double -fomit-frame-pointer -ffast-math -funsafe-math-optimizations -fsingle-precision-constant -pipe
 endif
-#LATER: try using the two-pass  -fprofile-arcs and -fbranch-probabilities
-#LATER: try -ftracer -funroll-loops, -fprefetch-loop-arrays
+#TODO try using the two-pass  -fprofile-arcs and -fbranch-probabilities
+#TODO try -ftracer -funroll-loops, -fprefetch-loop-arrays
 
-#opengl stuff
+# opengl stuff
 GL_LINUX = -lglut -lGLU -lGL
 GL_MAC = -framework OpenGL -framework Glut
 GL_CYGWIN = -lglut32 -lglu32 -lopengl32
 
-#compiler flags
-#LFLAGS   = -d #flex is called manually below
-YFLAGS   = -d
+#LFLAGS = -d #flex is called manually below
+YFLAGS = -d
 CPPFLAGS = -Wstrict-aliasing=0 --std=c++0x
 CXXFLAGS = -fno-strict-aliasing
 LDFLAGS =
 ifeq ($(COMPILE_TYPE), debug)
 	CPPFLAGS += -DDEBUG_LEVEL=$(DEBUG_LEVEL)
 	CXXFLAGS = $(WARNINGS) -ggdb
-	LDFLAGS  += -rdynamic
-	ifeq ($(PLATFORM), linux)
-		LDFLAGS  += -rdynamic
-	endif
+	LDFLAGS += -rdynamic
 endif
 ifeq ($(COMPILE_TYPE), fastdebug)
 	CPPFLAGS += -DDEBUG_LEVEL=$(DEBUG_LEVEL)
 	CXXFLAGS = $(WEAK_OPTIM) $(WARNINGS) -ggdb
-	LDFLAGS  += $(WEAK_OPTIM)
-	ifeq ($(PLATFORM), linux)
+	LDFLAGS += $(WEAK_OPTIM)
+	ifeq ($(PLATFORM), Linux)
 		LDFLAGS  += -rdynamic
 	endif
 endif
 ifeq ($(COMPILE_TYPE), fast)
 	CPPFLAGS += -DDEBUG_LEVEL=0
 	CXXFLAGS = $(OPTIM)
-	LDFLAGS  += $(OPTIM)
+	LDFLAGS += $(OPTIM)
 endif
 ifeq ($(COMPILE_TYPE), profile)
 	CPPFLAGS += -DDEBUG_LEVEL=0 -DPROFILE
 	CXXFLAGS = $(WEAK_OPTIM) -pg -ftest-coverage -fprofile-arcs
-	LDFLAGS  += $(WEAK_OPTIM) -pg -ftest-coverage -fprofile-arcs
+	LDFLAGS += $(WEAK_OPTIM) -pg -ftest-coverage -fprofile-arcs
 endif
 
 #platform-dependent flags
-ifeq ($(PLATFORM), linux)
+ifeq ($(PLATFORM), Linux)
 	CPPFLAGS += -pthread
 	LDFLAGS += -pthread
 	GL = $(GL_LINUX)
 endif
-ifeq ($(PLATFORM), mac)
+ifeq ($(PLATFORM), Darwin)
 	CPPFLAGS += -DMAC_HACKS
 	GL = $(GL_MAC)
 endif
 
-#=======[ modules ]============================================================
+#----( build rules )----------------------------------------------------------
 
-#main targets
-current_target: all
-all: kernel server toy
-#	$(MAKE) -C cgi-src all
+.SUFFIXES:
 
-#tests
-priority_queue_test: priority_queue_test.o definitions.o
-fifo_queue_test: fifo_queue_test.o definitions.o
-visual_test: visual_test.o visual.o definitions.o
-	$(CC) visual_test.o visual.o definitions.o -lpng -o visual_test
-linalg_test: linalg_test.o linalg.o definitions.o
-	$(CC) linalg_test.o linalg.o definitions.o -llapack -lblas -o linalg_test
-moments_test: moments_test.o definitions.o
-meas_lite_test: meas_lite.o files.o definitions.o
-optimization_test: optimization_test.o optimization.o linalg.o definitions.o
-	$(CC) optimization_test.o optimization.o linalg.o definitions.o -llapack -lblas -o optimization_test
-binary_relation_test: binary_relation_test.o dense_bin_rel.o dense_set.o aligned_alloc.o definitions.o
-dense_sym_fun_test: dense_sym_fun_test.o dense_sym_fun.o dense_set.o aligned_alloc.o definitions.o
+%.o: %.C
+	@echo compiling $@
+	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+%_test:
+	@echo linking $@
+	@$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) -o $@
+
+#requires_rtti_and_exceptions.o: requires_rtti_and_exceptions.C
+#	@echo compiling $<
+#	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) -frtti -fexceptions -c $< -o $@
+
+#----( modules )--------------------------------------------------------------
 
 EXPR_H = expressions.h substitute.h handling.h symbols.h large_set.h definitions.h
 EXPR_O = expressions.o substitute.o handling.o large_set.o
@@ -126,22 +118,25 @@ random_choice_test: random_choice_test.o node_heap.o aligned_alloc.o definitions
 
 #the tangled mess begins
 NODES_O = nodes.o reorder.o obs.o order.o apply.o compose.o join.o node_heap.o aligned_alloc.o
-LT_O = lambda_theories.o axiom_tools.o axiom_enforcement.o axiom_validation.o $(EXPR_O) syntax_semantics.o
-BRAIN_O = $(NODES_O) brain.o $(LT_O) dense_sym_fun.o dense_bin_fun.o sparse_bin_fun.o dense_bin_rel.o dense_set.o combinatory_structure.o measures.o languages.o fuzzy.o complexity.o linalg.o random_choice.o thought.o context.o statements.o optimization.o files.o visual.o definitions.o
+BRAIN_O = $(NODES_O) brain.o lambda_theories.o axiom_tools.o axiom_enforcement.o axiom_validation.o $(EXPR_O) syntax_semantics.o dense_sym_fun.o dense_bin_fun.o sparse_bin_fun.o dense_bin_rel.o dense_set.o combinatory_structure.o measures.o languages.o fuzzy.o complexity.o linalg.o random_choice.o thought.o context.o statements.o optimization.o files.o visual.o definitions.o
 SOCK_O = socket_tools.o thread_tools.o
 
 #console
 CONSOLE_H = console.h kernel.h context.h $(EXPR_H) statements.h symbols.h version.h definitions.h
 console.tab.c: console.y
-	bison -d -v console.y
+	@echo building parser $@
+	@bison -d -v console.y
 console.y.c: console.l
-	flex -oconsole.y.c console.l
-#	flex -d -v -oconsole.y.c console.l
+	@echo building lexer $@
+	@flex -oconsole.y.c console.l
+	@#flex -d -v -oconsole.y.c console.l
 #note: the dependence is really on console.tab.h
 console.y.o: console.y.c console.tab.c $(CONSOLE_H)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -Wno-old-style-cast console.y.c -c
+	@echo compiling $@
+	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) -Wno-old-style-cast console.y.c -c
 console.tab.o: console.tab.c $(CONSOLE_H)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -Wno-old-style-cast console.tab.c -c
+	@echo compiling $@
+	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) -Wno-old-style-cast console.tab.c -c
 console.o: console.C $(CONSOLE_H)
 CONSOLE_O = console.tab.o console.y.o console.o
 
@@ -153,48 +148,75 @@ CONSOLE_O = console.tab.o console.y.o console.o
 #	$(CXX) $(CXXFLAGS) -Wno-old-style-cast parser.tab.c -c
 PARSER_H = parser.h $(EXPR_H) symbols.h definitions.h
 parser.tab.c: parser.y
-	bison -d -v parser.y
-	#bison -d -v -t parser.y
+	@echo building parser $@
+	@bison -d -v parser.y
+	@#bison -d -v -t parser.y
 parser.y.c: parser.l
-	flex -oparser.y.c parser.l
-	#flex -oparser.y.c -d -v -T parser.l
+	@echo building lexer $@
+	@flex -oparser.y.c parser.l
+	@#flex -oparser.y.c -d -v -T parser.l
 parser.y.o: parser.y.c parser.tab.c $(PARSER_H)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -Wno-old-style-cast parser.y.c -c
+	@echo compiling $@
+	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) -Wno-old-style-cast parser.y.c -c
 parser.tab.o: parser.tab.c $(PARSER_H)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -Wno-old-style-cast parser.tab.c -c
+	@echo compiling $@
+	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) -Wno-old-style-cast parser.tab.c -c
 parser.o: parser.C $(PARSER_H)
 PARSER_O = parser.tab.o parser.y.o parser.o
 
-#kernel
-KER_O = $(BRAIN_O) kernel.o
-kernel: $(KER_O) $(CONSOLE_O) $(PARSER_O) $(SOCK_O)
-	$(CXX) $(CXXFLAGS) $(KER_O) $(CONSOLE_O) $(PARSER_O) $(SOCK_O) -lfl -lreadline -lhistory -lcurses -llapack -lblas -lpng -lbz2 -o kernel -g $(LDFLAGS)
+#----( main targets )---------------------------------------------------------
 
-#server
-SERVER_O = market.o simple.o $(PARSER_O) $(SOCK_O) $(EXPR_O) definitions.o server.o
-server: $(SERVER_O)
-	$(CXX) $(CPPFLAGS) $(SERVER_O) -ggdb -lpthread -lbz2 -o server -g $(LDFLAGS)
+kernel: kernel.o $(BRAIN_O) $(CONSOLE_O) $(PARSER_O) $(SOCK_O)
+	@echo linking $@
+	@$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) -lfl -lreadline -lhistory -lcurses -llapack -lblas -lpng -lbz2 -o $@
 
-#toy
-TOY_O = toy.o dynamics.o animator.o meas_lite.o files.o definitions.o
-toy: $(TOY_O)
-	$(CXX) $(CXXFLAGS) $(TOY_O) $(GL) -o toy -g $(LDFLAGS)
+server: server.o market.o simple.o $(PARSER_O) $(SOCK_O) $(EXPR_O) definitions.o
+	@echo linking $@
+	@$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) -lpthread -lbz2 -o $@
 
-#=======[ unit tests ]=========================================================
+toy: toy.o dynamics.o animator.o meas_lite.o files.o definitions.o
+	@echo linking $@
+	@$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) $(GL) -o $@
 
-#tests resquiring parser
+#----( testing )--------------------------------------------------------------
+
+priority_queue_test: priority_queue_test.o definitions.o
+
+fifo_queue_test: fifo_queue_test.o definitions.o
+
+visual_test: visual_test.o visual.o definitions.o
+	@echo linking $@
+	@$(CXX) $(CXXFLAGS) visual_test.o visual.o definitions.o -lpng -o visual_test
+
+linalg_test: linalg_test.o linalg.o definitions.o
+	@echo linking $@
+	@$(CXX) $(CXXFLAGS) linalg_test.o linalg.o definitions.o -llapack -lblas -o linalg_test
+
+moments_test: moments_test.o definitions.o
+
+meas_lite_test: meas_lite.o files.o definitions.o
+
+optimization_test: optimization_test.o optimization.o linalg.o definitions.o
+	@echo linking $@
+	@$(CXX) $(CXXFLAGS) optimization_test.o optimization.o linalg.o definitions.o -llapack -lblas -o optimization_test
+
+binary_relation_test: binary_relation_test.o dense_bin_rel.o dense_set.o aligned_alloc.o definitions.o
+
+dense_sym_fun_test: dense_sym_fun_test.o dense_sym_fun.o dense_set.o aligned_alloc.o definitions.o
+
 expressions_test: expressions_test.o $(EXPR_O) $(PARSER_O) definitions.o
+
 unification_test: unification_test.o $(EXPR_O) $(PARSER_O) unification.o definitions.o
 
 TESTS = priority_queue_test visual_test linalg_test handling_test moments_test optimization_test expressions_test binary_relation_test dense_sym_fun_test meas_lite_test
 #node_heap_test random_choice_test
 
-#all tests
+# TODO automate this
 test: $(TESTS)
 	echo "" > log/test.log
 	./run_tests
 
-#individual tests
+# Individual tests
 v_test: visual_test
 	./visual_test
 la_test: linalg_test
@@ -214,293 +236,45 @@ u_test: unification_test
 ml_test: meas_lite_test
 	./meas_lite_test
 
+#----( utilities )------------------------------------------------------------
 
-#=======[ utilities ]==========================================================
+todo:
+	@echo '\033[1m-------- Top 40 of' \
+		"$$(cat *.h *.C *.py | grep -c TODO)" \
+		'tasks --------\033[0m'
+	@ls -t \
+	| grep '.\(h\|C\|py\)$$' \
+	| xargs grep 'TODO' --color=yes 2>/dev/null\
+	| head -n 40
 
-#exuberant ctags
+arch: FORCE arch.C
+	@$(CXX) $(CXXFLAGS) arch.C -o $@
+	@echo 'The following are equivalent:'
+	@echo ' gcc -march=native'
+	@gcc -march=native -E -v - </dev/null 2>&1 | sed -n 's/.* -quiet -v / gcc /p'
+
 tags: FORCE
 	ctags-exuberant *.[lyCh]	
 
-#cleaning
-EXEC = a.out $(TESTS) kernel server toy
-PARSE_TEMPS = *.yy.c *.y.c *.tab.h *.tab.c *.tab.cc *.cc *.hh *.output
-PROF_TEMPS = *.gcov gmon.out *.da *.bb *.bbg *.prof cachegrind.out.* *.gcda *.gcno
-MISC_TEMPS =  core core.* *.stackdump *.log comb_struct.table temp.diff test.*.png tags TAGS
-oclean:
-	rm -f *.o *.rpo $(EXEC) $(PARSE_TEMPS)
-depclean:
-	makedepend
-clean: oclean
-	rm -f $(MISC_TEMPS) $(PROF_TEMPS)
+lclean: FORCE
+	rm -f a.out kernel server toy *_test arch
+
+oclean: FORCE
+	rm -f *.yy.c *.y.c *.tab.h *.tab.c *.tab.cc *.cc *.hh *.output
+	rm -f *.o *.rpo
+
+clean: lclean oclean FORCE
+	rm -f core core.* *.stackdump *.log temp.* test.*
+	rm -f *.gcov gmon.out *.da *.bb *.bbg *.prof cachegrind.out.* *.gcda *.gcno
+	rm -f comb_struct.table
+	rm -f tags TAGS
 	$(MAKE) -C cgi-src clean
-cleaner: clean depclean
 
-#DEP_INC = -I /usr/lib/gcc/i686-pc-linux-gnu/4.1.1/include/ -I /usr/lib/gcc/i686-pc-linux-gnu/4.1.1/include/g++-v4/ -I /usr/lib/gcc/i686-pc-linux-gnu/4.1.1/include/g++-v4/i686-pc-linux-gnu/
-DEP_INC = -Y
-#depend: console.tab.c console.y.c parser.tab.cc parser.yy.c
-depend: console.tab.c console.y.c
-	makedepend $(DEP_INC) -D__GNUG__ -- $(CPPFLAGS) $(CXXFLAGS) -- *.[Ch] &> /dev/null
+depend:
+	@makedepend -D__GNUG__ -Y *.C -fC.depend 2> makedepend.log
+	@! grep -i error makedepend.log
 
-# DO NOT DELETE THIS LINE -- make depend depends on it.
+include C.depend
 
-aligned_alloc.o: definitions.h aligned_alloc.h
-animator.o: animator.h definitions.h
-animator.o: definitions.h
-apply.o: apply.h definitions.h nodes.h node_heap.h aligned_alloc.h
-apply.o: small_ptr.h dense_bin_fun.h dense_set.h splay_forest.h reorder.h
-apply.o: obs.h symbols.h combinatory_structure.h order.h dense_bin_rel.h
-apply.o: definitions.h nodes.h node_heap.h aligned_alloc.h small_ptr.h
-apply.o: dense_bin_fun.h dense_set.h splay_forest.h reorder.h
-axiom_enforcement.o: axiom_tools.h lambda_theories.h definitions.h symbols.h
-axiom_enforcement.o: expressions.h large_set.h handling.h hash_map.h
-axiom_enforcement.o: statements.h nodes.h node_heap.h aligned_alloc.h
-axiom_enforcement.o: small_ptr.h order.h dense_bin_rel.h dense_set.h obs.h
-axiom_enforcement.o: reorder.h apply.h dense_bin_fun.h splay_forest.h
-axiom_enforcement.o: compose.h join.h dense_sym_fun.h combinatory_structure.h
-axiom_tools.o: axiom_tools.h lambda_theories.h definitions.h symbols.h
-axiom_tools.o: expressions.h large_set.h handling.h hash_map.h statements.h
-axiom_tools.o: nodes.h node_heap.h aligned_alloc.h small_ptr.h order.h
-axiom_tools.o: dense_bin_rel.h dense_set.h obs.h reorder.h apply.h
-axiom_tools.o: dense_bin_fun.h splay_forest.h compose.h join.h
-axiom_tools.o: dense_sym_fun.h combinatory_structure.h
-axiom_tools.o: lambda_theories.h definitions.h symbols.h expressions.h
-axiom_tools.o: large_set.h handling.h hash_map.h statements.h nodes.h
-axiom_tools.o: node_heap.h aligned_alloc.h small_ptr.h order.h
-axiom_tools.o: dense_bin_rel.h dense_set.h obs.h reorder.h apply.h
-axiom_tools.o: dense_bin_fun.h splay_forest.h compose.h join.h
-axiom_tools.o: dense_sym_fun.h combinatory_structure.h
-axiom_validation.o: axiom_tools.h lambda_theories.h definitions.h symbols.h
-axiom_validation.o: expressions.h large_set.h handling.h hash_map.h
-axiom_validation.o: statements.h nodes.h node_heap.h aligned_alloc.h
-axiom_validation.o: small_ptr.h order.h dense_bin_rel.h dense_set.h obs.h
-axiom_validation.o: reorder.h apply.h dense_bin_fun.h splay_forest.h
-axiom_validation.o: compose.h join.h dense_sym_fun.h combinatory_structure.h
-axiom_validation.o: syntax_semantics.h measures.h linalg.h
-binary_relation_test.o: definitions.h dense_bin_rel.h dense_set.h
-brain.o: brain.h definitions.h nodes.h node_heap.h aligned_alloc.h
-brain.o: small_ptr.h measures.h linalg.h languages.h symbols.h fuzzy.h
-brain.o: context.h expressions.h large_set.h handling.h hash_map.h
-brain.o: statements.h lambda_theories.h order.h dense_bin_rel.h dense_set.h
-brain.o: thought.h version.h random_choice.h complexity.h moments.h obs.h
-brain.o: reorder.h apply.h dense_bin_fun.h splay_forest.h compose.h join.h
-brain.o: dense_sym_fun.h combinatory_structure.h syntax_semantics.h sorting.h
-brain.o: files.h visual.h socket_tools.h thread_tools.h
-brain.o: definitions.h nodes.h node_heap.h aligned_alloc.h small_ptr.h
-brain.o: measures.h linalg.h languages.h symbols.h fuzzy.h context.h
-brain.o: expressions.h large_set.h handling.h hash_map.h statements.h
-brain.o: lambda_theories.h order.h dense_bin_rel.h dense_set.h thought.h
-collective.o: collective.h definitions.h
-collective.o: definitions.h
-combinatory_structure.o: combinatory_structure.h definitions.h symbols.h
-combinatory_structure.o: nodes.h node_heap.h aligned_alloc.h small_ptr.h
-combinatory_structure.o: order.h dense_bin_rel.h dense_set.h reorder.h obs.h
-combinatory_structure.o: apply.h dense_bin_fun.h splay_forest.h compose.h
-combinatory_structure.o: join.h dense_sym_fun.h lambda_theories.h
-combinatory_structure.o: expressions.h large_set.h handling.h hash_map.h
-combinatory_structure.o: statements.h priority_queue.h syntax_semantics.h
-combinatory_structure.o: measures.h linalg.h files.h version.h visual.h
-combinatory_structure.o: definitions.h symbols.h nodes.h node_heap.h
-combinatory_structure.o: aligned_alloc.h small_ptr.h order.h dense_bin_rel.h
-combinatory_structure.o: dense_set.h reorder.h
-complexity.o: complexity.h definitions.h symbols.h measures.h nodes.h
-complexity.o: node_heap.h aligned_alloc.h small_ptr.h linalg.h languages.h
-complexity.o: moments.h fuzzy.h order.h dense_bin_rel.h dense_set.h thought.h
-complexity.o: expressions.h large_set.h handling.h hash_map.h context.h
-complexity.o: statements.h optimization.h obs.h reorder.h apply.h
-complexity.o: dense_bin_fun.h splay_forest.h compose.h join.h dense_sym_fun.h
-complexity.o: combinatory_structure.h lambda_theories.h
-complexity.o: definitions.h symbols.h measures.h nodes.h node_heap.h
-complexity.o: aligned_alloc.h small_ptr.h linalg.h languages.h moments.h
-complexity.o: fuzzy.h order.h dense_bin_rel.h dense_set.h thought.h
-complexity.o: expressions.h large_set.h handling.h hash_map.h context.h
-complexity.o: statements.h
-compose.o: compose.h definitions.h nodes.h node_heap.h aligned_alloc.h
-compose.o: small_ptr.h dense_bin_fun.h dense_set.h splay_forest.h reorder.h
-compose.o: obs.h symbols.h combinatory_structure.h order.h dense_bin_rel.h
-compose.o: definitions.h nodes.h node_heap.h aligned_alloc.h small_ptr.h
-compose.o: dense_bin_fun.h dense_set.h splay_forest.h reorder.h
-console.o: console.h definitions.h version.h symbols.h expressions.h
-console.o: large_set.h handling.h hash_map.h statements.h substitute.h
-console.o: kernel.h context.h
-console.o: definitions.h version.h symbols.h expressions.h large_set.h
-console.o: handling.h hash_map.h statements.h substitute.h kernel.h context.h
-context.o: context.h definitions.h symbols.h expressions.h large_set.h
-context.o: handling.h hash_map.h statements.h syntax_semantics.h nodes.h
-context.o: node_heap.h aligned_alloc.h small_ptr.h order.h dense_bin_rel.h
-context.o: dense_set.h measures.h linalg.h
-context.o: definitions.h symbols.h expressions.h large_set.h handling.h
-context.o: hash_map.h statements.h
-definitions.o: definitions.h
-dense_bin_fun.o: dense_bin_fun.h definitions.h dense_set.h aligned_alloc.h
-dense_bin_fun.o: definitions.h dense_set.h
-dense_bin_rel.o: dense_bin_rel.h definitions.h dense_set.h aligned_alloc.h
-dense_bin_rel.o: definitions.h dense_set.h
-dense_set.o: dense_set.h definitions.h aligned_alloc.h
-dense_set.o: definitions.h
-dense_sym_fun.o: dense_sym_fun.h definitions.h dense_set.h aligned_alloc.h
-dense_sym_fun.o: definitions.h dense_set.h
-dense_sym_fun_test.o: definitions.h dense_sym_fun.h dense_set.h
-dynamics.o: dynamics.h definitions.h meas_lite.h
-dynamics.o: definitions.h meas_lite.h
-expressions.o: expressions.h definitions.h symbols.h large_set.h handling.h
-expressions.o: hash_map.h parser.h substitute.h buffer.h output.h
-expressions.o: definitions.h symbols.h large_set.h handling.h hash_map.h
-expressions_test.o: definitions.h expressions.h symbols.h large_set.h
-expressions_test.o: handling.h hash_map.h
-fifo_queue.o: definitions.h hash_map.h
-fifo_queue_test.o: definitions.h fifo_queue.h hash_map.h
-files.o: files.h definitions.h version.h
-files.o: definitions.h version.h
-fuzzy.o: fuzzy.h definitions.h symbols.h nodes.h node_heap.h aligned_alloc.h
-fuzzy.o: small_ptr.h version.h
-fuzzy.o: definitions.h symbols.h nodes.h node_heap.h aligned_alloc.h
-fuzzy.o: small_ptr.h
-handling.o: handling.h definitions.h
-handling.o: definitions.h
-handling_test.o: handling.h definitions.h
-join.o: join.h definitions.h nodes.h node_heap.h aligned_alloc.h small_ptr.h
-join.o: dense_sym_fun.h dense_set.h splay_forest.h reorder.h obs.h symbols.h
-join.o: combinatory_structure.h order.h dense_bin_rel.h
-join.o: definitions.h nodes.h node_heap.h aligned_alloc.h small_ptr.h
-join.o: dense_sym_fun.h dense_set.h splay_forest.h reorder.h
-kernel.o: kernel.h definitions.h symbols.h expressions.h large_set.h
-kernel.o: handling.h hash_map.h statements.h context.h version.h nodes.h
-kernel.o: node_heap.h aligned_alloc.h small_ptr.h obs.h reorder.h apply.h
-kernel.o: dense_bin_fun.h dense_set.h splay_forest.h compose.h join.h
-kernel.o: dense_sym_fun.h substitute.h order.h dense_bin_rel.h brain.h
-kernel.o: measures.h linalg.h languages.h fuzzy.h lambda_theories.h thought.h
-kernel.o: syntax_semantics.h combinatory_structure.h socket_tools.h
-kernel.o: thread_tools.h
-kernel.o: definitions.h symbols.h expressions.h large_set.h handling.h
-kernel.o: hash_map.h statements.h context.h
-lambda_theories.o: lambda_theories.h definitions.h symbols.h expressions.h
-lambda_theories.o: large_set.h handling.h hash_map.h statements.h nodes.h
-lambda_theories.o: node_heap.h aligned_alloc.h small_ptr.h order.h
-lambda_theories.o: dense_bin_rel.h dense_set.h obs.h reorder.h apply.h
-lambda_theories.o: dense_bin_fun.h splay_forest.h compose.h join.h
-lambda_theories.o: dense_sym_fun.h combinatory_structure.h syntax_semantics.h
-lambda_theories.o: measures.h linalg.h priority_queue.h
-lambda_theories.o: definitions.h symbols.h expressions.h large_set.h
-lambda_theories.o: handling.h hash_map.h statements.h nodes.h node_heap.h
-lambda_theories.o: aligned_alloc.h small_ptr.h order.h dense_bin_rel.h
-lambda_theories.o: dense_set.h
-languages.o: languages.h definitions.h symbols.h nodes.h node_heap.h
-languages.o: aligned_alloc.h small_ptr.h linalg.h files.h version.h
-languages.o: definitions.h symbols.h nodes.h node_heap.h aligned_alloc.h
-languages.o: small_ptr.h linalg.h
-large_set.o: large_set.h definitions.h handling.h
-large_set.o: definitions.h handling.h
-linalg.o: linalg.h definitions.h
-linalg.o: definitions.h
-linalg_test.o: definitions.h linalg.h
-market.o: market.h definitions.h expressions.h symbols.h large_set.h
-market.o: handling.h hash_map.h thread_tools.h socket_tools.h
-market.o: definitions.h expressions.h symbols.h large_set.h handling.h
-market.o: hash_map.h thread_tools.h
-meas_lite.o: meas_lite.h definitions.h files.h version.h
-meas_lite.o: definitions.h
-meas_lite_test.o: definitions.h meas_lite.h
-measures.o: measures.h definitions.h nodes.h node_heap.h aligned_alloc.h
-measures.o: small_ptr.h linalg.h
-measures.o: definitions.h nodes.h node_heap.h aligned_alloc.h small_ptr.h
-measures.o: linalg.h
-moments_test.o: definitions.h moments.h
-node_heap.o: node_heap.h definitions.h aligned_alloc.h small_ptr.h nodes.h
-node_heap.o: definitions.h aligned_alloc.h small_ptr.h
-node_heap_test.o: definitions.h node_heap.h aligned_alloc.h small_ptr.h
-nodes.o: nodes.h node_heap.h definitions.h aligned_alloc.h small_ptr.h
-nodes.o: node_heap.h definitions.h aligned_alloc.h small_ptr.h
-obs.o: obs.h definitions.h symbols.h nodes.h node_heap.h aligned_alloc.h
-obs.o: small_ptr.h reorder.h apply.h dense_bin_fun.h dense_set.h
-obs.o: splay_forest.h compose.h join.h dense_sym_fun.h
-obs.o: combinatory_structure.h order.h dense_bin_rel.h
-obs.o: definitions.h symbols.h nodes.h node_heap.h aligned_alloc.h
-obs.o: small_ptr.h reorder.h
-optimization.o: optimization.h definitions.h moments.h linalg.h
-optimization.o: definitions.h moments.h linalg.h
-optimization_test.o: definitions.h linalg.h optimization.h moments.h
-order.o: order.h definitions.h nodes.h node_heap.h aligned_alloc.h
-order.o: small_ptr.h dense_bin_rel.h dense_set.h obs.h symbols.h reorder.h
-order.o: definitions.h nodes.h node_heap.h aligned_alloc.h small_ptr.h
-order.o: dense_bin_rel.h dense_set.h
-param_tools.o: definitions.h
-parser.o: parser.h definitions.h expressions.h symbols.h large_set.h
-parser.o: handling.h hash_map.h substitute.h buffer.h output.h
-parser.o: definitions.h expressions.h symbols.h large_set.h handling.h
-parser.o: hash_map.h substitute.h buffer.h output.h
-parser.tab.o: stack.hh location.hh position.hh
-priority_queue.o: definitions.h
-priority_queue_test.o: definitions.h priority_queue.h
-random_choice.o: random_choice.h definitions.h measures.h nodes.h node_heap.h
-random_choice.o: aligned_alloc.h small_ptr.h linalg.h
-random_choice.o: definitions.h measures.h nodes.h node_heap.h aligned_alloc.h
-random_choice.o: small_ptr.h linalg.h
-random_choice_test.o: measures.h definitions.h nodes.h node_heap.h
-random_choice_test.o: aligned_alloc.h small_ptr.h linalg.h random_choice.h
-reorder.o: reorder.h definitions.h node_heap.h aligned_alloc.h small_ptr.h
-reorder.o: nodes.h
-reorder.o: definitions.h node_heap.h aligned_alloc.h small_ptr.h
-search.o: search.h definitions.h priority_queue.h
-search.o: definitions.h priority_queue.h
-server.o: definitions.h expressions.h symbols.h large_set.h handling.h
-server.o: hash_map.h substitute.h socket_tools.h thread_tools.h simple.h
-server.o: market.h version.h
-simple.o: simple.h definitions.h expressions.h symbols.h large_set.h
-simple.o: handling.h hash_map.h thread_tools.h
-simple.o: definitions.h expressions.h symbols.h large_set.h handling.h
-simple.o: hash_map.h thread_tools.h
-small_set.o: small_set.h definitions.h
-small_set.o: definitions.h
-socket_tools.o: socket_tools.h definitions.h thread_tools.h
-socket_tools.o: definitions.h thread_tools.h
-solver.o: solver.h definitions.h expressions.h symbols.h large_set.h
-solver.o: handling.h hash_map.h simple.h thread_tools.h search.h
-solver.o: priority_queue.h
-solver.o: definitions.h expressions.h symbols.h large_set.h handling.h
-solver.o: hash_map.h simple.h thread_tools.h search.h priority_queue.h
-sorting.o: definitions.h
-sparse_bin_fun.o: sparse_bin_fun.h definitions.h dense_set.h hash_map.h
-sparse_bin_fun.o: aligned_alloc.h
-sparse_bin_fun.o: definitions.h dense_set.h hash_map.h
-splay_forest.o: definitions.h
-statements.o: statements.h definitions.h handling.h expressions.h symbols.h
-statements.o: large_set.h hash_map.h
-statements.o: definitions.h handling.h expressions.h symbols.h large_set.h
-statements.o: hash_map.h
-substitute.o: substitute.h definitions.h symbols.h expressions.h large_set.h
-substitute.o: handling.h hash_map.h parser.h buffer.h output.h
-substitute.o: definitions.h symbols.h expressions.h large_set.h handling.h
-substitute.o: hash_map.h
-syntax_semantics.o: syntax_semantics.h definitions.h nodes.h node_heap.h
-syntax_semantics.o: aligned_alloc.h small_ptr.h order.h dense_bin_rel.h
-syntax_semantics.o: dense_set.h measures.h linalg.h expressions.h symbols.h
-syntax_semantics.o: large_set.h handling.h hash_map.h statements.h obs.h
-syntax_semantics.o: reorder.h apply.h dense_bin_fun.h splay_forest.h
-syntax_semantics.o: compose.h join.h dense_sym_fun.h combinatory_structure.h
-syntax_semantics.o: brain.h languages.h fuzzy.h context.h lambda_theories.h
-syntax_semantics.o: thought.h
-syntax_semantics.o: definitions.h nodes.h node_heap.h aligned_alloc.h
-syntax_semantics.o: small_ptr.h order.h dense_bin_rel.h dense_set.h
-syntax_semantics.o: measures.h linalg.h expressions.h symbols.h large_set.h
-syntax_semantics.o: handling.h hash_map.h statements.h
-thought.o: thought.h definitions.h nodes.h node_heap.h aligned_alloc.h
-thought.o: small_ptr.h order.h dense_bin_rel.h dense_set.h expressions.h
-thought.o: symbols.h large_set.h handling.h hash_map.h context.h statements.h
-thought.o: measures.h linalg.h fuzzy.h obs.h reorder.h apply.h
-thought.o: dense_bin_fun.h splay_forest.h compose.h join.h dense_sym_fun.h
-thought.o: combinatory_structure.h lambda_theories.h syntax_semantics.h
-thought.o: brain.h languages.h complexity.h moments.h random_choice.h
-thought.o: definitions.h nodes.h node_heap.h aligned_alloc.h small_ptr.h
-thought.o: order.h dense_bin_rel.h dense_set.h expressions.h symbols.h
-thought.o: large_set.h handling.h hash_map.h context.h statements.h
-thought.o: measures.h linalg.h fuzzy.h
-thread_tools.o: thread_tools.h definitions.h
-thread_tools.o: definitions.h
-toy.o: definitions.h meas_lite.h animator.h dynamics.h
-unification.o: definitions.h expressions.h symbols.h large_set.h handling.h
-unification.o: hash_map.h
-unification_test.o: definitions.h expressions.h symbols.h large_set.h
-unification_test.o: handling.h hash_map.h unification.h
-visual.o: visual.h definitions.h
-visual.o: definitions.h
-visual_test.o: definitions.h visual.h
+FORCE:
+
