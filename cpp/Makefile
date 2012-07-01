@@ -274,6 +274,7 @@ clean: lclean oclean FORCE
 	rm -f comb_struct.table
 	rm -f tags TAGS
 	$(MAKE) -C cgi-src clean
+	$(MAKE) -C mapper clean
 
 depend:
 	@makedepend -D__GNUG__ -Y *.C jdb/*.C -fC.depend 2> makedepend.log

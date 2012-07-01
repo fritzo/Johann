@@ -7,7 +7,7 @@ kernel: FORCE
 server: FORCE
 	$(MAKE) -C cpp server
 jmapper: FORCE
-	$(MAKE) -C mapper jmapper
+	$(MAKE) -C cpp/mapper jmapper
 doc: FORCE
 	$(MAKE) -C scripts/doc all
 pdf: FORCE
@@ -80,7 +80,6 @@ unit_test:
 clean:
 	rm -f core core.* vgcore.* gmon.out *.prof temp.diff
 	$(MAKE) -C cpp clean
-	$(MAKE) -C mapper clean
 	$(MAKE) -C scripts clean
 	$(MAKE) -C data clean
 	$(MAKE) -C html clean
