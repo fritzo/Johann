@@ -1,5 +1,5 @@
 
-#include "definitions.h"
+#include <definitions.h>
 #include "dense_sym_fun.h"
 #include <vector>
 

@@ -1,7 +1,7 @@
 #ifndef NONSTD_DENSE_SYM_FUN_H
 #define NONSTD_DENSE_SYM_FUN_H
 
-#include "definitions.h"
+#include <definitions.h>
 #include "dense_set.h"
 
 namespace nonstd

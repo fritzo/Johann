@@ -6,9 +6,9 @@
 #ifdef SPARSE_JOINS
     #include "sparse_sym_fun.h"
 #else
-    #include "dense_sym_fun.h"
+    #include <jdb/dense_sym_fun.h>
 #endif
-#include "splay_forest.h"
+#include <jdb/splay_forest.h>
 #include "reorder.h"
 //#include <set>
 

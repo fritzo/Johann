@@ -81,10 +81,8 @@ clean:
 	rm -f core core.* vgcore.* gmon.out *.prof temp.diff
 	$(MAKE) -C cpp clean
 	$(MAKE) -C mapper clean
-	$(MAKE) -C python clean
 	$(MAKE) -C scripts clean
 	$(MAKE) -C data clean
-	$(MAKE) -C sketches clean
 	$(MAKE) -C devel clean
 	$(MAKE) -C html clean
 	$(MAKE) -C doxygen clean

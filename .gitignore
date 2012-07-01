@@ -41,4 +41,4 @@ core.*
 *.ncb
 data/*
 stats/conjectures.text
-
+mapper/jmapper

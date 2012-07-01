@@ -1,7 +1,7 @@
 #ifndef NONSTD_DENSE_SET_H
 #define NONSTD_DENSE_SET_H
 
-#include "definitions.h"
+#include <definitions.h>
 #include <utility> //for pair
 
 namespace nonstd

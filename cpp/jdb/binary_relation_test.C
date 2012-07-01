@@ -1,6 +1,6 @@
 
-#include "definitions.h"
-#include "dense_bin_rel.h"
+#include <definitions.h>
+#include <jdb/dense_bin_rel.h>
 #include <utility>
 
 Logging::Logger logger("test");

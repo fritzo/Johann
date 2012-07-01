@@ -3,7 +3,7 @@
 
 #include "definitions.h"
 #include "nodes.h"
-#include "dense_bin_rel.h"
+#include <jdb/dense_bin_rel.h>
 
 namespace CombinatoryStructure
 {

@@ -6,9 +6,9 @@
 #ifdef SPARSE_TABLES
     #include "sparse_bin_fun.h"
 #else
-    #include "dense_bin_fun.h"
+    #include <jdb/dense_bin_fun.h>
 #endif
-#include "splay_forest.h"
+#include <jdb/splay_forest.h>
 #include "reorder.h"
 //#include <set>
 

@@ -1,7 +1,7 @@
 #ifndef JOHANN_SPLAY_H
 #define JOHANN_SPLAY_H
 
-#include "definitions.h"
+#include <definitions.h>
 
 namespace nonstd
 {
