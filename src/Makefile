@@ -56,7 +56,7 @@ GL_CYGWIN = -lglut32 -lglu32 -lopengl32
 YFLAGS = -d
 CPPFLAGS = -I. -Wstrict-aliasing=0 --std=c++0x
 CXXFLAGS = -fno-strict-aliasing
-LDFLAGS =
+LDFLAGS = -lpomagma
 ifeq ($(COMPILE_TYPE), debug)
 	CPPFLAGS += -DDEBUG_LEVEL=$(DEBUG_LEVEL)
 	CXXFLAGS = $(WARNINGS) -ggdb
@@ -119,8 +119,6 @@ random_choice_test: random_choice_test.o node_heap.o aligned_alloc.o definitions
 # the tangled mess begins
 
 NODES_O = nodes.o reorder.o obs.o order.o apply.o compose.o join.o node_heap.o aligned_alloc.o
-
-JDB_O = jdb/dense_sym_fun.o jdb/dense_bin_fun.o jdb/sparse_bin_fun.o jdb/dense_bin_rel.o jdb/dense_set.o
 
 BRAIN_O = $(NODES_O) brain.o lambda_theories.o axiom_tools.o axiom_enforcement.o axiom_validation.o $(JDB_O) $(EXPR_O) syntax_semantics.o combinatory_structure.o measures.o languages.o fuzzy.o complexity.o linalg.o random_choice.o thought.o context.o statements.o optimization.o files.o visual.o definitions.o
 SOCK_O = socket_tools.o thread_tools.o
@@ -204,10 +202,6 @@ optimization_test: optimization_test.o optimization.o linalg.o definitions.o
 	@echo linking $@
 	@$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) -llapack -lblas -o optimization_test
 
-binary_relation_test: jdb/binary_relation_test.o $(JDB_O) aligned_alloc.o definitions.o
-
-dense_sym_fun_test: jdb/dense_sym_fun_test.o $(JDB_O) aligned_alloc.o definitions.o
-
 expressions_test: expressions_test.o $(EXPR_O) $(PARSER_O) definitions.o
 
 unification_test: unification_test.o $(EXPR_O) $(PARSER_O) unification.o definitions.o
@@ -266,7 +260,6 @@ lclean: FORCE
 oclean: FORCE
 	rm -f *.yy.c *.y.c *.tab.h *.tab.c *.tab.cc *.cc *.hh *.output
 	rm -f *.o *.rpo
-	rm -f jdb/*.o
 
 clean: lclean oclean FORCE
 	rm -f core core.* *.stackdump *.log temp.* test.*
@@ -277,7 +270,7 @@ clean: lclean oclean FORCE
 	$(MAKE) -C mapper clean
 
 depend:
-	@makedepend -D__GNUG__ -Y *.C jdb/*.C -fC.depend 2> makedepend.log
+	@makedepend -D__GNUG__ -Y *.C -fC.depend 2> makedepend.log
 	@! grep -i error makedepend.log
 
 include C.depend

@@ -66,7 +66,7 @@ using CS::ensure_comp;
 using CS::ensure_join;
 
 //vector order
-typedef nonstd::dense_set Set;
+typedef pomagma::dense_set Set;
 void ensure_less (const Set& xs, Ob y);
 void ensure_less (Ob x, const Set& ys);
 void ensure_nless (const Set& xs, Ob y);

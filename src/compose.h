@@ -6,9 +6,9 @@
 #ifdef SPARSE_TABLES
     #include "sparse_bin_fun.h"
 #else
-    #include <jdb/dense_bin_fun.h>
+    #include <pomagma/dense_bin_fun.hpp>
 #endif
-#include <jdb/splay_forest.h>
+#include <pomagma/splay_forest.hpp>
 #include "reorder.h"
 //#include <set>
 
@@ -19,11 +19,11 @@ const Logging::Logger logger("compose", Logging::DEBUG);
 
 using namespace Heap;
 
-typedef nonstd::dense_set Set;
+typedef pomagma::dense_set Set;
 #ifdef SPARSE_TABLES
-typedef nonstd::sparse_bin_fun CompTable;
+typedef pomagma::sparse_bin_fun CompTable;
 #else
-typedef nonstd::dense_bin_fun CompTable;
+typedef pomagma::dense_bin_fun CompTable;
 #endif
 extern CompTable *g_comp_table; //this should be private
 
@@ -84,8 +84,8 @@ public:
 };
 #define L 1
 #define R 2
-typedef nonstd::splay_forest<Indexing< L,R, 0> > CLR;
-typedef nonstd::splay_forest<Indexing< R,L, 1> > CRL;
+typedef pomagma::splay_forest<Indexing< L,R, 0> > CLR;
+typedef pomagma::splay_forest<Indexing< R,L, 1> > CRL;
 #undef L
 #undef R
 

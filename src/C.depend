@@ -21,7 +21,6 @@ axiom_validation.o: statements.h nodes.h node_heap.h aligned_alloc.h
 axiom_validation.o: small_ptr.h order.h obs.h reorder.h apply.h compose.h
 axiom_validation.o: join.h combinatory_structure.h syntax_semantics.h
 axiom_validation.o: measures.h linalg.h
-binary_relation_test.o: definitions.h
 brain.o: brain.h definitions.h nodes.h node_heap.h aligned_alloc.h
 brain.o: small_ptr.h measures.h linalg.h languages.h symbols.h fuzzy.h
 brain.o: context.h expressions.h large_set.h handling.h hash_map.h
@@ -144,13 +143,3 @@ unification_test.o: definitions.h expressions.h symbols.h large_set.h
 unification_test.o: handling.h hash_map.h unification.h
 visual.o: visual.h definitions.h
 visual_test.o: definitions.h visual.h
-jdb/dense_bin_fun.o: jdb/dense_bin_fun.h definitions.h jdb/dense_set.h
-jdb/dense_bin_fun.o: aligned_alloc.h
-jdb/dense_bin_rel.o: jdb/dense_bin_rel.h definitions.h jdb/dense_set.h
-jdb/dense_bin_rel.o: aligned_alloc.h
-jdb/dense_set.o: jdb/dense_set.h definitions.h aligned_alloc.h
-jdb/dense_sym_fun.o: jdb/dense_sym_fun.h definitions.h jdb/dense_set.h
-jdb/dense_sym_fun.o: aligned_alloc.h
-jdb/dense_sym_fun_test.o: definitions.h jdb/dense_sym_fun.h jdb/dense_set.h
-jdb/sparse_bin_fun.o: jdb/sparse_bin_fun.h definitions.h jdb/dense_set.h
-jdb/sparse_bin_fun.o: hash_map.h aligned_alloc.h

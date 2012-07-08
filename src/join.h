@@ -6,9 +6,9 @@
 #ifdef SPARSE_JOINS
     #include "sparse_sym_fun.h"
 #else
-    #include <jdb/dense_sym_fun.h>
+    #include <pomagma/dense_sym_fun.hpp>
 #endif
-#include <jdb/splay_forest.h>
+#include <pomagma/splay_forest.hpp>
 #include "reorder.h"
 //#include <set>
 
@@ -21,11 +21,11 @@ const Logging::Logger logger("join", Logging::DEBUG);
 
 using namespace Heap;
 
-typedef nonstd::dense_set Set;
+typedef pomagma::dense_set Set;
 #ifdef SPARSE_JOINS
-typedef nonstd::sparse_sym_fun JoinTable;
+typedef pomagma::sparse_sym_fun JoinTable;
 #else
-typedef nonstd::dense_sym_fun JoinTable;
+typedef pomagma::dense_sym_fun JoinTable;
 #endif
 extern JoinTable *g_join_table; //this should be private
 
@@ -85,7 +85,7 @@ public:
 };
 #define L 1
 #define R 2
-typedef nonstd::splay_forest<Indexing<L,R> > JLR;
+typedef pomagma::splay_forest<Indexing<L,R> > JLR;
 #undef L
 #undef R
 

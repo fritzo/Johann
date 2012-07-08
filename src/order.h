@@ -3,7 +3,7 @@
 
 #include "definitions.h"
 #include "nodes.h"
-#include <jdb/dense_bin_rel.h>
+#include <pomagma/dense_bin_rel.hpp>
 
 namespace CombinatoryStructure
 {
@@ -17,9 +17,9 @@ const Logging::Logger logger("order", Logging::DEBUG);
 
 namespace CS = CombinatoryStructure;
 
-typedef nonstd::dense_set Set;
-using nonstd::bool_ref;
-typedef nonstd::dense_bin_rel OrdTable;
+typedef pomagma::dense_set Set;
+using pomagma::bool_ref;
+typedef pomagma::dense_bin_rel OrdTable;
 extern OrdTable *g_pos_table, *g_neg_table; //should be private
 enum { NUM_TEMP_SETS = 4 };
 extern Set* g_temp_sets[NUM_TEMP_SETS]; //should be private
