@@ -3,11 +3,7 @@
 
 #include "definitions.h"
 #include "nodes.h"
-#ifdef SPARSE_TABLES
-    #include "sparse_bin_fun.h"
-#else
-    #include <pomagma/dense_bin_fun.hpp>
-#endif
+#include <pomagma/dense_bin_fun.hpp>
 #include <pomagma/splay_forest.hpp>
 #include "reorder.h"
 //#include <set>
@@ -20,11 +16,7 @@ const Logging::Logger logger("compose", Logging::DEBUG);
 using namespace Heap;
 
 typedef pomagma::dense_set Set;
-#ifdef SPARSE_TABLES
-typedef pomagma::sparse_bin_fun CompTable;
-#else
 typedef pomagma::dense_bin_fun CompTable;
-#endif
 extern CompTable *g_comp_table; //this should be private
 
 //======================== field layout ========================

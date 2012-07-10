@@ -1,4 +1,3 @@
-
 #include "order.h"
 #include "obs.h"
 
@@ -147,24 +146,4 @@ void load_from_file (FILE* file)
     g_neg_table->read_from_file(file);
 }
 
-//explicit instantiation
-Iterator<LRpos> LRpos_factory (Ob ob) { return Iterator<LRpos>(ob); }
-Iterator<LRneg> LRneg_factory (Ob ob) { return Iterator<LRneg>(ob); }
-Iterator<RLpos> RLpos_factory (Ob ob) { return Iterator<RLpos>(ob); }
-Iterator<RLneg> RLneg_factory (Ob ob) { return Iterator<RLneg>(ob); }
-
-Iterator<LRpos> LRpos_factory () { return Iterator<LRpos>(); }
-Iterator<LRneg> LRneg_factory () { return Iterator<LRneg>(); }
-Iterator<RLpos> RLpos_factory () { return Iterator<RLpos>(); }
-Iterator<RLneg> RLneg_factory () { return Iterator<RLneg>(); }
-
-void LRpos_begin (Iterator<LRpos>& iter, Ob ob) { iter.begin(ob); }
-void LRneg_begin (Iterator<LRneg>& iter, Ob ob) { iter.begin(ob); }
-void RLpos_begin (Iterator<RLpos>& iter, Ob ob) { iter.begin(ob); }
-void RLneg_begin (Iterator<RLneg>& iter, Ob ob) { iter.begin(ob); }
-
-}
-
-
-
-
+} // namespace Order

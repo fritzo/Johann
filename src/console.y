@@ -1393,7 +1393,7 @@ void* start_parser (void* _init_script)
     if (g_interactive_output && g_interactive_input) {
         std::cout << "\e[1mJohann Kernel " << VERSION << "\e[0m"
                   //<< " (" << __DATE__ << ")"
-                  << " copyright (c) 2004-2009 Fritz Obermeyer" << std::endl;
+                  << " copyright (c) 2004-2012 Fritz Obermeyer" << std::endl;
     }
     if (init_script) push_file(init_script);
     else             push_input();

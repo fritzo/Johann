@@ -3,11 +3,7 @@
 
 #include "definitions.h"
 #include "nodes.h"
-#ifdef SPARSE_TABLES
-    #include "sparse_bin_fun.h"
-#else
-    #include <pomagma/dense_bin_fun.hpp>
-#endif
+#include <pomagma/dense_bin_fun.hpp>
 
 #include <pomagma/splay_forest.hpp>
 #include "reorder.h"
@@ -21,12 +17,8 @@ const Logging::Logger logger("apply", Logging::DEBUG);
 using namespace Heap;
 
 typedef pomagma::dense_set Set;
-#ifdef SPARSE_TABLES
-typedef pomagma::sparse_bin_fun AppTable;
-#else
 typedef pomagma::dense_bin_fun AppTable;
-#endif
-extern AppTable *g_app_table; //this should be private
+extern AppTable * g_app_table; // this should be private
 
 //======================== field layout ========================
 //(see node_field_usage.text)
