@@ -25,7 +25,7 @@ all: kernel server jmapper html pdf
 test: unit-test full-test
 
 unit-test:
-	echo "" > log/test.log
+	echo '' > log/test.log
 	$(MAKE) -C pomagma test
 	$(MAKE) -C src test
 

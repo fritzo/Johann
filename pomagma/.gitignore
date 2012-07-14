@@ -19,3 +19,5 @@
 *.bak
 /build/*
 !/build/test.sh
+/log
+/lib
