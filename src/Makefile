@@ -262,7 +262,6 @@ clean: lclean oclean FORCE
 	rm -f *.gcov gmon.out *.da *.bb *.bbg *.prof cachegrind.out.* *.gcda *.gcno
 	rm -f comb_struct.table
 	rm -f tags TAGS
-	$(MAKE) -C cgi-src clean
 	$(MAKE) -C mapper clean
 
 depend:
