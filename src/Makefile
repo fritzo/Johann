@@ -206,7 +206,7 @@ expressions_test: expressions_test.o $(EXPR_O) $(PARSER_O) definitions.o
 
 unification_test: unification_test.o $(EXPR_O) $(PARSER_O) unification.o definitions.o
 
-TESTS = priority_queue_test visual_test linalg_test handling_test moments_test optimization_test expressions_test binary_relation_test dense_sym_fun_test meas_lite_test
+TESTS = priority_queue_test visual_test linalg_test handling_test moments_test optimization_test expressions_test meas_lite_test unification_test
 #node_heap_test random_choice_test
 
 # TODO automate this
@@ -223,10 +223,6 @@ op_test: optimization_test
 	./optimization_test
 e_test: expressions_test
 	./expressions_test
-br_test: binary_relation_test
-	./binary_relation_test
-ds_test: dense_sym_fun_test
-	./dense_sym_fun_test
 rc_test: random_choice_test
 	./random_choice_test
 u_test: unification_test

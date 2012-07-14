@@ -1,8 +1,8 @@
-#Johann's makefile
 
 current_target: run_johann
 
 kernel: FORCE
+	$(MAKE) -C pomagma install
 	$(MAKE) -C src kernel
 server: FORCE
 	$(MAKE) -C src server
@@ -20,14 +20,26 @@ html: pdf FORCE
 
 all: kernel server jmapper html pdf
 
-#=======[ running johann ]=====================================================
+#-----------------------------------------------------------------------------
+# Testing
+
+test: unit-test full-test
+
+unit-test:
+	echo "" > log/test.log
+	$(MAKE) -C pomagma test
+	$(MAKE) -C src test
+
+full-test: kernel
+	echo "" > log/test.log
+	bin/johann -l test.log scripts/test/main.jcode
+
+#-----------------------------------------------------------------------------
+# Running johann
 
 run_johann: kernel
 	echo "" > log/default.log
 	bin/johann
-test: kernel
-	echo "" > log/test.log
-	bin/johann -l test.log scripts/test/main.jcode
 time: kernel
 	bash -c "time bin/johann scripts/test/build.jcode"
 profile: kernel
@@ -47,7 +59,8 @@ cachetest: kernel
 	echo "" > log/tests.log
 	valgrind --tool=cachegrind bin/johann -l test.log scripts/test/cachetest.jcode
 
-#=======[ building cores ]=====================================================
+#-----------------------------------------------------------------------------
+# Building cores
 
 default: kernel
 	echo "" > log/build.log
@@ -71,11 +84,8 @@ godels_T: kernel
 	echo "" > log/build.log
 	bin/johann scripts/build/godels_T.jcode -l godels_T.log
 
-#=======[ utilities ]==========================================================
-
-unit_test:
-	echo "" > log/test.log
-	$(MAKE) -C src test
+#-----------------------------------------------------------------------------
+# Utilities
 
 clean:
 	rm -f core core.* vgcore.* gmon.out *.prof temp.diff
@@ -84,6 +94,7 @@ clean:
 	$(MAKE) -C data clean
 	$(MAKE) -C html clean
 	$(MAKE) -C doxygen clean
+	$(MAKE) -C pomagma clean
 
 cleaner: clean
 	$(MAKE) -C data cleaner
@@ -94,4 +105,3 @@ cleanest: cleaner
 	rm -rf tool_config/example.subversion/auth
 
 FORCE: 
-
