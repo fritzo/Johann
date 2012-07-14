@@ -231,6 +231,6 @@ inline void dense_set::iterator::begin ()
             "dense_set::iterator::begin landed on empty pos " << m_i);
 }
 
-}
+} // namespace pomagma
 
 #endif // POMAGMA_DENSE_SET_H

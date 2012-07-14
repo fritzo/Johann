@@ -294,7 +294,6 @@ inline bool dense_bin_rel::ensure_inserted_Rx (int i, int j)
     return true;
 }
 
-}
+} // namespace pomagma
 
-#endif
-
+#endif // POMAGMA_DENSE_BIN_REL_H

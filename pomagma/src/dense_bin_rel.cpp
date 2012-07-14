@@ -19,7 +19,10 @@ dense_bin_rel::dense_bin_rel (int num_items, bool is_full)
       m_temp_line(pomagma::alloc_blocks<Line>(M))
 {
     POMAGMA_DEBUG("creating dense_bin_rel with " << M << " lines");
-    POMAGMA_ASSERT(N_up <= (1<<16), "dense_bin_rel is too large");
+
+    // FIXME allow larger
+    POMAGMA_ASSERT(N_up <= (1 << 16), "dense_bin_rel is too large");
+
     POMAGMA_ASSERT(m_Lx_lines, "failed to allocate Lx lines");
     POMAGMA_ASSERT(m_Rx_lines, "failed to allocate Rx lines");
     POMAGMA_ASSERT(m_temp_line, "failed to allocate temp line");
@@ -37,7 +40,7 @@ dense_bin_rel::~dense_bin_rel ()
     pomagma::free_blocks(m_Rx_lines);
     pomagma::free_blocks(m_temp_line);
 }
-void dense_bin_rel::move_from (const dense_bin_rel& other, const oid_t* new2old)
+void dense_bin_rel::move_from (const dense_bin_rel & other, const oid_t * new2old)
 {
     POMAGMA_DEBUG("Copying dense_bin_rel");
 
@@ -55,18 +58,18 @@ void dense_bin_rel::move_from (const dense_bin_rel& other, const oid_t* new2old)
         // copy rows and columns
         int minN = min(N, other.N);
         int minM = min(M, other.M);
-        for (int i=1; i<=minN; ++i) {
+        for (int i = 1; i <= minN; ++i) {
             memcpy(get_Lx_line(i), other.get_Lx_line(i), sizeof(Line) * minM);
             memcpy(get_Rx_line(i), other.get_Rx_line(i), sizeof(Line) * minM);
         }
     } else {
         POMAGMA_DEBUG("copying and reordering");
         // copy & reorder WIKKIT SLOW
-        for (unsigned i_new=1; i_new<=N; ++i_new) {
+        for (unsigned i_new = 1; i_new <= N; ++i_new) {
             if (not supports(i_new)) continue;
             unsigned i_old = new2old[i_new];
 
-            for (unsigned j_new=1; j_new<=N; ++j_new) {
+            for (unsigned j_new = 1; j_new <= N; ++j_new) {
                 if (not supports(j_new)) continue;
                 unsigned j_old = new2old[j_new];
 
@@ -113,9 +116,9 @@ void dense_bin_rel::validate () const
         bool sup_i = supports(i);
         Lx.init(get_Lx_line(i));
 
-        POMAGMA_ASSERT(i or not sup_i, "br supports null element");
+        POMAGMA_ASSERT(i or not sup_i, "dense_bin_rel supports null element");
 
-        for (unsigned j=1; j<=N; ++j) {
+        for (unsigned j = 1; j <= N; ++j) {
             bool sup_ij = sup_i and supports(j);
             Rx.init(get_Rx_line(j));
 
@@ -163,9 +166,9 @@ void dense_bin_rel::validate_disjoint (const dense_bin_rel& other) const
 void dense_bin_rel::print_table (unsigned n) const
 {
     if (n == 0) n = N;
-    for (unsigned i=1; i<=n; ++i) {
+    for (unsigned i = 1; i <= n; ++i) {
         std::cout << '\n';
-        for (unsigned j=1; j<=n; ++j) {
+        for (unsigned j = 1; j <= n; ++j) {
             std::cout << (contains(i,j) ? 'O' : '.');
         }
     }
@@ -247,35 +250,37 @@ void dense_bin_rel::merge (
         int j,                      // rep
         void (*move_to)(int,int))   // typically enforce_
 {
-    POMAGMA_ASSERT4(j!=i, "dense_bin_rel tried to merge item with self");
+    POMAGMA_ASSERT4(j != i, "dense_bin_rel tried to merge item with self");
     POMAGMA_ASSERT4(supports(i) and supports(j),
             "dense_bin_rel tried to merge unsupported items");
 
-    dense_set diff(N,m_temp_line), rep(N,NULL), dep(N,NULL);
+    dense_set diff(N, m_temp_line);
+    dense_set rep(N, NULL);
+    dense_set dep(N, NULL);
 
     // merge rows (i,_) into (j,_)
     dep.init(get_Lx_line(i));
-    remove_Rx(i,dep);
+    remove_Rx(i, dep);
     rep.init(get_Lx_line(j));
     if (rep.merge(dep, diff)) {
         for (dense_set::iterator k(diff); k; k.next()) {
-            insert_Rx(j,*k);
-            move_to  (j,*k);
+            insert_Rx(j, *k);
+            move_to(j, k);
         }
     }
 
     // merge cols (_,i) into (_,j)
     dep.init(get_Rx_line(i));
-    remove_Lx(dep,i);
+    remove_Lx(dep, i);
     rep.init(get_Rx_line(j));
     if (rep.merge(dep, diff)) {
         for (dense_set::iterator k(diff); k; k.next()) {
-            insert_Lx(*k,j);
-            move_to  (*k,j);
+            insert_Lx(*k, j);
+            move_to(*k, j);
         }
     }
 
-    m_support.merge(i,j);
+    m_support.merge(i, j);
 }
 
 // saving/loading, quicker rather than smaller
@@ -316,7 +321,7 @@ void dense_bin_rel::iterator::_find_rhs ()
             _update_rhs();
             _update_lhs();
             POMAGMA_ASSERT5(m_rel.contains(m_pos),
-                    "br::iterator landed outside of relation: "
+                    "dense_bin_rel::iterator landed outside of relation: "
                     << m_pos.lhs << "," << m_pos.rhs);
             return;
         }

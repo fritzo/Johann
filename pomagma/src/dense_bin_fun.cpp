@@ -1,4 +1,3 @@
-
 #include "dense_bin_fun.hpp"
 #include "aligned_alloc.hpp"
 #include <cstring>
@@ -10,13 +9,16 @@ dense_bin_fun::dense_bin_fun (int num_items)
     : N(num_items),
       M((N + ARG_STRIDE) / ARG_STRIDE),
       m_blocks(pomagma::alloc_blocks<Block4x4W>(M * M)),
-      m_temp_set(N,NULL),
+      m_temp_set(N, NULL),
+      m_temp_line(pomagma::alloc_blocks<Line>(1 * line_count())),
       m_Lx_lines(pomagma::alloc_blocks<Line>((N + 1) * line_count())),
-      m_Rx_lines(pomagma::alloc_blocks<Line>((N + 1) * line_count())),
-      m_temp_line(pomagma::alloc_blocks<Line>(1 * line_count()))
+      m_Rx_lines(pomagma::alloc_blocks<Line>((N + 1) * line_count()))
 {
     POMAGMA_DEBUG("creating dense_bin_fun with " << (M * M) << " blocks");
-    POMAGMA_ASSERT(N < (1<<15), "dense_bin_fun is too large"); // FIXME allow larger
+
+    // FIXME allow larger
+    POMAGMA_ASSERT(N < (1<<15), "dense_bin_fun is too large");
+
     POMAGMA_ASSERT(m_blocks, "failed to allocate blocks");
     POMAGMA_ASSERT(m_Lx_lines, "failed to allocate Lx lines");
     POMAGMA_ASSERT(m_Rx_lines, "failed to allocate Rx lines");
@@ -31,9 +33,9 @@ dense_bin_fun::dense_bin_fun (int num_items)
 dense_bin_fun::~dense_bin_fun ()
 {
     pomagma::free_blocks(m_blocks);
+    pomagma::free_blocks(m_temp_line);
     pomagma::free_blocks(m_Lx_lines);
     pomagma::free_blocks(m_Rx_lines);
-    pomagma::free_blocks(m_temp_line);
 }
 
 // for growing
@@ -222,6 +224,4 @@ Line* dense_bin_fun::_get_LLx_line (int i, int j) const
     return m_temp_line;
 }
 
-}
-
-
+} // namespace pomagma

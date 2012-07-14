@@ -26,8 +26,8 @@ class dense_sym_fun
 
     // dense sets for iteration
     mutable dense_set m_temp_set;
-    Line * m_Lx_lines;
     mutable Line * m_temp_line;
+    Line * m_Lx_lines;
 
     // block wrappers
     int * _block (int i_, int j_)
