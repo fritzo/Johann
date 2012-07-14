@@ -3,26 +3,24 @@
 #include "dense_bin_rel.hpp"
 #include <utility>
 
-using pomagma::Log;
-using pomagma::dense_set;
-using pomagma::dense_bin_rel;
+using namespace pomagma;
 
 unsigned g_num_moved(0);
-void move_to (int i __attribute__((unused)), int j __attribute__((unused)))
+void move_to (oid_t i __attribute__((unused)), oid_t j __attribute__((unused)))
 {
     //std::cout << i << '-' << j << ' ' << std::flush; //DEBUG
     ++g_num_moved;
 }
 
-bool br_test1 (int i, int j) { return i and j and i % 61 <= j % 31; }
-bool br_test2 (int i, int j) { return i and j and i % 61 == j % 31; }
+bool br_test1 (oid_t i, oid_t j) { return i and j and i % 61u <= j % 31u; }
+bool br_test2 (oid_t i, oid_t j) { return i and j and i % 61u == j % 31u; }
 
 typedef pomagma::dense_bin_rel dense_bin_rel;
 
 void test_dense_bin_rel (
         size_t size,
-        bool test1(int, int),
-        bool test2(int, int))
+        bool test1(oid_t, oid_t),
+        bool test2(oid_t, oid_t))
 {
     POMAGMA_INFO("Testing dense_bin_rel");
 
@@ -100,12 +98,13 @@ void test_dense_bin_rel (
 
 
     POMAGMA_INFO("testing position merging");
-    for (size_t i = 1; i <= size/3; ++i) {
-        size_t m=(2*i)%size, n=(2*(size-i-1)+1)%size;
-        if (not (rel.supports(m,n) and rel.contains(m,n))) continue;
+    for (oid_t i = 1; i <= size / 3; ++i) {
+        oid_t m = (2 * i) % size;
+        oid_t n = (2 * (size - i - 1) + 1) % size;
+        if (not (rel.supports(m, n) and rel.contains(m, n))) continue;
         if (m == n) continue;
-        if (m < n) std::swap(m,n);
-        rel.merge(m,n, move_to);
+        if (m < n) std::swap(m, n);
+        rel.merge(m, n, move_to);
         --item_count;
     }
     POMAGMA_INFO("  " << g_num_moved << " pairs moved in merging");

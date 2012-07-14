@@ -6,12 +6,12 @@ namespace Heap_
 {
 
 //global constants
-const Int MAX_DEPTH = 30;
-const Int MAX_CAPACITY     = (1<<MAX_DEPTH) - 1; //1GB / 64B nodes
-const Int DEFAULT_CAPACITY = (1<<12) - 1; //4k
+const size_t MAX_DEPTH = 30;
+const size_t MAX_CAPACITY     = (1<<MAX_DEPTH) - 1; //1GB / 64B nodes
+const size_t DEFAULT_CAPACITY = (1<<12) - 1; //4k
 
 //================ heap methods ================
-template<class Signature> void Heap_<Signature>::init (Int capacity, bool is_full)
+template<class Signature> void Heap_<Signature>::init (size_t capacity, bool is_full)
 {//allocate heap with IS_USED and NEXT_FREE_NODE set, garbage in other fields
     Assert (capacity < MAX_CAPACITY, "maximum heap capacity exceeded");
     Assert (m_base == NULL, "alloc: heap already allocated");
@@ -31,19 +31,19 @@ template<class Signature> void Heap_<Signature>::init (Int capacity, bool is_ful
 
     //deal with free node list
     logger.debug() << "initializing free nodes list" |0;
-    const Int last_pos = m_capacity;
+    const size_t last_pos = m_capacity;
     if (is_full) {
         m_nodes_used = m_capacity;
         m_nodes_free = 0;
         m_first_free_node = 0;
-        for (Int pos = 1; pos <= last_pos; ++pos) {
+        for (size_t pos = 1; pos <= last_pos; ++pos) {
             m_base[pos].isUsed() = true;
         }
     } else {
         m_nodes_used = 0;
         m_nodes_free = m_capacity;
         m_first_free_node = 1;
-        for (Int pos = 1; pos <= last_pos; ++pos) {
+        for (size_t pos = 1; pos <= last_pos; ++pos) {
             Node& node = m_base[pos];
             node.nextFreeNode() = Pos(1+pos);
             node.isUsed() = false;
@@ -64,11 +64,13 @@ template<class Signature> void Heap_<Signature>::clear ()
     m_nodes_free = 0;
     m_first_free_node = 0;
 }
-template<class Signature> void Heap_<Signature>::resize (Int new_capacity, const Int* new2old)
+template<class Signature> void Heap_<Signature>::resize (
+        size_t new_capacity,
+        const oid_t * new2old)
 {
     Assert (new_capacity < MAX_CAPACITY, "maximum heap capacity exceeded");
-    const Int old_capacity = m_capacity;
-    const Int last_pos = new_capacity;
+    const size_t old_capacity = m_capacity;
+    const size_t last_pos = new_capacity;
     logger.debug() << "Reallocating " << old_capacity << " --> " << new_capacity << " nodes" |0;
     Logging::IndentBlock block;
 
@@ -79,11 +81,12 @@ template<class Signature> void Heap_<Signature>::resize (Int new_capacity, const
 
     //XXX: this uses lots of memory
     //allocate new array
-    void*const old_allocated(static_cast<void*>(m_mem));
-    void*const new_allocated(nonstd::alloc_blocks(Signature::size_in_bytes, new_capacity));
+    void * const old_allocated(static_cast<void*>(m_mem));
+    void * const new_allocated(
+            nonstd::alloc_blocks(Signature::size_in_bytes, new_capacity));
     Assert (new_allocated != NULL, "reallocation failed");
-    Node*const new_mem = static_cast<Node*>(new_allocated);
-    Node*const new_base = new_mem-1;
+    Node * const new_mem = static_cast<Node*>(new_allocated);
+    Node * const new_base = new_mem-1;
 
     //move data over
     if (new2old == NULL) {
@@ -93,8 +96,8 @@ template<class Signature> void Heap_<Signature>::resize (Int new_capacity, const
         nonstd::copy_blocks (new_allocated, old_allocated, Signature::size_in_bytes, min_capacity);
     } else {
         //copy in specified order
-        for (Int pos=1; pos<=last_pos; ++pos) {
-            Node& old_node = m_base[new2old[pos]];
+        for (oid_t pos = 1; pos <= last_pos; ++pos) {
+            Node & old_node = m_base[new2old[pos]];
             Assert5(old_node.isUsed(), "tried to copy unused node");
             new_base[pos] = old_node;
 #if DEBUG_LEVEL >= 3
@@ -121,16 +124,16 @@ template<class Signature> void Heap_<Signature>::resize (Int new_capacity, const
         //there were no free nodes
         Assert1(m_first_free_node == 0, "supposedly full heap points to a free node");
         m_first_free_node = m_nodes_used + 1;
-        for (Int pos = m_first_free_node; pos < last_pos; ++pos) {
+        for (oid_t pos = m_first_free_node; pos < last_pos; ++pos) {
             Assert4(not m_base[pos].isUsed(), "supposedly free node appears to be used");
             m_base[pos].nextFreeNode() = Pos(1+pos);
         }
         m_base[last_pos].nextFreeNode() = Pos(0); //last node has no more free nodes
     } else {
         //nothing special, clean free node list up
-        Pos* next_free_node = reinterpret_cast<Pos*>(&m_first_free_node);
-        for (Int pos=1; pos<=last_pos; ++pos) {
-            Node& node = m_base[pos];
+        Pos * next_free_node = reinterpret_cast<Pos*>(&m_first_free_node);
+        for (oid_t pos = 1; pos <= last_pos; ++pos) {
+            Node & node = m_base[pos];
             if (not node.isUsed()) {
                 *next_free_node = Pos(pos);
                 next_free_node = &(node.nextFreeNode());
@@ -203,12 +206,12 @@ void Handle_<Signature>::merge (typename Signature::Name* dep, typename Signatur
 //obs
 typedef Nodes::ObSignature OSig;
 typedef Heap_<OSig> OHeap;
-void O_init_heap     (OHeap& heap, Int capacity) { heap.init(capacity); }
+void O_init_heap     (OHeap& heap, size_t capacity) { heap.init(capacity); }
 void O_clear_heap    (OHeap& heap) { heap.clear(); }
-void O_resize_heap   (OHeap& heap, Int capacity, const Int* new2old) { heap.resize(capacity, new2old); }
+void O_resize_heap   (OHeap& heap, size_t capacity, const oid_t * new2old) { heap.resize(capacity, new2old); }
 Ob   O_alloc         (OHeap& heap) { return heap.alloc(); }
 void O_free          (OHeap& heap, Ob pos) { heap.free(pos); }
-template void OHeap::init(Int, bool);
+template void OHeap::init(size_t, bool);
 
 //ob handles
 void O_merge_handles (ObName* dep, ObName* rep) { ObHdl::merge(dep, rep); }
@@ -216,32 +219,32 @@ void O_merge_handles (ObName* dep, ObName* rep) { ObHdl::merge(dep, rep); }
 //application
 typedef Nodes::AppSignature ASig;
 typedef Heap_<ASig> AHeap;
-void A_init_heap     (AHeap& heap, Int capacity) { heap.init(capacity); }
+void A_init_heap     (AHeap& heap, size_t capacity) { heap.init(capacity); }
 void A_clear_heap    (AHeap& heap) { heap.clear(); }
-void A_resize_heap   (AHeap& heap, Int capacity, const Int* new2old) { heap.resize(capacity, new2old); }
+void A_resize_heap   (AHeap& heap, size_t capacity, const oid_t * new2old) { heap.resize(capacity, new2old); }
 App  A_alloc         (AHeap& heap) { return heap.alloc(); }
 void A_free          (AHeap& heap, App pos) { heap.free(pos); }
-template void AHeap::init(Int, bool);
+template void AHeap::init(size_t, bool);
 
 //composition
 typedef Nodes::CompSignature CSig;
 typedef Heap_<CSig> CHeap;
-void C_init_heap     (CHeap& heap, Int capacity) { heap.init(capacity); }
+void C_init_heap     (CHeap& heap, size_t capacity) { heap.init(capacity); }
 void C_clear_heap    (CHeap& heap) { heap.clear(); }
-void C_resize_heap   (CHeap& heap, Int capacity, const Int* new2old) { heap.resize(capacity, new2old); }
+void C_resize_heap   (CHeap& heap, size_t capacity, const oid_t * new2old) { heap.resize(capacity, new2old); }
 Comp  C_alloc         (CHeap& heap) { return heap.alloc(); }
 void C_free          (CHeap& heap, Comp pos) { heap.free(pos); }
-template void CHeap::init(Int, bool);
+template void CHeap::init(size_t, bool);
 
 //join
 typedef Nodes::JoinSignature JSig;
 typedef Heap_<JSig> JHeap;
-void J_init_heap     (JHeap& heap, Int capacity) { heap.init(capacity); }
+void J_init_heap     (JHeap& heap, size_t capacity) { heap.init(capacity); }
 void J_clear_heap    (JHeap& heap) { heap.clear(); }
-void J_resize_heap   (JHeap& heap, Int capacity, const Int* new2old) { heap.resize(capacity, new2old); }
+void J_resize_heap   (JHeap& heap, size_t capacity, const oid_t * new2old) { heap.resize(capacity, new2old); }
 Join  J_alloc         (JHeap& heap) { return heap.alloc(); }
 void J_free          (JHeap& heap, Join pos) { heap.free(pos); }
-template void JHeap::init(Int, bool);
+template void JHeap::init(size_t, bool);
 
 }
 

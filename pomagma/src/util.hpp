@@ -32,13 +32,25 @@
 #define POMAGMA_DEBUG_LEVEL 0
 #endif // POMAGMA_DEBUG_LEVEL
 
-//----------------------------------------------------------------------------
-// Convenience
-
 namespace pomagma
 {
 
-typedef uint32_t oid_t;
+//----------------------------------------------------------------------------
+// Data types
+
+typedef uint32_t oid_t; // object id TODO switch to uint16_t
+const size_t MAX_ITEM_DIM = 0xffffUL;
+
+const size_t ITEMS_PER_BLOCK = 4; // TODO switch to 8
+const size_t BLOCK_POS_MASK = ITEMS_PER_BLOCK - 1;
+typedef oid_t Block4x4[ITEMS_PER_BLOCK * ITEMS_PER_BLOCK];
+
+typedef uint32_t Word; // TODO switch to uint64_t
+const size_t BITS_PER_WORD = 8 * sizeof(Word);
+const size_t WORD_POS_MASK = BITS_PER_WORD - 1;
+
+//----------------------------------------------------------------------------
+// Convenience
 
 template<class T> inline T min (T x, T y) { return (x < y) ? x : y; }
 template<class T> inline T max (T x, T y) { return (x > y) ? x : y; }
@@ -54,7 +66,7 @@ inline bool random_bool (double prob)
 }
 
 // this is used with template specialization
-template <class T> inline const char* nameof () { return "???"; }
+template <class T> inline const char * nameof () { return "???"; }
 
 float get_elapsed_time ();
 std::string get_date (bool hour=true);

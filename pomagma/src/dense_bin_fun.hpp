@@ -9,122 +9,117 @@ namespace pomagma
 
 // WARNING zero/null items are not allowed
 
-enum { ARG_STRIDE = 4 };
-
-typedef int Block4x4W[ARG_STRIDE * ARG_STRIDE];
-
 // a tight binary function in 4x4 word blocks
 class dense_bin_fun
 {
     // data, in blocks
-    // TODO switch usigned -> size_t
-    const unsigned m_item_dim; // item dimension
-    const unsigned m_block_dim; // block dimension
-    Block4x4W * const m_blocks;
+    const size_t m_item_dim;
+    const size_t m_block_dim;
+    const size_t m_word_dim;
+    Block4x4 * const m_blocks;
 
     // dense sets for iteration
-    const size_t m_line_count;
-    Line * const m_Lx_lines;
-    Line * const m_Rx_lines;
+    Word * const m_Lx_lines;
+    Word * const m_Rx_lines;
     mutable dense_set m_temp_set; // TODO FIXME this is not thread-safe
-    mutable Line * m_temp_line; // TODO FIXME this is not thread-safe
+    mutable Word * m_temp_line; // TODO FIXME this is not thread-safe
 
     // block wrappers
-    int * _block (int i_, int j_)
+    oid_t * _block (size_t i_, size_t j_)
     {
         return m_blocks[m_block_dim * j_ + i_];
     }
-    const int * _block (int i_, int j_) const
+    const oid_t * _block (size_t i_, size_t j_) const
     {
         return m_blocks[m_block_dim * j_ + i_];
     }
-    static int & _block2value (int * block, int i, int j)
+    static oid_t & _block2value (oid_t * block, oid_t i, oid_t j)
     {
-        return block[(j << 2) | i];
+        return block[(j * ITEMS_PER_BLOCK) | i];
     }
-    static int _block2value (const int* block, int i, int j)
+    static oid_t _block2value (const oid_t * block, oid_t i, oid_t j)
     {
-        return block[(j << 2) | i];
+        return block[(j * ITEMS_PER_BLOCK) | i];
     }
 
     // set wrappers
 public:
-    Line * get_Lx_line (int i) const { return m_Lx_lines + (i * m_line_count); }
-    Line * get_Rx_line (int i) const { return m_Rx_lines + (i * m_line_count); }
+    Word * get_Lx_line (oid_t i) const { return m_Lx_lines + (i * m_word_dim); }
+    Word * get_Rx_line (oid_t i) const { return m_Rx_lines + (i * m_word_dim); }
 private:
-    dense_set & _get_Lx_set (int i) { return m_temp_set.init(get_Lx_line(i)); }
-    dense_set & _get_Rx_set (int i) { return m_temp_set.init(get_Rx_line(i)); }
-    const dense_set & _get_Lx_set (int i) const
+    dense_set & _get_Lx_set (oid_t i) { return m_temp_set.init(get_Lx_line(i)); }
+    dense_set & _get_Rx_set (oid_t i) { return m_temp_set.init(get_Rx_line(i)); }
+    const dense_set & _get_Lx_set (oid_t i) const
     {
         return m_temp_set.init(get_Lx_line(i));
     }
-    const dense_set & _get_Rx_set (int i) const
+    const dense_set & _get_Rx_set (oid_t i) const
     {
         return m_temp_set.init(get_Rx_line(i));
     }
 
     // intersection wrappers
-    Line* _get_RRx_line (int i, int j) const;
-    Line* _get_LRx_line (int i, int j) const;
-    Line* _get_LLx_line (int i, int j) const;
+    Word * _get_RRx_line (oid_t i, oid_t j) const;
+    Word * _get_LRx_line (oid_t i, oid_t j) const;
+    Word * _get_LLx_line (oid_t i, oid_t j) const;
 
     // ctors & dtors
 public:
-    dense_bin_fun (int num_items);
+    dense_bin_fun (size_t item_dim);
     ~dense_bin_fun ();
     void move_from (const dense_bin_fun & other); // for growing
 
     // function calling
 private:
-    inline int & value (int lhs, int rhs);
+    inline oid_t & value (oid_t lhs, oid_t rhs);
 public:
-    inline int value (int lhs, int rhs) const;
-    int  get_value (int lhs, int rhs) const { return value(lhs, rhs); }
+    inline oid_t value (oid_t lhs, oid_t rhs) const;
+    oid_t  get_value (oid_t lhs, oid_t rhs) const { return value(lhs, rhs); }
 
     // attributes
-    unsigned count_pairs () const; // slow!
-    unsigned item_capacity () const { return m_item_dim; }
+    size_t count_pairs () const; // slow!
+    size_t item_capacity () const { return m_item_dim; }
     void validate () const;
 
     // element operations
-    void insert (int lhs, int rhs, int val)
+    void insert (oid_t lhs, oid_t rhs, oid_t val)
     {
         value(lhs, rhs) = val;
         _get_Lx_set(lhs).insert(rhs);
         _get_Rx_set(rhs).insert(lhs);
     }
-    void remove (int lhs, int rhs)
+    void remove (oid_t lhs, oid_t rhs)
     {
         value(lhs, rhs) = 0;
         _get_Lx_set(lhs).remove(rhs);
         _get_Rx_set(rhs).remove(lhs);
     }
-    bool contains (int lhs, int rhs) const
+    bool contains (oid_t lhs, oid_t rhs) const
     {
         return _get_Lx_set(lhs).contains(rhs);
     }
 
     // support operations
     void remove (
-            const int i,
-            void remove_value(int)); // rem
+            const oid_t i,
+            void remove_value(oid_t)); // rem
     void merge (
-            const int i,
-            const int j,
-            void merge_values(int,int),    // dep,rep
-            void move_value(int,int,int)); // moved,lhs,rhs
+            const oid_t i,
+            const oid_t j,
+            void merge_values(oid_t, oid_t), // dep,rep
+            void move_value(oid_t, oid_t, oid_t)); // moved,lhs,rhs
 
     //------------------------------------------------------------------------
     // Iteration over a line
 
     enum { LHS_FIXED = false, RHS_FIXED = true };
-    template<int idx> class Iterator : noncopyable
+    template<bool idx> class Iterator : noncopyable
     {
         dense_set m_set;
         dense_set::iterator m_iter;
         const dense_bin_fun * m_fun;
-        int m_lhs;
-        int m_rhs;
+        oid_t m_lhs;
+        oid_t m_rhs;
 
     public:
 
@@ -137,7 +132,7 @@ public:
               m_rhs(0)
         {}
 
-        Iterator (const dense_bin_fun * fun, int fixed)
+        Iterator (const dense_bin_fun * fun, oid_t fixed)
             : m_set(fun->m_item_dim, idx ? fun->get_Rx_line(fixed)
                                 : fun->get_Lx_line(fixed)),
               m_iter(m_set, false),
@@ -154,7 +149,7 @@ public:
     public:
         bool ok () const { return m_iter.ok(); }
         void begin () { m_iter.begin(); if (ok()) _set_pos(); }
-        void begin (int fixed)
+        void begin (oid_t fixed)
         {
             if (idx) { m_rhs=fixed; m_set.init(m_fun->get_Rx_line(fixed)); }
             else     { m_lhs=fixed; m_set.init(m_fun->get_Lx_line(fixed)); }
@@ -169,9 +164,9 @@ public:
             POMAGMA_ASSERT5(ok(), "dereferenced done dense_set::iter");
         }
     public:
-        int lhs () const { _deref_assert(); return m_lhs; }
-        int rhs () const { _deref_assert(); return m_rhs; }
-        int value () const
+        oid_t lhs () const { _deref_assert(); return m_lhs; }
+        oid_t rhs () const { _deref_assert(); return m_rhs; }
+        oid_t value () const
         {
             _deref_assert();
             return m_fun->get_value(m_lhs, m_rhs);
@@ -186,9 +181,9 @@ public:
         dense_set m_set;
         dense_set::iterator m_iter;
         const dense_bin_fun * m_fun;
-        int m_lhs;
-        int m_rhs1;
-        int m_rhs2;
+        oid_t m_lhs;
+        oid_t m_rhs1;
+        oid_t m_rhs2;
 
     public:
 
@@ -201,7 +196,7 @@ public:
 
         // traversal
         void begin () { m_iter.begin(); if (ok()) m_lhs = *m_iter; }
-        void begin (int fixed1, int fixed2)
+        void begin (oid_t fixed1, oid_t fixed2)
         {
             m_set.init(m_fun->_get_RRx_line(fixed1, fixed2));
             m_iter.begin();
@@ -215,9 +210,9 @@ public:
         void next () { m_iter.next(); if (ok()) m_lhs = *m_iter; }
 
         // dereferencing
-        int lhs () const { return m_lhs; }
-        int value1 () const { return m_fun->get_value(m_lhs, m_rhs1); }
-        int value2 () const { return m_fun->get_value(m_lhs, m_rhs2); }
+        oid_t lhs () const { return m_lhs; }
+        oid_t value1 () const { return m_fun->get_value(m_lhs, m_rhs1); }
+        oid_t value2 () const { return m_fun->get_value(m_lhs, m_rhs2); }
     };
 
     class LRxx_Iter : noncopyable
@@ -225,9 +220,9 @@ public:
         dense_set m_set;
         dense_set::iterator m_iter;
         const dense_bin_fun * m_fun;
-        int m_lhs1;
-        int m_rhs2;
-        int m_rhs1;
+        oid_t m_lhs1;
+        oid_t m_rhs2;
+        oid_t m_rhs1;
 
     public:
 
@@ -240,7 +235,7 @@ public:
 
         // traversal
         void begin () { m_iter.begin(); if (ok()) m_rhs1 = *m_iter; }
-        void begin (int fixed1, int fixed2)
+        void begin (oid_t fixed1, oid_t fixed2)
         {
             m_set.init(m_fun->_get_LRx_line(fixed1, fixed2));
             m_iter.begin();
@@ -254,10 +249,10 @@ public:
         void next () { m_iter.next(); if (ok()) m_rhs1 = *m_iter; }
 
         // dereferencing
-        int rhs1 () const { return m_rhs1; }
-        int lhs2 () const { return m_rhs1; }
-        int value1 () const { return m_fun->get_value(m_lhs1, m_rhs1); }
-        int value2 () const { return m_fun->get_value(m_rhs1, m_rhs2); }
+        oid_t rhs1 () const { return m_rhs1; }
+        oid_t lhs2 () const { return m_rhs1; }
+        oid_t value1 () const { return m_fun->get_value(m_lhs1, m_rhs1); }
+        oid_t value2 () const { return m_fun->get_value(m_rhs1, m_rhs2); }
     };
 
     class LLxx_Iter : noncopyable
@@ -265,9 +260,9 @@ public:
         dense_set           m_set;
         dense_set::iterator m_iter;
         const dense_bin_fun * m_fun;
-        int m_lhs1;
-        int m_lhs2;
-        int m_rhs;
+        oid_t m_lhs1;
+        oid_t m_lhs2;
+        oid_t m_rhs;
 
     public:
 
@@ -280,7 +275,7 @@ public:
 
         // traversal
         void begin () { m_iter.begin(); if (ok()) m_rhs = *m_iter; }
-        void begin (int fixed1, int fixed2)
+        void begin (oid_t fixed1, oid_t fixed2)
         {
             m_set.init(m_fun->_get_LLx_line(fixed1, fixed2));
             m_iter.begin();
@@ -294,34 +289,34 @@ public:
         void next () { m_iter.next(); if (ok()) m_rhs = *m_iter; }
 
         // dereferencing
-        int rhs () const { return m_rhs; }
-        int value1 () const { return m_fun->get_value(m_lhs1, m_rhs); }
-        int value2 () const { return m_fun->get_value(m_lhs2, m_rhs); }
+        oid_t rhs () const { return m_rhs; }
+        oid_t value1 () const { return m_fun->get_value(m_lhs1, m_rhs); }
+        oid_t value2 () const { return m_fun->get_value(m_lhs2, m_rhs); }
     };
 };
 
 //----------------------------------------------------------------------------
 // Function calling
 
-inline int & dense_bin_fun::value (int i, int j)
+inline oid_t & dense_bin_fun::value (oid_t i, oid_t j)
 {
-    POMAGMA_ASSERT5(0 <= i and i <= int(m_item_dim),
+    POMAGMA_ASSERT5(0 < i and i <= m_item_dim,
             "i=" << i << " out of bounds [1," << m_item_dim << "]");
-    POMAGMA_ASSERT5(0 <= j and j <= int(m_item_dim),
+    POMAGMA_ASSERT5(0 < j and j <= m_item_dim,
             "j=" << j<< " out of bounds [1," << m_item_dim << "]");
 
-    int * block = _block(i >> 2, j >> 2);
+    oid_t * block = _block(i >> 2, j >> 2);
     return _block2value(block, i & 3, j & 3);
 }
 
-inline int dense_bin_fun::value (int i, int j) const
+inline oid_t dense_bin_fun::value (oid_t i, oid_t j) const
 {
-    POMAGMA_ASSERT5(0 <= i and i <= int(m_item_dim),
+    POMAGMA_ASSERT5(0 < i and i <= m_item_dim,
             "i=" << i << " out of bounds [1," << m_item_dim << "]");
-    POMAGMA_ASSERT5(0 <= j and j <= int(m_item_dim),
+    POMAGMA_ASSERT5(0 < j and j <= m_item_dim,
             "j=" << j <<" out of bounds [1," << m_item_dim << "]");
 
-    const int * block = _block(i >> 2, j >> 2);
+    const oid_t * block = _block(i >> 2, j >> 2);
     return _block2value(block, i & 3, j & 3);
 }
 

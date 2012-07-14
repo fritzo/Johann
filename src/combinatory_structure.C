@@ -25,13 +25,17 @@
 
 namespace std
 {//hash template specialization for heap positions
-template<> struct hash<App> {
-    size_t operator() (App eqn) const { return hash<size_t>()(Int(eqn)); }
+template<> struct hash<App>
+{
+    size_t operator() (App eqn) const { return hash<size_t>()(size_t(eqn)); }
 };
-template<> struct hash<Ord> {
-    size_t operator() (Ord ord) const {
-        return hash<size_t>()( (Int(ord.lhs()) << 16)
-                             | Int(ord.rhs())         );
+template<> struct hash<Ord>
+{
+    size_t operator() (Ord ord) const
+    {
+        size_t lhs(ord.lhs());
+        size_t rhs(ord.rhs());
+        return hash<size_t>()((lhs << 16) | rhs);
     }
 };
 }
@@ -67,7 +71,7 @@ extern void extra_delete_ob    (Ob ob);
 extern void extra_merge_obs    (Ob dep, Ob rep);
 
 //these maintain fuzzy information
-extern void extra_resize (Int size, const Int* new2old=NULL);
+extern void extra_resize (size_t size, const oid_t * new2old = NULL);
 }
 
 namespace CombinatoryStructure
@@ -93,7 +97,7 @@ inline EX::ExprHdl expr (Ob ob) { return EX::parse_ob(ob); }
 //properties & flags
 bool g_is_initialized(false);
 bool isInitialized () { return g_is_initialized; }
-bool isCompacted   () { TODO(); return false; }
+bool isCompacted () { TODO(); return false; }
 
 //stats log
 ofstream stats_log;
@@ -104,8 +108,8 @@ typedef MAP_TYPE<string, ObHdl> AtomTable; //GCC4 bitches
 typedef MAP_TYPE<string, ObHdl> UnknTable;
 AtomTable g_atomTable;
 UnknTable g_unknTable;
-Int num_atoms () { return g_atomTable.size(); }
-Int num_unkns () { return g_unknTable.size(); }
+size_t num_atoms () { return g_atomTable.size(); }
+size_t num_unkns () { return g_unknTable.size(); }
 
 //processing queues
 //TODO how should these be ordered? FIFO? priority?
@@ -143,7 +147,7 @@ inline void merge_enforce (Join dep, Join rep);
        void merge_enforce (Ob   dep, Ob   rep);
 
 //coarse-level structural operations
-void initialize (Int num_obs, Int num_apps, Int num_comps, Int num_joins, bool is_full)
+void initialize (size_t num_obs, size_t num_apps, size_t num_comps, size_t num_joins, bool is_full)
 {
     bool apps_full = is_full and num_apps;
     bool comps_full = is_full and num_comps;
@@ -182,7 +186,7 @@ std::vector<ObHdl> get_basis ()
     }
     return result;
 }
-void resize (Int num_obs)
+void resize (size_t num_obs)
 {
     logger.info() << "Resizing combinatory structure to "
         << num_obs << " obs" |0;
@@ -223,7 +227,7 @@ void clear ()
 
     g_is_initialized = false;
 }
-void validate (Int level)
+void validate (size_t level)
 {
     logger.debug() << "Validating combinatory structure" |0;
     Logging::IndentBlock block(logger.at_debug());
@@ -246,16 +250,19 @@ void validate (Int level)
     OR::validate(level);
 }
 
-//shaping
+//----------------------------------------------------------------------------
+// Shaping
+
+//policy: reorder & minimize overhead, while preserving structure
 void compact (const ORing& o_order,
               const ARing& a_order,
               const CRing& c_order,
               const JRing& j_order)
-{//policy: reorder & minimize overhead, while preserving structure
-    Int num_obs = Ob::numUsed();
-    Int num_apps = App::numUsed();
-    Int num_comps = Comp::numUsed();
-    Int num_joins = Join::numUsed();
+{
+    size_t num_obs = Ob::numUsed();
+    size_t num_apps = App::numUsed();
+    size_t num_comps = Comp::numUsed();
+    size_t num_joins = Join::numUsed();
 
     logger.info() << "Compacting structure to " << num_obs << " obs" |0;
     Logging::IndentBlock block;
@@ -276,10 +283,14 @@ void compact (const ORing& o_order,
     TB::extra_resize(num_obs, o_order.new2old());
 }
 
-//saving/loading atom table
-Int data_size () { return num_atoms() * sizeof(Files::ObNamePair); }
+//----------------------------------------------------------------------------
+// Saving/loading atom table
+
+size_t data_size () { return num_atoms() * sizeof(Files::ObNamePair); }
+
+// saves atom names
 void save_to (ostream& os)
-{//saves atom names
+{
     logger.debug() << "Saving atoms to stream" |0;
 
     os << "#\\subsection{Basis}\n\n!using";
@@ -289,16 +300,17 @@ void save_to (ostream& os)
     }
     os << ".\n\n";
 }
+// saves atom table
 void save_to_file (FILE* file)
-{//saves atom table
-    Int N = num_atoms();
+{
+    size_t N = num_atoms();
     logger.debug() << "Saving " << N << " atoms to file" |0;
     Logging::IndentBlock block;
 
     using namespace Files;
     ObNamePair* data = new ObNamePair[N];
 
-    Int n=0;
+    size_t n = 0;
     for (AtomTable::iterator iter = g_atomTable.begin();
             iter!=g_atomTable.end(); ++iter) {
         const string& name = iter->first;
@@ -314,9 +326,9 @@ void save_to_file (FILE* file)
 
     delete[] data;
 }
-void load_from_file (FILE* file, Int num_atoms)
+void load_from_file (FILE* file, size_t num_atoms)
 {//loads atom table
-    Int N = num_atoms;
+    size_t N = num_atoms;
     logger.debug() << "Loading " << N << " atoms from file" |0;
     Logging::IndentBlock block;
 
@@ -325,7 +337,7 @@ void load_from_file (FILE* file, Int num_atoms)
     safe_fread(data, sizeof(ObNamePair), N, file);
 
     Assert (g_atomTable.empty(), "name table not empty before loading");
-    for (Int n=0; n<N; ++n) {
+    for (size_t n=0; n<N; ++n) {
         string name = data[n].name;
         LOG_DEBUG1( "loading atom " << name );
 
@@ -338,7 +350,7 @@ void load_from_file (FILE* file, Int num_atoms)
 }
 
 //diagnostics
-void dump (string filename, Int struct_type, bool verbose)
+void dump (string filename, size_t struct_type, bool verbose)
 {//writes structure to human-readable files
     logger.info() << "Dumping Comb. Struct. to files "
         << filename << ".* ..."|0;
@@ -470,8 +482,8 @@ void dump (string filename, Int struct_type, bool verbose)
         for (Ob::sparse_iterator j=Ob::sbegin(); j!=i; ++j) {
             Ob rhs = *j;
 
-            Int state1 = isLessThan(lhs,rhs) | (isNLessThan(lhs,rhs)<<1);
-            Int state2 = isLessThan(rhs,lhs) | (isNLessThan(rhs,lhs)<<1);
+            size_t state1 = isLessThan(lhs,rhs) | (isNLessThan(lhs,rhs)<<1);
+            size_t state2 = isLessThan(rhs,lhs) | (isNLessThan(rhs,lhs)<<1);
 
             if (state1 == 2 and state2 == 2) continue; //distinct
 
@@ -512,12 +524,12 @@ template<class OS>
 void _log_stats_to(OS& os)
 {
     // obs
-    Int o_size = Ob::size();
-    Int num_unkns = 0;
-    Int core_size = 0;
-    Int num_named = 0;
-    Int num_marked = 0;
-    Int num_used = 0;
+    size_t o_size = Ob::size();
+    size_t num_unkns = 0;
+    size_t core_size = 0;
+    size_t num_named = 0;
+    size_t num_marked = 0;
+    size_t num_used = 0;
     for (Ob::sparse_iterator iter=Ob::sbegin(); iter!=Ob::send(); ++iter) {
         Ob ob = *iter;
         if (O::isUnkn(ob))   ++num_unkns;
@@ -584,9 +596,9 @@ float log_stats (Long time)
     _log_stats_to(log);
     log |0;
 
-    Int obs = Ob::size();
-    Int ord_pos = Ord::size_pos();
-    Int ord_neg = Ord::size_neg();
+    size_t obs = Ob::size();
+    size_t ord_pos = Ord::size_pos();
+    size_t ord_neg = Ord::size_neg();
     float density = static_cast<float>(ord_pos + ord_neg) / sqr(obs);
 
     //and also to a log file
@@ -617,13 +629,13 @@ void write_params_to (ostream& os)
     }
     os << '}' << std::endl;
 }
-bool vis_eqn_table (Int size)
+bool vis_eqn_table (size_t size)
 {
     logger.info() << "visualizing eqn table to stats/eqn_table.png" |0;
-    Int N = Ob::numUsed();
+    size_t N = Ob::numUsed();
     V::ColorImage image(N);
     Ob::sparse_iterator end = Ob::send();
-    Int i=0,j=0;
+    size_t i=0,j=0;
     for (Ob::sparse_iterator I=Ob::sbegin(); I!=end; ++I) { j = 0;
     for (Ob::sparse_iterator J=Ob::sbegin(); J!=end; ++J) {
         image.set(i,j,
@@ -643,13 +655,13 @@ bool vis_eqn_table (Int size)
     scaled.lighten(1);
     return scaled.save("stats/eqn_table_small");
 }
-bool vis_ord_table (Int size)
+bool vis_ord_table (size_t size)
 {
     logger.info() << "visualizing ord table to stats/ord_table.png" |0;
-    Int N = Ob::numUsed();
+    size_t N = Ob::numUsed();
     V::ColorImage image(N);
     Ob::sparse_iterator end = Ob::send();
-    Int i=0,j=0;
+    size_t i=0,j=0;
     for (Ob::sparse_iterator I=Ob::sbegin(); I!=end; ++I) { j = 0;
     for (Ob::sparse_iterator J=Ob::sbegin(); J!=end; ++J) {
         if      ( isLessThan(*J,*I))    image.set(i,j,255,0,0);
@@ -1214,15 +1226,15 @@ void merge (Join dep, Join rep)
 void enforce (App eqn) { enqueue_enforce(eqn); }
 void enforce (Comp eqn) { enqueue_enforce(eqn); }
 void enforce (Join eqn) { enqueue_enforce(eqn); }
-void enforce_less (int lhs, int rhs)
+void enforce_less (oid_t lhs, oid_t rhs)
 {
     enqueue_enforce_L(Ord(Ob(lhs),Ob(rhs)));
 }
-void enforce_nless (int lhs, int rhs)
+void enforce_nless (oid_t lhs, oid_t rhs)
 {
     enqueue_enforce_N(Ord(Ob(lhs),Ob(rhs)));
 }
-ObHdl enforce_atom (const string& name)
+ObHdl enforce_atom (const string & name)
 {//enqueues neighborhood of ob & processes theorems
     Ob ob = find_atom(name);
     if (!ob) return ObHdl();
@@ -1375,7 +1387,7 @@ void saturate ()
     LOG_DEBUG1( "Processing theorem queues" );
     LOG_INDENT_DEBUG1
 
-    Int init_size = Ob::size();
+    size_t init_size = Ob::size();
 
     saturate:
 
@@ -1469,8 +1481,8 @@ void saturate ()
         goto saturate;
     }
 
-    Int final_size = Ob::size();
-    Int difference = init_size - final_size;
+    size_t final_size = Ob::size();
+    size_t difference = init_size - final_size;
     if (difference) {
         LOG_DEBUG1( init_size << " - " << final_size
             << " = " << difference << " equivalence classes merged" );

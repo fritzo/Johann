@@ -126,7 +126,7 @@ void save_to_file (FILE* file)
         safe_fwrite(&e, sizeof(LittleJoin), 1, file);
     }
 }
-void load_from_file (FILE* file)
+void load_from_file (FILE * file)
 {
     logger.debug() << "Loading " << Pos::numUsed() << " Joins from file" |0;
     Logging::IndentBlock block;
@@ -145,7 +145,7 @@ void load_from_file (FILE* file)
 }
 
 //event functions for the join table
-void remove_value (int _rem)
+void remove_value (oid_t _rem)
 {
     LOG_DEBUG1( "join table is removing " << _rem );
 
@@ -154,7 +154,7 @@ void remove_value (int _rem)
     JLR::remove(rem);
     delete_(rem);
 }
-void merge_values (int _dep, int _rep)
+void merge_values (oid_t _dep, oid_t _rep)
 {
     LOG_DEBUG1( "join table is merging " << _dep << " --> " << _rep );
 
@@ -165,7 +165,7 @@ void merge_values (int _dep, int _rep)
     CS::merge(dep, rep);
     delete_(dep);
 }
-void move_value (int _moved, int _lhs, int _rhs)
+void move_value (oid_t _moved, oid_t _lhs, oid_t _rhs)
 {
     LOG_DEBUG1( "join table is moving " << _moved );
 
@@ -272,8 +272,8 @@ void validate_join_table (Int level)
     logger.debug() << "Validating Join table" |0;
     Logging::IndentBlock block;
 
-    Assert (g_join_table->item_capacity() == Ob::capacity(),
-            "join table has wrong size: " << g_join_table->item_capacity());
+    Assert (g_join_table->item_dim() == Ob::capacity(),
+            "join table has wrong size: " << g_join_table->item_dim());
     if (level < 3) return;
     g_join_table->validate();
 }

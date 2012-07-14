@@ -35,8 +35,8 @@ Join make_join   (Ob lhs, Ob rhs);
 App  make_app    (Ob app, Ob lhs, Ob rhs);
 Comp make_comp   (Ob comp, Ob lhs, Ob rhs);
 Join make_join   (Ob join, Ob lhs, Ob rhs);
-Ob   make_unkn   (string& name, Int properties=0);
-Ob   update_unkn (string& name, Ob ob);
+Ob   make_unkn   (string & name, Int properties=0);
+Ob   update_unkn (string & name, Ob ob);
 
 //safe creation/pruning
 void create_app (Ob lhs, Ob rhs);
@@ -89,41 +89,45 @@ bool isInitialized ();
 bool isCompacted ();
 
 //coarse-level structural operations
-void initialize  (Int num_obs, Int num_apps=0,
-                               Int num_comps=0,
-                               Int num_joins=0, bool full=false);
-void resize      (Int num_obs);
-void clear       ();
-void compact     (const ORing& o_order,
-                  const ARing& a_order,
-                  const CRing& c_order,
-                  const JRing& j_order);
-void validate    (Int level);
+void initialize  (
+        size_t num_obs,
+        size_t num_apps = 0,
+        size_t num_comps = 0,
+        size_t num_joins = 0,
+        bool full = false);
+void resize (size_t num_obs);
+void clear ();
+void compact (
+        const ORing& o_order,
+        const ARing& a_order,
+        const CRing& c_order,
+        const JRing& j_order);
+void validate (size_t level);
 
 //saving/loading atom table
-Int num_atoms ();
-Int data_size ();
-void save_to (ostream& os);
-void save_to_file (FILE* file);
-void load_from_file (FILE* file, Int num_atoms);
+size_t num_atoms ();
+size_t data_size ();
+void save_to (ostream & os);
+void save_to_file (FILE * file);
+void load_from_file (FILE * file, size_t num_atoms);
 
 //wrappers for resizing
 const float RESIZE_FACTOR = 1.1;
-inline void grow_obs ()   { resize(Int(Ob::capacity() * RESIZE_FACTOR + 1)); }
-inline void shrink_obs () { resize(Int(Ob::capacity() / RESIZE_FACTOR)); }
+inline void grow_obs () { resize(size_t(Ob::capacity() * RESIZE_FACTOR + 1)); }
+inline void shrink_obs () { resize(size_t(Ob::capacity() / RESIZE_FACTOR)); }
 inline void grow_apps ()
 {
-    Int new_size = Int(App::capacity() * RESIZE_FACTOR + 1);
+    size_t new_size = size_t(App::capacity() * RESIZE_FACTOR + 1);
     App::resize(new_size);
 }
 inline void grow_comps ()
 {
-    Int new_size = Int(Comp::capacity() * RESIZE_FACTOR + 1);
+    size_t new_size = size_t(Comp::capacity() * RESIZE_FACTOR + 1);
     Comp::resize(new_size);
 }
 inline void grow_joins ()
 {
-    Int new_size = Int(Join::capacity() * RESIZE_FACTOR + 1);
+    size_t new_size = size_t(Join::capacity() * RESIZE_FACTOR + 1);
     Join::resize(new_size);
 }
 
@@ -135,18 +139,18 @@ void merge   (Join  dep, Join  rep);
 void enforce (App  eqn);
 void enforce (Comp eqn);
 void enforce (Join eqn);
-void enforce_less (int lhs, int rhs);
-void enforce_nless(int lhs, int rhs);
-ObHdl enforce_atom (const string& name);
+void enforce_less (oid_t lhs, oid_t rhs);
+void enforce_nless (oid_t lhs, oid_t rhs);
+ObHdl enforce_atom (const string & name);
 
 //diagnostics
-void dump (string filename, Int struct_type=0, bool verbose=false);
+void dump (string filename, size_t struct_type=0, bool verbose=false);
 float log_stats (Long time=0); //returns ord table fill
 void write_stats_to (ostream& os);
 void write_params_to (ostream& os);
-bool vis_eqn_table (Int size = 0);
-bool vis_ord_table (Int size = 0);
-bool stats_page (Int size = 0);
+bool vis_eqn_table (size_t size = 0);
+bool vis_ord_table (size_t size = 0);
+bool stats_page (size_t size = 0);
 void die_quietly ();
 
 }

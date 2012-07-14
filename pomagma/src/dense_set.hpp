@@ -9,33 +9,29 @@ namespace pomagma
 
 // WARNING zero/null items are not allowed
 
-typedef uint32_t Line; // TODO switch to uint64_t
-const size_t BITS_PER_LINE = 8 * sizeof(Line);
-const size_t LINE_POS_MASK = BITS_PER_LINE - 1;
-
 // proxy class for single bit
 class bool_ref
 {
-    Line & m_line;
-    const Line m_mask;
+    Word & m_word;
+    const Word m_mask;
 public:
-    bool_ref (Line & line, size_t _i) : m_line(line), m_mask(1 << _i) {}
+    bool_ref (Word & word, size_t _i) : m_word(word), m_mask(1 << _i) {}
 
-    operator bool () const { return m_line & m_mask; } // ATOMIC
-    void operator |= (bool b) { m_line |= b * m_mask; } // ATOMIC
-    void operator &= (bool b) { m_line &= ~(!b * m_mask); } // ATOMIC
-    void zero () { m_line &= ~m_mask; } // ATOMIC
-    void one () { m_line |= m_mask; } // ATOMIC
-    void invert () { m_line ^= m_mask; } // ATOMIC
+    operator bool () const { return m_word & m_mask; } // ATOMIC
+    void operator |= (bool b) { m_word |= b * m_mask; } // ATOMIC
+    void operator &= (bool b) { m_word &= ~(!b * m_mask); } // ATOMIC
+    void zero () { m_word &= ~m_mask; } // ATOMIC
+    void one () { m_word |= m_mask; } // ATOMIC
+    void invert () { m_word ^= m_mask; } // ATOMIC
 };
 
 // basically a bitfield
 class dense_set
 {
     // data, in lines
-    const size_t N; // number of items
-    const size_t M; // number of lines
-    Line * m_lines;
+    const size_t m_item_dim; // number of items
+    const size_t m_word_dim; // number of lines
+    Word * m_line;
     const bool m_alias;
 
     // bit wrappers
@@ -45,42 +41,42 @@ class dense_set
 public:
 
     // line wrappers
-    static size_t line_count (size_t item_count)
+    static size_t word_count (size_t item_count)
     {
         // position 0 is unused, so we count from item 1
-        return (item_count + BITS_PER_LINE) / BITS_PER_LINE;
+        return (item_count + BITS_PER_WORD) / BITS_PER_WORD;
     }
 
     // ctors & dtors
     dense_set (size_t item_count);
-    dense_set (size_t item_count, Line * lines)
-        : N(item_count),
-          M(line_count(item_count)),
-          m_lines(lines),
+    dense_set (size_t item_count, Word * lines)
+        : m_item_dim(item_count),
+          m_word_dim(word_count(item_count)),
+          m_line(lines),
           m_alias(true)
     {}
-    //dense_set (size_t item_count, AlignedBuffer<Line> & buffer)
-    //    : N(item_count),
-    //      M(line_count(item_count)),
-    //      m_lines(buffer(M)),
+    //dense_set (size_t item_count, AlignedBuffer<Word> & buffer)
+    //    : m_item_dim(item_count),
+    //      m_word_dim(word_count(item_count)),
+    //      m_line(buffer(m_word_dim)),
     //      m_alias(true)
     //{}
     ~dense_set ();
     void move_from (const dense_set & other, const oid_t * new2old = NULL);
-    dense_set & init (Line * lines)
+    dense_set & init (Word * lines)
     {
         POMAGMA_ASSERT4(m_alias,
                 "tried to set lines on non-alias dense set");
-        m_lines = lines;
+        m_line = lines;
         return * this;
     }
 
     // attributes
     bool empty () const; // not fast
     size_t count_items () const; // supa-slow, try not to use
-    size_t capacity () const { return N; }
-    size_t line_count () const { return M; }
-    unsigned data_size () const { return sizeof(Line) * M; }
+    size_t item_dim () const { return m_item_dim; }
+    size_t word_dim () const { return m_word_dim; }
+    unsigned data_size_bytes () const { return sizeof(Word) * m_word_dim; }
     void validate () const;
 
     // element operations
@@ -115,7 +111,7 @@ public:
         size_t m_i;
         size_t m_rem;
         size_t m_quot;
-        Line m_mask;
+        Word m_mask;
         const dense_set & m_set;
 
     public:
@@ -155,22 +151,22 @@ public:
 
 inline bool_ref dense_set::_bit (size_t i)
 {
-    POMAGMA_ASSERT5(0 < i and i <= N,
+    POMAGMA_ASSERT5(0 < i and i <= m_item_dim,
             "dense_set[i] index out of range: " << i);
-    auto I = div(i, BITS_PER_LINE); // either div_t or ldiv_t
-    return bool_ref(m_lines[I.quot], I.rem);
+    auto I = div(i, BITS_PER_WORD); // either div_t or ldiv_t
+    return bool_ref(m_line[I.quot], I.rem);
 }
 inline bool dense_set::_bit (size_t i) const
 {
-    POMAGMA_ASSERT5(0 < i and i <= N,
+    POMAGMA_ASSERT5(0 < i and i <= m_item_dim,
             "const dense_set[i] index out of range: " << i);
-    auto I = div(i, BITS_PER_LINE); // either div_t or ldiv_t
-    return m_lines[I.quot] & (1 << I.rem);
+    auto I = div(i, BITS_PER_WORD); // either div_t or ldiv_t
+    return m_line[I.quot] & (1 << I.rem);
 }
 
 inline void dense_set::insert (size_t i)
 {
-    POMAGMA_ASSERT5(0 < i and i <= N,
+    POMAGMA_ASSERT5(0 < i and i <= m_item_dim,
             "dense_set::insert item out of range: " << i);
     POMAGMA_ASSERT4(not contains(i),
             "tried to insert item " << i << " in dense_set twice");
@@ -178,7 +174,7 @@ inline void dense_set::insert (size_t i)
 }
 inline void dense_set::remove (size_t i)
 {
-    POMAGMA_ASSERT5(0 < i and i <= N,
+    POMAGMA_ASSERT5(0 < i and i <= m_item_dim,
             "dense_set::remove item out of range: " << i);
     POMAGMA_ASSERT4(contains(i),
             "tried to remove item " << i << " from dense_set twice");
@@ -186,9 +182,9 @@ inline void dense_set::remove (size_t i)
 }
 inline void dense_set::merge (size_t i, size_t j __attribute__((unused)))
 {
-    POMAGMA_ASSERT5(0 < i and i <= N,
+    POMAGMA_ASSERT5(0 < i and i <= m_item_dim,
             "dense_set.merge(i,j) index i="<<i<<" out of range");
-    POMAGMA_ASSERT5(0 < j and j <= N,
+    POMAGMA_ASSERT5(0 < j and j <= m_item_dim,
             "dense_set.merge(i,j) index j="<<j<<" out of range");
     POMAGMA_ASSERT5(i != j,
             "dense_set tried to merge item " << i << " into itself");
@@ -201,7 +197,7 @@ inline void dense_set::merge (size_t i, size_t j __attribute__((unused)))
 
 inline void dense_set::iterator::begin ()
 {
-    POMAGMA_ASSERT4(m_set.m_lines, "tried to begin a null dense_set::iterator");
+    POMAGMA_ASSERT4(m_set.m_line, "tried to begin a null dense_set::iterator");
     m_quot = 0;
     --m_quot;
     _next_block();

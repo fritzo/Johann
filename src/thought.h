@@ -165,7 +165,7 @@ class Motive
 {
 protected:
     unsigned long m_obs_tried, m_obs_created;
-    Int m_client_id; //for generator
+    size_t m_client_id; // for generator
 
     //expansion & contraction
     virtual void _setup () {}; //before expanding
@@ -175,7 +175,7 @@ protected:
 public:
     virtual bool expand (); //setup or expand by one ob
     virtual void cleanup (); //after expanding
-    virtual bool expand_to (Int target);
+    virtual bool expand_to (size_t target);
 
     //ctors & dtors
     Motive () : m_client_id(0) {}
@@ -225,26 +225,26 @@ public:
 
     //meory interface
     virtual void remember_this (Float weight = 0.5f) {} //do nothing
-    virtual bool contract_to (Int target);
+    virtual bool contract_to (size_t target);
 };
 
 class TwoLevelMemory : public Memory
 {
 protected:
     Meas m_was_imp, m_now_imp;
-    Int &m_time_scale; //in units of how much has been forgotten
+    size_t & m_time_scale; // in units of how much has been forgotten
     Float m_how_hip;
 public:
 
     //ctors & dtors
-    TwoLevelMemory (Int& scale, Float how_hip=0.5);
+    TwoLevelMemory (size_t & scale, Float how_hip=0.5);
     virtual ~TwoLevelMemory ();
     virtual void save_params_to (ostream& os) {} //TODO set hipness
     virtual void write_params_to (ostream& os);
 
     //meory interface
     virtual void remember_this (Float weight = 0.5f);
-    virtual bool contract_to (Int target);
+    virtual bool contract_to (size_t target);
 };
 
 }

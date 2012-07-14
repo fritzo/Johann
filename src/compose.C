@@ -146,7 +146,7 @@ inline void insert_Cxx (Pos pos) { CLR::insert(pos); CRL::insert(pos); }
 inline void remove_Cxx (Pos pos) { CLR::remove(pos); CRL::remove(pos); }
 
 //event functions for the comp table
-void remove_value (int _rem)
+void remove_value (oid_t _rem)
 {
     LOG_DEBUG1( "comp table is removing " << _rem );
 
@@ -155,7 +155,7 @@ void remove_value (int _rem)
     remove_Cxx(rem);
     delete_(rem);
 }
-void merge_values (int _dep, int _rep)
+void merge_values (oid_t _dep, oid_t _rep)
 {
     LOG_DEBUG1( "comp table is merging " << _dep << " --> " << _rep );
 
@@ -166,7 +166,7 @@ void merge_values (int _dep, int _rep)
     CS::merge(dep, rep);
     delete_(dep);
 }
-void move_value (int _moved, int _lhs, int _rhs)
+void move_value (oid_t _moved, oid_t _lhs, oid_t _rhs)
 {
     LOG_DEBUG1( "comp table is moving " << _moved );
 
@@ -220,7 +220,7 @@ void remove (Ob rem)
         changed_eqns.push_back(*iter);
     }
     //  traverse through: remove, delete
-    for (int i=0, size=changed_eqns.size(); i!=size; ++i) {
+    for (size_t i = 0, size = changed_eqns.size(); i != size; ++i) {
         Comp eqn = changed_eqns[i];
         g_comp_table->remove(Int(eqn(LHS)), Int(eqn(RHS)));
         delete_(eqn);

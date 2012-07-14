@@ -7,8 +7,8 @@
 
 namespace CombinatoryStructure
 {
-extern void enforce_less (int lhs, int rhs);
-extern void enforce_nless (int lhs, int rhs);
+extern void enforce_less (oid_t lhs, oid_t rhs);
+extern void enforce_nless (oid_t lhs, oid_t rhs);
 }
 
 namespace Order
@@ -199,8 +199,10 @@ class Iterator
 
 public:
     Iterator (Ob ob)
-        : m_iter(static_cast<int>(ob), idx::is_pos ? g_pos_table : g_neg_table)
-    { Assert3(ob.isUsed(), "Order Iterator created at unused ob"); }
+        : m_iter(static_cast<oid_t>(ob), idx::is_pos ? g_pos_table : g_neg_table)
+    {
+        Assert3(ob.isUsed(), "Order Iterator created at unused ob");
+    }
     Iterator () : m_iter(idx::is_pos ? g_pos_table : g_neg_table) {}
 
     // traversal
@@ -208,7 +210,7 @@ public:
     void begin (Ob ob)
     {
         Assert3(ob.isUsed(), "Order Iterator began at unused ob");
-        m_iter.begin(static_cast<int>(ob));
+        m_iter.begin(static_cast<oid_t>(ob));
     }
     bool ok () const { return m_iter.ok(); }
     void next () { m_iter.next(); }

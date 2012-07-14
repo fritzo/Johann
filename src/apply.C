@@ -146,7 +146,7 @@ inline void insert_Axx (Pos pos) { ALR::insert(pos); ARL::insert(pos); }
 inline void remove_Axx (Pos pos) { ALR::remove(pos); ARL::remove(pos); }
 
 //event functions for the app table
-void remove_value (int _rem)
+void remove_value (oid_t _rem)
 {
     LOG_DEBUG1( "app table is removing " << _rem );
 
@@ -155,7 +155,7 @@ void remove_value (int _rem)
     remove_Axx(rem);
     delete_(rem);
 }
-void merge_values (int _dep, int _rep)
+void merge_values (oid_t _dep, oid_t _rep)
 {
     LOG_DEBUG1( "app table is merging " << _dep << " --> " << _rep );
 
@@ -166,7 +166,7 @@ void merge_values (int _dep, int _rep)
     CS::merge(dep, rep);
     delete_(dep);
 }
-void move_value (int _moved, int _lhs, int _rhs)
+void move_value (oid_t _moved, oid_t _lhs, oid_t _rhs)
 {
     LOG_DEBUG1( "app table is moving " << _moved );
 
@@ -211,7 +211,7 @@ void remove (Ob rem)
     Logging::IndentBlock block;
 
     //remove occurrences as LHS & RHS
-    g_app_table->remove(Int(rem), remove_value);
+    g_app_table->remove(static_cast<oid_t>(rem), remove_value);
 
     //remove occurrences as APP
     std::vector<App> changed_eqns; //TODO maybe make this static
@@ -222,7 +222,9 @@ void remove (Ob rem)
     //  traverse through: remove, delete
     for (int i=0, size=changed_eqns.size(); i!=size; ++i) {
         App eqn = changed_eqns[i];
-        g_app_table->remove(Int(eqn(LHS)), Int(eqn(RHS)));
+        g_app_table->remove(
+                static_cast<oid_t>(eqn(LHS)),
+                static_cast<oid_t>(eqn(RHS)));
         delete_(eqn);
     }
 }
@@ -232,7 +234,11 @@ void merge (Ob dep, Ob rep)
     Logging::IndentBlock block;
 
     //merge occurrences as LHS & RHS
-    g_app_table->merge(Int(dep), Int(rep), merge_values, move_value);
+    g_app_table->merge(
+            Int(dep),
+            Int(rep),
+            merge_values,
+            move_value);
 
     //merge occurrences as APP
     std::vector<App> changed_eqns; //TODO maybe make this static

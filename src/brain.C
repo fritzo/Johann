@@ -161,7 +161,7 @@ Float Brain::mean_symbols ()
     Float info = C::get_HA();
     return info / get_lang_entropy();
 }
-void Brain::plot_funs_of_eps (Int num_points)
+void Brain::plot_funs_of_eps (size_t num_points)
 {
     //plots inverse perplexity
     if (num_points < 2) {
@@ -179,7 +179,7 @@ void Brain::plot_funs_of_eps (Int num_points)
 
     Float old_P_app = P_app(); //save existing value
     Float stepsize = 1.0 / num_points;
-    for (Int i=0; i<num_points; ++i) {
+    for (size_t i=0; i<num_points; ++i) {
         P_app() = (i + 0.5) * stepsize;
         calc_measures(false);
 
@@ -215,8 +215,10 @@ void Brain::calc_perturb ()
     C::calc_Z(m_lang);
     C::set_tolerance(old_tol);
 }
-bool Brain::save_map (Int dim)
-{//returns true on error
+
+// returns true on error
+bool Brain::save_map (size_t dim)
+{
     logger.info() << "Saving map" |0;
     Logging::IndentBlock block;
 
@@ -225,7 +227,7 @@ bool Brain::save_map (Int dim)
     VMeas coords = VMeas::alloc(dim+1);         //first coord is not a dim
     Vect eigs = C::calc_coords(m_lang, coords); //calculate coords
     Vect units(dim+1);
-    for (Int i=0; i<dim+1; ++i) {
+    for (size_t i=0; i<dim+1; ++i) {
         units(i) = expf(eigs(i));               //converte eigs to units
     }
     coords *= units;                            //scale by units
@@ -248,10 +250,11 @@ bool Brain::save_map (Int dim)
     file << "COORDS\n";
     for (Ob::sparse_iterator I=Ob::sbegin(); I!=Ob::send(); ++I) { Ob ob = *I;
         file << comp(ob) << '\t';
-        Int eqn = Int(EX::find_parse_app(ob));
-        if (!eqn) eqn = Int(AE::find_app_eqn(*(LT::theory()->I), ob));
-        file << eqn-1; //Careful: 1-based indexing
-        for (Int i=0; i<1+dim; ++i) {
+        size_t eqn = static_cast<size_t>(EX::find_parse_app(ob));
+        if (!eqn) eqn = static_cast<size_t>(
+                AE::find_app_eqn(*(LT::theory()->I), ob));
+        file << eqn - 1; // WARNING 1-based indexing
+        for (size_t i = 0; i < 1 + dim; ++i) {
             file << '\t' << coords(ob)[i];
         }
         file << '\n';
@@ -263,7 +266,7 @@ bool Brain::save_map (Int dim)
     file << "APPS\n";
     for (App::sparse_iterator iter=App::sbegin(), end=App::send();
             iter!=end; ++iter) { App eqn = *iter;
-        //Careful: 1-based indexing
+        // WARNING 1-based indexing
         file << get_app(eqn) - 1 << '\t'
              << get_lhs(eqn) - 1 << '\t'
              << get_rhs(eqn) - 1 << '\n';
@@ -324,7 +327,7 @@ bool Brain::send_lang_to (string address)
     client.write("set app");
     client.write(_2string(-log(get_P_app())));
 
-    for (Int i=0; i<lang().size(); ++i) {
+    for (size_t i = 0; i < lang().size(); ++i) {
         client.write("set mass");
         ExprHdl expr = EX::parse_ob(lang().atom(i));
         client.write(expr->str());
@@ -338,15 +341,18 @@ bool Brain::send_lang_to (string address)
 }
 class ParseCache
 {
-    MAP_TYPE<Int, ExprHdl> m_cache;
+    MAP_TYPE<oid_t, ExprHdl> m_cache;
 public:
-    ExprHdl operator() (Ob ob) const { return m_cache.find(Int(ob))->second; }
+    ExprHdl operator() (Ob ob) const
+    {
+        return m_cache.find(static_cast<oid_t>(ob))->second;
+    }
     ParseCache ()
     {
         for (Ob::sparse_iterator i=Ob::sbegin(); i!=Ob::send(); ++i) {
             Ob ob = *i;
             ExprHdl e = EX::parse_ob(ob);
-            m_cache[Int(ob)] = e ? e->reduce() : e;
+            m_cache[static_cast<oid_t>(ob)] = e ? e->reduce() : e;
         }
     }
 };
@@ -475,7 +481,7 @@ Brain::~Brain ()
     delete m_theory;
     s_unique_instance = NULL;
 }
-void Brain::initialize (Int num_obs, const BasisType& basis)
+void Brain::initialize (size_t num_obs, const BasisType& basis)
 {
     logger.info() << "Initializing brain" |0;
     Logging::IndentBlock block;
@@ -525,7 +531,7 @@ void Brain::clear ()
     CS::clear();
     m_lang.clear();
 }
-void Brain::resize (Int size, const Int* new2old)
+void Brain::resize (size_t size, const oid_t * new2old)
 {
     logger.debug() << "resizing brain" |0;
 
@@ -552,24 +558,24 @@ bool Brain::save (string filename)
 
     //prepare header
     //    calculate data sizes
-    Int b_size = CS::num_atoms();
-    Int o_size = Ob::size();
-    Int a_size = App::size();
-    Int c_size = Comp::size();
-    Int j_size = Join::size();
-    Int w_size = m_lang.num_words();
-    Int r_size = m_lang.num_rules();
+    size_t b_size = CS::num_atoms();
+    size_t o_size = Ob::size();
+    size_t a_size = App::size();
+    size_t c_size = Comp::size();
+    size_t j_size = Join::size();
+    size_t w_size = m_lang.num_words();
+    size_t r_size = m_lang.num_rules();
 
-    const Int START_OFFSET = bytes2blocks(sizeof(StructFileHeader));
-    Int offset = START_OFFSET;
+    const size_t START_OFFSET = bytes2blocks(sizeof(StructFileHeader));
+    size_t offset = START_OFFSET;
 
-    Int o_data = offset; offset += bytes2blocks( O::data_size());
-    Int b_data = offset; offset += bytes2blocks(CS::data_size());
-    Int a_data = offset; offset += bytes2blocks( AE::data_size());
-    Int c_data = offset; offset += bytes2blocks( CE::data_size());
-    Int j_data = offset; offset += bytes2blocks( JE::data_size());
-    Int l_data = offset; offset += bytes2blocks(OR::data_size());
-    Int L_data = offset; offset += bytes2blocks(m_lang.data_size());
+    size_t o_data = offset; offset += bytes2blocks(O::data_size());
+    size_t b_data = offset; offset += bytes2blocks(CS::data_size());
+    size_t a_data = offset; offset += bytes2blocks(AE::data_size());
+    size_t c_data = offset; offset += bytes2blocks(CE::data_size());
+    size_t j_data = offset; offset += bytes2blocks(JE::data_size());
+    size_t l_data = offset; offset += bytes2blocks(OR::data_size());
+    size_t L_data = offset; offset += bytes2blocks(m_lang.data_size());
 
     //    construct header & validate
     StructFileHeader header(
@@ -657,7 +663,7 @@ bool Brain::load (string filename)
 }
 
 //shaping
-bool Brain::expand_to (Int target)
+bool Brain::expand_to (size_t target)
 {//incrementally expands by a constant ratio until full
     if (target <= Ob::size()) return true; //nothing to do
     logger.info() << "Incrementally expanding" |0;
@@ -666,8 +672,8 @@ bool Brain::expand_to (Int target)
 
     calc_measures(false);
     while (Ob::size() < target) {
-        Int start_size = Ob::size();
-        Int sub_target = min(target, start_size + m_granularity);
+        size_t start_size = Ob::size();
+        size_t sub_target = min(target, start_size + m_granularity);
         sub_target = min(sub_target, 2 * Ob::size()); //when very small
         if (not m_motive->expand_to(sub_target)) {
         //if (Ob::size() == start_size) {
@@ -685,11 +691,11 @@ bool Brain::expand_to (Int target)
 
     return success;
 }
-bool Brain::contract_to (Int target)
+bool Brain::contract_to (size_t target)
 {
     while (Ob::size() > target) {
         calc_measures(false);
-        Int sub_target = max(target, Ob::size() - m_granularity);
+        size_t sub_target = max(target, Ob::size() - m_granularity);
         if (m_memory->contract_to(sub_target)) CS::log_stats(m_age);
         else return false;
 #if DEBUG_LEVEL >= 4
@@ -713,37 +719,37 @@ void Brain::compact (bool sort_eqns)
     //compress & sort eqns
     if (sort_eqns) {
         //app equations
-        App::array<Int> *a_rank = new(std::nothrow) App::array<Int>;
+        App::array<size_t> *a_rank = new(std::nothrow) App::array<size_t>;
         Assert (a_rank, "no memory for app sorting");
         for (App::sparse_iterator iter=App::sbegin(), end=App::send();
                 iter!=end; ++iter) { App eqn = *iter;
-            Int lhs = o_order.old2new(get_lhs(eqn));
-            Int rhs = o_order.old2new(get_rhs(eqn));
-            (*a_rank)(eqn) = lhs | (rhs << 16);
+            oid_t lhs = o_order.old2new(get_lhs(eqn));
+            oid_t rhs = o_order.old2new(get_rhs(eqn));
+            (*a_rank)(eqn) = lhs | (rhs << 16); // XXX FIXME does not scale
         }
         const ARing a_order(*a_rank);
         delete a_rank;
 
         //comp equations
-        Comp::array<Int> *c_rank = new(std::nothrow) Comp::array<Int>;
+        Comp::array<size_t> *c_rank = new(std::nothrow) Comp::array<size_t>;
         Assert (c_rank, "no memory for comp sorting");
         for (Comp::sparse_iterator iter=Comp::sbegin(), end=Comp::send();
                 iter!=end; ++iter) { Comp eqn = *iter;
-            Int lhs = o_order.old2new(get_lhs(eqn));
-            Int rhs = o_order.old2new(get_rhs(eqn));
-            (*c_rank)(eqn) = lhs | (rhs << 16);
+            oid_t lhs = o_order.old2new(get_lhs(eqn));
+            oid_t rhs = o_order.old2new(get_rhs(eqn));
+            (*c_rank)(eqn) = lhs | (rhs << 16); // XXX FIXME does not scale
         }
         const CRing c_order(*c_rank);
         delete c_rank;
 
         //join equations
-        Join::array<Int> *j_rank = new(std::nothrow) Join::array<Int>;
+        Join::array<size_t> *j_rank = new(std::nothrow) Join::array<size_t>;
         Assert (c_rank, "no memory for join sorting");
         for (Join::sparse_iterator iter=Join::sbegin(), end=Join::send();
                 iter!=end; ++iter) { Join eqn = *iter;
-            Int lhs = o_order.old2new(get_lhs(eqn));
-            Int rhs = o_order.old2new(get_rhs(eqn));
-            (*j_rank)(eqn) = lhs | (rhs << 16);
+            oid_t lhs = o_order.old2new(get_lhs(eqn));
+            oid_t rhs = o_order.old2new(get_rhs(eqn));
+            (*j_rank)(eqn) = lhs | (rhs << 16); // XXX FIXME does not scale
         }
         const JRing j_order(*j_rank);
         delete j_rank;
@@ -768,14 +774,14 @@ void Brain::compact (bool sort_eqns)
 }
 
 //thought control
-void Brain::set_size (Int s)
+void Brain::set_size (size_t s)
 {
     if (s == 0) s = Ob::size();
     logger.info() << "resizing brain to " << s << " concepts" |0;
     m_min_size = s;
     m_max_size = s + m_granularity;
 }
-void Brain::set_granularity (Int g)
+void Brain::set_granularity (size_t g)
 {
     if (g < 1) {
         logger.warning() << "granularity too small; setting to 1" |0;
@@ -840,7 +846,7 @@ void Brain::think_in (Float P_app, Float P_comp, Float P_join)
 {
     const std::vector<ObHdl>& all = CS::get_basis();
     std::vector<ObHdl> selected;
-    for (Int i=0; i<all.size(); ++i) {
+    for (size_t i = 0; i < all.size(); ++i) {
         const ObHdl& ob = all[i];
         if (*ob == *LT::Atoms::Bot) continue;
         if (*ob == *LT::Atoms::Top) continue;
@@ -857,7 +863,7 @@ void Brain::think_in (const std::vector<ObHdl>& obs,
     //set basis
     basis().clear();
     Float atom_size = 1.0; //all the same
-    for (Int i=0; i<obs.size(); ++i) {
+    for (size_t i = 0; i < obs.size(); ++i) {
         basis().push_back(std::make_pair(obs[i], atom_size));
     }
 
@@ -869,7 +875,7 @@ void Brain::think_in (ObPMF& obs, Float P_app, Float P_comp, Float P_join)
 
     //set basis
     m_lang.clear();
-    for (Int i=0; i<obs.size(); ++i) {
+    for (size_t i = 0; i < obs.size(); ++i) {
         ObHdl ob = obs[i].first;
         Float mass = expf(-obs[i].second);  //mass is exp(-size)
         basis().push_back(std::make_pair(ob,mass));
@@ -914,13 +920,13 @@ void Brain::think_about_everything (bool resting)
                 new T::Motive_to_ponder(comp),
                 resting);
 }
-bool Brain::think (Int num_cycles)
+bool Brain::think (size_t num_cycles)
 {//incrementally contracts & expands (by some granularity)
     logger.debug() << "Thinking for " << num_cycles |0;
     Logging::IndentBlock block;
 
     if (not contract_to(m_min_size)) return false;
-    for (Int i=0; i<num_cycles; ++i) {
+    for (size_t i = 0; i < num_cycles; ++i) {
         if (not expand_to(m_max_size)) return false;
         if (not contract_to(m_min_size)) return false;
     }
@@ -946,7 +952,7 @@ bool Brain::think ()
             << " at beta = " << m_beta |0;
         m_motive->cleanup();
         calc_measures(false);
-        Int target = max(m_min_size, Ob::size() - m_granularity);
+        size_t target = max(m_min_size, Ob::size() - m_granularity);
         result = m_memory->contract_to(target);
 
         //if density is sufficiently high, increase size
@@ -1000,7 +1006,7 @@ void Brain::init_basis_measure (bool init_lang)
 
     //set basis probabilities for atoms
     Float mass = 1.0 / atoms.size();
-    for (Int i=0; i<atoms.size(); ++i) {
+    for (size_t i = 0; i < atoms.size(); ++i) {
         Ob ob = *(atoms[i]);
         comp(ob) = mass;
         komp(ob) = -log(mass);
@@ -1120,7 +1126,7 @@ public:
     bool operator() (Ob lhs, Ob rhs) { return m_mass(lhs) < m_mass(rhs); }
 };
 typedef nonstd::N_Best<Ob,LessMass_> LeastMass;
-std::vector<std::pair<Ob,Float> > Brain::get_simplest (Int N)
+std::vector<std::pair<Ob,Float> > Brain::get_simplest (size_t N)
 {
     //find best
     LessMass_ less(comp);
@@ -1130,14 +1136,14 @@ std::vector<std::pair<Ob,Float> > Brain::get_simplest (Int N)
     //collect masses
     N = obs.size(); //fewer may have been found
     std::vector<std::pair<Ob,Float> > result(N,std::make_pair(Ob(0),0.0));
-    for (Int i=0; i<obs.size(); ++i) {
+    for (size_t i=0; i<obs.size(); ++i) {
         Ob ob = obs[i];
         result[i].first = ob;
         result[i].second = -log(comp(ob));
     }
     return result;
 }
-std::vector<std::pair<Ob,Float> > Brain::get_most_relevant (Int N)
+std::vector<std::pair<Ob,Float> > Brain::get_most_relevant (size_t N)
 {
     logger.debug() << "finding " << N << " most relevant obs" |0;
     //define relevance(x) = rel(x) / comp(x)
@@ -1153,7 +1159,7 @@ std::vector<std::pair<Ob,Float> > Brain::get_most_relevant (Int N)
     //collect masses while they're around
     N = obs.size(); //fewer may have been found
     std::vector<std::pair<Ob,Float> > result(N,std::make_pair(Ob(0),0.0));
-    for (Int i=0; i<N; ++i) {
+    for (size_t i=0; i<N; ++i) {
         Ob ob = obs[i];
         result[i].first = ob;
         result[i].second = relevance(ob);
@@ -1162,7 +1168,7 @@ std::vector<std::pair<Ob,Float> > Brain::get_most_relevant (Int N)
     relevance.free();
     return result;
 }
-std::vector<std::pair<Ob,Float> > Brain::get_sketchiest (Int N)
+std::vector<std::pair<Ob,Float> > Brain::get_sketchiest (size_t N)
 {
     //find sketchiest obs
     Meas sketch = Meas::alloc();
@@ -1176,7 +1182,7 @@ std::vector<std::pair<Ob,Float> > Brain::get_sketchiest (Int N)
     //collect masses while they're around
     N = obs.size(); //fewer may have been found
     std::vector<std::pair<Ob,Float> > result(N,std::make_pair(Ob(0),0.0));
-    for (Int i=0; i<N; ++i) {
+    for (size_t i=0; i<N; ++i) {
         Ob ob = obs[i];
         result[i].first = ob;
         result[i].second = sketch(ob);
@@ -1197,7 +1203,7 @@ struct LessEvidence_
                      or (x.lhs == y.lhs and x.rhs < y.rhs)));
     }
 };
-std::vector<Conjecture> Brain::get_conjectures (Int N)
+std::vector<Conjecture> Brain::get_conjectures (size_t N)
 {//generates conjectures from available data
     logger.info() << "Generating conjectures" |0;
     Logging::IndentBlock block;
@@ -1211,9 +1217,9 @@ std::vector<Conjecture> Brain::get_conjectures (Int N)
     logger.info() << "finding " << N
         << " [=-relations with most supporting evidence" |0;
     nonstd::N_Best<Conjecture, LessEvidence_> best(N);
-    Int num_obs = Ob::numUsed();
-    for (Int _x=1; _x<=num_obs; ++_x) { Ob x(_x);
-    for (Int _y=1; _y<=num_obs; ++_y) { Ob y(_y);
+    size_t num_obs = Ob::numUsed();
+    for (oid_t _x = 1; _x <= num_obs; ++_x) { Ob x(_x);
+    for (oid_t _y = 1; _y <= num_obs; ++_y) { Ob y(_y);
     if (not OR::contains(x,y)) {
         best.insert(Conjecture(x, y, m_guess->data(x,y)));
     }}}
@@ -1223,12 +1229,12 @@ std::vector<Conjecture> Brain::get_conjectures (Int N)
     return std::vector<Conjecture>(best.begin(), best.end());
 }
 inline Float safe_log (Float t) { return std::isfinite(t) ? log(t) : 0.0; }
-bool Brain::vis_ob_mass (Int size, Int ratio)
+bool Brain::vis_ob_mass (size_t size, size_t ratio)
 {//both on a log scale
     logger.info() << "visualizing ob masses to stats/ob_mass.png" |0;
 
-    Int N = Ob::numUsed();
-    Int M = (N + ratio - 1) / ratio;
+    size_t N = Ob::numUsed();
+    size_t M = (N + ratio - 1) / ratio;
 
     //find scales
     calc_measures(false);
@@ -1244,33 +1250,36 @@ bool Brain::vis_ob_mass (Int size, Int ratio)
     //draw image
     V::ColorImage image(N,M);
     image.set(0);
-    Int i=0;
-    for (Ob::sparse_iterator I=Ob::sbegin(); I!=end; ++I) { Ob ob = *I;
+    size_t i = 0;
+    for (Ob::sparse_iterator I = Ob::sbegin(); I != end; ++I) {
+        Ob ob = *I;
 
-        //check for bad mass
+        // check for bad mass
         if (not (comp(ob) > 0)) {
-            Int inCore = O::isInCore(ob) ? 0 : 255;
-            for (Int j=0; j<M; ++j) {
-                image(i,j,V::RED)   = 255;
-                image(i,j,V::GREEN) = inCore;
-                image(i,j,V::BLUE)  = 0;
+            size_t inCore = O::isInCore(ob) ? 0 : 255;
+            for (size_t j = 0; j < M; ++j) {
+                image(i, j, V::RED)   = 255;
+                image(i, j, V::GREEN) = inCore;
+                image(i, j, V::BLUE)  = 0;
             }
         }
 
-        //draw mass
+        // draw mass
         Float c = -safe_log(comp(ob)) / max_comp;
-        Int height = V::round((M-1) * c);
-        Int inCore = O::isInCore(ob) ? 0 : 255;
-        for (Int j=0; j<height; ++j) { Int k = M-j-1;
-            image(i,k,V::RED)   = 255;
-            image(i,k,V::GREEN) = inCore;
+        size_t height = V::round((M-1) * c);
+        size_t inCore = O::isInCore(ob) ? 0 : 255;
+        for (size_t j = 0; j < height; ++j) {
+            size_t k = M - j - 1;
+            image(i, k, V::RED)   = 255;
+            image(i, k, V::GREEN) = inCore;
         }
 
-        //draw relevance
+        // draw relevance
         Float r = -safe_log(rel(ob)) / max_rel;
         height = V::round((M-1) * r);
-        for (Int j=0; j<height; ++j) { Int k = M-j-1;
-            image(i,k,V::BLUE) = 255;
+        for (size_t j = 0; j < height; ++j) {
+            size_t k = M - j - 1;
+            image(i, k, V::BLUE) = 255;
         }
 
         ++i;
@@ -1303,7 +1312,7 @@ bool Brain::extend (ObHdl ob)
 bool Brain::extend (std::vector<ObHdl> obs)
 {
     bool extended = false;
-    for (Int i=0; i<obs.size(); ++i) {
+    for (size_t i = 0; i < obs.size(); ++i) {
         ObHdl ob = obs[i];
         if (not m_lang.insert(ob)) continue;
         logger.info() << "extending language with: " << EX::parse_ob(*ob) |0;
@@ -1384,7 +1393,7 @@ ostream& operator<< (ostream& os, ObPMF pmf)
     os << "\n\t\t";
     Float offset = 1.0 + log(pmf[0].second);
     os << EX::parse_ob(*(pmf[0].first)) << "\t@ " << 1.0;
-    for (Int i=1; i<pmf.size(); ++i) {
+    for (size_t i = 1; i < pmf.size(); ++i) {
         os << ",\n\t\t" << EX::parse_ob(*(pmf[i].first))
            << "\t@ "    << offset - log(pmf[i].second);
     }
@@ -1457,7 +1466,7 @@ void Brain::log_params ()
 }
 
 //debugging
-void Brain::validate (Int level)
+void Brain::validate (size_t level)
 {
     logger.info() << "Validating brain (level " << level << ")" |0;
     Logging::IndentBlock block;
@@ -1482,10 +1491,9 @@ void extra_create_comp  (Comp eqn)       { brain().create_comp(eqn); }
 void extra_create_join  (Join eqn)       { brain().create_join(eqn); }
 void extra_delete_ob    (Ob ob)          { brain().delete_ob(ob); }
 void extra_merge_obs    (Ob dep, Ob rep) { brain().merge_obs(dep, rep); }
-void extra_resize (Int size, const Int* new2old)
-{ brain().resize(size, new2old); }
-
+void extra_resize (size_t size, const oid_t * new2old)
+{
+    brain().resize(size, new2old);
 }
 
-
-
+} // namespace TheBrain

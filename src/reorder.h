@@ -15,9 +15,10 @@ using namespace Heap;
 template<class Pos>
 class Reordering
 {
-    Int m_total, m_used;
-    Int *const m_old2new;
-    Int *const m_new2old;
+    size_t m_total;
+    size_t m_used;
+    oid_t * const m_old2new;
+    oid_t * const m_new2old;
 
     void _compact();
     template<class T>
@@ -28,8 +29,8 @@ class Reordering
 public:
     Reordering ()
         : m_total(Pos::capacity()), m_used(Pos::numUsed()),
-          m_old2new(new Int[m_total+1]),
-          m_new2old(new Int[m_used +1])
+          m_old2new(new oid_t[m_total + 1]),
+          m_new2old(new oid_t[m_used + 1])
     {
         m_old2new[0] = 0;
         m_new2old[0] = 0;
@@ -38,8 +39,8 @@ public:
     template<class T>
     Reordering (const typename Pos::template array<T>& rank)
         : m_total(Pos::capacity()), m_used(Pos::numUsed()),
-          m_old2new(new Int[m_total+1]),
-          m_new2old(new Int[m_used +1])
+          m_old2new(new oid_t[m_total+1]),
+          m_new2old(new oid_t[m_used +1])
     {
         m_old2new[0] = 0;
         m_new2old[0] = 0;
@@ -50,26 +51,26 @@ public:
     //indexing
     Pos old2new (Pos old_pos) const
     {
-        Int i(old_pos);
+        oid_t i(old_pos);
         Assert4(i <= m_total, "old index out of bounds: "<<i<<" > "<<m_total);
-        Int j = m_old2new[i];
+        oid_t j = m_old2new[i];
         Assert4(j <= m_used, "new index out of bounds: "<<j<<" > "<<m_total);
         return Pos(j);
     }
     Pos new2old (Pos new_pos) const
     {
-        Int j(new_pos);
+        oid_t j(new_pos);
         Assert4(j <= m_used, "new index out of bounds: "<<j<<" > "<<m_total);
-        Int i = m_new2old[j];
+        oid_t i = m_new2old[j];
         Assert4(i <= m_total, "old index out of bounds: "<<i<<" > "<<m_total);
         return Pos(i);
     }
 
     //direct array access, 1-based but compatable with 0-based
-    const Int* old2new () const { return m_old2new; }
-    const Int* new2old () const { return m_new2old; }
+    const oid_t * old2new () const { return m_old2new; }
+    const oid_t * new2old () const { return m_new2old; }
 };
 
-}
+} // namespace Reorder
 
-#endif
+#endif // JOHANN_REORDER_H

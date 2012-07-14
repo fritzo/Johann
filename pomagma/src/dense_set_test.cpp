@@ -1,11 +1,9 @@
 #include "dense_set.hpp"
 #include <vector>
 
-using pomagma::Log;
-using pomagma::dense_set;
-using pomagma::random_bool;
+using namespace pomagma;
 
-bool is_even (size_t i, size_t modulus = 2) { return i % modulus == 0; }
+bool is_even (oid_t i, oid_t modulus = 2) { return i % modulus == 0; }
 
 void test_misc (size_t size)
 {
@@ -16,19 +14,19 @@ void test_misc (size_t size)
     POMAGMA_ASSERT_EQUAL(set.count_items(), 0);
 
     POMAGMA_INFO("testing position insertion");
-    for (size_t i = 1; i <= size; ++i) {
+    for (oid_t i = 1; i <= size; ++i) {
         set.insert(i);
     }
     POMAGMA_ASSERT_EQUAL(set.count_items(), size);
 
     POMAGMA_INFO("testing position removal");
-    for (size_t i = 1; i <= size; ++i) {
+    for (oid_t i = 1; i <= size; ++i) {
         set.remove(i);
     }
     POMAGMA_ASSERT_EQUAL(set.count_items(), 0);
 
     POMAGMA_INFO("testing iteration");
-    for (size_t i = 1; i <= size / 2; ++i) {
+    for (oid_t i = 1; i <= size / 2; ++i) {
         set.insert(i);
     }
     POMAGMA_ASSERT_EQUAL(set.count_items(), size / 2);
@@ -47,15 +45,15 @@ void test_even (size_t size)
     dense_set evens[7] = {0, size, size, size, size, size, size};
 
     POMAGMA_INFO("Defining sets");
-    for (size_t i = 1; i <= 6; ++i) {
-        for (size_t j = 1; j < 1 + size; ++j) {
+    for (oid_t i = 1; i <= 6; ++i) {
+        for (oid_t j = 1; j < 1 + size; ++j) {
             if (is_even(j, i)) { evens[i].insert(j); }
         }
     }
 
     POMAGMA_INFO("Testing set containment");
-    for (size_t i = 1; i <= 6; ++i) {
-    for (size_t j = 1; j <= 6; ++j) {
+    for (oid_t i = 1; i <= 6; ++i) {
+    for (oid_t j = 1; j <= 6; ++j) {
         POMAGMA_INFO(j << " % " << i << " = " << (j % i));
         if (j % i == 0) {
             POMAGMA_ASSERT(evens[j] <= evens[i],
@@ -73,7 +71,7 @@ void test_even (size_t size)
     POMAGMA_ASSERT(evens6 == evens[6], "expected 6 = lcm(2, 3)")
 
     POMAGMA_INFO("Validating");
-    for (size_t i = 0; i <= 6; ++i) {
+    for (oid_t i = 0; i <= 6; ++i) {
         evens[i].validate();
     }
     evens6.validate();
@@ -85,7 +83,7 @@ void test_iterator(size_t size)
     std::vector<bool> vect(size, false);
     size_t true_count = 0;
 
-    for (size_t i = 1; i <= size; ++i) {
+    for (oid_t i = 1; i <= size; ++i) {
         if (random_bool(0.2)) {
             set.insert(i);
             vect[i-1] = true;
@@ -93,7 +91,7 @@ void test_iterator(size_t size)
         }
     }
 
-    for (size_t i = 1; i <= size; ++i) {
+    for (oid_t i = 1; i <= size; ++i) {
         POMAGMA_ASSERT_EQUAL(bool(set(i)), vect[i-1]);
     }
 

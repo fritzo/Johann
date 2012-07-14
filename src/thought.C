@@ -156,7 +156,7 @@ void Interest_in_obs::init_R_term (Meas term, Float total)
     }
 
     Float factor = total / m_poly.total();
-    for (Int i=0; i<m_poly.size(); ++i) {
+    for (size_t i = 0; i < m_poly.size(); ++i) {
         term(m_poly.ob(i)) += factor * m_poly.num(i);
     }
 }
@@ -297,14 +297,14 @@ void Motive::cleanup ()
     //XXX TODO make this do something realistic
     return;
 }
-bool Motive::expand_to (Int target)
+bool Motive::expand_to (size_t target)
 {
     logger.info() << "expanding to " << target
                   << " at beta = " << brain().beta() |0;
     Logging::IndentBlock block;
 
     bool success = true;
-    Int orig_size = Ob::size();
+    size_t orig_size = Ob::size();
     m_obs_tried = 0;
     m_obs_created = 0;
     m_obs_tried = 0;
@@ -457,7 +457,7 @@ void Memory::write_stats_to (ostream& os)
 {
     os << "\ttotal memory weight = " << m_important.total() << std::endl;
 }
-bool Memory::contract_to (Int target)
+bool Memory::contract_to (size_t target)
 {
     logger.info() << "Forgetting: contracting to " << target |0;
     Logging::IndentBlock block;
@@ -466,7 +466,7 @@ bool Memory::contract_to (Int target)
     Meas unimportant = Meas::alloc();
 
     while (Ob::size() > target and progress) {
-        Int start_size = Ob::size();
+        size_t start_size = Ob::size();
 
         //define unimportance
         unimportant.set(0);
@@ -527,7 +527,7 @@ bool Memory::contract_to (Int target)
 }
 
 //two-level memory
-TwoLevelMemory::TwoLevelMemory (Int& scale, Float how_hip)
+TwoLevelMemory::TwoLevelMemory (size_t & scale, Float how_hip)
     : Memory(Meas::alloc()),
       m_was_imp(Meas::alloc()),
       m_now_imp(rel),
@@ -552,7 +552,7 @@ void TwoLevelMemory::remember_this (Float weight)
                          weight,   m_now_imp,
                                    m_was_imp);
 }
-bool TwoLevelMemory::contract_to (Int target)
+bool TwoLevelMemory::contract_to (size_t target)
 {
     Float diff = Ob::size() - target;
     Float old_part = exp(-diff / m_time_scale);

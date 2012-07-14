@@ -12,6 +12,7 @@
 //#include <cassert>
 //#include <cmath>
 #include <fstream>
+#include <pomagma/util.hpp>
 
 using std::cin;
 using std::cout;
@@ -108,6 +109,8 @@ void print_resources ();
 string get_date (bool hour=true);
 
 //================================ convenience ================================
+
+using pomagma::oid_t;
 
 typedef uint16_t Short;
 typedef uint32_t Int;

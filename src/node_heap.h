@@ -108,15 +108,17 @@ class Heap_
     typedef typename Signature::Pos  Pos;
     typedef typename Signature::Name Name;
 
-    Node *m_base, *m_mem; //keep real memory pointer to appease valgrind
-    Int   m_capacity;
-    Int   m_nodes_free;
-    Int   m_nodes_used;
-    Int   m_first_free_node; //this is really a Pos
+    Node * m_base;
+    Node * m_mem; //keep real memory pointer to appease valgrind
+    size_t m_capacity;
+    size_t m_nodes_free;
+    size_t m_nodes_used;
+    size_t m_first_free_node; //this is really a Pos
 
 public:
     Heap_ ()
-        : m_base(NULL), m_mem(NULL),
+        : m_base(NULL),
+          m_mem(NULL),
           m_capacity(0),
           m_nodes_free(0),
           m_nodes_used(0),
@@ -124,15 +126,15 @@ public:
     { Assert (Signature::is_used_field, "Signature::is_used_field must be nonzero"); }
 
     //diagnostics
-    bool cleared () const { return m_base==NULL; }
-    Int capacity     () const { return m_capacity; }
-    Int size         () const { return m_nodes_used; }
-    Int nodesUsed    () const { return m_nodes_used; }
-    Int nodesFree    () const { return m_nodes_free; }
+    bool cleared () const { return m_base == NULL; }
+    size_t capacity () const { return m_capacity; }
+    size_t size () const { return m_nodes_used; }
+    size_t nodesUsed () const { return m_nodes_used; }
+    size_t nodesFree () const { return m_nodes_free; }
 
     //memory allocation
-    void init   (Int size=0, bool is_full=false);
-    void resize (Int size, const Int* new2old=NULL);
+    void init   (size_t size = 0, bool is_full = false);
+    void resize (size_t size, const oid_t * new2old = NULL);
     void clear ();
     ~Heap_ () { if (m_base) clear(); }
 
@@ -141,8 +143,8 @@ public:
     void free (Pos pos);
 
     //basic Pos interface
-    Node& operator [] (int offset) { return m_base[offset]; }
-    Node* operator + (int offset) { return m_base + offset; }
+    Node & operator [] (oid_t offset) { return m_base[offset]; }
+    Node * operator + (oid_t offset) { return m_base + offset; }
 };
 
 //================================ positions ================================
@@ -159,14 +161,14 @@ class Pos_
 
     static Heap s_heap;
 
-    Int m_offset;
+    oid_t m_offset;
 public:
     //no constructors or destructors: this is used with reinterpret_cast
     Pos_ () {}
-    explicit Pos_ (Int offset) : m_offset(offset) {} //for conversions
-    //inline Pos& operator = (Int offset) { m_offset = offset; return *this; }
-    operator Int& () { return m_offset; }
-    operator const Int () const { return m_offset; }
+    explicit Pos_ (oid_t offset) : m_offset(offset) {} //for conversions
+    //inline Pos& operator = (oid_t offset) { m_offset = offset; return *this; }
+    operator oid_t & () { return m_offset; }
+    operator const oid_t () const { return m_offset; }
     void      reset ()              { IF_VALID s_heap[m_offset].reset(); }
 
     //simple math
@@ -187,29 +189,37 @@ public:
 
     //indexing
     template <class typedIndex>
-    typename typedIndex::valueType& operator [] (typedIndex index) const
-    { IF_VALID return s_heap[m_offset][index]; }
-    Pos&                            operator [] (Int index)        const
-    { IF_VALID return s_heap[m_offset][index]; }
+    typename typedIndex::valueType & operator [] (typedIndex index) const
+    {
+        IF_VALID return s_heap[m_offset][index];
+    }
+    Pos & operator [] (oid_t index) const
+    {
+        IF_VALID return s_heap[m_offset][index];
+    }
 
     template <class typedIndex>
     typename typedIndex::valueType& operator () (typedIndex index) const
-    { IF_VALID IF_USED  return s_heap[m_offset](index); }
-    Pos&                            operator () (Int index)        const
-    { IF_VALID IF_USED  return s_heap[m_offset](index); }
+    {
+        IF_VALID IF_USED return s_heap[m_offset](index);
+    }
+    Pos & operator () (oid_t index) const
+    {
+        IF_VALID IF_USED return s_heap[m_offset](index);
+    }
 
     //heap diagnostics
-    static bool cleared  () { return s_heap.cleared(); }
-    static bool empty    () { return !s_heap.nodesUsed(); }
-    static bool full     () { return !s_heap.nodesFree(); }
-    static Int  size     () { return s_heap.size(); }
-    static Int  capacity () { return s_heap.capacity(); }
-    static Int  numUsed  () { return s_heap.nodesUsed();}
-    static Int  numFree  () { return s_heap.nodesFree();}
+    static bool cleared () { return s_heap.cleared(); }
+    static bool empty () { return !s_heap.nodesUsed(); }
+    static bool full () { return !s_heap.nodesFree(); }
+    static size_t size () { return s_heap.size(); }
+    static size_t capacity () { return s_heap.capacity(); }
+    static size_t numUsed () { return s_heap.nodesUsed();}
+    static size_t numFree () { return s_heap.nodesFree();}
 
     //allocation
-    static void init    (Int capacity=0, bool is_full=false) { s_heap.init(capacity, is_full); }
-    static void resize  (Int capacity, const Int* new2old=NULL) { s_heap.resize(capacity, new2old); }
+    static void init    (size_t capacity=0, bool is_full = false) { s_heap.init(capacity, is_full); }
+    static void resize  (size_t capacity, const oid_t * new2old = NULL) { s_heap.resize(capacity, new2old); }
     static void clear   ()        { s_heap.clear(); }
     static Pos  alloc   ()        { return s_heap.alloc(); }
     static void free    (Pos pos) { s_heap.free(pos); }
