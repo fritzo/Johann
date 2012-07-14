@@ -59,6 +59,14 @@ template <class T> inline const char* nameof () { return "???"; }
 float get_elapsed_time ();
 std::string get_date (bool hour=true);
 
+class noncopyable
+{
+    noncopyable (const noncopyable &); // intentionally undefined
+    void operator= (const noncopyable &); // intentionally undefined
+public:
+    noncopyable () {}
+};
+
 //----------------------------------------------------------------------------
 // Logging
 

@@ -26,20 +26,21 @@ void test_dense_set (size_t N)
 
     //========================================================================
     POMAGMA_INFO("testing position insertion");
-    for (size_t i=1; i<=N; ++i) S.insert(i);
+    for (size_t i = 1; i <= N; ++i) S.insert(i);
     POMAGMA_ASSERT(S.size() == N, "set is not full after inserting all items");
 
     //========================================================================
     POMAGMA_INFO("testing position removal");
-    for (size_t i=1; i<=N; ++i) S.remove(i);
+    for (size_t i = 1; i <= N; ++i) S.remove(i);
     POMAGMA_ASSERT(S.size() == 0, "set is not empty after removing all items");
 
     //========================================================================
     POMAGMA_INFO("testing iteration");
-    for (size_t i=1; i<=N/2; ++i) S.insert(i);
-    POMAGMA_ASSERT(S.size() == N/2, "set is not half-full after inserting N/2 items");
+    for (size_t i = 1; i <= N / 2; ++i) S.insert(i);
+    POMAGMA_ASSERT(S.size() == N / 2,
+            "set is not half-full after inserting N/2 items");
     unsigned num_items = 0;
-    for (Set::iterator iter=S.begin(); iter; iter.next()) {
+    for (Set::iterator iter(S); iter; iter.next()) {
         POMAGMA_ASSERT(S.contains(*iter), "iterated over uncontained item");
         ++num_items;
     }
@@ -64,7 +65,7 @@ void test_dense_bin_rel (size_t N, bool test1(int,int), bool test2(int,int))
     //========================================================================
     POMAGMA_INFO("testing position insertion");
     unsigned num_items=0;
-    for (size_t i=1; i<=N; ++i) {
+    for (size_t i = 1; i <= N; ++i) {
         R.insert(i);
         ++num_items;
     }
@@ -73,7 +74,7 @@ void test_dense_bin_rel (size_t N, bool test1(int,int), bool test2(int,int))
     //========================================================================
     POMAGMA_INFO("testing pair insertion");
     unsigned num_pairs = 0;
-    for (size_t i=1; i<=N; ++i) {
+    for (size_t i = 1; i <= N; ++i) {
     for (size_t j=1; j<=N; ++j) {
         if (test1(i,j)) {
             R.insert(i,j);
@@ -87,7 +88,7 @@ void test_dense_bin_rel (size_t N, bool test1(int,int), bool test2(int,int))
 
     //========================================================================
     POMAGMA_INFO("testing pair removal");
-    for (size_t i=1; i<=N; ++i) {
+    for (size_t i = 1; i <= N; ++i) {
     for (size_t j=1; j<=N; ++j) {
         if (test1(i,j) and test2(i,j)) {
             R.remove(i,j);
@@ -114,7 +115,7 @@ void test_dense_bin_rel (size_t N, bool test1(int,int), bool test2(int,int))
     //========================================================================
     POMAGMA_INFO("testing pair containment");
     num_pairs = 0;
-    for (size_t i=1; i<=N; ++i) {
+    for (size_t i = 1; i <= N; ++i) {
     for (size_t j=1; j<=N; ++j) {
         if (test1(i,j) and not test2(i,j)) {
             POMAGMA_ASSERT(R.contains_Lx(i,j),
@@ -136,7 +137,7 @@ void test_dense_bin_rel (size_t N, bool test1(int,int), bool test2(int,int))
 
     //========================================================================
     POMAGMA_INFO("testing position merging");
-    for (size_t i=1; i<=N/3; ++i) {
+    for (size_t i = 1; i <= N/3; ++i) {
         size_t m=(2*i)%N, n=(2*(N-i-1)+1)%N;
         if (not (R.supports(m,n) and R.contains(m,n))) continue;
         if (m == n) continue;
@@ -166,7 +167,7 @@ void test_dense_bin_rel (size_t N, bool test1(int,int), bool test2(int,int))
     num_pairs = 0;
     unsigned num_items_seen = 0;
     num_items = R.sup_size();
-    for (size_t i=1; i<=N; ++i) {
+    for (size_t i = 1; i <= N; ++i) {
         if (not R.supports(i)) continue;
         ++num_items_seen;
         Rel::Iterator<LHS_FIXED> iter(i, &R);
@@ -187,7 +188,7 @@ void test_dense_bin_rel (size_t N, bool test1(int,int), bool test2(int,int))
     POMAGMA_INFO("testing line Iterator<RHS_FIXED>");
     num_pairs = 0;
     num_items_seen = 0;
-    for (size_t i=1; i<=N; ++i) {
+    for (size_t i = 1; i <= N; ++i) {
         if (not R.supports(i)) continue;
         ++num_items_seen;
         Rel::Iterator<RHS_FIXED> iter(i, &R);

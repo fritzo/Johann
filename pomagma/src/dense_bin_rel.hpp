@@ -48,21 +48,25 @@ public:
 private:
     dense_set& _get_Lx_set (int i) { return m_set.init(get_Lx_line(i)); }
     dense_set& _get_Rx_set (int i) { return m_set.init(get_Rx_line(i)); }
-    const dense_set& _get_Lx_set (int i) const
-    { return m_set.init(get_Lx_line(i)); }
-    const dense_set& _get_Rx_set (int i) const
-    { return m_set.init(get_Rx_line(i)); }
+    const dense_set & _get_Lx_set (int i) const
+    {
+        return m_set.init(get_Lx_line(i));
+    }
+    const dense_set & _get_Rx_set (int i) const
+    {
+        return m_set.init(get_Rx_line(i));
+    }
 
     // ctors & dtors
 public:
     dense_bin_rel (int num_items, bool is_full = false);
     ~dense_bin_rel ();
-    void move_from (const dense_bin_rel& other, const oid_t* new2old=NULL);
+    void move_from (const dense_bin_rel & other, const oid_t* new2old=NULL);
 
     // attributes
     unsigned size     () const; // supa-slow, try not to use
     unsigned sup_size () const { return m_support.size(); }
-    unsigned capacity () const { return N*N; }
+    unsigned capacity () const { return N * N; }
     unsigned sup_capacity () const { return N; }
     void validate () const;
     void validate_disjoint (const dense_bin_rel& other) const;
@@ -71,17 +75,17 @@ public:
     // element operations
     bool contains_Lx (int i, int j) const { return _bit_Lx(i,j); }
     bool contains_Rx (int i, int j) const { return _bit_Rx(i,j); }
-    bool contains_Lx (const Pos& p) const { return contains_Lx(p.lhs, p.rhs); }
-    bool contains_Rx (const Pos& p) const { return contains_Rx(p.lhs, p.rhs); }
+    bool contains_Lx (const Pos & p) const { return contains_Lx(p.lhs, p.rhs); }
+    bool contains_Rx (const Pos & p) const { return contains_Rx(p.lhs, p.rhs); }
     bool contains (int i, int j) const { return contains_Lx(i,j); }
-    bool contains (const Pos& p) const { return contains_Lx(p); }
+    bool contains (const Pos & p) const { return contains_Lx(p); }
 private:
     // one-sided versions
     void insert_Lx (int i, int j) { _bit_Lx(i,j).one(); }
     void insert_Rx (int i, int j) { _bit_Rx(i,j).one(); }
     void remove_Lx (int i, int j) { _bit_Lx(i,j).zero(); }
     void remove_Rx (int i, int j) { _bit_Rx(i,j).zero(); }
-    void remove_Lx (const dense_set& is, int i);
+    void remove_Lx (const dense_set & is, int i);
     void remove_Rx (int i, const dense_set& js);
 public:
     // two-sided versions
@@ -91,8 +95,8 @@ public:
     inline bool ensure_inserted_Lx (int i, int j);
     inline bool ensure_inserted_Rx (int i, int j);
     bool ensure_inserted (int i, int j) { return ensure_inserted_Lx(i,j); }
-    void ensure_inserted (int i, const dense_set& js, void (*change)(int,int));
-    void ensure_inserted (const dense_set& is, int j, void (*change)(int,int));
+    void ensure_inserted (int i, const dense_set & js, void (*change)(int,int));
+    void ensure_inserted (const dense_set & is, int j, void (*change)(int,int));
 
     // support operations
     bool supports (int i) const { return m_support.contains(i); }
@@ -109,7 +113,7 @@ public:
     //------------------------------------------------------------------------
     // Iteration, always LR
 
-    class iterator
+    class iterator : noncopyable
     {
         dense_set::iterator m_lhs;
         dense_set::iterator m_rhs;
@@ -117,38 +121,48 @@ public:
         const dense_bin_rel & m_rel;
         Pos m_pos;
 
-        // traversal
-        void _lhs () { m_pos.lhs = *m_lhs; }
-        void _rhs () { m_pos.rhs = *m_rhs; }
-        void _finish () { m_pos.lhs = m_pos.rhs = 0; }
-        void _find_rhs (); // finds first rhs, possibly incrementing lhs
     public:
-        void begin () { m_lhs.begin(); _find_rhs(); }
-        void next () { if (++m_rhs) _rhs(); else { m_lhs.next(); _find_rhs(); }}
-        iterator & operator ++ () { next(); return *this; }
-        operator bool () const { return m_lhs; }
-        bool done () const { return m_lhs.done(); }
 
-        // constructors
-    private:
-        iterator (); // intentionally undefined
-        iterator (const iterator &); // intentionally undefined
-        void operator= (const iterator&); // intentionally undefined
-    public:
+        // construction
         iterator (const dense_bin_rel * rel)
             : m_lhs(rel->m_support, false),
               m_rhs(m_rhs_set, false),
               m_rhs_set(rel->N, NULL),
               m_rel(*rel)
-        { begin(); }
+        {
+            begin();
+        }
+
+        // traversal
+    private:
+        void _update_lhs () { m_pos.lhs = *m_lhs; }
+        void _update_rhs () { m_pos.rhs = *m_rhs; }
+        void _finish () { m_pos.lhs = m_pos.rhs = 0; }
+        void _find_rhs (); // finds first rhs, possibly incrementing lhs
+    public:
+        void begin () { m_lhs.begin(); _find_rhs(); }
+        void next ()
+        {
+            m_rhs.next();
+            if (m_rhs) {
+                _update_rhs();
+            } else {
+                m_lhs.next();
+                _find_rhs();
+            }
+        }
+        operator bool () const { return m_lhs; }
+        bool done () const { return m_lhs.done(); }
 
         // dereferencing
     private:
         void _deref_assert () const
-        {   POMAGMA_ASSERT5(not done(), "dereferenced done br::iterator"); }
+        {
+            POMAGMA_ASSERT5(not done(), "dereferenced done br::iterator");
+        }
     public:
-        const Pos& operator *  () const { _deref_assert(); return m_pos; }
-        const Pos* operator -> () const { _deref_assert(); return &m_pos; }
+        const Pos & operator *  () const { _deref_assert(); return m_pos; }
+        const Pos * operator -> () const { _deref_assert(); return &m_pos; }
 
         // access
         int lhs () const { return m_pos.lhs; }
@@ -160,7 +174,7 @@ public:
 
     enum Direction { LHS_FIXED=true, RHS_FIXED=false };
     template<int dir> // REQUIRES Direction dir and Complement comp
-    class Iterator
+    class Iterator : noncopyable
     {
     protected:
         dense_set            m_set;
@@ -168,6 +182,27 @@ public:
         int                  m_fixed;
         Pos                  m_pos;
         const dense_bin_rel& m_rel;
+
+    public:
+
+        // construction
+        Iterator (int fixed, const dense_bin_rel * rel)
+            : m_set(rel->N, dir ? rel->get_Lx_line(fixed)
+                                : rel->get_Rx_line(fixed)),
+              m_moving(m_set, false),
+              m_fixed(fixed),
+              m_rel(*rel)
+        {
+            POMAGMA_ASSERT2(m_rel.supports(fixed),
+                    "br::Iterator's fixed pos is unsupported");
+            begin();
+        }
+        Iterator (const dense_bin_rel * rel)
+            : m_set(rel->N, NULL),
+              m_moving(m_set, false),
+              m_fixed(0),
+              m_rel(*rel)
+        {}
 
         // traversal
     private:
@@ -188,42 +223,29 @@ public:
                            : m_rel.get_Rx_line(fixed));
             begin();
         }
-        void next () { if (++m_moving) _move(); }
+        void next ()
+        {
+            m_moving.next();
+            if (m_moving) { _move(); }
+        }
         operator bool () const { return m_moving; }
         bool done  () const { return m_moving.done(); }
-
-        // construction
-        Iterator (int fixed, const dense_bin_rel* rel)
-            : m_set(rel->N, dir ? rel->get_Lx_line(fixed)
-                                : rel->get_Rx_line(fixed)),
-              m_moving(m_set, false),
-              m_fixed(fixed),
-              m_rel(*rel)
-        {
-            POMAGMA_ASSERT2(m_rel.supports(fixed),
-                    "br::Iterator's fixed pos is unsupported");
-            begin();
-        }
-        Iterator (const dense_bin_rel* rel)
-            : m_set(rel->N, NULL),
-              m_moving(m_set, false),
-              m_fixed(0),
-              m_rel(*rel)
-        {}
 
         // dereferencing
     private:
         void _deref_assert () const
-        { POMAGMA_ASSERT5(not done(), "dereferenced done dense_bin_rel'n::iter"); }
+        {
+            POMAGMA_ASSERT5(not done(), "dereferenced done dense_bin_rel'n::iter");
+        }
     public:
-        const Pos& operator *  () const { _deref_assert(); return m_pos; }
-        const Pos* operator -> () const { _deref_assert(); return &m_pos; }
+        const Pos & operator *  () const { _deref_assert(); return m_pos; }
+        const Pos * operator -> () const { _deref_assert(); return &m_pos; }
 
         // access
-        int fixed  () const { return m_fixed; }
+        int fixed () const { return m_fixed; }
         int moving () const { return *m_moving; }
-        int lhs    () const { return m_pos.lhs; }
-        int rhs    () const { return m_pos.rhs; }
+        int lhs () const { return m_pos.lhs; }
+        int rhs () const { return m_pos.rhs; }
     };
 };
 

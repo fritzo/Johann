@@ -10,7 +10,7 @@ namespace pomagma
 
 typedef uint32_t Line; // TODO switch to uint64_t
 enum { LINE_STRIDE = 8 * sizeof(Line) };
-const Line LINE_MASK = 0x1F;
+const size_t LINE_MASK = LINE_STRIDE - 1;
 
 // proxy class for single bit
 class bool_ref
@@ -97,7 +97,7 @@ public:
     bool empty () const; // not fast
     size_t size () const; // supa-slow, try not to use
     size_t capacity () const { return N; }
-    size_t num_lines () const { return M; }
+    size_t line_count () const { return M; }
     unsigned data_size () const { return sizeof(Line) * M; }
     void validate () const;
 
@@ -128,7 +128,7 @@ public:
 
     //------------------------------------------------------------------------
     // Iteration
-    class iterator
+    class iterator : noncopyable
     {
         typedef       iterator& Ref;
         typedef const iterator& const_Ref;
@@ -139,21 +139,14 @@ public:
         Line m_mask;
         const dense_set & m_set;
 
-        // coordinate access
     public:
-        size_t rem  () const { return m_rem; }
-        size_t quot () const { return m_quot; }
-        size_t mask () const { return m_mask; }
-        const dense_set & set () const { return m_set; };
 
-        // comparison
-        bool operator == (const_Ref other) const { return m_i == other.m_i; }
-        bool operator != (const_Ref other) const { return m_i != other.m_i; }
-        bool operator <  (const_Ref other) const { return m_i <  other.m_i; }
-        bool operator <= (const_Ref other) const { return m_i <= other.m_i; }
-        bool operator >  (const_Ref other) const { return m_i >  other.m_i; }
-        bool operator >= (const_Ref other) const { return m_i >= other.m_i; }
-        // operator size_t () const { return m_i; }
+        // construction
+        iterator (const dense_set & set, bool b = true)
+            : m_set(set)
+        {
+            if (b) { begin(); }
+        }
 
         // traversal
     private:
@@ -161,7 +154,6 @@ public:
     public:
         inline void begin ();
         void next ();
-        Ref operator ++ () { next(); return *this; }
         operator bool () const { return m_i; }
         bool done () const { return not m_i; }
 
@@ -175,13 +167,12 @@ public:
         size_t         operator *  () const { _deref_assert(); return m_i; }
         const size_t * operator -> () const { _deref_assert(); return & m_i; }
 
-        // constructors
-        // WARNING careful using these
-        iterator (const dense_set & set, bool) : m_set(set) {}
-        iterator (const dense_set & set) : m_set(set) { begin(); }
+        // access
+        size_t rem  () const { return m_rem; }
+        size_t quot () const { return m_quot; }
+        size_t mask () const { return m_mask; }
+        const dense_set & set () const { return m_set; };
     };
-    iterator begin () const { return iterator(*this); }
-    iterator end   () const { return iterator(*this, false); }
 };
 
 inline bool_ref dense_set::_bit (size_t i)

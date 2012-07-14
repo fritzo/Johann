@@ -8,12 +8,12 @@ namespace pomagma
 
 dense_bin_fun::dense_bin_fun (int num_items)
     : N(num_items),
-      M((N+ARG_STRIDE)/ARG_STRIDE),
+      M((N + ARG_STRIDE) / ARG_STRIDE),
       m_blocks(pomagma::alloc_blocks<Block4x4W>(M * M)),
-      m_set(N,NULL),
-      m_Lx_lines(pomagma::alloc_blocks<Line>((N+1) * num_lines())),
-      m_Rx_lines(pomagma::alloc_blocks<Line>((N+1) * num_lines())),
-      m_temp_line(pomagma::alloc_blocks<Line>(1 * num_lines()))
+      m_temp_set(N,NULL),
+      m_Lx_lines(pomagma::alloc_blocks<Line>((N + 1) * line_count())),
+      m_Rx_lines(pomagma::alloc_blocks<Line>((N + 1) * line_count())),
+      m_temp_line(pomagma::alloc_blocks<Line>(1 * line_count()))
 {
     POMAGMA_DEBUG("creating dense_bin_fun with " << (M * M) << " blocks");
     POMAGMA_ASSERT(N < (1<<15), "dense_bin_fun is too large"); // FIXME allow larger
@@ -24,8 +24,8 @@ dense_bin_fun::dense_bin_fun (int num_items)
 
     // initialize to zero
     bzero(m_blocks, M * M * sizeof(Block4x4W));
-    bzero(m_Lx_lines, (N+1) * num_lines() * sizeof(Line));
-    bzero(m_Rx_lines, (N+1) * num_lines() * sizeof(Line));
+    bzero(m_Lx_lines, (N + 1) * line_count() * sizeof(Line));
+    bzero(m_Rx_lines, (N + 1) * line_count() * sizeof(Line));
 }
 
 dense_bin_fun::~dense_bin_fun ()
@@ -37,13 +37,13 @@ dense_bin_fun::~dense_bin_fun ()
 }
 
 // for growing
-void dense_bin_fun::move_from (const dense_bin_fun& other)
+void dense_bin_fun::move_from (const dense_bin_fun & other)
 {
     POMAGMA_DEBUG("Copying dense_bin_fun");
 
     // copy data
     unsigned minM = min(M, other.M);
-    for (unsigned j_=0; j_<minM; ++j_) {
+    for (unsigned j_ = 0; j_ < minM; ++j_) {
         int* destin = _block(0,j_);
         const int* source = other._block(0,j_);
         memcpy(destin, source, sizeof(Block4x4W) * minM);
@@ -51,8 +51,8 @@ void dense_bin_fun::move_from (const dense_bin_fun& other)
 
     // copy sets
     unsigned minN = min(N, other.N);
-    unsigned minL = min(num_lines(), other.num_lines());
-    for (unsigned i=1; i<=minN; ++i) {
+    unsigned minL = min(line_count(), other.line_count());
+    for (unsigned i = 1; i <= minN; ++i) {
         memcpy(get_Lx_line(i), other.get_Lx_line(i), sizeof(Line) * minL);
         memcpy(get_Rx_line(i), other.get_Rx_line(i), sizeof(Line) * minL);
     }
@@ -75,31 +75,31 @@ void dense_bin_fun::validate () const
     POMAGMA_DEBUG("Validating dense_bin_fun");
 
     POMAGMA_DEBUG("validating line-block consistency");
-    for (unsigned i_=0; i_<M; ++i_) {
-    for (unsigned j_=0; j_<M; ++j_) {
+    for (unsigned i_ = 0; i_ < M; ++i_) {
+    for (unsigned j_ = 0; j_ < M; ++j_) {
         const int* block = _block(i_,j_);
 
-        for (unsigned _i=0; _i<ARG_STRIDE; ++_i) {
-        for (unsigned _j=0; _j<ARG_STRIDE; ++_j) {
-            unsigned i = i_*ARG_STRIDE+_i; if (i==0 or N<i) continue;
-            unsigned j = j_*ARG_STRIDE+_j; if (j==0 or N<j) continue;
-            int val = _block2value(block,_i,_j);
+        for (unsigned _i = 0; _i < ARG_STRIDE; ++_i) {
+        for (unsigned _j = 0; _j < ARG_STRIDE; ++_j) {
+            unsigned i = i_ * ARG_STRIDE+_i; if (i == 0 or N < i) continue;
+            unsigned j = j_ * ARG_STRIDE+_j; if (j == 0 or N < j) continue;
+            int val = _block2value(block, _i, _j);
 
             if (val) {
-                POMAGMA_ASSERT(contains(i,j),
+                POMAGMA_ASSERT(contains(i, j),
                         "invalid: found unsupported value: " << i << ',' << j);
             } else {
-                POMAGMA_ASSERT(not contains(i,j),
+                POMAGMA_ASSERT(not contains(i, j),
                         "invalid: found supported null value: " << i << ',' << j);
             }
         }}
     }}
 
     POMAGMA_DEBUG("validating left-right line consistency");
-    for (unsigned i=1; i<=N; ++i) {
+    for (unsigned i = 1; i <= N; ++i) {
         dense_set L_set(_get_Lx_set(i));
 
-        for (unsigned j=1; j<=N; ++j) {
+        for (unsigned j = 1; j <= N; ++j) {
             dense_set R_set(_get_Rx_set(j));
 
             if (L_set.contains(j) and not R_set.contains(i)) {
@@ -159,12 +159,12 @@ void dense_bin_fun::merge(
         int k = iter.lhs();
         int& dep = value(k,i);
         int& rep = value(k,j);
-        _get_Lx_set(k).remove(i); // sets m_set
+        _get_Lx_set(k).remove(i); // sets m_temp_set
         if (rep) {
             merge_values(dep,rep);
         } else {
             move_value(dep, k, j);
-            m_set.insert(j); // ie, _get_Lx_set(k).insert(j), as above
+            m_temp_set.insert(j); // ie, _get_Lx_set(k).insert(j), as above
             rep = dep;
         }
         dep = 0;
@@ -178,12 +178,12 @@ void dense_bin_fun::merge(
         int k = iter.rhs();
         int& dep = value(i,k);
         int& rep = value(j,k);
-        _get_Rx_set(k).remove(i); // sets m_set
+        _get_Rx_set(k).remove(i); // sets m_temp_set
         if (rep) {
             merge_values(dep,rep);
         } else {
             move_value(dep, j, k);
-            m_set.insert(j); // ie, _get_Rx_set(k).insert(j), as above
+            m_temp_set.insert(j); // ie, _get_Rx_set(k).insert(j), as above
             rep = dep;
         }
         dep = 0;
@@ -198,7 +198,7 @@ Line* dense_bin_fun::_get_RRx_line (int i, int j) const
 {
     Line* i_line = get_Rx_line(i);
     Line* j_line = get_Rx_line(j);
-    for (oid_t k_=0; k_<num_lines(); ++k_) {
+    for (oid_t k_=0; k_<line_count(); ++k_) {
         m_temp_line[k_] = i_line[k_] & j_line[k_];
     }
     return m_temp_line;
@@ -207,7 +207,7 @@ Line* dense_bin_fun::_get_LRx_line (int i, int j) const
 {
     Line* i_line = get_Lx_line(i);
     Line* j_line = get_Rx_line(j);
-    for (oid_t k_=0; k_<num_lines(); ++k_) {
+    for (oid_t k_=0; k_<line_count(); ++k_) {
         m_temp_line[k_] = i_line[k_] & j_line[k_];
     }
     return m_temp_line;
@@ -216,7 +216,7 @@ Line* dense_bin_fun::_get_LLx_line (int i, int j) const
 {
     Line* i_line = get_Lx_line(i);
     Line* j_line = get_Lx_line(j);
-    for (oid_t k_=0; k_<num_lines(); ++k_) {
+    for (oid_t k_=0; k_<line_count(); ++k_) {
         m_temp_line[k_] = i_line[k_] & j_line[k_];
     }
     return m_temp_line;

@@ -8,7 +8,6 @@ add_library(pomagma SHARED
 	dense_bin_rel.cpp
 	dense_bin_fun.cpp
 	dense_sym_fun.cpp
-	sparse_bin_fun.cpp
 	)
 install(TARGETS pomagma LIBRARY DESTINATION /usr/lib)
 

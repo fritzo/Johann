@@ -17,35 +17,43 @@ typedef int Block4x4W[ARG_STRIDE * ARG_STRIDE];
 class dense_bin_fun
 {
     // data, in blocks
-    const unsigned N,M; // item,block dimension
-    Block4x4W* const m_blocks;
+    const unsigned N, M; // item,block dimension
+    Block4x4W * const m_blocks;
 
     // dense sets for iteration
-    mutable dense_set m_set; // this is a temporary
-    Line* m_Lx_lines;
-    Line* m_Rx_lines;
-    mutable Line* m_temp_line; // this is a temporary
+    mutable dense_set m_temp_set;
+    Line * m_Lx_lines;
+    Line * m_Rx_lines;
+    mutable Line * m_temp_line;
 
     // block wrappers
-          int* _block (int i_, int j_)       { return m_blocks[M*j_ + i_]; }
-    const int* _block (int i_, int j_) const { return m_blocks[M*j_ + i_]; }
-    static int& _block2value (int* block, int i, int j)
-    { return block[(j<<2) | i]; }
+    int * _block (int i_, int j_) { return m_blocks[M * j_ + i_]; }
+    const int * _block (int i_, int j_) const { return m_blocks[M * j_ + i_]; }
+    static int & _block2value (int * block, int i, int j)
+    {
+        return block[(j << 2) | i];
+    }
     static int _block2value (const int* block, int i, int j)
-    { return block[(j<<2) | i]; }
+    {
+        return block[(j << 2) | i];
+    }
 
     // set wrappers
-    unsigned num_lines () const { return m_set.num_lines(); }
+    unsigned line_count () const { return m_temp_set.line_count(); }
 public:
-    Line* get_Lx_line (int i) const { return m_Lx_lines + (i*num_lines()); }
-    Line* get_Rx_line (int i) const { return m_Rx_lines + (i*num_lines()); }
+    Line* get_Lx_line (int i) const { return m_Lx_lines + (i*line_count()); }
+    Line* get_Rx_line (int i) const { return m_Rx_lines + (i*line_count()); }
 private:
-    dense_set& _get_Lx_set (int i) { return m_set.init(get_Lx_line(i)); }
-    dense_set& _get_Rx_set (int i) { return m_set.init(get_Rx_line(i)); }
+    dense_set& _get_Lx_set (int i) { return m_temp_set.init(get_Lx_line(i)); }
+    dense_set& _get_Rx_set (int i) { return m_temp_set.init(get_Rx_line(i)); }
     const dense_set& _get_Lx_set (int i) const
-    { return m_set.init(get_Lx_line(i)); }
+    {
+        return m_temp_set.init(get_Lx_line(i));
+    }
     const dense_set& _get_Rx_set (int i) const
-    { return m_set.init(get_Rx_line(i)); }
+    {
+        return m_temp_set.init(get_Rx_line(i));
+    }
 
     // intersection wrappers
     Line* _get_RRx_line (int i, int j) const;
@@ -74,18 +82,20 @@ public:
     // element operations
     void insert (int lhs, int rhs, int val)
     {
-        value(lhs,rhs) = val;
+        value(lhs, rhs) = val;
         _get_Lx_set(lhs).insert(rhs);
         _get_Rx_set(rhs).insert(lhs);
     }
     void remove (int lhs, int rhs)
     {
-        value(lhs,rhs) = 0;
+        value(lhs, rhs) = 0;
         _get_Lx_set(lhs).remove(rhs);
         _get_Rx_set(rhs).remove(lhs);
     }
     bool contains (int lhs, int rhs) const
-    { return _get_Lx_set(lhs).contains(rhs); }
+    {
+        return _get_Lx_set(lhs).contains(rhs);
+    }
 
     // support operations
     void remove (
@@ -100,7 +110,7 @@ public:
     // Iteration over a line
 
     enum { LHS_FIXED = false, RHS_FIXED = true };
-    template<int idx> class Iterator
+    template<int idx> class Iterator : noncopyable
     {
         dense_set m_set;
         dense_set::iterator m_iter;
@@ -108,19 +118,7 @@ public:
         int m_lhs;
         int m_rhs;
 
-        void _set_pos () { if (idx) m_lhs = *m_iter; else m_rhs = *m_iter; }
     public:
-        // traversal
-        operator bool () const { return m_iter; }
-        bool done () const { return m_iter.done(); }
-        void begin () { m_iter.begin(); if (not done()) _set_pos(); }
-        void begin (int fixed)
-        {
-            if (idx) { m_rhs=fixed; m_set.init(m_fun->get_Rx_line(fixed)); }
-            else     { m_lhs=fixed; m_set.init(m_fun->get_Lx_line(fixed)); }
-            begin();
-        }
-        void next () { m_iter.next(); if (not done()) _set_pos(); }
 
         // construction
         Iterator (const dense_bin_fun * fun)
@@ -142,7 +140,7 @@ public:
             begin();
         }
 
-        Iterator (const dense_bin_fun* fun, int fixed, dense_set& subset)
+        Iterator (const dense_bin_fun * fun, int fixed, dense_set & subset)
             : m_set(fun->N, subset.data()),
               m_iter(m_set, false),
               m_fun(fun),
@@ -154,6 +152,21 @@ public:
             m_set *= line;
             begin();
         }
+
+        // traversal
+    private:
+        void _set_pos () { if (idx) m_lhs = *m_iter; else m_rhs = *m_iter; }
+    public:
+        operator bool () const { return m_iter; }
+        bool done () const { return m_iter.done(); }
+        void begin () { m_iter.begin(); if (not done()) _set_pos(); }
+        void begin (int fixed)
+        {
+            if (idx) { m_rhs=fixed; m_set.init(m_fun->get_Rx_line(fixed)); }
+            else     { m_lhs=fixed; m_set.init(m_fun->get_Lx_line(fixed)); }
+            begin();
+        }
+        void next () { m_iter.next(); if (not done()) _set_pos(); }
 
         // dereferencing
     private:
@@ -167,20 +180,31 @@ public:
         int value () const
         {
             _deref_assert();
-            return m_fun->get_value(m_lhs,m_rhs);
+            return m_fun->get_value(m_lhs, m_rhs);
         }
     };
 
     //------------------------------------------------------------------------
     // Intersection iteration over 2 lines
 
-    class RRxx_Iter
+    class RRxx_Iter : noncopyable
     {
-        dense_set           m_set;
+        dense_set m_set;
         dense_set::iterator m_iter;
-        const dense_bin_fun *m_fun;
-        int m_lhs, m_rhs1, m_rhs2;
+        const dense_bin_fun * m_fun;
+        int m_lhs;
+        int m_rhs1;
+        int m_rhs2;
+
     public:
+
+        // construction
+        RRxx_Iter (const dense_bin_fun * fun)
+            : m_set(fun->N, NULL),
+              m_iter(m_set, false),
+              m_fun(fun)
+        {}
+
         // traversal
         void begin () { m_iter.begin(); if (not done()) m_lhs = *m_iter; }
         void begin (int fixed1, int fixed2)
@@ -197,23 +221,30 @@ public:
         bool done () const { return m_iter.done(); }
         void next () { m_iter.next(); if (not done()) m_lhs = *m_iter; }
 
-        // construction
-        RRxx_Iter (const dense_bin_fun * fun)
-            : m_set(fun->N, NULL), m_iter(m_set, false), m_fun(fun)
-        {}
-
         // dereferencing
-        int lhs    () const { return m_lhs; }
-        int value1 () const { return m_fun->get_value(m_lhs,m_rhs1); }
-        int value2 () const { return m_fun->get_value(m_lhs,m_rhs2); }
+        int lhs () const { return m_lhs; }
+        int value1 () const { return m_fun->get_value(m_lhs, m_rhs1); }
+        int value2 () const { return m_fun->get_value(m_lhs, m_rhs2); }
     };
-    class LRxx_Iter
+
+    class LRxx_Iter : noncopyable
     {
-        dense_set           m_set;
+        dense_set m_set;
         dense_set::iterator m_iter;
         const dense_bin_fun * m_fun;
-        int m_lhs1, m_rhs2, m_rhs1;
+        int m_lhs1;
+        int m_rhs2;
+        int m_rhs1;
+
     public:
+
+        // construction
+        LRxx_Iter (const dense_bin_fun * fun)
+            : m_set(fun->N, NULL),
+              m_iter(m_set, false),
+              m_fun(fun)
+        {}
+
         // traversal
         void begin () { m_iter.begin(); if (not done()) m_rhs1 = *m_iter; }
         void begin (int fixed1, int fixed2)
@@ -230,24 +261,31 @@ public:
         bool done () const { return m_iter.done(); }
         void next () { m_iter.next(); if (not done()) m_rhs1 = *m_iter; }
 
-        // construction
-        LRxx_Iter (const dense_bin_fun * fun)
-            : m_set(fun->N, NULL), m_iter(m_set, false), m_fun(fun)
-        {}
-
         // dereferencing
-        int rhs1   () const { return m_rhs1; }
-        int lhs2   () const { return m_rhs1; }
+        int rhs1 () const { return m_rhs1; }
+        int lhs2 () const { return m_rhs1; }
         int value1 () const { return m_fun->get_value(m_lhs1, m_rhs1); }
         int value2 () const { return m_fun->get_value(m_rhs1, m_rhs2); }
     };
-    class LLxx_Iter
+
+    class LLxx_Iter : noncopyable
     {
         dense_set           m_set;
         dense_set::iterator m_iter;
         const dense_bin_fun * m_fun;
-        int m_lhs1, m_lhs2, m_rhs;
+        int m_lhs1;
+        int m_lhs2;
+        int m_rhs;
+
     public:
+
+        // construction
+        LLxx_Iter (const dense_bin_fun * fun)
+            : m_set(fun->N, NULL),
+              m_iter(m_set, false),
+              m_fun(fun)
+        {}
+
         // traversal
         void begin () { m_iter.begin(); if (not done()) m_rhs = *m_iter; }
         void begin (int fixed1, int fixed2)
@@ -264,19 +302,16 @@ public:
         bool done () const { return m_iter.done(); }
         void next () { m_iter.next(); if (not done()) m_rhs = *m_iter; }
 
-        // construction
-        LLxx_Iter (const dense_bin_fun* fun)
-            : m_set(fun->N, NULL), m_iter(m_set, false), m_fun(fun)
-        {}
-
         // dereferencing
-        int rhs    () const { return m_rhs; }
-        int value1 () const { return m_fun->get_value(m_lhs1,m_rhs); }
-        int value2 () const { return m_fun->get_value(m_lhs2,m_rhs); }
+        int rhs () const { return m_rhs; }
+        int value1 () const { return m_fun->get_value(m_lhs1, m_rhs); }
+        int value2 () const { return m_fun->get_value(m_lhs2, m_rhs); }
     };
 };
 
-// function calling
+//----------------------------------------------------------------------------
+// Function calling
+
 inline int& dense_bin_fun::value (int i, int j)
 {
     POMAGMA_ASSERT5(0<=i and i<=int(N), "i="<<i<<" out of bounds [1,"<<N<<"]");
