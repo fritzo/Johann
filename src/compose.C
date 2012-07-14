@@ -284,9 +284,9 @@ void validate_agreement (Int level)
     logger.debug() << "Validating Comp forests-table agreement" |0;
     Logging::IndentBlock block;
 
-    Assert (g_comp_table->count_items() == Comp::numUsed(),
+    Assert (g_comp_table->count_pairs() == Comp::numUsed(),
             "invalid: g_comp_table has wrong number of eqns: "
-            << g_comp_table->count_items() << ", should be " << Comp::numUsed());
+            << g_comp_table->count_pairs() << ", should be " << Comp::numUsed());
     if (level < 3) return;
 
     for (Comp::sparse_iterator iter=Comp::sbegin(); iter!=Comp::send(); ++iter) {

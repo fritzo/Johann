@@ -57,7 +57,7 @@ void dense_sym_fun::move_from (const dense_sym_fun & other)
 //----------------------------------------------------------------------------
 // Diagnostics
 
-unsigned dense_sym_fun::count_items () const
+unsigned dense_sym_fun::count_pairs () const
 {
     unsigned result = 0;
     for (unsigned i=1; i<=N; ++i) {

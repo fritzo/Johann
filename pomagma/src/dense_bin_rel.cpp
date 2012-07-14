@@ -83,7 +83,7 @@ void dense_bin_rel::move_from (
 // Diagnostics
 
 // supa-slow, try not to use
-unsigned dense_bin_rel::count_items () const
+unsigned dense_bin_rel::count_pairs () const
 {
     unsigned result = 0;
     for (dense_set::iterator i(m_support); i.ok(); i.next()) {
@@ -137,7 +137,7 @@ void dense_bin_rel::validate () const
         }
     }
 
-    unsigned true_size = count_items();
+    unsigned true_size = count_pairs();
     POMAGMA_ASSERT(num_pairs == true_size,
             "invalid: incorrect number of pairs: "
             << num_pairs << " should be " << true_size);

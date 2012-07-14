@@ -75,8 +75,7 @@ public:
     int  get_value (int lhs, int rhs) const { return value(lhs, rhs); }
 
     // attributes
-    unsigned count_items () const; // slow!
-    unsigned capacity () const { return N * N; }
+    unsigned count_pairs () const; // slow!
     unsigned sup_capacity () const { return N; }
     void validate () const;
 

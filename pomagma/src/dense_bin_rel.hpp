@@ -29,7 +29,7 @@ class dense_bin_rel
     // data
     const unsigned N; // number of items per slice
     const unsigned m_line_count;
-    const unsigned N_up; // N rounded up, = m_line_count * LINE_STRIDE
+    const unsigned N_up; // N rounded up, = m_line_count * BITS_PER_LINE
     const unsigned NUM_LINES; // number of Lines in each orientation
     dense_set m_support;
     Line * m_Lx_lines;
@@ -66,9 +66,8 @@ public:
     void move_from (const dense_bin_rel & other, const oid_t* new2old=NULL);
 
     // attributes
-    unsigned count_items () const; // supa-slow, try not to use
+    unsigned count_pairs () const; // supa-slow, try not to use
     unsigned count_items_support () const { return m_support.count_items(); }
-    unsigned capacity () const { return N * N; }
     unsigned sup_capacity () const { return N; }
     void validate () const;
     void validate_disjoint (const dense_bin_rel& other) const;

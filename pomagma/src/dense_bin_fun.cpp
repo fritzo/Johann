@@ -59,7 +59,7 @@ void dense_bin_fun::move_from (const dense_bin_fun & other)
 //----------------------------------------------------------------------------
 // Diagnostics
 
-unsigned dense_bin_fun::count_items () const
+unsigned dense_bin_fun::count_pairs () const
 {
     unsigned result = 0;
     for (unsigned i = 1; i <= N; ++i) {

@@ -284,9 +284,9 @@ void validate_agreement (Int level)
     logger.debug() << "Validating App forests-table agreement" |0;
     Logging::IndentBlock block;
 
-    Assert (g_app_table->count_items() == App::numUsed(),
+    Assert (g_app_table->count_pairs() == App::numUsed(),
             "invalid: g_app_table has wrong number of eqns: "
-            << g_app_table->count_items() << ", should be " << App::numUsed());
+            << g_app_table->count_pairs() << ", should be " << App::numUsed());
     if (level < 3) return;
 
     for (App::sparse_iterator iter=App::sbegin(); iter!=App::send(); ++iter) {
