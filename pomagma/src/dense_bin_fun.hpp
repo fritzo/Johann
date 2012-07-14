@@ -17,14 +17,16 @@ typedef int Block4x4W[ARG_STRIDE * ARG_STRIDE];
 class dense_bin_fun
 {
     // data, in blocks
+    // TODO switch usigned -> size_t
     const unsigned N, M; // item,block dimension
     Block4x4W * const m_blocks;
 
     // dense sets for iteration
-    mutable dense_set m_temp_set;
-    mutable Line * m_temp_line;
-    Line * m_Lx_lines;
-    Line * m_Rx_lines;
+    const size_t m_line_count;
+    Line * const m_Lx_lines;
+    Line * const m_Rx_lines;
+    mutable dense_set m_temp_set; // TODO FIXME this is not thread-safe
+    mutable Line * m_temp_line; // TODO FIXME this is not thread-safe
 
     // block wrappers
     int * _block (int i_, int j_) { return m_blocks[M * j_ + i_]; }
@@ -39,18 +41,17 @@ class dense_bin_fun
     }
 
     // set wrappers
-    unsigned line_count () const { return m_temp_set.line_count(); }
 public:
-    Line* get_Lx_line (int i) const { return m_Lx_lines + (i*line_count()); }
-    Line* get_Rx_line (int i) const { return m_Rx_lines + (i*line_count()); }
+    Line * get_Lx_line (int i) const { return m_Lx_lines + (i * m_line_count); }
+    Line * get_Rx_line (int i) const { return m_Rx_lines + (i * m_line_count); }
 private:
-    dense_set& _get_Lx_set (int i) { return m_temp_set.init(get_Lx_line(i)); }
-    dense_set& _get_Rx_set (int i) { return m_temp_set.init(get_Rx_line(i)); }
-    const dense_set& _get_Lx_set (int i) const
+    dense_set & _get_Lx_set (int i) { return m_temp_set.init(get_Lx_line(i)); }
+    dense_set & _get_Rx_set (int i) { return m_temp_set.init(get_Rx_line(i)); }
+    const dense_set & _get_Lx_set (int i) const
     {
         return m_temp_set.init(get_Lx_line(i));
     }
-    const dense_set& _get_Rx_set (int i) const
+    const dense_set & _get_Rx_set (int i) const
     {
         return m_temp_set.init(get_Rx_line(i));
     }
@@ -64,18 +65,18 @@ private:
 public:
     dense_bin_fun (int num_items);
     ~dense_bin_fun ();
-    void move_from (const dense_bin_fun& other); // for growing
+    void move_from (const dense_bin_fun & other); // for growing
 
     // function calling
 private:
-    inline int& value (int lhs, int rhs);
+    inline int & value (int lhs, int rhs);
 public:
-    inline int  value (int lhs, int rhs) const;
-    int  get_value (int lhs, int rhs) const { return value(lhs,rhs); }
+    inline int value (int lhs, int rhs) const;
+    int  get_value (int lhs, int rhs) const { return value(lhs, rhs); }
 
     // attributes
-    unsigned size     () const; // slow!
-    unsigned capacity () const { return N*N; }
+    unsigned count_items () const; // slow!
+    unsigned capacity () const { return N * N; }
     unsigned sup_capacity () const { return N; }
     void validate () const;
 
@@ -102,7 +103,8 @@ public:
             const int i,
             void remove_value(int)); // rem
     void merge (
-            const int i, const int j,
+            const int i,
+            const int j,
             void merge_values(int,int),    // dep,rep
             void move_value(int,int,int)); // moved,lhs,rhs
 

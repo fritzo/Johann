@@ -12,55 +12,48 @@
 namespace pomagma
 {
 
+// allocates an aligned array, wraps posix_memalign
+void * alloc_blocks (size_t block_size, size_t block_count, size_t alignment)
+{
+    POMAGMA_DEBUG("Allocating " << block_count
+                   << " blocks of size " << block_size << 'B');
 
-unsigned roundUp (unsigned i)
-{//rounds up to next power of two
-    unsigned j = 1;
-    for (i-=1; i; i>>=1) j <<= 1;
-    return j;
-}
-unsigned roundDown (unsigned i)
-{//rounds down to previous power of two
-    unsigned j = 1;
-    for (i>>=1; i; i>>=1) j <<= 1;
-    return j;
-}
-
-void* alloc_blocks (size_t blockSize, size_t numBlocks)
-{//allocates an aligned array, wraps posix_memalign
-    POMAGMA_DEBUG("Allocating " << numBlocks
-                   << " blocks of size " << blockSize << 'B');
-
-    size_t alignment = max(16u, roundDown(blockSize));
-    size_t numBytes = blockSize * numBlocks;
+    size_t byte_count = block_size * block_count;
     void * base;
-    if (posix_memalign(& base, alignment, numBytes)) {
-        POMAGMA_WARN("posix_memalign failed");
-        return NULL;
-    } else {
-        return base;
-    }
+    int info = posix_memalign(& base, alignment, byte_count);
+
+    POMAGMA_ASSERT(info == 0,
+            "posix_memalign failed to allocate " << byte_count << 'B');
+
+    return base;
 }
-void free_blocks (void* base)
-{//just wraps free()
+
+// just wraps free()
+void free_blocks (void * base)
+{
     POMAGMA_DEBUG("Freeing blocks");
 
     free(base);
 }
-void clear_block (void* base, size_t blockSize)
-{//sets data to zero, wraps memset
-    LOG_DEBUG1( "Clearing block of size " << blockSize << 'B' )
 
-    //std::memset(base, 0, blockSize);
-    bzero(base, blockSize);
-}
-void copy_blocks (void* destin_base, const void* source_base,
-                  size_t blockSize, size_t numBlocks)
-{//justs wraps for memcpy
-    LOG_DEBUG1( "Copying blocks" )
+// sets data to zero, wraps memset
+void clear_block (void * base, size_t block_size)
+{
+    LOG_DEBUG1("Clearing block of size " << block_size << 'B')
 
-    memcpy(destin_base, source_base, blockSize * numBlocks);
+    bzero(base, block_size);
 }
 
+// justs wraps memcpy
+void copy_blocks (
+        void * destin_base,
+        const void * source_base,
+        size_t block_size,
+        size_t block_count)
+{
+    LOG_DEBUG1("Copying blocks")
+
+    memcpy(destin_base, source_base, block_size * block_count);
 }
 
+} // namespace pomagma

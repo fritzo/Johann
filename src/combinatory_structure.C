@@ -511,7 +511,7 @@ void dump (string filename, Int struct_type, bool verbose)
 template<class OS>
 void _log_stats_to(OS& os)
 {
-    //obs
+    // obs
     Int o_size = Ob::size();
     Int num_unkns = 0;
     Int core_size = 0;
@@ -534,7 +534,7 @@ void _log_stats_to(OS& os)
     //    << o_size - num_unkns << " explicit + "
     //    << num_unkns << " implicit \n";
 
-    //app table
+    // app table
     long a_size = App::size();
     long a_supported = o_size * o_size;
     float a_usage = (1.0 * a_size) / (1.0 * a_supported);
@@ -542,7 +542,7 @@ void _log_stats_to(OS& os)
         << a_size << " eqns / "
         << a_supported << " supported\n";
 
-    //comp table
+    // comp table
     long c_size = Comp::size();
     long c_supported = o_size * o_size;
     float c_usage = (1.0 * c_size) / (1.0 * c_supported);
@@ -550,7 +550,7 @@ void _log_stats_to(OS& os)
         << c_size << " eqns / "
         << c_supported << " supported\n";
 
-    //join table
+    // join table
     long j_size = Join::size();
     long j_supported = o_size * o_size;
     float j_usage = (1.0 * j_size) / (1.0 * j_supported);
@@ -558,7 +558,7 @@ void _log_stats_to(OS& os)
         << j_size << " eqns / "
         << j_supported << " supported\n";
 
-    //order table
+    // order table
     long l_size = Ord::size_pos();
     long n_size = Ord::size_neg();
     long l_supported = o_size * o_size;
@@ -567,9 +567,9 @@ void _log_stats_to(OS& os)
         << l_size << " pos + " << n_size << " neg) / "
         << l_supported << " supported\n";
 
-    //constancy
+    // constancy
     if (LT::Atoms::K) {
-        long num_const = AE::Lx_support(*LT::Atoms::K).size();
+        long num_const = AE::Lx_support(*LT::Atoms::K).count_items();
         float o_const = (1.0 * num_const) / o_size;
         float a_const = o_const / a_usage;
         float c_const = o_const / c_usage;

@@ -22,7 +22,7 @@ all: kernel server jmapper html pdf
 #-----------------------------------------------------------------------------
 # Testing
 
-test:
+test: kernel
 	echo '' > log/test.log
 	$(MAKE) -C pomagma test
 	$(MAKE) -C src test

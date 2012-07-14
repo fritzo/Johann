@@ -58,10 +58,10 @@ public:
     static void init   (Int num_obs, bool is_full=false);
     static void resize (Int num_obs, const Int* old2new=NULL);
     static void clear ();
-    static inline unsigned long capacity () { return g_pos_table->capacity(); }
-    static inline unsigned long size_pos () { return g_pos_table->size(); }
-    static inline unsigned long size_neg () { return g_neg_table->size(); }
-    static inline unsigned long size     () { return size_pos() + size_neg(); }
+    static inline size_t capacity () { return g_pos_table->capacity(); }
+    static inline size_t size_pos () { return g_pos_table->count_items(); }
+    static inline size_t size_neg () { return g_neg_table->count_items(); }
+    static inline size_t size     () { return size_pos() + size_neg(); }
 
     //comparison, for containers
     bool operator == (const Ord& rhs) const

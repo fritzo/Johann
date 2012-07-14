@@ -10,9 +10,10 @@ dense_sym_fun::dense_sym_fun (int num_items)
     : N(num_items),
       M((N + DSF_STRIDE) / DSF_STRIDE),
       m_blocks(pomagma::alloc_blocks<Block4x4W>(unordered_pair_count(M))),
+      m_line_count(dense_set::line_count(N)),
+      m_Lx_lines(pomagma::alloc_blocks<Line>((N + 1) * m_line_count)),
       m_temp_set(N, NULL),
-      m_temp_line(pomagma::alloc_blocks<Line>(1 * line_count())),
-      m_Lx_lines(pomagma::alloc_blocks<Line>((N + 1) * line_count()))
+      m_temp_line(pomagma::alloc_blocks<Line>(1 * m_line_count))
 {
     POMAGMA_DEBUG("creating dense_sym_fun with "
             << unordered_pair_count(M) << " blocks");
@@ -26,14 +27,14 @@ dense_sym_fun::dense_sym_fun (int num_items)
 
     // initialize to zero
     bzero(m_blocks, unordered_pair_count(M) * sizeof(Block4x4W));
-    bzero(m_Lx_lines, (N + 1) * line_count() * sizeof(Line));
+    bzero(m_Lx_lines, (N + 1) * m_line_count * sizeof(Line));
 }
 
 dense_sym_fun::~dense_sym_fun ()
 {
     pomagma::free_blocks(m_blocks);
-    pomagma::free_blocks(m_temp_line);
     pomagma::free_blocks(m_Lx_lines);
+    pomagma::free_blocks(m_temp_line);
 }
 
 // for growing
@@ -51,7 +52,7 @@ void dense_sym_fun::move_from (const dense_sym_fun & other)
 
     // copy sets
     unsigned minN = min(N, other.N);
-    unsigned minL = min(line_count(), other.line_count());
+    unsigned minL = min(m_line_count, other.m_line_count);
     for (unsigned i = 1; i <= minN; ++i) {
         memcpy(get_Lx_line(i), other.get_Lx_line(i), sizeof(Line) * minL);
     }
@@ -60,11 +61,11 @@ void dense_sym_fun::move_from (const dense_sym_fun & other)
 //----------------------------------------------------------------------------
 // Diagnostics
 
-unsigned dense_sym_fun::size () const
+unsigned dense_sym_fun::count_items () const
 {
     unsigned result = 0;
     for (unsigned i=1; i<=N; ++i) {
-        result += _get_Lx_set(i).size();
+        result += _get_Lx_set(i).count_items();
     }
     return result;
 }
@@ -169,7 +170,7 @@ Line * dense_sym_fun::_get_LLx_line (int i, int j) const
 {
     Line * i_line = get_Lx_line(i);
     Line * j_line = get_Lx_line(j);
-    for (oid_t k_ = 0; k_ < line_count(); ++k_) {
+    for (oid_t k_ = 0; k_ < m_line_count; ++k_) {
         m_temp_line[k_] = i_line[k_] & j_line[k_];
     }
     return m_temp_line;

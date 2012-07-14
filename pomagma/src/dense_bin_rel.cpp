@@ -84,11 +84,11 @@ void dense_bin_rel::move_from (const dense_bin_rel & other, const oid_t * new2ol
 // Diagnostics
 
 // supa-slow, try not to use
-unsigned dense_bin_rel::size () const
+unsigned dense_bin_rel::count_items () const
 {
     unsigned result = 0;
     for (dense_set::iterator i(m_support); i.ok(); i.next()) {
-        result += _get_Lx_set(*i).size();
+        result += _get_Lx_set(*i).count_items();
     }
     return result;
 }
@@ -138,7 +138,7 @@ void dense_bin_rel::validate () const
         }
     }
 
-    unsigned true_size = size();
+    unsigned true_size = count_items();
     POMAGMA_ASSERT(num_pairs == true_size,
             "invalid: incorrect number of pairs: "
             << num_pairs << " should be " << true_size);
@@ -151,7 +151,7 @@ void dense_bin_rel::validate_disjoint (const dense_bin_rel& other) const
     // validate supports agree
     POMAGMA_ASSERT(m_support.capacity() == other.m_support.capacity(),
             "invalid: disjoint dense_bin_rel support capacities disagree");
-    POMAGMA_ASSERT(m_support.size() == other.m_support.size(),
+    POMAGMA_ASSERT(m_support.count_items() == other.m_support.count_items(),
             "invalid: disjoint dense_bin_rel support sizes disagree");
     POMAGMA_ASSERT(m_support == other.m_support,
             "invalid: disjoint dense_bin_rel supports disagree");

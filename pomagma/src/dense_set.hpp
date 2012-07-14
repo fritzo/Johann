@@ -2,6 +2,7 @@
 #define POMAGMA_DENSE_SET_H
 
 #include "util.hpp"
+#include "aligned_alloc.hpp"
 
 namespace pomagma
 {
@@ -9,57 +10,32 @@ namespace pomagma
 // WARNING zero/null items are not allowed
 
 typedef uint32_t Line; // TODO switch to uint64_t
-enum { LINE_STRIDE = 8 * sizeof(Line) };
+const size_t LINE_STRIDE = 8 * sizeof(Line);
 const size_t LINE_MASK = LINE_STRIDE - 1;
 
 // proxy class for single bit
 class bool_ref
 {
-    Line * const m_line;
+    Line & m_line;
     const Line m_mask;
-    void _deref_assert () const
-    {
-        POMAGMA_ASSERT4(m_line != NULL, "null bit_ref accessed");
-    }
 public:
-    bool_ref (Line * line, size_t _i) : m_line(line), m_mask(1 << _i) {}
-    bool_ref () : m_line(NULL), m_mask(0) {} // for containers
+    bool_ref (Line & line, size_t _i) : m_line(line), m_mask(1 << _i) {}
 
-    operator bool () const
-    {
-        _deref_assert();
-        return (*m_line) & m_mask;
-    }
-    bool_ref & operator = (bool b)
-    {
-        _deref_assert();
-        (*m_line) |= b * m_mask;
-        (*m_line) &= ~(b * ~m_mask);
-        return * this;
-    }
-    bool_ref & operator |= (bool b)
-    {
-        _deref_assert();
-        (*m_line) |= b * m_mask;
-        return * this;
-    }
-    bool_ref & operator &= (bool b)
-    {
-        _deref_assert();
-        (*m_line) &= ~(!b * m_mask);
-        return * this;
-    }
-
-    void zero () { _deref_assert(); (*m_line) &= ~m_mask; }
-    void one () { _deref_assert(); (*m_line) |= m_mask; }
-    void invert () { _deref_assert(); (*m_line) ^= m_mask; }
+    // these should be atomic
+    operator bool () const { return m_line & m_mask; }
+    void operator |= (bool b) { m_line |= b * m_mask; }
+    void operator &= (bool b) { m_line &= ~(!b * m_mask); }
+    void zero () { m_line &= ~m_mask; }
+    void one () { m_line |= m_mask; }
+    void invert () { m_line ^= m_mask; }
 };
 
 // basically a bitfield
 class dense_set
 {
     // data, in lines
-    const size_t N, M; // number of items,lines
+    const size_t N; // number of items
+    const size_t M; // number of items
     Line * m_lines;
     const bool m_alias;
 
@@ -74,15 +50,26 @@ public:
     Line _line (size_t i) const { return m_lines[i]; }
     Line & _line (size_t i) { return m_lines[i]; }
     Line * data () { return m_lines; }
+    static size_t line_count (size_t item_count)
+    {
+        // position 0 is unused, so we count from item 1
+        return (item_count + LINE_STRIDE) / LINE_STRIDE;
+    }
 
     // ctors & dtors
-    dense_set (size_t num_items);
-    dense_set (size_t num_items, Line * lines)
-        : N(num_items),
-          M((N + LINE_STRIDE) / LINE_STRIDE), // since position 0 is unused
+    dense_set (size_t item_count);
+    dense_set (size_t item_count, Line * lines)
+        : N(item_count),
+          M(line_count(item_count)),
           m_lines(lines),
           m_alias(true)
     {}
+    //dense_set (size_t item_count, AlignedBuffer<Line> & buffer)
+    //    : N(item_count),
+    //      M(line_count(item_count)),
+    //      m_lines(buffer(M)),
+    //      m_alias(true)
+    //{}
     ~dense_set ();
     void move_from (const dense_set & other, const oid_t * new2old = NULL);
     dense_set & init (Line * lines)
@@ -95,7 +82,7 @@ public:
 
     // attributes
     bool empty () const; // not fast
-    size_t size () const; // supa-slow, try not to use
+    size_t count_items () const; // supa-slow, try not to use
     size_t capacity () const { return N; }
     size_t line_count () const { return M; }
     unsigned data_size () const { return sizeof(Line) * M; }
@@ -130,9 +117,6 @@ public:
     // Iteration
     class iterator : noncopyable
     {
-        typedef       iterator& Ref;
-        typedef const iterator& const_Ref;
-
         size_t m_i;
         size_t m_rem;
         size_t m_quot;
@@ -178,8 +162,8 @@ inline bool_ref dense_set::_bit (size_t i)
 {
     POMAGMA_ASSERT5(0 < i and i <= N,
             "dense_set[i] index out of range: " << i);
-    auto I = div(i,LINE_STRIDE); // either div_t or ldiv_t
-    return bool_ref(m_lines + I.quot, I.rem);
+    auto I = div(i, LINE_STRIDE); // either div_t or ldiv_t
+    return bool_ref(m_lines[I.quot], I.rem);
 }
 inline bool dense_set::_bit (size_t i) const
 {

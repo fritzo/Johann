@@ -1,6 +1,5 @@
 
 #include "dense_set.hpp"
-#include "aligned_alloc.hpp"
 #include <cstring>
 
 namespace pomagma
@@ -56,7 +55,7 @@ bool dense_set::empty () const
 }
 
 // supa-slow, try not to use
-size_t dense_set::size () const
+size_t dense_set::count_items () const
 {
     unsigned result = 0;
     for (size_t m = 0; m < M; ++m) {

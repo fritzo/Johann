@@ -293,9 +293,9 @@ void validate_agreement (Int level)
     Logging::IndentBlock block;
 
     unsigned num_used = numUsed();
-    Assert (g_join_table->size() == num_used,
+    Assert (g_join_table->count_items() == num_used,
             "invalid: g_join_table has wrong number of eqns: "
-            << g_join_table->size() << ", should be " << num_used);
+            << g_join_table->count_items() << ", should be " << num_used);
     if (level < 3) return;
 
     for (Join::sparse_iterator iter=Join::sbegin(); iter!=Join::send(); ++iter) {

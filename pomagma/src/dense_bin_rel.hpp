@@ -64,8 +64,8 @@ public:
     void move_from (const dense_bin_rel & other, const oid_t* new2old=NULL);
 
     // attributes
-    unsigned size     () const; // supa-slow, try not to use
-    unsigned sup_size () const { return m_support.size(); }
+    unsigned count_items () const; // supa-slow, try not to use
+    unsigned count_items_support () const { return m_support.count_items(); }
     unsigned capacity () const { return N * N; }
     unsigned sup_capacity () const { return N; }
     void validate () const;
