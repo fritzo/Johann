@@ -10,8 +10,8 @@ namespace pomagma
 // WARNING zero/null items are not allowed
 
 typedef uint32_t Line; // TODO switch to uint64_t
-const size_t LINE_STRIDE = 8 * sizeof(Line);
-const size_t LINE_MASK = LINE_STRIDE - 1;
+const size_t BITS_PER_LINE = 8 * sizeof(Line);
+const size_t LINE_POS_MASK = BITS_PER_LINE - 1;
 
 // proxy class for single bit
 class bool_ref
@@ -21,13 +21,12 @@ class bool_ref
 public:
     bool_ref (Line & line, size_t _i) : m_line(line), m_mask(1 << _i) {}
 
-    // these should be atomic
-    operator bool () const { return m_line & m_mask; }
-    void operator |= (bool b) { m_line |= b * m_mask; }
-    void operator &= (bool b) { m_line &= ~(!b * m_mask); }
-    void zero () { m_line &= ~m_mask; }
-    void one () { m_line |= m_mask; }
-    void invert () { m_line ^= m_mask; }
+    operator bool () const { return m_line & m_mask; } // ATOMIC
+    void operator |= (bool b) { m_line |= b * m_mask; } // ATOMIC
+    void operator &= (bool b) { m_line &= ~(!b * m_mask); } // ATOMIC
+    void zero () { m_line &= ~m_mask; } // ATOMIC
+    void one () { m_line |= m_mask; } // ATOMIC
+    void invert () { m_line ^= m_mask; } // ATOMIC
 };
 
 // basically a bitfield
@@ -35,7 +34,7 @@ class dense_set
 {
     // data, in lines
     const size_t N; // number of items
-    const size_t M; // number of items
+    const size_t M; // number of lines
     Line * m_lines;
     const bool m_alias;
 
@@ -49,7 +48,7 @@ public:
     static size_t line_count (size_t item_count)
     {
         // position 0 is unused, so we count from item 1
-        return (item_count + LINE_STRIDE) / LINE_STRIDE;
+        return (item_count + BITS_PER_LINE) / BITS_PER_LINE;
     }
 
     // ctors & dtors
@@ -158,14 +157,14 @@ inline bool_ref dense_set::_bit (size_t i)
 {
     POMAGMA_ASSERT5(0 < i and i <= N,
             "dense_set[i] index out of range: " << i);
-    auto I = div(i, LINE_STRIDE); // either div_t or ldiv_t
+    auto I = div(i, BITS_PER_LINE); // either div_t or ldiv_t
     return bool_ref(m_lines[I.quot], I.rem);
 }
 inline bool dense_set::_bit (size_t i) const
 {
     POMAGMA_ASSERT5(0 < i and i <= N,
             "const dense_set[i] index out of range: " << i);
-    auto I = div(i, LINE_STRIDE); // either div_t or ldiv_t
+    auto I = div(i, BITS_PER_LINE); // either div_t or ldiv_t
     return m_lines[I.quot] & (1 << I.rem);
 }
 

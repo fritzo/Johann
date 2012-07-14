@@ -6,19 +6,18 @@
 namespace pomagma
 {
 
-// ctor & dtor
 dense_bin_rel::dense_bin_rel (int num_items, bool is_full)
     : N(num_items),
-      M( (N+LINE_STRIDE) / LINE_STRIDE ),
-      N_up(M * LINE_STRIDE),
-      NUM_LINES(M * N_up),
+      m_line_count(dense_set::line_count(N)),
+      N_up(m_line_count * BITS_PER_LINE),
+      NUM_LINES(m_line_count * N_up),
       m_support(N),
       m_Lx_lines(pomagma::alloc_blocks<Line>(NUM_LINES)),
       m_Rx_lines(pomagma::alloc_blocks<Line>(NUM_LINES)),
-      m_set(N,NULL),
-      m_temp_line(pomagma::alloc_blocks<Line>(M))
+      m_temp_set(N,NULL),
+      m_temp_line(pomagma::alloc_blocks<Line>(m_line_count))
 {
-    POMAGMA_DEBUG("creating dense_bin_rel with " << M << " lines");
+    POMAGMA_DEBUG("creating dense_bin_rel with " << m_line_count << " lines");
 
     // FIXME allow larger
     POMAGMA_ASSERT(N_up <= (1 << 16), "dense_bin_rel is too large");
@@ -30,13 +29,17 @@ dense_bin_rel::dense_bin_rel (int num_items, bool is_full)
     // fill if necessary
     if (is_full) m_support.insert_all();
 }
+
 dense_bin_rel::~dense_bin_rel ()
 {
     pomagma::free_blocks(m_Lx_lines);
     pomagma::free_blocks(m_Rx_lines);
     pomagma::free_blocks(m_temp_line);
 }
-void dense_bin_rel::move_from (const dense_bin_rel & other, const oid_t * new2old)
+
+void dense_bin_rel::move_from (
+        const dense_bin_rel & other,
+        const oid_t * new2old)
 {
     POMAGMA_DEBUG("Copying dense_bin_rel");
 
@@ -53,7 +56,7 @@ void dense_bin_rel::move_from (const dense_bin_rel & other, const oid_t * new2ol
         POMAGMA_DEBUG("copying by column and by row");
         // copy rows and columns
         int minN = min(N, other.N);
-        int minM = min(M, other.M);
+        int minM = min(m_line_count, other.m_line_count);
         for (int i = 1; i <= minN; ++i) {
             memcpy(get_Lx_line(i), other.get_Lx_line(i), sizeof(Line) * minM);
             memcpy(get_Rx_line(i), other.get_Rx_line(i), sizeof(Line) * minM);
@@ -177,32 +180,32 @@ void dense_bin_rel::print_table (unsigned n) const
 void dense_bin_rel::remove_Lx (const dense_set& is, int j)
 {
     // slower version
-    //for (dense_set::iterator i = is.begin(); i; i.next()) {
-    //    remove_Lx(*i,j);
+    //for (dense_set::iterator i(is); i.ok(); i.next()) {
+    //    remove_Lx(*i, j);
     //}
 
     // faster version
-    unsigned mask = ~(1 << (j % LINE_STRIDE));
-    int offset = j / LINE_STRIDE;
+    unsigned mask = ~(1 << (j % BITS_PER_LINE));
+    int offset = j / BITS_PER_LINE;
     Line* lines = m_Lx_lines + offset;
     for (dense_set::iterator i(is); i.ok(); i.next()) {
-         lines[*i * M] &= mask;
+         lines[*i * m_line_count] &= mask; // ATOMIC
     }
 }
 
 void dense_bin_rel::remove_Rx (int i, const dense_set& js)
 {
     // slower version
-    //for (dense_set::iterator j = js.begin(); j; j.next()) {
-    //    remove_Rx(i,*j);
+    //for (dense_set::iterator j(js); j.ok(); j.next()) {
+    //    remove_Rx(i, *j);
     //}
 
     // faster version
-    unsigned mask = ~(1 << (i % LINE_STRIDE));
-    int offset = i / LINE_STRIDE;
-    Line* lines = m_Rx_lines + offset;
+    unsigned mask = ~(1 << (i % BITS_PER_LINE));
+    int offset = i / BITS_PER_LINE;
+    Line * lines = m_Rx_lines + offset;
     for (dense_set::iterator j(js); j.ok(); j.next()) {
-         lines[*j * M] &= mask;
+         lines[*j * m_line_count] &= mask; // ATOMIC
     }
 }
 
@@ -210,32 +213,44 @@ void dense_bin_rel::remove (int i)
 {
     POMAGMA_ASSERT4(supports(i), "tried to remove unsupported element " << i);
 
-    _get_Lx_set(i);  remove_Rx(i,m_set);  m_set.zero();     // remove column
-    _get_Rx_set(i);  remove_Lx(m_set,i);  m_set.zero();     // remove row
+    // remove column
+    _get_Lx_set(i);
+    remove_Rx(i, m_temp_set);
+    m_temp_set.zero();
+
+    // remove row
+    _get_Rx_set(i);
+    remove_Lx(m_temp_set, i);
+    m_temp_set.zero();
 
     m_support.remove(i);
 }
 
-void dense_bin_rel::ensure_inserted (int i, const dense_set& js,
-                                     void (*change)(int,int))
+void dense_bin_rel::ensure_inserted (
+        int i,
+        const dense_set & js,
+        void (*change)(int,int))
 {
-    dense_set diff(N,m_temp_line), dest(N,get_Lx_line(i));
+    dense_set diff(N, m_temp_line), dest(N, get_Lx_line(i));
     if (dest.ensure(js, diff)) {
         for (dense_set::iterator k(diff); k.ok(); k.next()) {
-            insert_Rx(i,*k);
-            change   (i,*k);
+            insert_Rx(i, *k);
+            change(i, *k);
         }
     }
 }
 
-void dense_bin_rel::ensure_inserted (const dense_set& is, int j,
-                                     void (*change)(int,int))
+void dense_bin_rel::ensure_inserted (
+        const dense_set & is,
+        int j,
+        void (*change)(int, int))
 {
-    dense_set diff(N,m_temp_line), dest(N,get_Rx_line(j));
+    dense_set diff(N, m_temp_line);
+    dense_set dest(N, get_Rx_line(j));
     if (dest.ensure(is, diff)) {
         for (dense_set::iterator k(diff); k.ok(); k.next()) {
-            insert_Lx(*k,j);
-            change   (*k,j);
+            insert_Lx(*k, j);
+            change(*k, j);
         }
     }
 }
@@ -295,12 +310,12 @@ oid_t dense_bin_rel::data_size () const
 {
     return 2 * sizeof(Line) * NUM_LINES;
 }
-void dense_bin_rel::write_to_file (FILE* file)
+void dense_bin_rel::write_to_file (FILE * file)
 {
     safe_fwrite(m_Lx_lines, sizeof(Line), NUM_LINES, file);
     safe_fwrite(m_Rx_lines, sizeof(Line), NUM_LINES, file);
 }
-void dense_bin_rel::read_from_file (FILE* file)
+void dense_bin_rel::read_from_file (FILE * file)
 {
     // WARNING assumes support is full
     safe_fread(m_Lx_lines, sizeof(Line), NUM_LINES, file);
@@ -326,5 +341,4 @@ void dense_bin_rel::iterator::_find_rhs ()
     _finish();
 }
 
-}
-
+} // namespace pomagma

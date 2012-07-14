@@ -27,34 +27,36 @@ class dense_bin_rel
     };
 
     // data
-    const unsigned N, M;        // number of items,Lines per slice
-    const unsigned N_up;        // N rounded up, = M * LINE_STRIDE
-    const unsigned NUM_LINES;   // number of Lines in each orientation
+    const unsigned N; // number of items per slice
+    const unsigned m_line_count;
+    const unsigned N_up; // N rounded up, = m_line_count * LINE_STRIDE
+    const unsigned NUM_LINES; // number of Lines in each orientation
     dense_set m_support;
-    Line * m_Lx_lines, * m_Rx_lines;
-    mutable dense_set m_set;    // this is a temporary
-    mutable Line* m_temp_line;  // this is a temporary
+    Line * m_Lx_lines;
+    Line * m_Rx_lines;
+    mutable dense_set m_temp_set; // TODO FIXME this is not thread-safe
+    mutable Line* m_temp_line; // TODO FIXME this is not thread-safe
 
     // bit wrappers
     inline bool_ref _bit_Lx (int i, int j);
     inline bool_ref _bit_Rx (int i, int j);
-    inline bool     _bit_Lx (int i, int j) const;
-    inline bool     _bit_Rx (int i, int j) const;
+    inline bool _bit_Lx (int i, int j) const;
+    inline bool _bit_Rx (int i, int j) const;
 
     // set wrappers
 public:
-    Line* get_Lx_line (int i) const { return m_Lx_lines + i * M; }
-    Line* get_Rx_line (int i) const { return m_Rx_lines + i * M; }
+    Line * get_Lx_line (int i) const { return m_Lx_lines + i * m_line_count; }
+    Line * get_Rx_line (int i) const { return m_Rx_lines + i * m_line_count; }
 private:
-    dense_set& _get_Lx_set (int i) { return m_set.init(get_Lx_line(i)); }
-    dense_set& _get_Rx_set (int i) { return m_set.init(get_Rx_line(i)); }
+    dense_set & _get_Lx_set (int i) { return m_temp_set.init(get_Lx_line(i)); }
+    dense_set & _get_Rx_set (int i) { return m_temp_set.init(get_Rx_line(i)); }
     const dense_set & _get_Lx_set (int i) const
     {
-        return m_set.init(get_Lx_line(i));
+        return m_temp_set.init(get_Lx_line(i));
     }
     const dense_set & _get_Rx_set (int i) const
     {
-        return m_set.init(get_Rx_line(i));
+        return m_temp_set.init(get_Rx_line(i));
     }
 
     // ctors & dtors
@@ -70,15 +72,21 @@ public:
     unsigned sup_capacity () const { return N; }
     void validate () const;
     void validate_disjoint (const dense_bin_rel& other) const;
-    void print_table (unsigned n=0) const;
+    void print_table (unsigned n = 0) const;
 
     // element operations
-    bool contains_Lx (int i, int j) const { return _bit_Lx(i,j); }
-    bool contains_Rx (int i, int j) const { return _bit_Rx(i,j); }
-    bool contains_Lx (const Pos & p) const { return contains_Lx(p.lhs, p.rhs); }
-    bool contains_Rx (const Pos & p) const { return contains_Rx(p.lhs, p.rhs); }
-    bool contains (int i, int j) const { return contains_Lx(i,j); }
+    bool contains_Lx (int i, int j) const { return _bit_Lx(i, j); }
+    bool contains_Rx (int i, int j) const { return _bit_Rx(i, j); }
+    bool contains (int i, int j) const { return contains_Lx(i, j); }
     bool contains (const Pos & p) const { return contains_Lx(p); }
+    bool contains_Lx (const Pos & p) const
+    {
+        return contains_Lx(p.lhs, p.rhs);
+    }
+    bool contains_Rx (const Pos & p) const
+    {
+        return contains_Rx(p.lhs, p.rhs);
+    }
 private:
     // one-sided versions
     void insert_Lx (int i, int j) { _bit_Lx(i,j).one(); }
@@ -176,7 +184,7 @@ public:
     class Iterator : noncopyable
     {
     protected:
-        dense_set            m_set;
+        dense_set            m_temp_set;
         dense_set::iterator  m_moving;
         int                  m_fixed;
         Pos                  m_pos;
@@ -186,9 +194,9 @@ public:
 
         // construction
         Iterator (int fixed, const dense_bin_rel * rel)
-            : m_set(rel->N, dir ? rel->get_Lx_line(fixed)
+            : m_temp_set(rel->N, dir ? rel->get_Lx_line(fixed)
                                 : rel->get_Rx_line(fixed)),
-              m_moving(m_set, false),
+              m_moving(m_temp_set, false),
               m_fixed(fixed),
               m_rel(*rel)
         {
@@ -197,8 +205,8 @@ public:
             begin();
         }
         Iterator (const dense_bin_rel * rel)
-            : m_set(rel->N, NULL),
-              m_moving(m_set, false),
+            : m_temp_set(rel->N, NULL),
+              m_moving(m_temp_set, false),
               m_fixed(0),
               m_rel(*rel)
         {}
@@ -218,8 +226,8 @@ public:
         {   POMAGMA_ASSERT2(m_rel.supports(fixed),
                     "br::Iterator's fixed pos is unsupported");
             m_fixed = fixed;
-            m_set.init(dir ? m_rel.get_Lx_line(fixed)
-                           : m_rel.get_Rx_line(fixed));
+            m_temp_set.init(dir ? m_rel.get_Lx_line(fixed)
+                                : m_rel.get_Rx_line(fixed));
             begin();
         }
         void next ()

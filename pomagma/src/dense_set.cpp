@@ -58,6 +58,7 @@ size_t dense_set::count_items () const
     unsigned result = 0;
     for (size_t m = 0; m < M; ++m) {
         // WARNING: only unsigned's work with >>
+        static_assert(Line(1) >> 1 == 0, "bitshifting Line fails");
         for (Line line = m_lines[m]; line; line>>=1) {
             result += line & 1;
         }
@@ -69,7 +70,7 @@ void dense_set::validate () const
 {
     // make sure extra bits aren't used
     POMAGMA_ASSERT(not (m_lines[0] & 1), "dense set contains null item");
-    size_t end = (N + 1) % LINE_STRIDE; // bit count in partially-filled block
+    size_t end = (N + 1) % BITS_PER_LINE; // bit count in partially-filled block
     if (end == 0) return;
     POMAGMA_ASSERT(not (m_lines[M - 1] >> end),
             "dense set's end bits are used: " << m_lines[M - 1]);
@@ -85,8 +86,8 @@ void dense_set::insert_all ()
     // fast version
     const Line full = 0xFFFFFFFF;
     for (size_t m = 0; m < M; ++m) m_lines[m] = full;
-    size_t end = (N + 1) % LINE_STRIDE; // bit count in partially-filled block
-    if (end) m_lines[M - 1] = full >> (LINE_STRIDE - end);
+    size_t end = (N + 1) % BITS_PER_LINE; // bit count in partially-filled block
+    if (end) m_lines[M - 1] = full >> (BITS_PER_LINE - end);
     m_lines[0] ^= 1; // remove zero element
 }
 
@@ -263,10 +264,10 @@ void dense_set::iterator::_next_block ()
     // traverse to first nonempty bit in a nonempty block
     Line line = lines[m_quot];
     for (m_rem = 0, m_mask = 1; !(m_mask & line); ++m_rem, m_mask <<= 1) {
-        POMAGMA_ASSERT4(m_rem != LINE_STRIDE,
+        POMAGMA_ASSERT4(m_rem != BITS_PER_LINE,
                 "dense_set::_next_block found no bits");
     }
-    m_i = m_rem + LINE_STRIDE * m_quot;
+    m_i = m_rem + BITS_PER_LINE * m_quot;
     POMAGMA_ASSERT5(0 < m_i and m_i <= m_set.N,
             "dense_set::iterator::_next_block landed on invalid pos " << m_i);
     POMAGMA_ASSERT5(m_set.contains(m_i),
@@ -280,11 +281,11 @@ void dense_set::iterator::next ()
     Line line = m_set.m_lines[m_quot];
     do {
         ++m_rem;
-        //if (m_rem < LINE_STRIDE) m_mask <<=1; // slow version
-        if (m_rem & LINE_MASK) m_mask <<= 1;    // fast version
+        //if (m_rem < BITS_PER_LINE) m_mask <<=1; // slow version
+        if (m_rem & LINE_POS_MASK) m_mask <<= 1;    // fast version
         else { _next_block(); return; }
     } while (!(m_mask & line));
-    m_i = m_rem + LINE_STRIDE * m_quot;
+    m_i = m_rem + BITS_PER_LINE * m_quot;
     POMAGMA_ASSERT5(0 < m_i and m_i <= m_set.N,
             "dense_set::iterator::next landed on invalid pos " << m_i);
     POMAGMA_ASSERT5(m_set.contains(m_i),
