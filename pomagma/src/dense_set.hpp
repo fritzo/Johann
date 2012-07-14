@@ -151,6 +151,9 @@ public:
         // traversal
     private:
         void _next_block ();
+        operator int () const; // intentionally undefined
+        operator oid_t () const; // intentionally undefined
+        operator size_t () const; // intentionally undefined
     public:
         inline void begin ();
         void next ();

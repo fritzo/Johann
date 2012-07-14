@@ -159,7 +159,7 @@ void dense_bin_rel::validate_disjoint (const dense_bin_rel& other) const
     // validate disjointness
     for (dense_set::iterator i(m_support); i; i.next()) {
         POMAGMA_ASSERT(_get_Lx_set(*i).disjoint(other._get_Lx_set(*i)),
-                "invalid: dense_bin_rels intersect at row " << i);
+                "invalid: dense_bin_rels intersect at row " << *i);
     }
 }
 
@@ -265,7 +265,7 @@ void dense_bin_rel::merge (
     if (rep.merge(dep, diff)) {
         for (dense_set::iterator k(diff); k; k.next()) {
             insert_Rx(j, *k);
-            move_to(j, k);
+            move_to(j, *k);
         }
     }
 
