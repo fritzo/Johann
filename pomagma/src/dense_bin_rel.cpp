@@ -7,20 +7,21 @@ namespace pomagma
 {
 
 dense_bin_rel::dense_bin_rel (int num_items, bool is_full)
-    : N(num_items),
-      m_line_count(dense_set::line_count(N)),
-      N_up(m_line_count * BITS_PER_LINE),
-      NUM_LINES(m_line_count * N_up),
-      m_support(N),
+    : m_item_dim(num_items),
+      m_line_dim(dense_set::line_count(m_item_dim)),
+      m_round_item_dim(m_line_dim * BITS_PER_LINE),
+      NUM_LINES(m_line_dim * m_round_item_dim),
+      m_support(m_item_dim),
       m_Lx_lines(pomagma::alloc_blocks<Line>(NUM_LINES)),
       m_Rx_lines(pomagma::alloc_blocks<Line>(NUM_LINES)),
-      m_temp_set(N,NULL),
-      m_temp_line(pomagma::alloc_blocks<Line>(m_line_count))
+      m_temp_set(m_item_dim,NULL),
+      m_temp_line(pomagma::alloc_blocks<Line>(m_line_dim))
 {
-    POMAGMA_DEBUG("creating dense_bin_rel with " << m_line_count << " lines");
+    POMAGMA_DEBUG("creating dense_bin_rel with " << m_line_dim << " lines");
 
     // FIXME allow larger
-    POMAGMA_ASSERT(N_up <= (1 << 16), "dense_bin_rel is too large");
+    POMAGMA_ASSERT(m_round_item_dim <= (1 << 16),
+            "dense_bin_rel is too large");
 
     // initialize to zeros
     bzero(m_Lx_lines, sizeof(Line) * NUM_LINES);
@@ -55,8 +56,8 @@ void dense_bin_rel::move_from (
     if (new2old == NULL) {
         POMAGMA_DEBUG("copying by column and by row");
         // copy rows and columns
-        int minN = min(N, other.N);
-        int minM = min(m_line_count, other.m_line_count);
+        int minN = min(m_item_dim, other.m_item_dim);
+        int minM = min(m_line_dim, other.m_line_dim);
         for (int i = 1; i <= minN; ++i) {
             memcpy(get_Lx_line(i), other.get_Lx_line(i), sizeof(Line) * minM);
             memcpy(get_Rx_line(i), other.get_Rx_line(i), sizeof(Line) * minM);
@@ -64,11 +65,11 @@ void dense_bin_rel::move_from (
     } else {
         POMAGMA_DEBUG("copying and reordering");
         // copy & reorder WIKKIT SLOW
-        for (unsigned i_new = 1; i_new <= N; ++i_new) {
+        for (unsigned i_new = 1; i_new <= m_item_dim; ++i_new) {
             if (not supports(i_new)) continue;
             unsigned i_old = new2old[i_new];
 
-            for (unsigned j_new = 1; j_new <= N; ++j_new) {
+            for (unsigned j_new = 1; j_new <= m_item_dim; ++j_new) {
                 if (not supports(j_new)) continue;
                 unsigned j_old = new2old[j_new];
 
@@ -101,7 +102,7 @@ void dense_bin_rel::validate () const
     unsigned num_pairs = 0;
 
     // validate sets
-    for (unsigned i=0; i<N_up; ++i) {
+    for (unsigned i = 0; i < m_round_item_dim; ++i) {
         _get_Lx_set(i).validate();
         _get_Rx_set(i).validate();
     }
@@ -110,14 +111,15 @@ void dense_bin_rel::validate () const
     POMAGMA_ASSERT(_get_Lx_set(0).empty(), "Lx(0) line not empty");
     POMAGMA_ASSERT(_get_Rx_set(0).empty(), "Rx(0) line not empty");
 
-    dense_set Lx(N_up, NULL), Rx(N_up, NULL);
-    for (unsigned i=1; i<=N; ++i) {
+    dense_set Lx(m_round_item_dim, NULL);
+    dense_set Rx(m_round_item_dim, NULL);
+    for (unsigned i=1; i<=m_item_dim; ++i) {
         bool sup_i = supports(i);
         Lx.init(get_Lx_line(i));
 
         POMAGMA_ASSERT(i or not sup_i, "dense_bin_rel supports null element");
 
-        for (unsigned j = 1; j <= N; ++j) {
+        for (unsigned j = 1; j <= m_item_dim; ++j) {
             bool sup_ij = sup_i and supports(j);
             Rx.init(get_Rx_line(j));
 
@@ -164,7 +166,7 @@ void dense_bin_rel::validate_disjoint (const dense_bin_rel& other) const
 
 void dense_bin_rel::print_table (unsigned n) const
 {
-    if (n == 0) n = N;
+    if (n == 0) n = m_item_dim;
     for (unsigned i = 1; i <= n; ++i) {
         std::cout << '\n';
         for (unsigned j = 1; j <= n; ++j) {
@@ -187,9 +189,9 @@ void dense_bin_rel::remove_Lx (const dense_set& is, int j)
     // faster version
     unsigned mask = ~(1 << (j % BITS_PER_LINE));
     int offset = j / BITS_PER_LINE;
-    Line* lines = m_Lx_lines + offset;
+    Line * lines = m_Lx_lines + offset;
     for (dense_set::iterator i(is); i.ok(); i.next()) {
-         lines[*i * m_line_count] &= mask; // ATOMIC
+         lines[*i * m_line_dim] &= mask; // ATOMIC
     }
 }
 
@@ -205,7 +207,7 @@ void dense_bin_rel::remove_Rx (int i, const dense_set& js)
     int offset = i / BITS_PER_LINE;
     Line * lines = m_Rx_lines + offset;
     for (dense_set::iterator j(js); j.ok(); j.next()) {
-         lines[*j * m_line_count] &= mask; // ATOMIC
+         lines[*j * m_line_dim] &= mask; // ATOMIC
     }
 }
 
@@ -231,7 +233,7 @@ void dense_bin_rel::ensure_inserted (
         const dense_set & js,
         void (*change)(int,int))
 {
-    dense_set diff(N, m_temp_line), dest(N, get_Lx_line(i));
+    dense_set diff(m_item_dim, m_temp_line), dest(m_item_dim, get_Lx_line(i));
     if (dest.ensure(js, diff)) {
         for (dense_set::iterator k(diff); k.ok(); k.next()) {
             insert_Rx(i, *k);
@@ -245,8 +247,8 @@ void dense_bin_rel::ensure_inserted (
         int j,
         void (*change)(int, int))
 {
-    dense_set diff(N, m_temp_line);
-    dense_set dest(N, get_Rx_line(j));
+    dense_set diff(m_item_dim, m_temp_line);
+    dense_set dest(m_item_dim, get_Rx_line(j));
     if (dest.ensure(is, diff)) {
         for (dense_set::iterator k(diff); k.ok(); k.next()) {
             insert_Lx(*k, j);
@@ -265,9 +267,9 @@ void dense_bin_rel::merge (
     POMAGMA_ASSERT4(supports(i) and supports(j),
             "dense_bin_rel tried to merge unsupported items");
 
-    dense_set diff(N, m_temp_line);
-    dense_set rep(N, NULL);
-    dense_set dep(N, NULL);
+    dense_set diff(m_item_dim, m_temp_line);
+    dense_set rep(m_item_dim, NULL);
+    dense_set dep(m_item_dim, NULL);
 
     // merge rows (i,_) into (j,_)
     dep.init(get_Lx_line(i));

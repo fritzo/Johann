@@ -14,13 +14,14 @@ class dense_bin_rel
 {
     struct Pos
     {
-        int lhs, rhs;
+        int lhs;
+        int rhs;
         Pos (int l = 0, int r = 0) : lhs(l), rhs(r) {}
-        bool operator == (const Pos& p) const
+        bool operator == (const Pos & p) const
         {
             return lhs == p.lhs and rhs == p.rhs;
         }
-        bool operator != (const Pos& p) const
+        bool operator != (const Pos & p) const
         {
             return lhs != p.lhs or rhs != p.rhs;
         }
@@ -28,9 +29,9 @@ class dense_bin_rel
 
     // data
     // TODO switch usigned -> size_t
-    const unsigned N; // number of items per slice
-    const unsigned m_line_count;
-    const unsigned N_up; // N rounded up, = m_line_count * BITS_PER_LINE
+    const unsigned m_item_dim; // number of items per slice
+    const unsigned m_line_dim;
+    const unsigned m_round_item_dim; // = m_line_dim * BITS_PER_LINE
     const unsigned NUM_LINES; // number of Lines in each orientation
     dense_set m_support;
     Line * m_Lx_lines;
@@ -46,8 +47,8 @@ class dense_bin_rel
 
     // set wrappers
 public:
-    Line * get_Lx_line (int i) const { return m_Lx_lines + i * m_line_count; }
-    Line * get_Rx_line (int i) const { return m_Rx_lines + i * m_line_count; }
+    Line * get_Lx_line (int i) const { return m_Lx_lines + i * m_line_dim; }
+    Line * get_Rx_line (int i) const { return m_Rx_lines + i * m_line_dim; }
 private:
     dense_set & _get_Lx_set (int i) { return m_temp_set.init(get_Lx_line(i)); }
     dense_set & _get_Rx_set (int i) { return m_temp_set.init(get_Rx_line(i)); }
@@ -135,7 +136,7 @@ public:
         iterator (const dense_bin_rel * rel)
             : m_lhs(rel->m_support, false),
               m_rhs(m_rhs_set, false),
-              m_rhs_set(rel->N, NULL),
+              m_rhs_set(rel->m_item_dim, NULL),
               m_rel(*rel)
         {
             begin();
@@ -184,17 +185,17 @@ public:
     class Iterator : noncopyable
     {
     protected:
-        dense_set            m_temp_set;
-        dense_set::iterator  m_moving;
-        int                  m_fixed;
-        Pos                  m_pos;
-        const dense_bin_rel& m_rel;
+        dense_set m_temp_set;
+        dense_set::iterator m_moving;
+        int m_fixed;
+        Pos m_pos;
+        const dense_bin_rel & m_rel;
 
     public:
 
         // construction
         Iterator (int fixed, const dense_bin_rel * rel)
-            : m_temp_set(rel->N, dir ? rel->get_Lx_line(fixed)
+            : m_temp_set(rel->m_item_dim, dir ? rel->get_Lx_line(fixed)
                                 : rel->get_Rx_line(fixed)),
               m_moving(m_temp_set, false),
               m_fixed(fixed),
@@ -205,7 +206,7 @@ public:
             begin();
         }
         Iterator (const dense_bin_rel * rel)
-            : m_temp_set(rel->N, NULL),
+            : m_temp_set(rel->m_item_dim, NULL),
               m_moving(m_temp_set, false),
               m_fixed(0),
               m_rel(*rel)
