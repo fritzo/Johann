@@ -17,7 +17,7 @@ class bool_ref
 {
     Line * const m_line;
     const Line m_mask;
-    void _deref_assert ()
+    void _deref_assert () const
     {
         POMAGMA_ASSERT4(m_line != NULL, "null bit_ref accessed");
     }
@@ -25,7 +25,7 @@ public:
     bool_ref (Line * line, size_t _i) : m_line(line), m_mask(1 << _i) {}
     bool_ref () : m_line(NULL), m_mask(0) {} // for containers
 
-    operator bool ()
+    operator bool () const
     {
         _deref_assert();
         return (*m_line) & m_mask;
@@ -151,20 +151,16 @@ public:
         // traversal
     private:
         void _next_block ();
-        operator int () const; // intentionally undefined
-        operator oid_t () const; // intentionally undefined
-        operator size_t () const; // intentionally undefined
     public:
         inline void begin ();
         void next ();
-        operator bool () const { return m_i; }
-        bool done () const { return not m_i; }
+        bool ok () const { return m_i; }
 
         // dereferencing
     private:
         void _deref_assert () const
         {
-            POMAGMA_ASSERT5(not done(), "dereferenced done dense_set::iter");
+            POMAGMA_ASSERT5(ok(), "dereferenced done dense_set::iter");
         }
     public:
         size_t         operator *  () const { _deref_assert(); return m_i; }
@@ -230,7 +226,7 @@ inline void dense_set::iterator::begin ()
     m_quot = 0;
     --m_quot;
     _next_block();
-    POMAGMA_ASSERT5(done() or m_set.contains(m_i),
+    POMAGMA_ASSERT5(not ok() or m_set.contains(m_i),
             "dense_set::iterator::begin landed on empty pos " << m_i);
 }
 

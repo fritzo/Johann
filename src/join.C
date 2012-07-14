@@ -216,7 +216,7 @@ void remove (Ob rem)
 
     //remove occurrences as JOIN
     std::vector<Join> changed_eqns; //TODO maybe make this static
-    for (Jlr_Iterator iter(rem); iter; iter.next()) {
+    for (Jlr_Iterator iter(rem); iter.ok(); iter.next()) {
         Assert3(iter.join() == rem, "eqn has wrong JOIN before removing");
         changed_eqns.push_back(*iter);
     }
@@ -237,7 +237,7 @@ void merge (Ob dep, Ob rep)
 
     //merge occurrences as JOIN
     std::vector<Join> changed_eqns; //TODO maybe make this static
-    for (Jlr_Iterator iter(dep); iter; iter.next()) {
+    for (Jlr_Iterator iter(dep); iter.ok(); iter.next()) {
         Assert3(iter.join() == dep, "eqn has wrong JOIN before rerooting");
         changed_eqns.push_back(*iter);
     }
@@ -323,13 +323,13 @@ void test_line_contains (Join eqn)
     Lrj_Iterator iter(start);
 
     bool found = false;
-    for (; iter; iter.next()) {
+    for (; iter.ok(); iter.next()) {
         if (*iter == eqn) { found = true; break; }
     }
     Assert (found, "invalid (1): eqn not contained in own line");
 
     found = false;
-    for (iter.begin(start); iter; iter.next()) {
+    for (iter.begin(start); iter.ok(); iter.next()) {
         if (*iter == eqn) { found = true; break; }
     }
     Assert (found, "invalid (2): eqn not contained in own line");
@@ -338,7 +338,7 @@ void test_line_find ()
 {
     for (Ob::sparse_iterator iter=Ob::sbegin(); iter!=Ob::send(); ++iter) {
         Lrj_Iterator iter2;
-        for (iter2.begin(*iter); iter2; iter2.next()) {
+        for (iter2.begin(*iter); iter2.ok(); iter2.next()) {
             Assert (*iter2 == find_join_eqn(iter2.fixed(), iter2.moving()),
                     "line iterator contains wrong value");
         }

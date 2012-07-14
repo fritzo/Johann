@@ -249,6 +249,7 @@ public:
         Pos m_pos;
     public:
         reverse_iterator (Pos pos) : m_pos(pos) {}
+        // TODO switch to POMAGMA iterator inteface: begin, ok, next
         bool operator == (const MyType& other) { return m_pos == other.m_pos; }
         bool operator != (const MyType& other) { return m_pos != other.m_pos; }
         MyType& operator ++ () { --m_pos; return *this; }
@@ -262,6 +263,7 @@ public:
         Int m_nodes_left;
     public:
         sparse_iterator (Pos pos, Int nodes_left) : m_pos(pos), m_nodes_left(nodes_left) {}
+        // TODO switch to POMAGMA iterator inteface: begin, ok, next
         bool operator == (const MyType& other) const { return m_nodes_left == other.m_nodes_left; }
         bool operator != (const MyType& other) const { return m_nodes_left != other.m_nodes_left; }
         MyType& operator ++ () {
@@ -280,6 +282,7 @@ public:
         Int m_nodes_left;
     public:
         rev_sps_iterator (Pos pos, Int nodes_left) : m_pos(pos), m_nodes_left(nodes_left) {}
+        // TODO switch to POMAGMA iterator inteface: begin, ok, next
         bool operator == (const MyType& other) { return m_nodes_left == other.m_nodes_left; }
         bool operator != (const MyType& other) { return m_nodes_left != other.m_nodes_left; }
         MyType& operator ++ () {

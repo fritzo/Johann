@@ -147,7 +147,7 @@ void validate_idempotence (Ob A)
     logger.debug() << "Validating " << print(A) << "-idempotence" |0;
     Logging::IndentBlock block;
 
-    for (Lra_Iterator Ax_iter(A); Ax_iter; Ax_iter.next()) {
+    for (Lra_Iterator Ax_iter(A); Ax_iter.ok(); Ax_iter.next()) {
         Ob x  = Ax_iter.rhs();
         Ob Ax = Ax_iter.app();
         AssertV(ensure_app(x, Ax,x),
@@ -161,11 +161,11 @@ void validate_commutativity (Ob A)
     logger.debug() << "Validating " << print(A) << "-commutativity" |0;
     Logging::IndentBlock block;
 
-    for (Lra_Iterator Ax_iter(A); Ax_iter; Ax_iter.next()) {
+    for (Lra_Iterator Ax_iter(A); Ax_iter.ok(); Ax_iter.next()) {
         Ob x  = Ax_iter.rhs();
         Ob Ax = Ax_iter.app();
 
-        for (Lra_Iterator Axy_iter(Ax); Axy_iter; Axy_iter.next()) {
+        for (Lra_Iterator Axy_iter(Ax); Axy_iter.ok(); Axy_iter.next()) {
             Ob Axy = Axy_iter.app();
             Ob y   = Axy_iter.rhs();
             Ob Ay  = find_app(A,y); if (!Ay) continue;
@@ -181,17 +181,17 @@ void validate_right_distrib (Ob A)
     logger.debug() << "Validating " << print(A) << "-right_distrib" |0;
     Logging::IndentBlock block;
 
-    for (Lra_Iterator Ax_iter(A); Ax_iter; Ax_iter.next()) {
+    for (Lra_Iterator Ax_iter(A); Ax_iter.ok(); Ax_iter.next()) {
         Ob x  = Ax_iter.rhs();
         Ob Ax = Ax_iter.app();
 
-        Lra_Iterator xz_iter(x); if (!xz_iter) continue; //for below
+        Lra_Iterator xz_iter(x); if (!xz_iter.ok()) continue; //for below
 
-        for (Lra_Iterator Axy_iter(Ax); Axy_iter; Axy_iter.next()) {
+        for (Lra_Iterator Axy_iter(Ax); Axy_iter.ok(); Axy_iter.next()) {
             Ob Axy = Axy_iter.app();
             Ob y   = Axy_iter.rhs();
 
-            for (xz_iter.begin(); xz_iter; xz_iter.next()) {
+            for (xz_iter.begin(); xz_iter.ok(); xz_iter.next()) {
                 Ob xz      = xz_iter.app();
                 Ob A_xz    = find_app(A,xz); if (!A_xz) continue;
                 Ob z       = xz_iter.rhs();
@@ -211,16 +211,16 @@ void validate_associativity (Ob A)
     Lra_Iterator Axy_iter; //for below
     Lra_Iterator Ayz_iter; //for below
 
-    for (Lra_Iterator Ax_iter(A); Ax_iter; Ax_iter.next()) {
+    for (Lra_Iterator Ax_iter(A); Ax_iter.ok(); Ax_iter.next()) {
         Ob Ax = Ax_iter.app();
 
-        for (Axy_iter.begin(Ax); Axy_iter; Axy_iter.next()) {
+        for (Axy_iter.begin(Ax); Axy_iter.ok(); Axy_iter.next()) {
             Ob y     = Axy_iter.rhs();
             Ob Ay    = find_app(A,y); if (!Ay) continue;
             Ob Axy   = Axy_iter.app();
             Ob A_Axy = find_app(A,Axy); if (!A_Axy) continue;
 
-            for (Ayz_iter.begin(Ay); Ayz_iter; Ayz_iter.next()) {
+            for (Ayz_iter.begin(Ay); Ayz_iter.ok(); Ayz_iter.next()) {
                 Ob z       = Ayz_iter.rhs();
                 Ob Ayz     = Ayz_iter.app();
                 AssertV(ensure_apps(Ax,Ayz, A_Axy,z),
@@ -235,16 +235,16 @@ void validate_supconvexity (Ob A)
     Lra_Iterator Axy_iter; //for below
     Set& zs = OR::temp_set(); //for below
 
-    for (Lra_Iterator Ax_iter(A); Ax_iter; Ax_iter.next()) {
+    for (Lra_Iterator Ax_iter(A); Ax_iter.ok(); Ax_iter.next()) {
         Ob Ax = Ax_iter.app();
         Ob x  = Ax_iter.rhs();
 
-        for (Axy_iter.begin(Ax); Axy_iter; Axy_iter.next()) {
+        for (Axy_iter.begin(Ax); Axy_iter.ok(); Axy_iter.next()) {
             Ob Axy = Axy_iter.app();
             Ob y   = Axy_iter.rhs();
             zs.set_insn(OR::below(x), OR::below(y));
 
-            for (Set::iterator z_iter(zs); z_iter; z_iter.next()) {
+            for (Set::iterator z_iter(zs); z_iter.ok(); z_iter.next()) {
                 Ob z = Ob(*z_iter);
                 AssertV(ensure_less(z,Axy),
                         "repaired z[=x, z[=y |- z[=Axy instance: "
@@ -260,16 +260,16 @@ void validate_subconvexity (Ob A)
     Lra_Iterator Axy_iter; //for below
     Set& zs = OR::temp_set(); //for below
 
-    for (Lra_Iterator Ax_iter(A); Ax_iter; Ax_iter.next()) {
+    for (Lra_Iterator Ax_iter(A); Ax_iter.ok(); Ax_iter.next()) {
         Ob Ax = Ax_iter.app();
         Ob x  = Ax_iter.rhs();
 
-        for (Axy_iter.begin(Ax); Axy_iter; Axy_iter.next()) {
+        for (Axy_iter.begin(Ax); Axy_iter.ok(); Axy_iter.next()) {
             Ob Axy = Axy_iter.app();
             Ob y   = Axy_iter.rhs();
             zs.set_insn(OR::above(x), OR::above(y));
 
-            for (Set::iterator z_iter(zs); z_iter; z_iter.next()) {
+            for (Set::iterator z_iter(zs); z_iter.ok(); z_iter.next()) {
                 Ob z = Ob(*z_iter);
                 AssertV(ensure_less(Axy,z),
                         "repaired z=]x, z=]y |- z=]Axy instance: "
@@ -285,16 +285,16 @@ void validate_subaffinity (Ob A)
     Lra_Iterator Axy_iter; //for below
     Set& zs = OR::temp_set(); //for below
 
-    for (Lra_Iterator Ax_iter(A); Ax_iter; Ax_iter.next()) {
+    for (Lra_Iterator Ax_iter(A); Ax_iter.ok(); Ax_iter.next()) {
         Ob Ax = Ax_iter.app();
         Ob x  = Ax_iter.rhs();
 
-        for (Axy_iter.begin(Ax); Axy_iter; Axy_iter.next()) {
+        for (Axy_iter.begin(Ax); Axy_iter.ok(); Axy_iter.next()) {
             Ob Axy = Axy_iter.app();
             Ob y   = Axy_iter.rhs();
             zs.set_insn(OR::above(x), OR::above(y));
 
-            for (Set::iterator z_iter(zs); z_iter; z_iter.next()) {
+            for (Set::iterator z_iter(zs); z_iter.ok(); z_iter.next()) {
                 Ob z   = Ob(*z_iter);
                 Ob Az  = find_app(A,z);  if (!Az) continue;
                 Ob Azz = find_app(Az,z); if (!Azz) continue;
@@ -316,18 +316,18 @@ void validate_distributivity (Ob A, Ob B)
     Lra_Iterator Axy_iter, Axz_iter; //for later
 
     //Ax(Byz) = B(Axy)(Axz)
-    for (Lra_Iterator Ax_iter(A); Ax_iter; Ax_iter.next()) {
+    for (Lra_Iterator Ax_iter(A); Ax_iter.ok(); Ax_iter.next()) {
         Ob x  = Ax_iter.rhs();
         Ob Bx = find_app(B,x); if (!Bx) continue;
         Ob Ax = Ax_iter.app();
 
-        for (Axy_iter.begin(Ax); Axy_iter; Axy_iter.next()) {
+        for (Axy_iter.begin(Ax); Axy_iter.ok(); Axy_iter.next()) {
             Ob Axy = Axy_iter.app();
             Ob BA  = find_app(B,Axy); if (!BA) continue;
             Ob y   = Axy_iter.rhs();
             Ob By  = find_app(B,y); if (!By) continue;
 
-            for (Axz_iter.begin(Ax); Axz_iter; Axz_iter.next()) {
+            for (Axz_iter.begin(Ax); Axz_iter.ok(); Axz_iter.next()) {
                 Ob z   = Axz_iter.rhs();
                 Ob Byz = find_app(By,z); if (!Byz) continue;
                 Ob Axz = find_app(Ax,z); if (!Axz) continue;
@@ -350,12 +350,12 @@ void validate_duals (Ob A, Ob B)
 
     Lra_Iterator Bxy_iter; //for later
 
-    for (Lra_Iterator Ax_iter(A); Ax_iter; Ax_iter.next()) {
+    for (Lra_Iterator Ax_iter(A); Ax_iter.ok(); Ax_iter.next()) {
         Ob x  = Ax_iter.rhs();
         Ob Bx = find_app(B,x); if (!Bx) continue;
         Ob Ax = Ax_iter.app();
 
-        for (Bxy_iter.begin(Bx); Bxy_iter; Bxy_iter.next()) {
+        for (Bxy_iter.begin(Bx); Bxy_iter.ok(); Bxy_iter.next()) {
             Ob y      = Bxy_iter.rhs();
             Ob Bxy    = Bxy_iter.app();
             AssertV(ensure_app(x, Ax,Bxy),
@@ -374,7 +374,7 @@ void validate_L_order ()
     logger.debug() << "Validating axiom scheme L-order" |0;
     Logging::IndentBlock block;
 
-    for (Ord::iterator<POS> iter; iter; iter.next()) {
+    for (Ord::iterator<POS> iter; iter.ok(); iter.next()) {
 
         Ob x = iter->lhs();
         Ob y = iter->rhs();
@@ -387,7 +387,7 @@ void validate_L_order ()
         }
 
         //validate transitivity
-        for (OR::Iterator<LRpos> yz_iter(y); yz_iter; yz_iter.next()) {
+        for (OR::Iterator<LRpos> yz_iter(y); yz_iter.ok(); yz_iter.next()) {
 
             Ob z = yz_iter.rhs();
             AssertV(ensure_less(x,z),
@@ -401,13 +401,13 @@ void validate_N_order ()
     logger.debug() << "Validating axiom scheme N-order (very slow)" |0;
     Logging::IndentBlock block;
 
-    for (Ord::iterator<NEG> iter; iter; iter.next()) {
+    for (Ord::iterator<NEG> iter; iter.ok(); iter.next()) {
 
         Ob x = iter->lhs();
         Ob z = iter->rhs();
 
         //validate transitivity_N1:  x[=y, x![=z |- y![=z
-        for (OR::Iterator<LRpos> xy_iter(x); xy_iter; xy_iter.next()) {
+        for (OR::Iterator<LRpos> xy_iter(x); xy_iter.ok(); xy_iter.next()) {
 
             Ob y = xy_iter.rhs();
             AssertV(ensure_nless(y,z),
@@ -416,7 +416,7 @@ void validate_N_order ()
         }
 
         //validate transitivity_N2:  y[=z, x![=z |- x![=y
-        for (OR::Iterator<RLpos> yz_iter(z); yz_iter; yz_iter.next()) {
+        for (OR::Iterator<RLpos> yz_iter(z); yz_iter.ok(); yz_iter.next()) {
 
             Ob y = yz_iter.lhs();
             AssertV(ensure_nless(x,y),
@@ -436,7 +436,7 @@ void validate_L_monotony ()
     RRlc_Iterator f_f_iter; //for below
     LLrc_Iterator x_x_iter; //for below
 
-    for (Ord::iterator<POS> iter; iter; iter.next()) {
+    for (Ord::iterator<POS> iter; iter.ok(); iter.next()) {
 
         Ob x = iter->lhs();
         Ob y = iter->rhs();
@@ -444,7 +444,7 @@ void validate_L_monotony ()
         Ob g = y;
 
         //validate mu-app
-        for (ff_iter.begin(x,y); ff_iter; ff_iter.next()) {
+        for (ff_iter.begin(x,y); ff_iter.ok(); ff_iter.next()) {
             Ob f  = ff_iter.lhs();
             Ob fx = ff_iter.app1();
             Ob fy = ff_iter.app2();
@@ -455,7 +455,7 @@ void validate_L_monotony ()
         }
 
         //validate nu-app
-        for (xx_iter.begin(f,g); xx_iter; xx_iter.next()) {
+        for (xx_iter.begin(f,g); xx_iter.ok(); xx_iter.next()) {
             Ob x  = xx_iter.rhs();
             Ob fx = xx_iter.app1();
             Ob gx = xx_iter.app2();
@@ -466,7 +466,7 @@ void validate_L_monotony ()
         }
 
         //validate mu-comp
-        for (f_f_iter.begin(x,y); f_f_iter; f_f_iter.next()) {
+        for (f_f_iter.begin(x,y); f_f_iter.ok(); f_f_iter.next()) {
             Ob f  = f_f_iter.lhs();
             Ob fx = f_f_iter.comp1();
             Ob fy = f_f_iter.comp2();
@@ -477,7 +477,7 @@ void validate_L_monotony ()
         }
 
         //validate nu-comp
-        for (x_x_iter.begin(f,g); x_x_iter; x_x_iter.next()) {
+        for (x_x_iter.begin(f,g); x_x_iter.ok(); x_x_iter.next()) {
             Ob x  = x_x_iter.rhs();
             Ob fx = x_x_iter.comp1();
             Ob gx = x_x_iter.comp2();
@@ -507,7 +507,7 @@ void validate_N_monotony ()
 
         //validate mu-app
         if (is_nless(x,y)) continue;
-        for (aa_iter.begin(x,y); aa_iter; aa_iter.next()) {
+        for (aa_iter.begin(x,y); aa_iter.ok(); aa_iter.next()) {
             Ob a  = aa_iter.lhs();
             Ob ax = aa_iter.app1();
             Ob ay = aa_iter.app2();
@@ -522,7 +522,7 @@ void validate_N_monotony ()
 
         //validate nu-app
         if (is_nless(x,y)) continue;
-        for (zz_iter.begin(x,y); zz_iter; zz_iter.next()) {
+        for (zz_iter.begin(x,y); zz_iter.ok(); zz_iter.next()) {
             Ob z  = zz_iter.rhs();
             Ob xz = zz_iter.app1();
             Ob yz = zz_iter.app2();
@@ -537,7 +537,7 @@ void validate_N_monotony ()
 
         //validate mu-comp
         if (is_nless(x,y)) continue;
-        for (a_a_iter.begin(x,y); a_a_iter; a_a_iter.next()) {
+        for (a_a_iter.begin(x,y); a_a_iter.ok(); a_a_iter.next()) {
             Ob a  = a_a_iter.lhs();
             Ob ax = a_a_iter.comp1();
             Ob ay = a_a_iter.comp2();
@@ -552,7 +552,7 @@ void validate_N_monotony ()
 
         //validate nu-comp
         if (is_nless(x,y)) continue;
-        for (z_z_iter.begin(x,y); z_z_iter; z_z_iter.next()) {
+        for (z_z_iter.begin(x,y); z_z_iter.ok(); z_z_iter.next()) {
             Ob z  = z_z_iter.rhs();
             Ob xz = z_z_iter.comp1();
             Ob yz = z_z_iter.comp2();
@@ -574,7 +574,7 @@ void validate_Bot_E ()
     Logging::IndentBlock block;
 
     Ob Bot = *Atoms::Bot;
-    for (Lra_Iterator Bot_x_iter(Bot); Bot_x_iter; Bot_x_iter.next()) {
+    for (Lra_Iterator Bot_x_iter(Bot); Bot_x_iter.ok(); Bot_x_iter.next()) {
         Ob Bot_x = Bot_x_iter.app();
         AssertV(ensure_equiv(Bot_x, Bot),
                 "repaired Bot-E instance: "
@@ -587,7 +587,7 @@ void validate_Top_E ()
     Logging::IndentBlock block;
 
     Ob Top = *Atoms::Top;
-    for (Lra_Iterator Top_x_iter(Top); Top_x_iter; Top_x_iter.next()) {
+    for (Lra_Iterator Top_x_iter(Top); Top_x_iter.ok(); Top_x_iter.next()) {
         Ob Top_x = Top_x_iter.app();
         AssertV(ensure_equiv(Top_x, Top),
                 "repaired Top-E instance: "
@@ -602,10 +602,10 @@ void validate_Bot_N ()
     Alr_Iterator fx_iter; //for below
 
     Ob Bot = *Atoms::Bot;
-    for (OR::Iterator<RLneg> fx_Bot_iter(Bot); fx_Bot_iter; fx_Bot_iter.next()) {
+    for (OR::Iterator<RLneg> fx_Bot_iter(Bot); fx_Bot_iter.ok(); fx_Bot_iter.next()) {
         Ob fx = fx_Bot_iter.lhs();
 
-        for (fx_iter.begin(fx); fx_iter; fx_iter.next()) {
+        for (fx_iter.begin(fx); fx_iter.ok(); fx_iter.next()) {
             //Bot_N
             Ob f = fx_iter.lhs();
             AssertV(ensure_nless(f, Bot),
@@ -623,10 +623,10 @@ void validate_Top_N ()
 
     Ob Top = *Atoms::Top;
     for (OR::Iterator<LRneg> fx_Top_iter(Top);
-            fx_Top_iter; fx_Top_iter.next()) {
+            fx_Top_iter.ok(); fx_Top_iter.next()) {
         Ob fx = fx_Top_iter.rhs();
 
-        for (fx_iter.begin(fx); fx_iter; fx_iter.next()) {
+        for (fx_iter.begin(fx); fx_iter.ok(); fx_iter.next()) {
             //Top_N
             Ob f = fx_iter.lhs();
             AssertV(ensure_nless(Top, f),
@@ -643,7 +643,7 @@ void validate_join ()
 
     //join-order: x[=y ==> x|y=y
     logger.debug() << "validating join-order axiom" |0;
-    for (Ord::iterator<POS> iter; iter; iter.next()) {
+    for (Ord::iterator<POS> iter; iter.ok(); iter.next()) {
         Ob x = iter->lhs();
         Ob y = iter->rhs();
 
@@ -673,7 +673,7 @@ void validate_join ()
 
         Set& zs = OR::temp_set();
         zs.set_insn(OR::above(x), OR::above(y));
-        for (Set::iterator z_iter(zs); z_iter; z_iter.next()) {
+        for (Set::iterator z_iter(zs); z_iter.ok(); z_iter.next()) {
             Ob z = Ob(*z_iter);
 
             AssertV(ensure_less(xy, z),
@@ -687,11 +687,11 @@ void validate_join ()
     //join-J: Jxy=x|y
     logger.debug() << "validating join-J axiom" |0;
     Ob J = *Atoms::J;
-    for (Lra_Iterator Jx_iter(J); Jx_iter; Jx_iter.next()) {
+    for (Lra_Iterator Jx_iter(J); Jx_iter.ok(); Jx_iter.next()) {
         Ob x  = Jx_iter.rhs();
         Ob Jx = Jx_iter.app();
 
-        for (Lra_Iterator Jxy_iter(Jx); Jxy_iter; Jxy_iter.next()) {
+        for (Lra_Iterator Jxy_iter(Jx); Jxy_iter.ok(); Jxy_iter.next()) {
             Ob y   = Jxy_iter.rhs();
             Ob Jxy = Jxy_iter.app();
 
@@ -701,7 +701,7 @@ void validate_join ()
                     << ", y = " << print(y));
         }
 
-        for (Lrj_Iterator xy_iter(x); xy_iter; xy_iter.next()) {
+        for (Lrj_Iterator xy_iter(x); xy_iter.ok(); xy_iter.next()) {
             Ob y  = xy_iter.moving();
             Ob xy = xy_iter.join();
 
@@ -731,7 +731,7 @@ void validate_join ()
         Ob xy = get_join(*xy_iter);
 
         //join-join: x|(y|z)=(x|y)|z
-        for (LLrj_Iterator z_iter(x,xy); z_iter; z_iter.next()) {
+        for (LLrj_Iterator z_iter(x,xy); z_iter.ok(); z_iter.next()) {
             Ob z   = z_iter.moving();
             Ob xz  = z_iter.join1();
             Ob xyz = z_iter.join2();
@@ -742,7 +742,7 @@ void validate_join ()
                     << ", y = " << print(y)
                     << ", z = " << print(z));
         }
-        for (LLrj_Iterator z_iter(y,xy); z_iter; z_iter.next()) {
+        for (LLrj_Iterator z_iter(y,xy); z_iter.ok(); z_iter.next()) {
             Ob z   = z_iter.moving();
             Ob yz  = z_iter.join1();
             Ob xyz = z_iter.join2();
@@ -755,7 +755,7 @@ void validate_join ()
         }
 
         //join-apply: (x|y)z=xz|yz
-        for (LLra_Iterator z_iter(x,y); z_iter; z_iter.next()) {
+        for (LLra_Iterator z_iter(x,y); z_iter.ok(); z_iter.next()) {
             Ob z  = z_iter.rhs();
             Ob xz = z_iter.app1();
             Ob yz = z_iter.app2();
@@ -768,7 +768,7 @@ void validate_join ()
         }
 
         //join-compose: (x|y)*z=x*z|y*z
-        for (LLrc_Iterator z_iter(x,y); z_iter; z_iter.next()) {
+        for (LLrc_Iterator z_iter(x,y); z_iter.ok(); z_iter.next()) {
             Ob z  = z_iter.rhs();
             Ob xz = z_iter.comp1();
             Ob yz = z_iter.comp2();
@@ -794,7 +794,7 @@ void validate_compose ()
         Ob y  = get_rhs(*xy_iter);
         Ob xy = get_comp(*xy_iter);
 
-        for (Lrc_Iterator yz_iter(y); yz_iter; yz_iter.next()) {
+        for (Lrc_Iterator yz_iter(y); yz_iter.ok(); yz_iter.next()) {
             Ob z  = yz_iter.rhs();
             Ob yz = yz_iter.comp();
 
@@ -813,7 +813,7 @@ void validate_compose ()
         Ob y  = get_rhs(*xy_iter);
         Ob xy = get_comp(*xy_iter);
 
-        for (Lra_Iterator yz_iter(y); yz_iter; yz_iter.next()) {
+        for (Lra_Iterator yz_iter(y); yz_iter.ok(); yz_iter.next()) {
             Ob z  = yz_iter.rhs();
             Ob yz = yz_iter.app();
 
@@ -862,7 +862,7 @@ void validate_K ()
 
     Ob K = *Atoms::K;
 
-    for (Lra_Iterator Kx_iter(K); Kx_iter; Kx_iter.next()) {
+    for (Lra_Iterator Kx_iter(K); Kx_iter.ok(); Kx_iter.next()) {
         Ob Kx = Kx_iter.app();
         Ob x  = Kx_iter.rhs();
 
@@ -881,7 +881,7 @@ void validate_K ()
 
         }
 
-        for (Rla_Iterator fx_iter(x); fx_iter; fx_iter.next()) {
+        for (Rla_Iterator fx_iter(x); fx_iter.ok(); fx_iter.next()) {
             Ob f  = fx_iter.lhs();
             Ob fx = fx_iter.app();
 
@@ -902,17 +902,17 @@ void validate_S ()
     Lra_Iterator xz_iter; //for below
     Lra_Iterator Sxy_iter; //for below
 
-    for (Lra_Iterator Sx_iter(S); Sx_iter; Sx_iter.next()) {
+    for (Lra_Iterator Sx_iter(S); Sx_iter.ok(); Sx_iter.next()) {
         Ob Sx = Sx_iter.app();
         Ob x  = Sx_iter.rhs();
 
-        xz_iter.begin(x); if (!xz_iter) continue; //for below
+        xz_iter.begin(x); if (!xz_iter.ok()) continue; //for below
 
-        for (Sxy_iter.begin(Sx); Sxy_iter; Sxy_iter.next()) {
+        for (Sxy_iter.begin(Sx); Sxy_iter.ok(); Sxy_iter.next()) {
             Ob Sxy = Sxy_iter.app();
             Ob y   = Sxy_iter.rhs();
 
-            for (xz_iter.begin(); xz_iter; xz_iter.next()) {
+            for (xz_iter.begin(); xz_iter.ok(); xz_iter.next()) {
                 Ob z     = xz_iter.rhs();
                 Ob yz    = find_app(y,z); if (!yz) continue;
                 Ob xz    = xz_iter.app();
@@ -935,17 +935,17 @@ void validate_C ()
     Lra_Iterator xz_iter; //for below
     Lra_Iterator Cxy_iter; //for below
 
-    for (Lra_Iterator Cx_iter(C); Cx_iter; Cx_iter.next()) {
+    for (Lra_Iterator Cx_iter(C); Cx_iter.ok(); Cx_iter.next()) {
         Ob Cx = Cx_iter.app();
         Ob x  = Cx_iter.rhs();
 
-        xz_iter.begin(x); if (!xz_iter) continue; //for below
+        xz_iter.begin(x); if (!xz_iter.ok()) continue; //for below
 
-        for (Cxy_iter.begin(Cx); Cxy_iter; Cxy_iter.next()) {
+        for (Cxy_iter.begin(Cx); Cxy_iter.ok(); Cxy_iter.next()) {
             Ob Cxy = Cxy_iter.app();
             Ob y   = Cxy_iter.rhs();
 
-            for (xz_iter.begin(); xz_iter; xz_iter.next()) {
+            for (xz_iter.begin(); xz_iter.ok(); xz_iter.next()) {
                 Ob z    = xz_iter.rhs();
                 Ob yz   = find_app(y,z); if (!yz) continue;
                 Ob xz   = xz_iter.app();
@@ -966,11 +966,11 @@ void validate_B ()
     Logging::IndentBlock block;
 
     Ob B = *Atoms::B;
-    for (Lra_Iterator Bx_iter(B); Bx_iter; Bx_iter.next()) {
+    for (Lra_Iterator Bx_iter(B); Bx_iter.ok(); Bx_iter.next()) {
         Ob x  = Bx_iter.rhs();
         Ob Bx = Bx_iter.app();
 
-        for (Lra_Iterator Bxy_iter(Bx); Bxy_iter; Bxy_iter.next()) {
+        for (Lra_Iterator Bxy_iter(Bx); Bxy_iter.ok(); Bxy_iter.next()) {
             Ob y   = Bxy_iter.rhs();
             Ob Bxy = Bxy_iter.app();
 
@@ -981,11 +981,11 @@ void validate_B ()
     }
 
     Ob CB = *Atoms::CB;
-    for (Lra_Iterator CBy_iter(CB); CBy_iter; CBy_iter.next()) {
+    for (Lra_Iterator CBy_iter(CB); CBy_iter.ok(); CBy_iter.next()) {
         Ob y   = CBy_iter.rhs();
         Ob CBy = CBy_iter.app();
 
-        for (Lra_Iterator CByx_iter(CBy); CByx_iter; CByx_iter.next()) {
+        for (Lra_Iterator CByx_iter(CBy); CByx_iter.ok(); CByx_iter.next()) {
             Ob x    = CByx_iter.rhs();
             Ob CByx = CByx_iter.app();
 
@@ -1021,14 +1021,14 @@ void validate_Y ()
     Ob Y = *Atoms::Y;
     Ob SI = *Atoms::SI;
 
-    for (Lra_Iterator Yf_iter(Y); Yf_iter; Yf_iter.next()) {
+    for (Lra_Iterator Yf_iter(Y); Yf_iter.ok(); Yf_iter.next()) {
         Ob f    = Yf_iter.rhs();
         Ob Yf   = Yf_iter.app();
         AssertV(ensure_app(Yf, f,Yf),
                 "repaired Y1 instance: " << print(Yf) << " == ???");
     }
 
-    for (Lra_Iterator SIy_iter(SI); SIy_iter; SIy_iter.next()) {
+    for (Lra_Iterator SIy_iter(SI); SIy_iter.ok(); SIy_iter.next()) {
         Ob y   = SIy_iter.rhs();
         Ob SIy = SIy_iter.app(); if (SIy != y) continue;
         AssertV(ensure_equiv(y, Y),
@@ -1044,11 +1044,11 @@ void validate_W ()
 
     Lra_Iterator xy_iter; //for below
 
-    for (Lra_Iterator Wx_iter(W); Wx_iter; Wx_iter.next()) {
+    for (Lra_Iterator Wx_iter(W); Wx_iter.ok(); Wx_iter.next()) {
         Ob Wx = Wx_iter.app();
         Ob x  = Wx_iter.rhs();
 
-        for (xy_iter.begin(x); xy_iter; xy_iter.next()) {
+        for (xy_iter.begin(x); xy_iter.ok(); xy_iter.next()) {
             Ob y  = xy_iter.rhs();
             Ob xy = xy_iter.app();
             AssertV(ensure_apps(Wx,y, xy,y),
@@ -1066,7 +1066,7 @@ void validate_U ()
     Ob U = *Atoms::U;
 
     //validate U(Ux)=Ux
-    for (Lra_Iterator Ux_iter(U); not Ux_iter.done(); Ux_iter.next()) {
+    for (Lra_Iterator Ux_iter(U); Ux_iter.ok(); Ux_iter.next()) {
         Ob Ux = Ux_iter.app();
         AssertV(ensure_app(Ux, U,Ux),
                 "repaired unenforced U(Ux)=Ux instance: "
@@ -1074,7 +1074,7 @@ void validate_U ()
     }
 
     //validate Ux=x |- x*x[=x
-    for (Lra_Iterator Ux_iter(U); not Ux_iter.done(); Ux_iter.next()) {
+    for (Lra_Iterator Ux_iter(U); Ux_iter.ok(); Ux_iter.next()) {
         Ob x  = Ux_iter.rhs();
         Ob Ux = Ux_iter.app(); if (x != Ux) continue;
         Ob xx = find_comp(x,x); if (!xx) continue;
@@ -1093,11 +1093,11 @@ void validate_U ()
     }
 
     //validate fx[=x |- (Uf)x=fx
-    for (Lra_Iterator Uf_iter(U); not Uf_iter.done(); Uf_iter.next()) {
+    for (Lra_Iterator Uf_iter(U); Uf_iter.ok(); Uf_iter.next()) {
         Ob f  = Uf_iter.rhs();
         Ob Uf = Uf_iter.app();
 
-        for (Lra_Iterator fx_iter(f); not fx_iter.done(); fx_iter.next()) {
+        for (Lra_Iterator fx_iter(f); fx_iter.ok(); fx_iter.next()) {
             Ob x  = fx_iter.rhs();
             Ob fx = fx_iter.app(); if (not is_less(fx, x)) continue;
             AssertV(ensure_app(fx, Uf,x),
@@ -1115,7 +1115,7 @@ void validate_V ()
     Ob V = *Atoms::V;
 
     //validate V(Vx)=Vx
-    for (Lra_Iterator Vx_iter(V); Vx_iter; Vx_iter.next()) {
+    for (Lra_Iterator Vx_iter(V); Vx_iter.ok(); Vx_iter.next()) {
         Ob Vx  = Vx_iter.app();
         AssertV(ensure_app(Vx, V,Vx),
                 "repaired V(V x)=V x instance:\n\t"
@@ -1123,7 +1123,7 @@ void validate_V ()
     }
 
     //validate Vx=x |- x*x=x, I[=x
-    for (Lra_Iterator Vx_iter(V); Vx_iter; Vx_iter.next()) {
+    for (Lra_Iterator Vx_iter(V); Vx_iter.ok(); Vx_iter.next()) {
         Ob x  = Vx_iter.rhs();
         Ob Vx = Vx_iter.app(); if (x != Vx) continue;
 
@@ -1139,7 +1139,7 @@ void validate_V ()
     }
 
     //validate I[=x=x*x |- Vx=x
-    for (OR::Iterator<LRpos> ix_iter(I); ix_iter; ix_iter.next()) {
+    for (OR::Iterator<LRpos> ix_iter(I); ix_iter.ok(); ix_iter.next()) {
         Ob x = ix_iter.rhs();
         Ob xx = find_comp(x,x); if (xx != x) continue;
 
@@ -1149,11 +1149,11 @@ void validate_V ()
     }
 
     //validate fx[=x |- Vfx=x
-    for (Lra_Iterator Vf_iter(V); Vf_iter; Vf_iter.next()) {
+    for (Lra_Iterator Vf_iter(V); Vf_iter.ok(); Vf_iter.next()) {
         Ob f  = Vf_iter.rhs();
         Ob Vf = Vf_iter.app();
 
-        for (Lra_Iterator fx_iter(f); fx_iter; fx_iter.next()) {
+        for (Lra_Iterator fx_iter(f); fx_iter.ok(); fx_iter.next()) {
             Ob x  = fx_iter.rhs();
             Ob fx = fx_iter.app(); if (not is_less(fx, x)) continue;
             AssertV(ensure_app(x, Vf,x),
@@ -1184,7 +1184,7 @@ void validate_Div ()
     Ob Bot = *Atoms::Bot;
 
     //x![=Bot |- Divx=Top
-    for (OR::Iterator<RLneg> iter(Bot); iter; iter.next()) {
+    for (OR::Iterator<RLneg> iter(Bot); iter.ok(); iter.next()) {
         Ob x = iter.lhs();
         AssertV(ensure_app(Top, Div,x),
                 "repaired x![=Bot |- div x=Top instance: "
@@ -1192,7 +1192,7 @@ void validate_Div ()
     }
 
     //xBot=Bot |- x[=Div
-    for (ARl_Iterator xB_iter(Bot,Bot); xB_iter; xB_iter.next()) {
+    for (ARl_Iterator xB_iter(Bot,Bot); xB_iter.ok(); xB_iter.next()) {
         Ob x = xB_iter.lhs();
         AssertV(ensure_less(x, Div),
                 "repaired x Bot=Bot |- x[=div instance: "
@@ -1204,12 +1204,12 @@ void validate_Div ()
     Ob y = Top;
     const Set& fs = get_funs_of_div();
 
-    for (Set::iterator f_iter(fs); f_iter; f_iter.next()) {
+    for (Set::iterator f_iter(fs); f_iter.ok(); f_iter.next()) {
         Ob f  = Ob(*f_iter); if (f != find_comp(f,Div)) continue;
         Ob fx = find_app(f,x);
         Ob fy = find_app(f,y);
 
-        for (Set::iterator g_iter(fs); g_iter; g_iter.next()) {
+        for (Set::iterator g_iter(fs); g_iter.ok(); g_iter.next()) {
             Ob g = Ob(*g_iter); if (g != find_comp(g,Div)) continue;
             Ob gx = find_app(g,x); if (not is_less(fx,gx)) continue;
             Ob gy = find_app(g,y); if (not is_less(fy,gy)) continue;
@@ -1230,7 +1230,7 @@ void validate_Unit ()
     Ob I    = *Atoms::I;
 
     //x![=I |- Unitx=Top
-    for (OR::Iterator<RLneg> iter(I); iter; iter.next()) {
+    for (OR::Iterator<RLneg> iter(I); iter.ok(); iter.next()) {
         Ob x = iter.lhs();
         AssertV(ensure_app(Top, Unit,x),
                 "repaired x![=I |- unit x=Top instance: "
@@ -1238,7 +1238,7 @@ void validate_Unit ()
     }
 
     //xI[=I |- x[=Unit
-    for (Rla_Iterator xI_iter(I); xI_iter; xI_iter.next()) {
+    for (Rla_Iterator xI_iter(I); xI_iter.ok(); xI_iter.next()) {
         if (not is_less(xI_iter.app(), I)) continue;
         Ob x = xI_iter.lhs();
         AssertV(ensure_less(x, Unit),
@@ -1251,12 +1251,12 @@ void validate_Unit ()
     Ob y = Top;
     const Set& fs = get_funs_of_unit();
 
-    for (Set::iterator f_iter(fs); f_iter; f_iter.next()) {
+    for (Set::iterator f_iter(fs); f_iter.ok(); f_iter.next()) {
         Ob f  = Ob(*f_iter); if (f != find_comp(f,Unit)) continue;
         Ob fx = find_app(f,x);
         Ob fy = find_app(f,y);
 
-        for (Set::iterator g_iter(fs); g_iter; g_iter.next()) {
+        for (Set::iterator g_iter(fs); g_iter.ok(); g_iter.next()) {
             Ob g = Ob(*g_iter); if (g != find_comp(g,Unit)) continue;
             Ob gx = find_app(g,x); if (not is_less(fx,gx)) continue;
             Ob gy = find_app(g,y); if (not is_less(fy,gy)) continue;
@@ -1278,7 +1278,7 @@ void validate_Semi ()
     Ob I    = *Atoms::I;
 
     //xBot=Bot, xI[=I |- x[=Semi
-    for (ARl_Iterator xB_iter(Bot,Bot); xB_iter; xB_iter.next()) {
+    for (ARl_Iterator xB_iter(Bot,Bot); xB_iter.ok(); xB_iter.next()) {
         Ob x  = xB_iter.lhs();
         Ob xI = find_app(x,I); if (not (xI and is_less(xI,I))) continue;
 
@@ -1287,7 +1287,7 @@ void validate_Semi ()
                 << print(x));
     }
 
-    for (Lra_Iterator sx_iter(Semi); sx_iter; sx_iter.next()) {
+    for (Lra_Iterator sx_iter(Semi); sx_iter.ok(); sx_iter.next()) {
         Ob x  = sx_iter.rhs();
         Ob sx = sx_iter.app();
 
@@ -1312,13 +1312,13 @@ void validate_Semi ()
     Ob z = I;
     const Set& fs = get_funs_of_semi();
 
-    for (Set::iterator f_iter(fs); f_iter; f_iter.next()) {
+    for (Set::iterator f_iter(fs); f_iter.ok(); f_iter.next()) {
         Ob f  = Ob(*f_iter); if (f != find_comp(f,Semi)) continue;
         Ob fx = find_app(f,x);
         Ob fy = find_app(f,y);
         Ob fz = find_app(f,z);
 
-        for (Set::iterator g_iter(fs); g_iter; g_iter.next()) {
+        for (Set::iterator g_iter(fs); g_iter.ok(); g_iter.next()) {
             Ob g = Ob(*g_iter); if (g != find_comp(g,Semi)) continue;
             Ob gx = find_app(g,x); if (not is_less(fx,gx)) continue;
             Ob gy = find_app(g,y); if (not is_less(fy,gy)) continue;
@@ -1341,7 +1341,7 @@ void validate_Bool ()
     Ob K    = *Atoms::K;
     Ob KI   = *Atoms::KI;
 
-    for (Lra_Iterator bx_iter(Bool); bx_iter; bx_iter.next()) {
+    for (Lra_Iterator bx_iter(Bool); bx_iter.ok(); bx_iter.next()) {
         Ob x  = bx_iter.rhs();
         Ob bx = bx_iter.app();
 
@@ -1363,7 +1363,8 @@ void validate_Bool ()
 
     //x![=Bot, x[=K |- Bool x=K
     xs.set_insn(OR::nbelow(Bot), OR::below(K));
-    for (Set::iterator x_iter(xs); x_iter; x_iter.next()) { Ob x = Ob(*x_iter);
+    for (Set::iterator x_iter(xs); x_iter.ok(); x_iter.next()) {
+        Ob x = Ob(*x_iter);
 
         AssertV(ensure_app(K, Bool,x),
                 "repaired x![=Bot, x[=K |- Bool x=K instance: "
@@ -1372,7 +1373,8 @@ void validate_Bool ()
 
     //x![=Bot, x[=F |- Bool x=F
     xs.set_insn(OR::nbelow(Bot), OR::below(KI));
-    for (Set::iterator x_iter(xs); x_iter; x_iter.next()) { Ob x = Ob(*x_iter);
+    for (Set::iterator x_iter(xs); x_iter.ok(); x_iter.next()) {
+        Ob x = Ob(*x_iter);
 
         AssertV(ensure_app(KI, Bool,x),
                 "repaired x![=Bot, x[=F |- Bool x=F instance: "
@@ -1391,14 +1393,14 @@ void validate_Bool ()
     Ob z = KI;
     const Set& fs = get_funs_of_bool();
 
-    for (Set::iterator f_iter(fs); f_iter; f_iter.next()) {
+    for (Set::iterator f_iter(fs); f_iter.ok(); f_iter.next()) {
         Ob f  = Ob(*f_iter); if (f != find_comp(f,Bool)) continue;
         Ob fw = find_app(f,w);
         Ob fx = find_app(f,x);
         Ob fy = find_app(f,y);
         Ob fz = find_app(f,z);
 
-        for (Set::iterator g_iter(fs); g_iter; g_iter.next()) {
+        for (Set::iterator g_iter(fs); g_iter.ok(); g_iter.next()) {
             Ob g = Ob(*g_iter); if (g != find_comp(g,Bool)) continue;
             Ob gw = find_app(g,w); if (not is_less(fw,gw)) continue;
             Ob gx = find_app(g,x); if (not is_less(fx,gx)) continue;

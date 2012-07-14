@@ -142,22 +142,21 @@ public:
     private:
         void _set_pos () { m_moving = *m_iter; }
     public:
-        operator bool () const { return m_iter; }
-        bool done () const { return m_iter.done(); }
-        void begin () { m_iter.begin(); if (not done()) _set_pos(); }
+        bool ok () const { return m_iter.ok(); }
+        void begin () { m_iter.begin(); if (ok()) _set_pos(); }
         void begin (int fixed)
         {
             m_fixed=fixed;
             m_set.init(m_fun->get_Lx_line(fixed));
             begin();
         }
-        void next () { m_iter.next(); if (not done()) _set_pos(); }
+        void next () { m_iter.next(); if (ok()) _set_pos(); }
 
         // dereferencing
     private:
         void _deref_assert () const
         {
-            POMAGMA_ASSERT5(not done(), "dereferenced done dense_set::iter");
+            POMAGMA_ASSERT5(ok(), "dereferenced done dense_set::iter");
         }
     public:
         int fixed  () const { _deref_assert(); return m_fixed; }
@@ -191,20 +190,19 @@ public:
         {}
 
         // traversal
-        void begin () { m_iter.begin(); if (not done()) m_moving = *m_iter; }
+        void begin () { m_iter.begin(); if (ok()) m_moving = *m_iter; }
         void begin (int fixed1, int fixed2)
         {
             m_set.init(m_fun->_get_LLx_line(fixed1, fixed2));
             m_iter.begin();
-            if (not done()) {
+            if (ok()) {
                 m_fixed1 = fixed1;
                 m_fixed2 = fixed2;
                 m_moving = *m_iter;
             }
         }
-        operator bool () const { return m_iter; }
-        bool done () const { return m_iter.done(); }
-        void next () { m_iter.next(); if (not done()) m_moving = *m_iter; }
+        bool ok () const { return m_iter.ok(); }
+        void next () { m_iter.next(); if (ok()) m_moving = *m_iter; }
 
         // dereferencing
         int fixed1 () const { return m_fixed1; }

@@ -1229,24 +1229,24 @@ ObHdl enforce_atom (const string& name)
     ObHdl atom = ObHdl(ob);
 
     using namespace Apply;
-    for (Lra_Iterator i(ob); not i.done(); i.next()) enqueue_enforce(*i);
-    for (Rla_Iterator i(ob); not i.done(); i.next()) enqueue_enforce(*i);
-    for (Alr_Iterator i(ob); not i.done(); i.next()) enqueue_enforce(*i);
+    for (Lra_Iterator i(ob); i.ok(); i.next()) enqueue_enforce(*i);
+    for (Rla_Iterator i(ob); i.ok(); i.next()) enqueue_enforce(*i);
+    for (Alr_Iterator i(ob); i.ok(); i.next()) enqueue_enforce(*i);
 
     using namespace Compose;
-    for (Lrc_Iterator i(ob); not i.done(); i.next()) enqueue_enforce(*i);
-    for (Rlc_Iterator i(ob); not i.done(); i.next()) enqueue_enforce(*i);
-    for (Clr_Iterator i(ob); not i.done(); i.next()) enqueue_enforce(*i);
+    for (Lrc_Iterator i(ob); i.ok(); i.next()) enqueue_enforce(*i);
+    for (Rlc_Iterator i(ob); i.ok(); i.next()) enqueue_enforce(*i);
+    for (Clr_Iterator i(ob); i.ok(); i.next()) enqueue_enforce(*i);
 
     using namespace JoinEqn;
-    for (Lrj_Iterator i(ob); not i.done(); i.next()) enqueue_enforce(*i);
-    for (Jlr_Iterator i(ob); not i.done(); i.next()) enqueue_enforce(*i);
+    for (Lrj_Iterator i(ob); i.ok(); i.next()) enqueue_enforce(*i);
+    for (Jlr_Iterator i(ob); i.ok(); i.next()) enqueue_enforce(*i);
 
     using namespace Order;
-    for (Iterator<LRpos> i(ob); not i.done(); i.next()) enqueue_enforce_L(*i);
-    for (Iterator<RLpos> i(ob); not i.done(); i.next()) enqueue_enforce_L(*i);
-    for (Iterator<LRneg> i(ob); not i.done(); i.next()) enqueue_enforce_N(*i);
-    for (Iterator<RLneg> i(ob); not i.done(); i.next()) enqueue_enforce_N(*i);
+    for (Iterator<LRpos> i(ob); i.ok(); i.next()) enqueue_enforce_L(*i);
+    for (Iterator<RLpos> i(ob); i.ok(); i.next()) enqueue_enforce_L(*i);
+    for (Iterator<LRneg> i(ob); i.ok(); i.next()) enqueue_enforce_N(*i);
+    for (Iterator<RLneg> i(ob); i.ok(); i.next()) enqueue_enforce_N(*i);
 
     saturate();
 

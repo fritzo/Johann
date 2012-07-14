@@ -279,7 +279,7 @@ void dense_set::iterator::_next_block ()
 // PROFILE this is one of the slowest methods
 void dense_set::iterator::next ()
 {
-    POMAGMA_ASSERT5(not done(), "tried to increment a finished dense_set::iterator");
+    POMAGMA_ASSERT5(ok(), "tried to increment a finished dense_set::iterator");
     Line line = m_set.m_lines[m_quot];
     do {
         ++m_rem;

@@ -346,7 +346,7 @@ Nodes::App find_parse_app (Ob ob)
 {//finds min-complexity parse app
     Nodes::App eqn(0);
     Float min_mass = INFINITY;
-    for (AE::Alr_Iterator iter(ob); not iter.done(); iter.next()) {
+    for (AE::Alr_Iterator iter(ob); iter.ok(); iter.next()) {
         Ob lhs = iter.lhs(); if (lhs == ob) continue;
         Ob rhs = iter.rhs(); if (rhs == ob) continue;
         Float mass = M::komp(lhs) + M::komp(rhs);
@@ -361,7 +361,7 @@ Nodes::Comp find_parse_comp (Ob ob)
 {//finds min-complexity parse comp
     Nodes::Comp eqn(0);
     Float min_mass = INFINITY;
-    for (CE::Clr_Iterator iter(ob); not iter.done(); iter.next()) {
+    for (CE::Clr_Iterator iter(ob); iter.ok(); iter.next()) {
         Ob lhs = iter.lhs(); if (lhs == ob) continue;
         Ob rhs = iter.rhs(); if (rhs == ob) continue;
         Float mass = M::komp(lhs) + M::komp(rhs);
@@ -376,7 +376,7 @@ Nodes::Join find_parse_join (Ob ob)
 {//finds min-complexity parse join
     Nodes::Join eqn(0);
     Float min_mass = INFINITY;
-    for (JE::Jlr_Iterator iter(ob); not iter.done(); iter.next()) {
+    for (JE::Jlr_Iterator iter(ob); iter.ok(); iter.next()) {
         Ob lhs = iter.lhs(); if (lhs == ob) continue;
         Ob rhs = iter.rhs(); if (rhs == ob) continue;
         Float mass = M::komp(lhs) + M::komp(rhs);

@@ -45,7 +45,7 @@ void test_dense_set (size_t N)
     POMAGMA_ASSERT(S.size() == N / 2,
             "set is not half-full after inserting N/2 items");
     unsigned num_items = 0;
-    for (dense_set::iterator iter(S); iter; iter.next()) {
+    for (dense_set::iterator iter(S); iter.ok(); iter.next()) {
         POMAGMA_ASSERT(S.contains(*iter), "iterated over uncontained item");
         ++num_items;
     }
@@ -111,7 +111,7 @@ void test_dense_bin_rel (
     //========================================================================
     POMAGMA_INFO("testing table iterator");
     unsigned num_pairs_seen = 0;
-    for (Rel::iterator iter(&R); iter; iter.next()) {
+    for (Rel::iterator iter(&R); iter.ok(); iter.next()) {
         ++num_pairs_seen;
     }
     POMAGMA_INFO("  iterated over "
@@ -160,7 +160,7 @@ void test_dense_bin_rel (
     //========================================================================
     POMAGMA_INFO("testing table iterator again");
     num_pairs_seen = 0;
-    for (Rel::iterator iter(&R); iter; iter.next()) {
+    for (Rel::iterator iter(&R); iter.ok(); iter.next()) {
         ++num_pairs_seen;
     }
     num_pairs = R.size();
@@ -179,7 +179,7 @@ void test_dense_bin_rel (
         if (not R.supports(i)) continue;
         ++num_items_seen;
         Rel::Iterator<LHS_FIXED> iter(i, &R);
-        for (iter.begin(); iter; iter.next()) {
+        for (iter.begin(); iter.ok(); iter.next()) {
             ++num_pairs;
         }
     }
@@ -201,7 +201,7 @@ void test_dense_bin_rel (
         if (not R.supports(i)) continue;
         ++num_items_seen;
         Rel::Iterator<RHS_FIXED> iter(i, &R);
-        for (iter.begin(); iter; iter.next()) {
+        for (iter.begin(); iter.ok(); iter.next()) {
             ++num_pairs;
         }
     }

@@ -82,8 +82,7 @@ public: // interface
 
         //traversal
         void begin (Ob root_ob) { m_root = root_ob; begin(); }
-        operator bool () const { return m_pos; }
-        bool done  () const { return not m_pos; }
+        bool ok () const { return m_pos; }
         void next  ();
 
         //dereferencing
@@ -388,11 +387,11 @@ template<class X> void splay_forest<X>::test_find (Pos eqn)
 }
 template<class X> void splay_forest<X>::test_contains (Pos eqn)
 {
-    for (Iterator iter(get_root(eqn)); iter; iter.next()) {
+    for (Iterator iter(get_root(eqn)); iter.ok(); iter.next()) {
         if (*iter == eqn) return;
     }
     Iterator iter;
-    for (iter.begin(get_root(eqn)); iter; iter.next()) {
+    for (iter.begin(get_root(eqn)); iter.ok(); iter.next()) {
         if (*iter == eqn) return;
     }
     POMAGMA_ERROR("invalid: eqn not contained in own " << nameof<X>() << " tree");
@@ -401,7 +400,7 @@ template<class X> void splay_forest<X>::test_range_contains (Pos eqn)
 {
     Ob my_root = get_root(eqn);
     Ob my_key = get_key(eqn);
-    for (RangeIterator iter(my_root, my_key); iter; iter.next()) {
+    for (RangeIterator iter(my_root, my_key); iter.ok(); iter.next()) {
         if (*iter == eqn) return;
     }
     POMAGMA_ERROR("invalid: eqn not (range) contained in own "

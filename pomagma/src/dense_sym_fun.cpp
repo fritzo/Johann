@@ -104,7 +104,7 @@ void dense_sym_fun::remove(
 {
     POMAGMA_ASSERT4(0<i and i<=int(N), "item out of bounds: " << i);
 
-    for (Iterator iter(this, i); not iter.done(); iter.next()) {
+    for (Iterator iter(this, i); iter.ok(); iter.next()) {
         int k = iter.moving();
         int& dep = value(k,i);
         remove_value(dep);
@@ -143,7 +143,7 @@ void dense_sym_fun::merge(
     }
 
     // (k,i) --> (j,j) for k != i
-    for (Iterator iter(this, i); iter; iter.next()) {
+    for (Iterator iter(this, i); iter.ok(); iter.next()) {
         int k = iter.moving();
         int & dep = value(k,i);
         int & rep = value(k,j);

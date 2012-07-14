@@ -67,6 +67,11 @@ public:
     noncopyable () {}
 };
 
+#define POMAGMA_FOR(POMAGMA_type, POMAGMA_var, POMAGMA_init) \
+    for (POMAGMA_type POMAGMA_var POMAGMA_init; \
+         POMAGMA_var.ok(); \
+         POMAGMA_var.next())
+
 //----------------------------------------------------------------------------
 // Logging
 

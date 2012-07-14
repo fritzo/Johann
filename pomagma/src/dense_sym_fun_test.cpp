@@ -39,7 +39,7 @@ void test_dense_sym_fun (unsigned size)
     dense_sym_fun::Iterator iter(&fun);
     for (unsigned i = 1; i <= size; ++i) {
         unsigned line_size_i = 0;
-        for (iter.begin(i); iter; iter.next()) {
+        for (iter.begin(i); iter.ok(); iter.next()) {
             unsigned j = iter.moving();
             unsigned k = iter.value();
             POMAGMA_ASSERT(gcd(i, j) == k and k >= 1,

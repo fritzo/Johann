@@ -215,7 +215,7 @@ void remove (Ob rem)
 
     //remove occurrences as APP
     std::vector<App> changed_eqns; //TODO maybe make this static
-    for (Alr_Iterator iter(rem); iter; iter.next()) {
+    for (Alr_Iterator iter(rem); iter.ok(); iter.next()) {
         Assert3(iter.app() == rem, "eqn has wrong APP before removing");
         changed_eqns.push_back(*iter);
     }
@@ -236,7 +236,7 @@ void merge (Ob dep, Ob rep)
 
     //merge occurrences as APP
     std::vector<App> changed_eqns; //TODO maybe make this static
-    for (Alr_Iterator iter(dep); iter; iter.next()) {
+    for (Alr_Iterator iter(dep); iter.ok(); iter.next()) {
         Assert3(iter.app() == dep, "eqn has wrong APP before rerooting");
         changed_eqns.push_back(*iter);
     }
@@ -323,14 +323,14 @@ template<int X> void test_line_contains (App eqn)
     LineIterator<X> iter(start);
 
     bool found = false;
-    for (; iter; iter.next()) {
+    for (; iter.ok(); iter.next()) {
         if (*iter == eqn) { found = true; break; }
     }
     Assert (found,
             "invalid (1): eqn not contained in own line <" << X << ">");
 
     found = false;
-    for (iter.begin(start); iter; iter.next()) {
+    for (iter.begin(start); iter.ok(); iter.next()) {
         if (*iter == eqn) { found = true; break; }
     }
     Assert (found,
@@ -340,7 +340,7 @@ template<int X> void test_line_find ()
 {
     for (Ob::sparse_iterator iter=Ob::sbegin(); iter!=Ob::send(); ++iter) {
         LineIterator<X> iter2;
-        for (iter2.begin(*iter); iter2; iter2.next()) {
+        for (iter2.begin(*iter); iter2.ok(); iter2.next()) {
             Assert (*iter2 == find_app_eqn(iter2.lhs(), iter2.rhs()),
                     "line iterator contains wrong value");
         }

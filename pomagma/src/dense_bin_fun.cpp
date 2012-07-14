@@ -124,7 +124,7 @@ void dense_bin_fun::remove(
     POMAGMA_ASSERT4(0 < i and i <= int(N), "item out of bounds: " << i);
 
     // (k,i)
-    for (Iterator<RHS_FIXED> iter(this, i); not iter.done(); iter.next()) {
+    for (Iterator<RHS_FIXED> iter(this, i); iter.ok(); iter.next()) {
         int k = iter.lhs();
         int & dep = value(k, i);
         remove_value(dep);
@@ -134,7 +134,7 @@ void dense_bin_fun::remove(
     _get_Rx_set(i).zero();
 
     // (i,k)
-    for (Iterator<LHS_FIXED> iter(this, i); not iter.done(); iter.next()) {
+    for (Iterator<LHS_FIXED> iter(this, i); iter.ok(); iter.next()) {
         int k = iter.rhs();
         int & dep = value(i, k);
         remove_value(dep);
@@ -157,7 +157,7 @@ void dense_bin_fun::merge(
     // Note: the spacial case (i,i) --> (i,j) --> (j,j) merges in two steps
 
     // (k,i) --> (k,j)
-    for (Iterator<RHS_FIXED> iter(this,i); iter; iter.next()) {
+    for (Iterator<RHS_FIXED> iter(this,i); iter.ok(); iter.next()) {
         int k = iter.lhs();
         int& dep = value(k,i);
         int& rep = value(k,j);
@@ -176,7 +176,7 @@ void dense_bin_fun::merge(
     Rx_rep.merge(Rx_dep);
 
     // (i,k) --> (j,k)
-    for (Iterator<LHS_FIXED> iter(this,i); iter; iter.next()) {
+    for (Iterator<LHS_FIXED> iter(this,i); iter.ok(); iter.next()) {
         int k = iter.rhs();
         int& dep = value(i,k);
         int& rep = value(j,k);

@@ -97,9 +97,7 @@ public:
 
         //traversal
         void next () { m_iter.next(); }
-        iterator& operator ++ () { next(); return *this; }
-        operator bool () const { return m_iter; }
-        bool done () const { return m_iter.done(); }
+        bool ok () const { return m_iter.ok(); }
 
         //dereferencing
         const Ord& operator *  () const
@@ -196,9 +194,8 @@ public:
         Assert3(ob.isUsed(), "Order Iterator began at unused ob");
         m_iter.begin(static_cast<int>(ob));
     }
-    operator bool () const { return m_iter; }
-    bool done  () const { return m_iter.done(); }
-    void next  () { m_iter.next(); }
+    bool ok () const { return m_iter.ok(); }
+    void next () { m_iter.next(); }
 
     //dereferencing
     const Ord& operator *  () const

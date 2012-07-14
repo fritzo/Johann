@@ -60,7 +60,7 @@ void get_random_parse (Ob app, Ob& lhs, Ob& rhs,
 {//sets references to lhs,rhs
     Double total = mu_app * drand48();
     while (true) {
-        for (AE::Alr_Iterator iter(app); not iter.done(); iter.next()) {
+        for (AE::Alr_Iterator iter(app); iter.ok(); iter.next()) {
             total -= mu_lhs(iter.lhs()) * mu_rhs(iter.rhs());
             if (total <= 0) {
                 lhs = iter.lhs();
@@ -75,7 +75,7 @@ void get_random_parse (Ob app, Ob lhs, Ob& rhs,
 {//sets reference to rhs
     Double total = mu_app * drand48();
     while (true) {
-        for (AE::ALr_Iterator iter(app,lhs); not iter.done(); iter.next()) {
+        for (AE::ALr_Iterator iter(app,lhs); iter.ok(); iter.next()) {
             total -= mu_lhs * mu_rhs(iter.rhs());
             if (total <= 0) {
                 rhs = iter.rhs();

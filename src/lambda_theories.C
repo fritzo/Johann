@@ -890,7 +890,7 @@ std::vector<Ob> LambdaTheory::solve (VarHdl var, ST::Relationship* r)
 
     //solve for {x | f x rel g x}
     std::vector<Ob> result;
-    for (AE::LLra_Iterator iter(*f,*g); iter; iter.next()) {
+    for (AE::LLra_Iterator iter(*f,*g); iter.ok(); iter.next()) {
         Ob fx = iter.app1();
         Ob gx = iter.app2();
         Ob x  = iter.rhs();
@@ -969,7 +969,7 @@ std::vector<ObWNum> TypedTheory::type_of
         if (not is_type[i]) continue;
         Int n_inhabs = 0;
         Ob t = Ob(i);
-        for (AE::Lra_Iterator tx_iter(t); not tx_iter.done(); tx_iter.next()) {
+        for (AE::Lra_Iterator tx_iter(t); tx_iter.ok(); tx_iter.next()) {
             Ob x  = tx_iter.rhs();
             Ob tx = tx_iter.app();
             if (tx == x) ++n_inhabs;

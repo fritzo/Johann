@@ -87,7 +87,7 @@ void dense_bin_rel::move_from (const dense_bin_rel & other, const oid_t * new2ol
 unsigned dense_bin_rel::size () const
 {
     unsigned result = 0;
-    for (dense_set::iterator i(m_support); i; i.next()) {
+    for (dense_set::iterator i(m_support); i.ok(); i.next()) {
         result += _get_Lx_set(*i).size();
     }
     return result;
@@ -157,7 +157,7 @@ void dense_bin_rel::validate_disjoint (const dense_bin_rel& other) const
             "invalid: disjoint dense_bin_rel supports disagree");
 
     // validate disjointness
-    for (dense_set::iterator i(m_support); i; i.next()) {
+    for (dense_set::iterator i(m_support); i.ok(); i.next()) {
         POMAGMA_ASSERT(_get_Lx_set(*i).disjoint(other._get_Lx_set(*i)),
                 "invalid: dense_bin_rels intersect at row " << *i);
     }
@@ -189,7 +189,7 @@ void dense_bin_rel::remove_Lx (const dense_set& is, int j)
     unsigned mask = ~(1 << (j % LINE_STRIDE));
     int offset = j / LINE_STRIDE;
     Line* lines = m_Lx_lines + offset;
-    for (dense_set::iterator i(is); i; i.next()) {
+    for (dense_set::iterator i(is); i.ok(); i.next()) {
          lines[*i * M] &= mask;
     }
 }
@@ -205,7 +205,7 @@ void dense_bin_rel::remove_Rx (int i, const dense_set& js)
     unsigned mask = ~(1 << (i % LINE_STRIDE));
     int offset = i / LINE_STRIDE;
     Line* lines = m_Rx_lines + offset;
-    for (dense_set::iterator j(js); j; j.next()) {
+    for (dense_set::iterator j(js); j.ok(); j.next()) {
          lines[*j * M] &= mask;
     }
 }
@@ -225,7 +225,7 @@ void dense_bin_rel::ensure_inserted (int i, const dense_set& js,
 {
     dense_set diff(N,m_temp_line), dest(N,get_Lx_line(i));
     if (dest.ensure(js, diff)) {
-        for (dense_set::iterator k(diff); k; k.next()) {
+        for (dense_set::iterator k(diff); k.ok(); k.next()) {
             insert_Rx(i,*k);
             change   (i,*k);
         }
@@ -237,7 +237,7 @@ void dense_bin_rel::ensure_inserted (const dense_set& is, int j,
 {
     dense_set diff(N,m_temp_line), dest(N,get_Rx_line(j));
     if (dest.ensure(is, diff)) {
-        for (dense_set::iterator k(diff); k; k.next()) {
+        for (dense_set::iterator k(diff); k.ok(); k.next()) {
             insert_Lx(*k,j);
             change   (*k,j);
         }
@@ -263,7 +263,7 @@ void dense_bin_rel::merge (
     remove_Rx(i, dep);
     rep.init(get_Lx_line(j));
     if (rep.merge(dep, diff)) {
-        for (dense_set::iterator k(diff); k; k.next()) {
+        for (dense_set::iterator k(diff); k.ok(); k.next()) {
             insert_Rx(j, *k);
             move_to(j, *k);
         }
@@ -274,7 +274,7 @@ void dense_bin_rel::merge (
     remove_Lx(dep, i);
     rep.init(get_Rx_line(j));
     if (rep.merge(dep, diff)) {
-        for (dense_set::iterator k(diff); k; k.next()) {
+        for (dense_set::iterator k(diff); k.ok(); k.next()) {
             insert_Lx(*k, j);
             move_to(*k, j);
         }
@@ -314,10 +314,10 @@ void dense_bin_rel::read_from_file (FILE* file)
 // iteration
 void dense_bin_rel::iterator::_find_rhs ()
 {
-    while (m_lhs) {
+    while (m_lhs.ok()) {
         m_rhs_set.init(m_rel.get_Lx_line(*m_lhs));
         m_rhs.begin();
-        if (m_rhs) {
+        if (m_rhs.ok()) {
             _update_rhs();
             _update_lhs();
             POMAGMA_ASSERT5(m_rel.contains(m_pos),

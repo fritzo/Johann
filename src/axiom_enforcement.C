@@ -410,7 +410,7 @@ inline void enforce_A_commutativity_A2 (Ob A, App eqn)
     Ob x  = get_rhs(eqn);
     Ob Ax = get_app(eqn);
 
-    for (Lra_Iterator Axy_iter(Ax); Axy_iter; Axy_iter.next()) {
+    for (Lra_Iterator Axy_iter(Ax); Axy_iter.ok(); Axy_iter.next()) {
         Ob y   = Axy_iter.rhs();
         Ob Ay  = find_app(A,y); if (!Ay) continue;
         Ob Axy = Axy_iter.app();
@@ -423,7 +423,7 @@ inline void enforce_A_commutativity_A3 (Ob A, App eqn)
     if (get_lhs(eqn) != A) return;
     Ob Ay = get_app(eqn);
     Ob y  = get_rhs(eqn);
-    for (Lra_Iterator Ax_iter(A); Ax_iter; Ax_iter.next()) {
+    for (Lra_Iterator Ax_iter(A); Ax_iter.ok(); Ax_iter.next()) {
         Ob Ax  = Ax_iter.app();
         Ob Axy = find_app(Ax,y); if (!Axy) continue;
         Ob x   = Ax_iter.rhs();
@@ -447,13 +447,13 @@ inline void enforce_A_associativity_A1 (Ob A, App eqn)
 
     Lra_Iterator Ayz_iter; //for below
 
-    for (Lra_Iterator Axy_iter(Ax); Axy_iter; Axy_iter.next()) {
+    for (Lra_Iterator Axy_iter(Ax); Axy_iter.ok(); Axy_iter.next()) {
         Ob Axy   = Axy_iter.app();
         Ob A_Axy = find_app(A, Axy); if (!A_Axy) continue;
         Ob y     = Axy_iter.rhs();
         Ob Ay    = find_app(A, y); if (!Ay) continue;
 
-        for (Ayz_iter.begin(Ay); Ayz_iter; Ayz_iter.next()) {
+        for (Ayz_iter.begin(Ay); Ayz_iter.ok(); Ayz_iter.next()) {
             Ob z      = Ayz_iter.rhs();
             Ob Ayz    = Ayz_iter.app();
             Ob Ax_Ayz = find_app(Ax, Ayz);
@@ -479,7 +479,7 @@ inline void enforce_A_associativity_A2 (Ob A, App eqn)
     Ob y     = get_rhs(eqn);
     Ob Ay    = find_app(A, y); if (!Ay) return;
 
-    for (Lra_Iterator Ayz_iter(Ay); Ayz_iter; Ayz_iter.next()) {
+    for (Lra_Iterator Ayz_iter(Ay); Ayz_iter.ok(); Ayz_iter.next()) {
         Ob z      = Ayz_iter.rhs();
         Ob Ayz    = Ayz_iter.app();
         Ob Ax_Ayz = find_app(Ax, Ayz);
@@ -500,16 +500,16 @@ inline void enforce_A_associativity_A3 (Ob A, App eqn)
     Ob y  = get_rhs(eqn);
     Ob Ay = get_app(eqn);
 
-    Lra_Iterator Ayz_iter(Ay); if (!Ayz_iter) return; //for below
+    Lra_Iterator Ayz_iter(Ay); if (!Ayz_iter.ok()) return; //for below
 
-    for (Rla_Iterator Axy_iter(y); Axy_iter; Axy_iter.next()) {
+    for (Rla_Iterator Axy_iter(y); Axy_iter.ok(); Axy_iter.next()) {
         Ob Axy   = Axy_iter.app();
         Ob A_Axy = find_app(A,Axy); if (!A_Axy) continue;
         Ob Ax    = Axy_iter.lhs();
         //here we assume that A injects
         Ob x     = find_ldiv(A,Ax); if (!x) continue;
 
-        for (Ayz_iter.begin(); Ayz_iter; Ayz_iter.next()) {
+        for (Ayz_iter.begin(); Ayz_iter.ok(); Ayz_iter.next()) {
             Ob z      = Ayz_iter.rhs();
             Ob Ayz    = Ayz_iter.app();
             Ob Ax_Ayz = find_app(Ax,Ayz);
@@ -533,7 +533,7 @@ inline void enforce_A_associativity_A4 (Ob A, App eqn)
     Ob z   = get_rhs(eqn);
     Ob Ayz = get_app(eqn);
 
-    for (Rla_Iterator Axy_iter(y); Axy_iter; Axy_iter.next()) {
+    for (Rla_Iterator Axy_iter(y); Axy_iter.ok(); Axy_iter.next()) {
         Ob Axy    = Axy_iter.app();
         Ob A_Axy  = find_app(A,Axy); if (!A_Axy) continue;
         Ob Ax     = Axy_iter.lhs();
@@ -559,14 +559,14 @@ inline void enforce_A_associativity_A5 (Ob A, App eqn)
 
     Lra_Iterator Ayz_iter; //for below
 
-    for (Alr_Iterator Axy_iter(Axy); Axy_iter; Axy_iter.next()) {
+    for (Alr_Iterator Axy_iter(Axy); Axy_iter.ok(); Axy_iter.next()) {
         Ob y  = Axy_iter.rhs();
         Ob Ay = find_app(A,y); if (!Ay) continue;
         Ob Ax = Axy_iter.lhs();
         //here we assume that A injects
         Ob x  = find_ldiv(A, Ax); if (!x) continue;
 
-        for (Ayz_iter.begin(Ay); Ayz_iter; Ayz_iter.next()) {
+        for (Ayz_iter.begin(Ay); Ayz_iter.ok(); Ayz_iter.next()) {
             Ob z      = Ayz_iter.rhs();
             Ob Ayz    = Ayz_iter.app();
             Ob Ax_Ayz = find_app(Ax, Ayz);
@@ -590,7 +590,7 @@ inline void enforce_A_associativity_A6 (Ob A, App eqn)
     Ob z       = get_rhs(eqn);
     Ob A_Axy_z = get_app(eqn);
 
-    for (Alr_Iterator Axy_iter(Axy); Axy_iter; Axy_iter.next()) {
+    for (Alr_Iterator Axy_iter(Axy); Axy_iter.ok(); Axy_iter.next()) {
         Ob y   = Axy_iter.rhs();
         Ob Ay  = find_app(A, y); if (!Ay) continue;
         Ob Ayz = find_app(Ay, z); if (!Ayz) continue;
@@ -609,7 +609,7 @@ inline void enforce_A_associativity_A7 (Ob A, App eqn)
     Ob Ayz    = get_rhs(eqn);
     Ob Ax_Ayz = get_app(eqn);
 
-    for (Alr_Iterator Ayz_iter(Ayz); Ayz_iter; Ayz_iter.next()) {
+    for (Alr_Iterator Ayz_iter(Ayz); Ayz_iter.ok(); Ayz_iter.next()) {
         Ob Ay    = Ayz_iter.lhs();
         //here we assume that A injects
         Ob y     = find_ldiv(A, Ay); if (!y) continue;
@@ -638,7 +638,7 @@ inline void enforce_A_distrib_rapply_A1 (Ob A, App eqn)
     Ob Axy  = get_lhs(eqn);
     Ob Axyz = get_app(eqn);
 
-    for (Alr_Iterator Axy_iter(Axy); Axy_iter; Axy_iter.next()) {
+    for (Alr_Iterator Axy_iter(Axy); Axy_iter.ok(); Axy_iter.next()) {
         Ob Ax   = Axy_iter.lhs();
         //here we assume that A injects
         Ob x    = find_ldiv(A,Ax); if (!x) continue;
@@ -658,7 +658,7 @@ inline void enforce_A_distrib_rapply_A2 (Ob A, App eqn)
     Ob y   = get_rhs(eqn);
     Ob Axy = get_app(eqn);
 
-    for (Lra_Iterator xz_iter(x); xz_iter; xz_iter.next()) {
+    for (Lra_Iterator xz_iter(x); xz_iter.ok(); xz_iter.next()) {
         Ob xz   = xz_iter.app();
         Ob A_xz = find_app(A,xz); if (!A_xz) continue;
         Ob z    = xz_iter.rhs();
@@ -681,13 +681,13 @@ inline void enforce_A_distrib_rapply_A3 (Ob A, App eqn)
     Ob x  = get_rhs(eqn);
     Ob Ax = get_app(eqn);
 
-    Lra_Iterator xz_iter(x); if (!xz_iter) return; //for below
+    Lra_Iterator xz_iter(x); if (!xz_iter.ok()) return; //for below
 
-    for (Lra_Iterator Axy_iter(Ax); Axy_iter; Axy_iter.next()) {
+    for (Lra_Iterator Axy_iter(Ax); Axy_iter.ok(); Axy_iter.next()) {
         Ob y   = Axy_iter.rhs();
         Ob Axy = Axy_iter.app();
 
-        for (xz_iter.begin(); xz_iter; xz_iter.next()) {
+        for (xz_iter.begin(); xz_iter.ok(); xz_iter.next()) {
             Ob xz   = xz_iter.app();
             Ob A_xz = find_app(A,xz); if (!A_xz) continue;
             Ob z    = xz_iter.rhs();
@@ -715,12 +715,12 @@ inline void enforce_A_distrib_rapply_A4 (Ob A, App eqn)
 
     ARl_Iterator yz_iter; //for below
 
-    for (Alr_Iterator xz_iter(xz); xz_iter; xz_iter.next()) {
+    for (Alr_Iterator xz_iter(xz); xz_iter.ok(); xz_iter.next()) {
         Ob x  = xz_iter.lhs();
         Ob Ax = find_app(A,x); if (!Ax) continue;
         Ob z  = xz_iter.rhs();
 
-        for (yz_iter.begin(yz,z); yz_iter; yz_iter.next()) {
+        for (yz_iter.begin(yz,z); yz_iter.ok(); yz_iter.next()) {
             Ob y   = yz_iter.lhs();
             Ob Axy = find_app(Ax,y); if (!Axy) continue;
             LOG_DEBUG1( "enforcing A_distrib_rapply_A4" );
@@ -736,12 +736,12 @@ inline void enforce_A_distrib_rapply_A5 (Ob A, App eqn)
 
     Lra_Iterator Axy_iter; //for below
 
-    for (Alr_Iterator xz_iter(xz); xz_iter; xz_iter.next()) {
+    for (Alr_Iterator xz_iter(xz); xz_iter.ok(); xz_iter.next()) {
         Ob x  = xz_iter.lhs();
         Ob Ax = find_app(A,x); if (!Ax) continue;
         Ob z  = xz_iter.rhs();
 
-        for (Axy_iter.begin(Ax); Axy_iter; Axy_iter.next()) {
+        for (Axy_iter.begin(Ax); Axy_iter.ok(); Axy_iter.next()) {
             Ob y    = Axy_iter.rhs();
             Ob yz   = find_app(y,z); if (!yz) continue;
             Ob Axy  = Axy_iter.app();
@@ -766,7 +766,7 @@ inline void enforce_A_distrib_rapply_A6 (Ob A, App eqn)
     Ob A_xz = find_app(A,xz); if (!A_xz) return;
     Ob z    = get_rhs(eqn);
 
-    for (Rla_Iterator yz_iter(z); yz_iter; yz_iter.next()) {
+    for (Rla_Iterator yz_iter(z); yz_iter.ok(); yz_iter.next()) {
         Ob y    = yz_iter.lhs();
         Ob Axy  = find_app(Ax,y); if (!Axy) continue;
         Ob yz   = yz_iter.app();
@@ -788,7 +788,7 @@ inline void enforce_A_distrib_rapply_A7 (Ob A, App eqn)
     Ob z  = get_rhs(eqn);
     Ob yz = get_app(eqn);
 
-    for (Rla_Iterator xz_iter(z); xz_iter; xz_iter.next()) {
+    for (Rla_Iterator xz_iter(z); xz_iter.ok(); xz_iter.next()) {
         Ob xz   = xz_iter.app();
         Ob A_xz = find_app(A,xz); if (!A_xz) continue;
         Ob x    = xz_iter.lhs();
@@ -829,7 +829,7 @@ inline void enforce_A_supconvexity_L1 (Ob A, App eqn)
     Set& zs = OR::temp_set();
     zs.set_insn(OR::below(x), OR::below(y));
 
-    for (Set::iterator z_iter(zs); z_iter; z_iter.next()) {
+    for (Set::iterator z_iter(zs); z_iter.ok(); z_iter.next()) {
         Ob z = Ob(*z_iter);
         LOG_DEBUG1( "enforcing A_supconvexity_L1" );
         ensure_less(z,Axy);
@@ -842,10 +842,10 @@ inline void enforce_A_supconvexity_L2 (Ob A, App eqn)
     Ob Ax = get_app(eqn);
     Set& ys = OR::temp_set(); //for below
 
-    for (OR::Iterator<RLpos> xz_iter(x); xz_iter; xz_iter.next()) {
+    for (OR::Iterator<RLpos> xz_iter(x); xz_iter.ok(); xz_iter.next()) {
         Ob z = xz_iter.rhs();
         ys.set_insn(OR::above(z), AE::Lx_support(Ax));
-        for (Set::iterator y_iter(ys); y_iter; y_iter.next()) {
+        for (Set::iterator y_iter(ys); y_iter.ok(); y_iter.next()) {
             Ob y = Ob(*y_iter);
             LOG_DEBUG1( "enforcing A_supconvexity_L2" );
             ensure_less(z,find_app(Ax,y));
@@ -860,7 +860,7 @@ inline void enforce_L_supconvexity_L1 (Ob A, Ord ord)
     Set& ys = OR::temp_set();
     ys.set_insn(OR::above(z), AE::Lx_support(Ax));
 
-    for (Set::iterator y_iter(ys); y_iter; y_iter.next()) {
+    for (Set::iterator y_iter(ys); y_iter.ok(); y_iter.next()) {
         Ob y = Ob(*y_iter);
         LOG_DEBUG1( "enforcing L_supconvexity_L1" );
         ensure_less(z,find_app(Ax,y));
@@ -873,7 +873,7 @@ inline void enforce_L_supconvexity_L2 (Ob A, Ord ord)
     Set& xs = OR::temp_set();
     xs.set_insn(OR::above(z), AE::Lx_support(A));
 
-    for (Set::iterator x_iter(xs); x_iter; x_iter.next()) {
+    for (Set::iterator x_iter(xs); x_iter.ok(); x_iter.next()) {
         Ob x   = Ob(*x_iter);
         Ob Ax  = find_app(A,x);
         Ob Axy = find_app(Ax,y); if (!Axy) continue;
@@ -905,7 +905,7 @@ inline void enforce_A_subconvexity_L1 (Ob A, App eqn)
     Set& zs = OR::temp_set();
     zs.set_insn(OR::above(x), OR::above(y));
 
-    for (Set::iterator z_iter(zs); z_iter; z_iter.next()) {
+    for (Set::iterator z_iter(zs); z_iter.ok(); z_iter.next()) {
         Ob z = Ob(*z_iter);
         LOG_DEBUG1( "enforcing A_subconvexity_L1" );
         ensure_less(Axy,z);
@@ -918,11 +918,11 @@ inline void enforce_A_subconvexity_L2 (Ob A, App eqn)
     Ob Ax = get_app(eqn);
     Set& ys = OR::temp_set(); //for below
 
-    for (OR::Iterator<LRpos> xz_iter(x); xz_iter; xz_iter.next()) {
+    for (OR::Iterator<LRpos> xz_iter(x); xz_iter.ok(); xz_iter.next()) {
         Ob z = xz_iter.rhs();
         ys.set_insn(OR::below(z), AE::Lx_support(Ax));
 
-        for (Set::iterator y_iter(ys); y_iter; y_iter.next()) {
+        for (Set::iterator y_iter(ys); y_iter.ok(); y_iter.next()) {
             Ob y = Ob(*y_iter);
             LOG_DEBUG1( "enforcing A_subconvexity_L2" );
             ensure_less(find_app(Ax,y),z);
@@ -937,7 +937,7 @@ inline void enforce_L_subconvexity_L1 (Ob A, Ord ord)
     Set& ys = OR::temp_set();
     ys.set_insn(OR::below(z), AE::Lx_support(Ax));
 
-    for (Set::iterator y_iter(ys); y_iter; y_iter.next()) {
+    for (Set::iterator y_iter(ys); y_iter.ok(); y_iter.next()) {
         Ob y = Ob(*y_iter);
         LOG_DEBUG1( "enforcing L_subconvexity_L1" );
         ensure_less(find_app(Ax,y),z);
@@ -950,7 +950,7 @@ inline void enforce_L_subconvexity_L2 (Ob A, Ord ord)
     Set& xs = OR::temp_set();
     xs.set_insn(OR::below(z), AE::Lx_support(A));
 
-    for (Set::iterator x_iter(xs); x_iter; x_iter.next()) {
+    for (Set::iterator x_iter(xs); x_iter.ok(); x_iter.next()) {
         Ob x   = Ob(*x_iter);
         Ob Ax  = find_app(A,x);
         Ob Axy = find_app(Ax,y); if (!Axy) continue;
@@ -979,7 +979,7 @@ inline void enforce_A_duals_A1 (Ob A, Ob B, App eqn)
     Ob Bx = find_app(B,x); if (!Bx) return;
     Ob Ax = get_app(eqn);
 
-    for (Lra_Iterator Bxy_iter(Bx); Bxy_iter; Bxy_iter.next()) {
+    for (Lra_Iterator Bxy_iter(Bx); Bxy_iter.ok(); Bxy_iter.next()) {
         Ob Bxy = Bxy_iter.app();
         LOG_DEBUG1( "enforcing A_duals_A1" );
         ensure_app(x, Ax,Bxy);
@@ -992,7 +992,7 @@ inline void enforce_A_duals_A2 (Ob A, Ob B, App eqn)
     Ob Ax = find_app(A,x); if (!Ax) return;
     Ob Bx = get_app(eqn);
 
-    for (Lra_Iterator Bxy_iter(Bx); Bxy_iter; Bxy_iter.next()) {
+    for (Lra_Iterator Bxy_iter(Bx); Bxy_iter.ok(); Bxy_iter.next()) {
         Ob Bxy = Bxy_iter.app();
         LOG_DEBUG1( "enforcing A_duals_A2" );
         ensure_app(x, Ax,Bxy);
@@ -1015,7 +1015,7 @@ inline void enforce_A_duals_A4 (Ob A, Ob B, App eqn)
     Ob x   = find_ldiv(A,Ax); if (!x) return;
     Ob Bxy = get_rhs(eqn);
 
-    for (Alr_Iterator Bxy_iter(Bxy); Bxy_iter; Bxy_iter.next()) {
+    for (Alr_Iterator Bxy_iter(Bxy); Bxy_iter.ok(); Bxy_iter.next()) {
         Ob Bx = Bxy_iter.lhs();
         //here we assume that B injects
         Ob x_ = find_ldiv(B,Bx); if (x_!=x) continue; //x_ may be 0
@@ -1051,14 +1051,14 @@ inline void enforce_A_mu_L (App eqn)
     Set& ys = OR::temp_set();
 
     ys.set_insn(OR::above(x), AE::Lx_support(f));
-    for (Set::iterator y_iter(ys); y_iter; y_iter.next()) {
+    for (Set::iterator y_iter(ys); y_iter.ok(); y_iter.next()) {
         Ob y = Ob(*y_iter);
         LOG_DEBUG1( "enforcing A_mu_La" );
         ensure_less(fx, find_app(f,y));
     }
 
     ys.set_insn(OR::below(x), AE::Lx_support(f));
-    for (Set::iterator y_iter(ys); y_iter; y_iter.next()) {
+    for (Set::iterator y_iter(ys); y_iter.ok(); y_iter.next()) {
         Ob y = Ob(*y_iter);
         LOG_DEBUG1( "enforcing A_mu_Lb" );
         ensure_less(find_app(f,y), fx);
@@ -1072,14 +1072,14 @@ inline void enforce_C_mu_L (Comp eqn)
     Set& ys = OR::temp_set();
 
     ys.set_insn(OR::above(x), CE::Lx_support(f));
-    for (Set::iterator y_iter(ys); y_iter; y_iter.next()) {
+    for (Set::iterator y_iter(ys); y_iter.ok(); y_iter.next()) {
         Ob y = Ob(*y_iter);
         LOG_DEBUG1( "enforcing C_mu_La" );
         ensure_less(fx, find_comp(f,y));
     }
 
     ys.set_insn(OR::below(x), CE::Lx_support(f));
-    for (Set::iterator y_iter(ys); y_iter; y_iter.next()) {
+    for (Set::iterator y_iter(ys); y_iter.ok(); y_iter.next()) {
         Ob y = Ob(*y_iter);
         LOG_DEBUG1( "enforcing C_mu_Lb" );
         ensure_less(find_comp(f,y), fx);
@@ -1090,14 +1090,14 @@ inline void enforce_L_mu_L (Ord ord)
     Ob x = ord.lhs();
     Ob y = ord.rhs();
 
-    for (RRla_Iterator iter(x,y); iter; iter.next()) {
+    for (RRla_Iterator iter(x,y); iter.ok(); iter.next()) {
         Ob fx = iter.app1();
         Ob fy = iter.app2();
         LOG_DEBUG1( "enforcing L_mu_La" );
         ensure_less(fx,fy);
     }
 
-    for (RRlc_Iterator iter(x,y); iter; iter.next()) {
+    for (RRlc_Iterator iter(x,y); iter.ok(); iter.next()) {
         Ob fx = iter.comp1();
         Ob fy = iter.comp2();
         LOG_DEBUG1( "enforcing L_mu_Lb" );
@@ -1113,14 +1113,14 @@ inline void enforce_A_nu_L (App eqn)
     Set& gs = OR::temp_set();
 
     gs.set_insn(OR::above(f), AE::Rx_support(x));
-    for (Set::iterator g_iter(gs); g_iter; g_iter.next()) {
+    for (Set::iterator g_iter(gs); g_iter.ok(); g_iter.next()) {
         Ob g = Ob(*g_iter);
         LOG_DEBUG1( "enforcing A_nu_La" );
         ensure_less(fx, find_app(g,x));
     }
 
     gs.set_insn(OR::below(f), AE::Rx_support(x));
-    for (Set::iterator g_iter(gs); g_iter; g_iter.next()) {
+    for (Set::iterator g_iter(gs); g_iter.ok(); g_iter.next()) {
         Ob g = Ob(*g_iter);
         LOG_DEBUG1( "enforcing A_nu_Lb" );
         ensure_less(find_app(g,x), fx);
@@ -1134,14 +1134,14 @@ inline void enforce_C_nu_L (Comp eqn)
     Set& gs = OR::temp_set();
 
     gs.set_insn(OR::above(f), CE::Rx_support(x));
-    for (Set::iterator g_iter(gs); g_iter; g_iter.next()) {
+    for (Set::iterator g_iter(gs); g_iter.ok(); g_iter.next()) {
         Ob g = Ob(*g_iter);
         LOG_DEBUG1( "enforcing A_nu_La" );
         ensure_less(fx, find_comp(g,x));
     }
 
     gs.set_insn(OR::below(f), CE::Rx_support(x));
-    for (Set::iterator g_iter(gs); g_iter; g_iter.next()) {
+    for (Set::iterator g_iter(gs); g_iter.ok(); g_iter.next()) {
         Ob g = Ob(*g_iter);
         LOG_DEBUG1( "enforcing A_nu_Lb" );
         ensure_less(find_comp(g,x), fx);
@@ -1152,14 +1152,14 @@ inline void enforce_L_nu_L (Ord ord)
     Ob f = ord.lhs();
     Ob g = ord.rhs();
 
-    for (LLra_Iterator iter(f,g); iter; iter.next()) {
+    for (LLra_Iterator iter(f,g); iter.ok(); iter.next()) {
         Ob fx = iter.app1();
         Ob gx = iter.app2();
         LOG_DEBUG1( "enforcing L_nu_La" );
         ensure_less(fx,gx);
     }
 
-    for (LLrc_Iterator iter(f,g); iter; iter.next()) {
+    for (LLrc_Iterator iter(f,g); iter.ok(); iter.next()) {
         Ob fx = iter.comp1();
         Ob gx = iter.comp2();
         LOG_DEBUG1( "enforcing L_nu_Lb" );
@@ -1173,7 +1173,7 @@ inline void enforce_A_mu_N (App eqn)
     Ob x  = get_rhs(eqn);
     Ob fx = get_app(eqn);
 
-    for (Lra_Iterator fy_iter(f); fy_iter; fy_iter.next()) {
+    for (Lra_Iterator fy_iter(f); fy_iter.ok(); fy_iter.next()) {
         Ob fy = fy_iter.app();
         Ob y  = fy_iter.rhs();
 
@@ -1193,7 +1193,7 @@ inline void enforce_C_mu_N (Comp eqn)
     Ob x  = get_rhs(eqn);
     Ob fx = get_comp(eqn);
 
-    for (Lrc_Iterator fy_iter(f); fy_iter; fy_iter.next()) {
+    for (Lrc_Iterator fy_iter(f); fy_iter.ok(); fy_iter.next()) {
         Ob fy = fy_iter.comp();
         Ob y  = fy_iter.rhs();
 
@@ -1214,7 +1214,7 @@ inline void enforce_A_nu_N (App eqn)
     Ob x  = get_rhs(eqn);
     Ob fx = get_app(eqn);
 
-    for (Rla_Iterator gx_iter(x); gx_iter; gx_iter.next()) {
+    for (Rla_Iterator gx_iter(x); gx_iter.ok(); gx_iter.next()) {
         Ob gx = gx_iter.app();
         Ob g  = gx_iter.lhs();
 
@@ -1234,7 +1234,7 @@ inline void enforce_C_nu_N (Comp eqn)
     Ob x  = get_rhs(eqn);
     Ob fx = get_comp(eqn);
 
-    for (Rlc_Iterator gx_iter(x); gx_iter; gx_iter.next()) {
+    for (Rlc_Iterator gx_iter(x); gx_iter.ok(); gx_iter.next()) {
         Ob gx = gx_iter.comp();
         Ob g  = gx_iter.lhs();
 
@@ -1259,18 +1259,18 @@ inline void enforce_N_mono_N1 (Ord ord)
 
     ALr_Iterator fy_iter; //for below
     ARl_Iterator gx_iter; //for below
-    for (Alr_Iterator fx_iter(fx); fx_iter; fx_iter.next()) {
+    for (Alr_Iterator fx_iter(fx); fx_iter.ok(); fx_iter.next()) {
         Ob f = fx_iter.lhs();
         Ob x = fx_iter.rhs();
 
-        for (fy_iter.begin(fy,f); fy_iter; fy_iter.next()) {
+        for (fy_iter.begin(fy,f); fy_iter.ok(); fy_iter.next()) {
             Ob y = fy_iter.rhs();
 
             LOG_DEBUG1( "enforcing N_mu_N1" );
             ensure_nless(x,y);
         }
 
-        for (gx_iter.begin(gx,x); gx_iter; gx_iter.next()) {
+        for (gx_iter.begin(gx,x); gx_iter.ok(); gx_iter.next()) {
             Ob g = gx_iter.lhs();
 
             LOG_DEBUG1( "enforcing N_nu_N1" );
@@ -1287,18 +1287,18 @@ inline void enforce_N_mono_N2 (Ord ord)
 
     CLr_Iterator fy_iter; //for below
     CRl_Iterator gx_iter; //for below
-    for (Clr_Iterator fx_iter(fx); fx_iter; fx_iter.next()) {
+    for (Clr_Iterator fx_iter(fx); fx_iter.ok(); fx_iter.next()) {
         Ob f = fx_iter.lhs();
         Ob x = fx_iter.rhs();
 
-        for (fy_iter.begin(fy,f); fy_iter; fy_iter.next()) {
+        for (fy_iter.begin(fy,f); fy_iter.ok(); fy_iter.next()) {
             Ob y = fy_iter.rhs();
 
             LOG_DEBUG1( "enforcing N_mu_N2" );
             ensure_nless(x,y);
         }
 
-        for (gx_iter.begin(gx,x); gx_iter; gx_iter.next()) {
+        for (gx_iter.begin(gx,x); gx_iter.ok(); gx_iter.next()) {
             Ob g = gx_iter.lhs();
 
             LOG_DEBUG1( "enforcing N_nu_N2" );
@@ -1397,7 +1397,7 @@ inline void enforce_N_Bot_N (Ord ord)
 {// fx![=Bot | fx=f*x
     Ob Bot = *Atoms::Bot; if (Bot != ord.rhs()) return;
     Ob fx  = ord.lhs();
-    for (Alr_Iterator fx_iter(fx); fx_iter; fx_iter.next()) {
+    for (Alr_Iterator fx_iter(fx); fx_iter.ok(); fx_iter.next()) {
         Ob f = fx_iter.lhs();
         LOG_DEBUG1( "enforcing N_Bot_N" );
         ensure_nless(f, Bot);
@@ -1422,7 +1422,7 @@ inline void enforce_N_Top_N (Ord ord)
 {// fx=!]Top | fx=f*x
     Ob Top = *Atoms::Top; if (Top != ord.lhs()) return;
     Ob fx  = ord.rhs();
-    for (Alr_Iterator fx_iter(fx); fx_iter; fx_iter.next()) {
+    for (Alr_Iterator fx_iter(fx); fx_iter.ok(); fx_iter.next()) {
         Ob f = fx_iter.lhs();
         LOG_DEBUG1( "enforcing N_Top_N" );
         ensure_nless(Top, f);
@@ -1455,7 +1455,7 @@ inline void enforce_L_join_pos2 (Ord ord)
 
     Set& ys = OR::temp_set();
     ys.set_insn(JE::Lx_support(x), OR::below(z));
-    for (Set::iterator y_iter(ys); y_iter; y_iter.next()) {
+    for (Set::iterator y_iter(ys); y_iter.ok(); y_iter.next()) {
         Ob y  = Ob(*y_iter);
 
         LOG_DEBUG1( "enforcing L_join_pos2" );
@@ -1482,7 +1482,7 @@ inline void enforce_J_join_pos3 (Join eqn, bool parity)
     Ob y  = parity ? get_rhs(eqn) : get_lhs(eqn);
     Ob xy = get_join(eqn);
 
-    for (Lrj_Iterator xz_iter(x); xz_iter; xz_iter.next()) {
+    for (Lrj_Iterator xz_iter(x); xz_iter.ok(); xz_iter.next()) {
         Ob z  = xz_iter.moving();
         Ob xz = xz_iter.join();
 
@@ -1496,7 +1496,7 @@ inline void enforce_J_join_pos4 (Join eqn, bool parity)
     Ob yz  = parity ? get_rhs(eqn) : get_lhs(eqn);
     Ob xyz = get_join(eqn);
 
-    for (Jlr_Iterator yz_iter(yz); yz_iter; yz_iter.next()) {
+    for (Jlr_Iterator yz_iter(yz); yz_iter.ok(); yz_iter.next()) {
         Ob y  = yz_iter.lhs();
         Ob z  = yz_iter.rhs();
 
@@ -1519,7 +1519,7 @@ inline void enforce_J_join_pos5 (Join eqn)
     Ob y  = get_rhs(eqn);
     Ob xy = get_join(eqn);
 
-    for (LLra_Iterator z_iter(x,y); z_iter; z_iter.next()) {
+    for (LLra_Iterator z_iter(x,y); z_iter.ok(); z_iter.next()) {
         Ob z  = z_iter.rhs();
         Ob xz = z_iter.app1();
         Ob yz = z_iter.app2();
@@ -1536,11 +1536,11 @@ inline void enforce_J_join_pos6 (Join eqn)
 
     ARl_Iterator xz_iter; //for below
 
-    for (Alr_Iterator yz_iter(yz); yz_iter; yz_iter.next()) {
+    for (Alr_Iterator yz_iter(yz); yz_iter.ok(); yz_iter.next()) {
         Ob y = yz_iter.lhs();
         Ob z = yz_iter.rhs();
 
-        for (xz_iter.begin(xz,z); xz_iter; xz_iter.next()) {
+        for (xz_iter.begin(xz,z); xz_iter.ok(); xz_iter.next()) {
             Ob x  = xz_iter.lhs();
             Ob xy = find_join(x,y); if (!xy) continue;
 
@@ -1557,7 +1557,7 @@ inline void enforce_A_join_pos1 (App eqn)
 
     Set& ys = OR::temp_set();
     ys.set_insn(JE::Lx_support(x), AE::Rx_support(z));
-    for (Set::iterator y_iter(ys); y_iter; y_iter.next()) {
+    for (Set::iterator y_iter(ys); y_iter.ok(); y_iter.next()) {
         Ob y  = Ob(*y_iter);
         Ob xy = find_join(x,y);
         Ob yz = find_app(y,z);
@@ -1572,7 +1572,7 @@ inline void enforce_A_join_pos2 (App eqn)
     Ob z   = get_rhs(eqn);
     Ob xyz = get_app(eqn);
 
-    for (Jlr_Iterator xy_iter(xy); xy_iter; xy_iter.next()) {
+    for (Jlr_Iterator xy_iter(xy); xy_iter.ok(); xy_iter.next()) {
         Ob x  = xy_iter.lhs();
         Ob xz = find_app(x,z); if (!xz) continue;
         Ob y  = xy_iter.rhs();
@@ -1590,7 +1590,7 @@ inline void enforce_J_join_pos7 (Join eqn)
     Ob y  = get_rhs(eqn);
     Ob xy = get_join(eqn);
 
-    for (LLrc_Iterator z_iter(x,y); z_iter; z_iter.next()) {
+    for (LLrc_Iterator z_iter(x,y); z_iter.ok(); z_iter.next()) {
         Ob z  = z_iter.rhs();
         Ob xz = z_iter.comp1();
         Ob yz = z_iter.comp2();
@@ -1607,11 +1607,11 @@ inline void enforce_J_join_pos8 (Join eqn)
 
     CRl_Iterator xz_iter; //for below
 
-    for (Clr_Iterator yz_iter(yz); yz_iter; yz_iter.next()) {
+    for (Clr_Iterator yz_iter(yz); yz_iter.ok(); yz_iter.next()) {
         Ob y = yz_iter.lhs();
         Ob z = yz_iter.rhs();
 
-        for (xz_iter.begin(xz,z); xz_iter; xz_iter.next()) {
+        for (xz_iter.begin(xz,z); xz_iter.ok(); xz_iter.next()) {
             Ob x  = xz_iter.lhs();
             Ob xy = find_join(x,y); if (!xy) continue;
 
@@ -1628,7 +1628,7 @@ inline void enforce_C_join_pos1 (Comp eqn)
 
     Set& ys = OR::temp_set();
     ys.set_insn(JE::Lx_support(x), CE::Rx_support(z));
-    for (Set::iterator y_iter(ys); y_iter; y_iter.next()) {
+    for (Set::iterator y_iter(ys); y_iter.ok(); y_iter.next()) {
         Ob y  = Ob(*y_iter);
         Ob xy = find_join(x,y);
         Ob yz = find_comp(y,z);
@@ -1643,7 +1643,7 @@ inline void enforce_C_join_pos2 (Comp eqn)
     Ob z   = get_rhs(eqn);
     Ob xyz = get_comp(eqn);
 
-    for (Jlr_Iterator xy_iter(xy); xy_iter; xy_iter.next()) {
+    for (Jlr_Iterator xy_iter(xy); xy_iter.ok(); xy_iter.next()) {
         Ob x  = xy_iter.lhs();
         Ob xz = find_comp(x,z); if (!xz) continue;
         Ob y  = xy_iter.rhs();
@@ -1691,7 +1691,7 @@ inline void enforce_A_Join_pos1 (App eqn)
     Ob x  = get_rhs(eqn);
     Ob Jx = get_app(eqn);
 
-    for (Lrj_Iterator xy_iter(x); xy_iter; xy_iter.next()) {
+    for (Lrj_Iterator xy_iter(x); xy_iter.ok(); xy_iter.next()) {
         Ob y  = xy_iter.moving();
         Ob xy = xy_iter.join();
 
@@ -1699,7 +1699,7 @@ inline void enforce_A_Join_pos1 (App eqn)
         ensure_app(xy, Jx,y);
     }
 
-    for (Lra_Iterator Jxy_iter(Jx); Jxy_iter; Jxy_iter.next()) {
+    for (Lra_Iterator Jxy_iter(Jx); Jxy_iter.ok(); Jxy_iter.next()) {
         Ob y   = Jxy_iter.rhs();
         Ob Jxy = Jxy_iter.app();
 
@@ -1747,7 +1747,7 @@ inline void enforce_C_comp_assoc_C1 (Comp eqn)
     Ob y  = get_rhs(eqn);
     Ob xy = get_comp(eqn);
 
-    for (Lrc_Iterator yz_iter(y); yz_iter; yz_iter.next()) {
+    for (Lrc_Iterator yz_iter(y); yz_iter.ok(); yz_iter.next()) {
         Ob z  = yz_iter.rhs();
         Ob yz = yz_iter.comp();
 
@@ -1761,7 +1761,7 @@ inline void enforce_C_comp_assoc_C2 (Comp eqn)
     Ob z  = get_rhs(eqn);
     Ob yz = get_comp(eqn);
 
-    for (Rlc_Iterator xy_iter(y); xy_iter; xy_iter.next()) {
+    for (Rlc_Iterator xy_iter(y); xy_iter.ok(); xy_iter.next()) {
         Ob x  = xy_iter.lhs();
         Ob xy = xy_iter.comp();
 
@@ -1775,7 +1775,7 @@ inline void enforce_C_comp_assoc_C3 (Comp eqn)
     Ob yz   = get_rhs(eqn);
     Ob x_yz = get_comp(eqn);
 
-    for (Clr_Iterator yz_iter(yz); yz_iter; yz_iter.next()) {
+    for (Clr_Iterator yz_iter(yz); yz_iter.ok(); yz_iter.next()) {
         Ob y  = yz_iter.lhs();
         Ob xy = find_comp(x,y); if (!xy) continue;
         Ob z  = yz_iter.rhs();
@@ -1790,7 +1790,7 @@ inline void enforce_C_comp_assoc_C4 (Comp eqn)
     Ob z    = get_rhs(eqn);
     Ob xy_z = get_comp(eqn);
 
-    for (Clr_Iterator xy_iter(xy); xy_iter; xy_iter.next()) {
+    for (Clr_Iterator xy_iter(xy); xy_iter.ok(); xy_iter.next()) {
         Ob y  = xy_iter.rhs();
         Ob yz = find_comp(y,z); if (!yz) continue;
         Ob x  = xy_iter.lhs();
@@ -1815,7 +1815,7 @@ inline void enforce_C_comp_app_A (Comp eqn)
     Ob y  = get_rhs(eqn);
     Ob xy = get_comp(eqn);
 
-    for (Lra_Iterator z_iter(y); z_iter; z_iter.next()) {
+    for (Lra_Iterator z_iter(y); z_iter.ok(); z_iter.next()) {
         Ob yz = z_iter.app();
         Ob z  = z_iter.rhs();
 
@@ -1829,7 +1829,7 @@ inline void enforce_A_comp_app_A1 (App eqn)
     Ob z  = get_rhs(eqn);
     Ob yz = get_app(eqn);
 
-    for (Rlc_Iterator x_iter(y); x_iter; x_iter.next()) {
+    for (Rlc_Iterator x_iter(y); x_iter.ok(); x_iter.next()) {
         Ob xy = x_iter.comp();
         Ob x  = x_iter.lhs();
 
@@ -1843,7 +1843,7 @@ inline void enforce_A_comp_app_A2 (App eqn)
     Ob z    = get_rhs(eqn);
     Ob xy_z = get_app(eqn);
 
-    for (Clr_Iterator xy_iter(xy); xy_iter; xy_iter.next()) {
+    for (Clr_Iterator xy_iter(xy); xy_iter.ok(); xy_iter.next()) {
         Ob y  = xy_iter.rhs();
         Ob yz = find_app(y,z); if (!yz) continue;
         Ob x  = xy_iter.lhs();
@@ -1858,7 +1858,7 @@ inline void enforce_A_comp_app_A3 (App eqn)
     Ob yz   = get_rhs(eqn);
     Ob x_yz = get_app(eqn);
 
-    for (Alr_Iterator yz_iter(yz); yz_iter; yz_iter.next()) {
+    for (Alr_Iterator yz_iter(yz); yz_iter.ok(); yz_iter.next()) {
         Ob y  = yz_iter.lhs();
         Ob xy = find_comp(x,y); if (!xy) continue;
         Ob z  = yz_iter.rhs();
@@ -1909,7 +1909,7 @@ inline void enforce_O_K_pos (Ob ob)
     LOG_DEBUG1( "enforcing O_K_pos" );
     Ob K = *Atoms::K;
 
-    for (Lra_Iterator Kx_iter(K); Kx_iter; Kx_iter.next()) {
+    for (Lra_Iterator Kx_iter(K); Kx_iter.ok(); Kx_iter.next()) {
         Ob x  = Kx_iter.rhs();
         Ob Kx = Kx_iter.app();
 
@@ -1943,7 +1943,7 @@ inline void enforce_A_K_pos2 (App eqn)
     Ob K  = get_lhs(eqn); if (K != *Atoms::K) return;
     Ob Kx = get_app(eqn);
 
-    for (Rla_Iterator fx_iter(x); fx_iter; fx_iter.next()) {
+    for (Rla_Iterator fx_iter(x); fx_iter.ok(); fx_iter.next()) {
         Ob f  = fx_iter.lhs();
         Ob fx = fx_iter.app();
 
@@ -1968,7 +1968,7 @@ inline void enforce_A_K_pos4 (App eqn)
     Ob Kfx = get_app(eqn);
     Ob fx  = get_rhs(eqn);
 
-    for (Alr_Iterator fx_iter(fx); fx_iter; fx_iter.next()) {
+    for (Alr_Iterator fx_iter(fx); fx_iter.ok(); fx_iter.next()) {
         Ob x  = fx_iter.rhs();
         Ob Kx = find_app(K,x); if (!Kx) continue;
         Ob f  = fx_iter.lhs();
@@ -2004,13 +2004,13 @@ inline void enforce_A_S_A1 (App eqn)
     Ob x  = get_rhs(eqn);
     Ob Sx = get_app(eqn);
 
-    Lra_Iterator xz_iter(x); if (!xz_iter) return; //for below
+    Lra_Iterator xz_iter(x); if (!xz_iter.ok()) return; //for below
 
-    for (Lra_Iterator Sxy_iter(Sx); Sxy_iter; Sxy_iter.next()) {
+    for (Lra_Iterator Sxy_iter(Sx); Sxy_iter.ok(); Sxy_iter.next()) {
         Ob Sxy = Sxy_iter.app();
         Ob y   = Sxy_iter.rhs();
 
-        for (xz_iter.begin(); xz_iter; xz_iter.next()) {
+        for (xz_iter.begin(); xz_iter.ok(); xz_iter.next()) {
             Ob z     = xz_iter.rhs();
             Ob yz    = find_app(y,z); if (!yz) continue;
             Ob xz    = xz_iter.app();
@@ -2028,7 +2028,7 @@ inline void enforce_A_S_A2 (App eqn)
     Ob y   = get_rhs(eqn);
     Ob Sxy = get_app(eqn);
 
-    for (Lra_Iterator xz_iter(x); xz_iter; xz_iter.next()) {
+    for (Lra_Iterator xz_iter(x); xz_iter.ok(); xz_iter.next()) {
         Ob z     = xz_iter.rhs();
         Ob yz    = find_app(y,z); if (!yz) continue;
         Ob xz    = xz_iter.app();
@@ -2044,7 +2044,7 @@ inline void enforce_A_S_A3 (App eqn)
     Ob z    = get_rhs(eqn);
     Ob Sxyz = get_app(eqn);
 
-    for (Alr_Iterator Sxy_iter(Sxy); Sxy_iter; Sxy_iter.next()) {
+    for (Alr_Iterator Sxy_iter(Sxy); Sxy_iter.ok(); Sxy_iter.next()) {
         Ob Sx = Sxy_iter.lhs();
         Ob x  = find_ldiv(S,Sx); if (!x) continue;
         Ob xz = find_app(x,z);   if (!xz) continue;
@@ -2063,7 +2063,7 @@ inline void enforce_A_S_A4 (App eqn)
     Ob z  = get_rhs(eqn);
     Ob xz = get_app(eqn);
 
-    for (Lra_Iterator Sxy_iter(Sx); Sxy_iter; Sxy_iter.next()) {
+    for (Lra_Iterator Sxy_iter(Sx); Sxy_iter.ok(); Sxy_iter.next()) {
         Ob y     = Sxy_iter.rhs();
         Ob yz    = find_app(y,z); if (!yz) continue;
         Ob Sxy   = Sxy_iter.app();
@@ -2079,7 +2079,7 @@ inline void enforce_A_S_A5 (App eqn)
     Ob z  = get_rhs(eqn);
     Ob yz = get_app(eqn);
 
-    for (Rla_Iterator Sxy_iter(y); Sxy_iter; Sxy_iter.next()) {
+    for (Rla_Iterator Sxy_iter(y); Sxy_iter.ok(); Sxy_iter.next()) {
         Ob Sx    = Sxy_iter.lhs();
         Ob x     = find_ldiv(S,Sx); if (!x) continue;
         Ob xz    = find_app(x,z);   if (!xz) continue;
@@ -2098,12 +2098,12 @@ inline void enforce_A_S_A6 (App eqn)
 
     ARl_Iterator yz_iter; //for below
 
-    for (Alr_Iterator xz_iter(xz); xz_iter; xz_iter.next()) {
+    for (Alr_Iterator xz_iter(xz); xz_iter.ok(); xz_iter.next()) {
         Ob x  = xz_iter.lhs();
         Ob Sx = find_app(S,x);   if (!Sx) continue;
         Ob z  = xz_iter.rhs();
 
-        for (yz_iter.begin(yz,z); yz_iter; yz_iter.next()) {
+        for (yz_iter.begin(yz,z); yz_iter.ok(); yz_iter.next()) {
             Ob y    = yz_iter.lhs();
             Ob Sxy  = find_app(Sx,y);  if (!Sxy)  continue;
 
@@ -2129,14 +2129,14 @@ inline void enforce_A_S2_A1 (App eqn)
     Ob x  = get_rhs(eqn);
     Ob Sx = get_app(eqn);
 
-    Lra_Iterator xz_iter(x); if (!xz_iter) return; //for below
+    Lra_Iterator xz_iter(x); if (!xz_iter.ok()) return; //for below
 
-    for (Lra_Iterator Sxy_iter(Sx); Sxy_iter; Sxy_iter.next()) {
+    for (Lra_Iterator Sxy_iter(Sx); Sxy_iter.ok(); Sxy_iter.next()) {
         Ob y   = Sxy_iter.rhs();
         Ob xy = find_app(x,y); if (!xy) continue;
         Ob Sxy = Sxy_iter.app();
 
-        for (xz_iter.begin(); xz_iter; xz_iter.next()) {
+        for (xz_iter.begin(); xz_iter.ok(); xz_iter.next()) {
             Ob z     = xz_iter.rhs();
             Ob xz    = xz_iter.app();
 
@@ -2182,7 +2182,7 @@ inline void enforce_A_compose_pos1 (App eqn)
     Ob x  = get_rhs(eqn);
     Ob Bx = get_app(eqn);
 
-    for (Lra_Iterator Bxy_iter(Bx); Bxy_iter; Bxy_iter.next()) {
+    for (Lra_Iterator Bxy_iter(Bx); Bxy_iter.ok(); Bxy_iter.next()) {
         Ob y   = Bxy_iter.rhs();
         Ob Bxy = Bxy_iter.app();
 
@@ -2190,7 +2190,7 @@ inline void enforce_A_compose_pos1 (App eqn)
         ensure_comp(Bxy, x,y);
     }
 
-    for (Lrc_Iterator xy_iter(x); xy_iter; xy_iter.next()) {
+    for (Lrc_Iterator xy_iter(x); xy_iter.ok(); xy_iter.next()) {
         Ob y  = xy_iter.rhs();
         Ob xy = xy_iter.comp();
 
@@ -2204,7 +2204,7 @@ inline void enforce_A_compose_pos2 (App eqn)
     Ob x   = get_rhs(eqn);
     Ob CBx = get_app(eqn);
 
-    for (Lra_Iterator CBxy_iter(CBx); CBxy_iter; CBxy_iter.next()) {
+    for (Lra_Iterator CBxy_iter(CBx); CBxy_iter.ok(); CBxy_iter.next()) {
         Ob y   = CBxy_iter.rhs();
         Ob CBxy = CBxy_iter.app();
 
@@ -2212,7 +2212,7 @@ inline void enforce_A_compose_pos2 (App eqn)
         ensure_comp(CBxy, y,x);
     }
 
-    for (Rlc_Iterator yx_iter(x); yx_iter; yx_iter.next()) {
+    for (Rlc_Iterator yx_iter(x); yx_iter.ok(); yx_iter.next()) {
         Ob y  = yx_iter.lhs();
         Ob yx = yx_iter.comp();
 
@@ -2275,13 +2275,13 @@ inline void enforce_A_C_A1 (App eqn)
     Ob x  = get_rhs(eqn);
     Ob Cx = get_app(eqn);
 
-    Lra_Iterator xz_iter(x); if (!xz_iter) return; //for below
+    Lra_Iterator xz_iter(x); if (!xz_iter.ok()) return; //for below
 
-    for (Lra_Iterator Cxy_iter(Cx); Cxy_iter; Cxy_iter.next()) {
+    for (Lra_Iterator Cxy_iter(Cx); Cxy_iter.ok(); Cxy_iter.next()) {
         Ob Cxy = Cxy_iter.app();
         Ob y   = Cxy_iter.rhs();
 
-        for (xz_iter.begin(); xz_iter; xz_iter.next()) {
+        for (xz_iter.begin(); xz_iter.ok(); xz_iter.next()) {
             Ob z   = xz_iter.rhs();
             Ob xz  = xz_iter.app();
             Ob xzy = find_app(xz,y);
@@ -2305,7 +2305,7 @@ inline void enforce_A_C_A2 (App eqn)
     Ob y   = get_rhs(eqn);
     Ob Cxy = get_app(eqn);
 
-    for (Lra_Iterator xz_iter(x); xz_iter; xz_iter.next()) {
+    for (Lra_Iterator xz_iter(x); xz_iter.ok(); xz_iter.next()) {
         Ob z   = xz_iter.rhs();
         Ob xz  = xz_iter.app();
         Ob xzy = find_app(xz,y);
@@ -2327,7 +2327,7 @@ inline void enforce_A_C_A3 (App eqn)
     Ob z    = get_rhs(eqn);
     Ob Cxyz = get_app(eqn);
 
-    for (Alr_Iterator Cxy_iter(Cxy); Cxy_iter; Cxy_iter.next()) {
+    for (Alr_Iterator Cxy_iter(Cxy); Cxy_iter.ok(); Cxy_iter.next()) {
         Ob Cx = Cxy_iter.lhs();
         Ob x  = find_ldiv(C,Cx); if (!x) continue;
         Ob xz = find_app(x,z);   if (!xz) continue;
@@ -2344,7 +2344,7 @@ inline void enforce_A_C_A4 (App eqn)
     Ob z  = get_rhs(eqn);
     Ob xz = get_app(eqn);
 
-    for (Lra_Iterator Cxy_iter(Cx); Cxy_iter; Cxy_iter.next()) {
+    for (Lra_Iterator Cxy_iter(Cx); Cxy_iter.ok(); Cxy_iter.next()) {
         Ob y   = Cxy_iter.rhs();
         Ob Cxy = Cxy_iter.app();
         Ob xzy = find_app(xz,y);
@@ -2366,7 +2366,7 @@ inline void enforce_A_C_A5 (App eqn)
     Ob y   = get_rhs(eqn);
     Ob xzy = get_app(eqn);
 
-    for (Alr_Iterator xz_iter(xz); xz_iter; xz_iter.next()) {
+    for (Alr_Iterator xz_iter(xz); xz_iter.ok(); xz_iter.next()) {
         Ob x    = xz_iter.lhs();
         Ob Cx   = find_app(C,x);   if (!Cx)   continue;
         Ob Cxy  = find_app(Cx,y);  if (!Cxy)  continue;
@@ -2423,7 +2423,7 @@ inline void enforce_L_Y_L (Ord ord)
     Ob Y = *Atoms::Y;
     Ob fx = ord.lhs();
     Ob x  = ord.rhs();
-    for (ARl_Iterator fx_iter(fx,x); fx_iter; fx_iter.next()) {
+    for (ARl_Iterator fx_iter(fx,x); fx_iter.ok(); fx_iter.next()) {
 
         Ob f = fx_iter.lhs();
         Ob Yf = find_app(Y,f); if (!Yf) continue;
@@ -2449,7 +2449,7 @@ inline void enforce_A_W_A1 (App eqn)
     Ob x  = get_rhs(eqn);
     Ob Wx = get_app(eqn);
 
-    for (Lra_Iterator xy_iter(x); xy_iter; xy_iter.next()) {
+    for (Lra_Iterator xy_iter(x); xy_iter.ok(); xy_iter.next()) {
         Ob y   = xy_iter.rhs();
         Ob xy  = xy_iter.app();
         LOG_DEBUG1( "enforcing A_W_A1" );
@@ -2471,7 +2471,7 @@ inline void enforce_A_W_A3 (App eqn)
     Ob Wx  = get_lhs(eqn);
     Ob y   = get_rhs(eqn);
     Ob Wxy = get_app(eqn);
-    for (ALr_Iterator Wx_iter(Wx,W); Wx_iter; Wx_iter.next()) {
+    for (ALr_Iterator Wx_iter(Wx,W); Wx_iter.ok(); Wx_iter.next()) {
         Ob x  = Wx_iter.rhs();
         Ob xy = find_app(x,y); if (!xy) continue;
         LOG_DEBUG1( "enforcing A_W_A3" );
@@ -2485,7 +2485,7 @@ inline void enforce_A_W_A4 (App eqn)
     Ob y   = get_rhs(eqn);
     Ob xyy = get_app(eqn);
 
-    for (ARl_Iterator xy_iter(xy,y); xy_iter; xy_iter.next()) {
+    for (ARl_Iterator xy_iter(xy,y); xy_iter.ok(); xy_iter.next()) {
         Ob x  = xy_iter.lhs();
         Ob Wx = find_app(W,x); if (!Wx) continue;
         LOG_DEBUG1( "enforcing A_W_A4" );
@@ -2553,7 +2553,7 @@ inline void enforce_L_U_pos2 (Ord ord)
     Ob U  = *Atoms::U;
     Ob fx = ord.lhs();
     Ob x  = ord.rhs();
-    for (ARl_Iterator fx_iter(fx,x); fx_iter; fx_iter.next()) {
+    for (ARl_Iterator fx_iter(fx,x); fx_iter.ok(); fx_iter.next()) {
         Ob f  = fx_iter.lhs();
         Ob Uf = find_app(U,f); if (!Uf) continue;
 
@@ -2566,7 +2566,7 @@ inline void enforce_A_U_pos2 (App eqn)
     if (get_lhs(eqn) != *Atoms::U) return;
     Ob Uf = get_app(eqn);
     Ob f  = get_rhs(eqn); //if (f == Uf) return; //would be unnecessary
-    for (Lra_Iterator fx_iter(f); fx_iter; fx_iter.next()) {
+    for (Lra_Iterator fx_iter(f); fx_iter.ok(); fx_iter.next()) {
         Ob x  = fx_iter.rhs();
         Ob fx = fx_iter.app(); if (not is_less(fx, x)) continue;
 
@@ -2641,7 +2641,7 @@ inline void enforce_L_V_pos2 (Ord ord)
     Ob V  = *Atoms::V;
     Ob fx = ord.lhs();
     Ob x  = ord.rhs();
-    for (ARl_Iterator fx_iter(fx,x); fx_iter; fx_iter.next()) {
+    for (ARl_Iterator fx_iter(fx,x); fx_iter.ok(); fx_iter.next()) {
         Ob f  = fx_iter.lhs();
         Ob Vf = find_app(V,f); if (!Vf) continue;
 
@@ -2654,7 +2654,7 @@ inline void enforce_A_V_pos2 (App eqn)
     if (get_lhs(eqn) != *Atoms::V) return;
     Ob Vf = get_app(eqn);
     Ob f  = get_rhs(eqn); //if (f == Vf) return; //would be unnecessary
-    for (Lra_Iterator fx_iter(f); fx_iter; fx_iter.next()) {
+    for (Lra_Iterator fx_iter(f); fx_iter.ok(); fx_iter.next()) {
         Ob x  = fx_iter.rhs();
         Ob fx = fx_iter.app(); if (not is_less(fx, x)) continue;
 
@@ -2693,11 +2693,11 @@ inline enforce_A_P_A1 (App eqn)
     Ob a  = get_rhs(eqn);  if (get_app(eqn) != a) return;
     Ob P  = *Atoms::P;
     Ob Pa = find_app(P,a); if (!Pa) return;
-    for (Lra_Iterator Pab_iter(Pa); Pab_iter; Pab_iter.next()) {
+    for (Lra_Iterator Pab_iter(Pa); Pab_iter.ok(); Pab_iter.next()) {
         Ob b   = Pab_iter.rhs(); if (b == a) continue; //unnecessary
         Ob Vb  = find_app(V,b); if (Vb != b) continue; //Vb may be 0
         Ob Pab = Pab_iter.app();
-        for (LLra_Iterator ab_iter(a,b); ab_iter; ab_iter.next()) {
+        for (LLra_Iterator ab_iter(a,b); ab_iter.ok(); ab_iter.next()) {
             Ob x = ab_iter.rhs();
             if (x != ab_iter.app1()) continue;
             if (x != ab_iter.app2()) continue;
@@ -2748,12 +2748,12 @@ inline void enforce_L_Div_pos1 (Ord ord, Ob x, Ob y)
 
     ARl_Iterator gx_iter; //for below
 
-    for (ARl_Iterator fx_iter(fx,x); fx_iter; fx_iter.next()) {
+    for (ARl_Iterator fx_iter(fx,x); fx_iter.ok(); fx_iter.next()) {
         Ob f  = fx_iter.lhs(); if (f != find_comp(f,Div)) continue;
         Ob fy = find_app(f,y); if (!fy) continue;
         if (is_const(f)) continue;
 
-        for (gx_iter.begin(gx,x); gx_iter; gx_iter.next()) {
+        for (gx_iter.begin(gx,x); gx_iter.ok(); gx_iter.next()) {
             Ob g  = gx_iter.lhs(); if (g != find_comp(g,Div)) continue;
             Ob gy = find_app(g,y); if (!gy) continue;
             if (is_const(g)) continue;
@@ -2773,7 +2773,7 @@ inline void enforce_C_Div_pos1 (Comp eqn, const Set& gs)
     Ob x   = *Atoms::Bot;  Ob fx  = find_app(f,x); if (!fx) return;
     Ob y   = *Atoms::Top;  Ob fy  = find_app(f,y); if (!fy) return;
 
-    for (Set::iterator g_iter(gs); g_iter; g_iter.next()) {
+    for (Set::iterator g_iter(gs); g_iter.ok(); g_iter.next()) {
         Ob g  = Ob(*g_iter); if (g != find_comp(g,Div)) continue;
         if (is_const(g)) continue;
         Ob gx = find_app(g,x);
@@ -2799,7 +2799,7 @@ inline void enforce_A_Div_pos2 (App eqn, Ob x, Ob y, const Set& gs)
     if (is_const(f)) return;
     Ob fx  = get_app(eqn);
 
-    for (Set::iterator g_iter(gs); g_iter; g_iter.next()) {
+    for (Set::iterator g_iter(gs); g_iter.ok(); g_iter.next()) {
         Ob g  = Ob(*g_iter); if (g != find_comp(g,Div)) continue;
         if (is_const(g)) continue;
         Ob gx = find_app(g,x);
@@ -2857,7 +2857,7 @@ inline void enforce_L_Unit_pos1 (Ord ord)
     Ob I    = *Atoms::I; if (ord.rhs() != I) return;
     Ob xI   = ord.lhs();
     Ob Unit = *Atoms::Unit;
-    for (ARl_Iterator xI_iter(xI,I); xI_iter; xI_iter.next()) {
+    for (ARl_Iterator xI_iter(xI,I); xI_iter.ok(); xI_iter.next()) {
 
         LOG_DEBUG1( "enforcing L_Unit_pos1" );
         ensure_less(xI_iter.lhs(), Unit);
@@ -2879,12 +2879,12 @@ inline void enforce_L_Unit_pos2 (Ord ord, Ob x, Ob y)
 
     ARl_Iterator gx_iter; //for below
 
-    for (ARl_Iterator fx_iter(fx,x); fx_iter; fx_iter.next()) {
+    for (ARl_Iterator fx_iter(fx,x); fx_iter.ok(); fx_iter.next()) {
         Ob f  = fx_iter.lhs(); if (f != find_comp(f,Unit)) continue;
         Ob fy = find_app(f,y); if (!fy) continue;
         if (is_const(f)) continue;
 
-        for (gx_iter.begin(gx,x); gx_iter; gx_iter.next()) {
+        for (gx_iter.begin(gx,x); gx_iter.ok(); gx_iter.next()) {
             Ob g  = gx_iter.lhs(); if (g != find_comp(g,Unit)) continue;
             Ob gy = find_app(g,y); if (!gy) continue;
             if (is_const(g)) continue;
@@ -2904,7 +2904,7 @@ inline void enforce_C_Unit_pos1 (Comp eqn, const Set& gs)
     Ob x   = *Atoms::Bot;  Ob fx  = find_app(f,x); if (!fx) return;
     Ob y   = *Atoms::Top; Ob fy  = find_app(f,y); if (!fy) return;
 
-    for (Set::iterator g_iter(gs); g_iter; g_iter.next()) {
+    for (Set::iterator g_iter(gs); g_iter.ok(); g_iter.next()) {
         Ob g  = Ob(*g_iter); if (g != find_comp(g,Unit)) continue;
         if (is_const(g)) continue;
         Ob gx = find_app(g,x);
@@ -2930,7 +2930,7 @@ inline void enforce_A_Unit_pos2 (App eqn, Ob x, Ob y, const Set& gs)
     if (is_const(f)) return;
     Ob fx  = get_app(eqn);
 
-    for (Set::iterator g_iter(gs); g_iter; g_iter.next()) {
+    for (Set::iterator g_iter(gs); g_iter.ok(); g_iter.next()) {
         Ob g  = Ob(*g_iter); if (g != find_comp(g,Unit)) continue;
         if (is_const(g)) continue;
         Ob gx = find_app(g,x);
@@ -3007,7 +3007,7 @@ inline void enforce_L_Semi_pos1 (Ord ord)
     Ob Bot  = *Atoms::Bot;
     Ob Semi = *Atoms::Semi;
 
-    for (ARl_Iterator xI_iter(xI,I); xI_iter; xI_iter.next()) {
+    for (ARl_Iterator xI_iter(xI,I); xI_iter.ok(); xI_iter.next()) {
         Ob x    = xI_iter.lhs();
         Ob xBot = find_app(x,Bot); if (xBot!=Bot) continue;
 
@@ -3049,13 +3049,13 @@ inline void enforce_L_Semi_pos2 (Ord ord, Ob x, Ob y, Ob z)
 
     ARl_Iterator gx_iter; //for below
 
-    for (ARl_Iterator fx_iter(fx,x); fx_iter; fx_iter.next()) {
+    for (ARl_Iterator fx_iter(fx,x); fx_iter.ok(); fx_iter.next()) {
         Ob f  = fx_iter.lhs(); if (f != find_comp(f,Semi)) continue;
         Ob fy = find_app(f,y); if (!fy) continue;
         Ob fz = find_app(f,z); if (!fz) continue;
         if (is_const(f)) continue;
 
-        for (gx_iter.begin(gx,x); gx_iter; gx_iter.next()) {
+        for (gx_iter.begin(gx,x); gx_iter.ok(); gx_iter.next()) {
             Ob g  = gx_iter.lhs(); if (g != find_comp(g,Semi)) continue;
             Ob gy = find_app(g,y); if (!gy) continue;
             Ob gz = find_app(g,z); if (!gz) continue;
@@ -3077,7 +3077,7 @@ inline void enforce_C_Semi_pos1 (Comp eqn, const Set& gs)
     Ob y   = *Atoms::Top;  Ob fy  = find_app(f,y); if (!fy) return;
     Ob z   = *Atoms::I;    Ob fz  = find_app(f,z); if (!fz) return;
 
-    for (Set::iterator g_iter(gs); g_iter; g_iter.next()) {
+    for (Set::iterator g_iter(gs); g_iter.ok(); g_iter.next()) {
         Ob g  = Ob(*g_iter); if (g != find_comp(g,Semi)) continue;
         if (is_const(g)) continue;
         Ob gx = find_app(g,x);
@@ -3105,7 +3105,7 @@ inline void enforce_A_Semi_pos4 (App eqn, Ob x, Ob y, Ob z, const Set& gs)
     if (is_const(f)) return;
     Ob fx  = get_app(eqn);
 
-    for (Set::iterator g_iter(gs); g_iter; g_iter.next()) {
+    for (Set::iterator g_iter(gs); g_iter.ok(); g_iter.next()) {
         Ob g  = Ob(*g_iter); if (g != find_comp(g,Semi)) continue;
         if (is_const(g)) continue;
         Ob gx = find_app(g,x);
@@ -3252,14 +3252,14 @@ inline void enforce_L_Bool_pos3 (Ord ord, Ob w, Ob x, Ob y, Ob z)
 
     ARl_Iterator gw_iter; //for below
 
-    for (ARl_Iterator fw_iter(fw,w); fw_iter; fw_iter.next()) {
+    for (ARl_Iterator fw_iter(fw,w); fw_iter.ok(); fw_iter.next()) {
         Ob f  = fw_iter.lhs(); if (f != find_comp(f,Bool)) continue;
         Ob fx = find_app(f,x); if (!fx) continue;
         Ob fy = find_app(f,y); if (!fy) continue;
         Ob fz = find_app(f,z); if (!fz) continue;
         if (is_const(f)) continue;
 
-        for (gw_iter.begin(gw,w); gw_iter; gw_iter.next()) {
+        for (gw_iter.begin(gw,w); gw_iter.ok(); gw_iter.next()) {
             Ob g  = gw_iter.lhs(); if (g != find_comp(g,Bool)) continue;
             Ob gx = find_app(g,x); if (!gx) continue;
             Ob gy = find_app(g,y); if (!gy) continue;
@@ -3283,7 +3283,7 @@ inline void enforce_C_Bool_pos1 (Comp eqn, const Set& gs)
     Ob y   = *Atoms::K;    Ob fy  = find_app(f,y); if (!fy) return;
     Ob z   = *Atoms::KI;   Ob fz  = find_app(f,z); if (!fz) return;
 
-    for (Set::iterator g_iter(gs); g_iter; g_iter.next()) {
+    for (Set::iterator g_iter(gs); g_iter.ok(); g_iter.next()) {
         Ob g  = Ob(*g_iter); if (g != find_comp(g,Bool)) continue;
         if (is_const(g)) continue;
         Ob gw = find_app(g,w);
@@ -3315,7 +3315,7 @@ inline void enforce_A_Bool_pos2 (App eqn, Ob w, Ob x, Ob y, Ob z, const Set& gs)
     if (is_const(f)) return;
     Ob fw  = get_app(eqn);
 
-    for (Set::iterator g_iter(gs); g_iter; g_iter.next()) {
+    for (Set::iterator g_iter(gs); g_iter.ok(); g_iter.next()) {
         Ob g  = Ob(*g_iter); if (g != find_comp(g,Bool)) continue;
         if (is_const(g)) continue;
         Ob gw = find_app(g,w);

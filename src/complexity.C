@@ -1154,7 +1154,7 @@ Vect calc_coords_alt (Lang& L, VMeas coords)
     for (Int yi=1; yi<=xi; ++yi) { Ob y(yi);  Float P_y = comp(y);
 #define conv(ob) CS::isNLessThan(ob,Bot)
         Float cor = 0.0;
-        for (AE::RRla_Iterator fx_fy(x,y); fx_fy; fx_fy.next()) {
+        for (AE::RRla_Iterator fx_fy(x,y); fx_fy.ok(); fx_fy.next()) {
             if (conv(fx_fy.app1()) == conv(fx_fy.app2())) {
                 cor += comp(fx_fy.lhs());
             }
@@ -1239,7 +1239,7 @@ void prop_known (FOrder& less2)
 {//proven theorems have 0-1 probability
     using namespace Symbols;
 
-    for (Ord::iterator<OR::POS> iter; iter; iter.next()) {
+    for (Ord::iterator<OR::POS> iter; iter.ok(); iter.next()) {
         Ob lhs = iter.lhs();
         Ob rhs = iter.rhs();
         less2(lhs, rhs) = P_TRUE;
@@ -1265,7 +1265,7 @@ void prop_mu (Float P_mu, const FOrder& less, FOrder& less2)
     if (not OR::contains(x,y)) {
 
         Float less_xy = 0.0;
-        for (fx_fy.begin(x,y); not fx_fy.done(); fx_fy.next()) {
+        for (fx_fy.begin(x,y); fx_fy.ok(); fx_fy.next()) {
             Ob f  = fx_fy.lhs();
             Ob fx = fx_fy.app1();
             Ob fy = fx_fy.app2();
@@ -1287,7 +1287,7 @@ void prop_nu (Float P_nu, const FOrder& less, FOrder& less2)
     for (Int _g=1; _g<=N; ++_g) { Ob g(_g);
     if (not OR::contains(f,g)) {
         Float less_fg = 0.0;
-        for (fx_gx.begin(f,g); not fx_gx.done(); fx_gx.next()) {
+        for (fx_gx.begin(f,g); fx_gx.ok(); fx_gx.next()) {
             Ob x  = fx_gx.rhs();
             Ob fx = fx_gx.app1();
             Ob gx = fx_gx.app2();

@@ -144,21 +144,20 @@ public:
         void next ()
         {
             m_rhs.next();
-            if (m_rhs) {
+            if (m_rhs.ok()) {
                 _update_rhs();
             } else {
                 m_lhs.next();
                 _find_rhs();
             }
         }
-        operator bool () const { return m_lhs; }
-        bool done () const { return m_lhs.done(); }
+        bool ok () const { return m_lhs.ok(); }
 
         // dereferencing
     private:
         void _deref_assert () const
         {
-            POMAGMA_ASSERT5(not done(), "dereferenced done br::iterator");
+            POMAGMA_ASSERT5(ok(), "dereferenced done br::iterator");
         }
     public:
         const Pos & operator *  () const { _deref_assert(); return m_pos; }
@@ -213,7 +212,7 @@ public:
         {
             POMAGMA_ASSERT(m_fixed, "tried to begin() a null br::Iterator");
             m_moving.begin();
-            if (m_moving) { _fix(); _move(); }
+            if (m_moving.ok()) { _fix(); _move(); }
         }
         void begin (int fixed)
         {   POMAGMA_ASSERT2(m_rel.supports(fixed),
@@ -226,16 +225,15 @@ public:
         void next ()
         {
             m_moving.next();
-            if (m_moving) { _move(); }
+            if (m_moving.ok()) { _move(); }
         }
-        operator bool () const { return m_moving; }
-        bool done  () const { return m_moving.done(); }
+        bool ok () const { return m_moving.ok(); }
 
         // dereferencing
     private:
         void _deref_assert () const
         {
-            POMAGMA_ASSERT5(not done(), "dereferenced done dense_bin_rel'n::iter");
+            POMAGMA_ASSERT5(ok(), "dereferenced done dense_bin_rel'n::iter");
         }
     public:
         const Pos & operator *  () const { _deref_assert(); return m_pos; }
