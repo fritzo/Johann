@@ -4,54 +4,97 @@
 aligned_alloc.o: definitions.h aligned_alloc.h
 animator.o: animator.h definitions.h
 apply.o: apply.h definitions.h nodes.h node_heap.h aligned_alloc.h
-apply.o: small_ptr.h reorder.h obs.h symbols.h combinatory_structure.h
-apply.o: order.h
+apply.o: small_ptr.h ../include/pomagma/dense_bin_fun.hpp
+apply.o: ../include/pomagma/util.hpp ../include/pomagma/dense_set.hpp
+apply.o: ../include/pomagma/aligned_alloc.hpp
+apply.o: ../include/pomagma/splay_forest.hpp reorder.h obs.h symbols.h
+apply.o: combinatory_structure.h order.h ../include/pomagma/dense_bin_rel.hpp
 axiom_enforcement.o: axiom_tools.h lambda_theories.h definitions.h symbols.h
 axiom_enforcement.o: expressions.h large_set.h handling.h hash_map.h
 axiom_enforcement.o: statements.h nodes.h node_heap.h aligned_alloc.h
-axiom_enforcement.o: small_ptr.h order.h obs.h reorder.h apply.h compose.h
-axiom_enforcement.o: join.h combinatory_structure.h
+axiom_enforcement.o: small_ptr.h order.h ../include/pomagma/dense_bin_rel.hpp
+axiom_enforcement.o: ../include/pomagma/util.hpp
+axiom_enforcement.o: ../include/pomagma/dense_set.hpp
+axiom_enforcement.o: ../include/pomagma/aligned_alloc.hpp obs.h reorder.h
+axiom_enforcement.o: apply.h ../include/pomagma/dense_bin_fun.hpp
+axiom_enforcement.o: ../include/pomagma/splay_forest.hpp compose.h join.h
+axiom_enforcement.o: ../include/pomagma/dense_sym_fun.hpp
+axiom_enforcement.o: combinatory_structure.h
 axiom_tools.o: axiom_tools.h lambda_theories.h definitions.h symbols.h
 axiom_tools.o: expressions.h large_set.h handling.h hash_map.h statements.h
-axiom_tools.o: nodes.h node_heap.h aligned_alloc.h small_ptr.h order.h obs.h
-axiom_tools.o: reorder.h apply.h compose.h join.h combinatory_structure.h
+axiom_tools.o: nodes.h node_heap.h aligned_alloc.h small_ptr.h order.h
+axiom_tools.o: ../include/pomagma/dense_bin_rel.hpp
+axiom_tools.o: ../include/pomagma/util.hpp ../include/pomagma/dense_set.hpp
+axiom_tools.o: ../include/pomagma/aligned_alloc.hpp obs.h reorder.h apply.h
+axiom_tools.o: ../include/pomagma/dense_bin_fun.hpp
+axiom_tools.o: ../include/pomagma/splay_forest.hpp compose.h join.h
+axiom_tools.o: ../include/pomagma/dense_sym_fun.hpp combinatory_structure.h
 axiom_validation.o: axiom_tools.h lambda_theories.h definitions.h symbols.h
 axiom_validation.o: expressions.h large_set.h handling.h hash_map.h
 axiom_validation.o: statements.h nodes.h node_heap.h aligned_alloc.h
-axiom_validation.o: small_ptr.h order.h obs.h reorder.h apply.h compose.h
-axiom_validation.o: join.h combinatory_structure.h syntax_semantics.h
-axiom_validation.o: measures.h linalg.h
+axiom_validation.o: small_ptr.h order.h ../include/pomagma/dense_bin_rel.hpp
+axiom_validation.o: ../include/pomagma/util.hpp
+axiom_validation.o: ../include/pomagma/dense_set.hpp
+axiom_validation.o: ../include/pomagma/aligned_alloc.hpp obs.h reorder.h
+axiom_validation.o: apply.h ../include/pomagma/dense_bin_fun.hpp
+axiom_validation.o: ../include/pomagma/splay_forest.hpp compose.h join.h
+axiom_validation.o: ../include/pomagma/dense_sym_fun.hpp
+axiom_validation.o: combinatory_structure.h syntax_semantics.h measures.h
+axiom_validation.o: linalg.h
 brain.o: brain.h definitions.h nodes.h node_heap.h aligned_alloc.h
 brain.o: small_ptr.h measures.h linalg.h languages.h symbols.h fuzzy.h
 brain.o: context.h expressions.h large_set.h handling.h hash_map.h
-brain.o: statements.h lambda_theories.h order.h thought.h version.h
+brain.o: statements.h lambda_theories.h order.h
+brain.o: ../include/pomagma/dense_bin_rel.hpp ../include/pomagma/util.hpp
+brain.o: ../include/pomagma/dense_set.hpp
+brain.o: ../include/pomagma/aligned_alloc.hpp thought.h version.h
 brain.o: random_choice.h complexity.h moments.h obs.h reorder.h apply.h
-brain.o: compose.h join.h combinatory_structure.h syntax_semantics.h
-brain.o: sorting.h files.h visual.h socket_tools.h thread_tools.h
+brain.o: ../include/pomagma/dense_bin_fun.hpp
+brain.o: ../include/pomagma/splay_forest.hpp compose.h join.h
+brain.o: ../include/pomagma/dense_sym_fun.hpp combinatory_structure.h
+brain.o: syntax_semantics.h sorting.h files.h visual.h socket_tools.h
+brain.o: thread_tools.h
 collective.o: collective.h definitions.h
 combinatory_structure.o: combinatory_structure.h definitions.h symbols.h
 combinatory_structure.o: nodes.h node_heap.h aligned_alloc.h small_ptr.h
-combinatory_structure.o: order.h reorder.h obs.h apply.h compose.h join.h
+combinatory_structure.o: order.h ../include/pomagma/dense_bin_rel.hpp
+combinatory_structure.o: ../include/pomagma/util.hpp
+combinatory_structure.o: ../include/pomagma/dense_set.hpp
+combinatory_structure.o: ../include/pomagma/aligned_alloc.hpp reorder.h obs.h
+combinatory_structure.o: apply.h ../include/pomagma/dense_bin_fun.hpp
+combinatory_structure.o: ../include/pomagma/splay_forest.hpp compose.h join.h
+combinatory_structure.o: ../include/pomagma/dense_sym_fun.hpp
 combinatory_structure.o: lambda_theories.h expressions.h large_set.h
 combinatory_structure.o: handling.h hash_map.h statements.h priority_queue.h
 combinatory_structure.o: syntax_semantics.h measures.h linalg.h files.h
 combinatory_structure.o: version.h visual.h
 complexity.o: complexity.h definitions.h symbols.h measures.h nodes.h
 complexity.o: node_heap.h aligned_alloc.h small_ptr.h linalg.h languages.h
-complexity.o: moments.h fuzzy.h order.h thought.h expressions.h large_set.h
-complexity.o: handling.h hash_map.h context.h statements.h optimization.h
-complexity.o: obs.h reorder.h apply.h compose.h join.h
-complexity.o: combinatory_structure.h lambda_theories.h
+complexity.o: moments.h fuzzy.h order.h ../include/pomagma/dense_bin_rel.hpp
+complexity.o: ../include/pomagma/util.hpp ../include/pomagma/dense_set.hpp
+complexity.o: ../include/pomagma/aligned_alloc.hpp thought.h expressions.h
+complexity.o: large_set.h handling.h hash_map.h context.h statements.h
+complexity.o: optimization.h obs.h reorder.h apply.h
+complexity.o: ../include/pomagma/dense_bin_fun.hpp
+complexity.o: ../include/pomagma/splay_forest.hpp compose.h join.h
+complexity.o: ../include/pomagma/dense_sym_fun.hpp combinatory_structure.h
+complexity.o: lambda_theories.h
 compose.o: compose.h definitions.h nodes.h node_heap.h aligned_alloc.h
-compose.o: small_ptr.h reorder.h obs.h symbols.h combinatory_structure.h
-compose.o: order.h
+compose.o: small_ptr.h ../include/pomagma/dense_bin_fun.hpp
+compose.o: ../include/pomagma/util.hpp ../include/pomagma/dense_set.hpp
+compose.o: ../include/pomagma/aligned_alloc.hpp
+compose.o: ../include/pomagma/splay_forest.hpp reorder.h obs.h symbols.h
+compose.o: combinatory_structure.h order.h
+compose.o: ../include/pomagma/dense_bin_rel.hpp
 console.o: console.h definitions.h version.h symbols.h expressions.h
 console.o: large_set.h handling.h hash_map.h statements.h substitute.h
 console.o: kernel.h context.h
 context.o: context.h definitions.h symbols.h expressions.h large_set.h
 context.o: handling.h hash_map.h statements.h syntax_semantics.h nodes.h
-context.o: node_heap.h aligned_alloc.h small_ptr.h order.h measures.h
-context.o: linalg.h
+context.o: node_heap.h aligned_alloc.h small_ptr.h order.h
+context.o: ../include/pomagma/dense_bin_rel.hpp ../include/pomagma/util.hpp
+context.o: ../include/pomagma/dense_set.hpp
+context.o: ../include/pomagma/aligned_alloc.hpp measures.h linalg.h
 definitions.o: definitions.h
 dynamics.o: dynamics.h definitions.h meas_lite.h
 expressions.o: expressions.h definitions.h symbols.h large_set.h handling.h
@@ -65,18 +108,33 @@ fuzzy.o: small_ptr.h version.h
 handling.o: handling.h definitions.h
 handling_test.o: handling.h definitions.h
 join.o: join.h definitions.h nodes.h node_heap.h aligned_alloc.h small_ptr.h
-join.o: reorder.h obs.h symbols.h combinatory_structure.h order.h
+join.o: ../include/pomagma/dense_sym_fun.hpp ../include/pomagma/util.hpp
+join.o: ../include/pomagma/dense_set.hpp ../include/pomagma/aligned_alloc.hpp
+join.o: ../include/pomagma/splay_forest.hpp reorder.h obs.h symbols.h
+join.o: combinatory_structure.h order.h ../include/pomagma/dense_bin_rel.hpp
 kernel.o: kernel.h definitions.h symbols.h expressions.h large_set.h
 kernel.o: handling.h hash_map.h statements.h context.h version.h nodes.h
 kernel.o: node_heap.h aligned_alloc.h small_ptr.h obs.h reorder.h apply.h
-kernel.o: compose.h join.h substitute.h order.h brain.h measures.h linalg.h
+kernel.o: ../include/pomagma/dense_bin_fun.hpp ../include/pomagma/util.hpp
+kernel.o: ../include/pomagma/dense_set.hpp
+kernel.o: ../include/pomagma/aligned_alloc.hpp
+kernel.o: ../include/pomagma/splay_forest.hpp compose.h join.h
+kernel.o: ../include/pomagma/dense_sym_fun.hpp substitute.h order.h
+kernel.o: ../include/pomagma/dense_bin_rel.hpp brain.h measures.h linalg.h
 kernel.o: languages.h fuzzy.h lambda_theories.h thought.h syntax_semantics.h
 kernel.o: combinatory_structure.h socket_tools.h thread_tools.h
 lambda_theories.o: lambda_theories.h definitions.h symbols.h expressions.h
 lambda_theories.o: large_set.h handling.h hash_map.h statements.h nodes.h
-lambda_theories.o: node_heap.h aligned_alloc.h small_ptr.h order.h obs.h
-lambda_theories.o: reorder.h apply.h compose.h join.h combinatory_structure.h
-lambda_theories.o: syntax_semantics.h measures.h linalg.h priority_queue.h
+lambda_theories.o: node_heap.h aligned_alloc.h small_ptr.h order.h
+lambda_theories.o: ../include/pomagma/dense_bin_rel.hpp
+lambda_theories.o: ../include/pomagma/util.hpp
+lambda_theories.o: ../include/pomagma/dense_set.hpp
+lambda_theories.o: ../include/pomagma/aligned_alloc.hpp obs.h reorder.h
+lambda_theories.o: apply.h ../include/pomagma/dense_bin_fun.hpp
+lambda_theories.o: ../include/pomagma/splay_forest.hpp compose.h join.h
+lambda_theories.o: ../include/pomagma/dense_sym_fun.hpp
+lambda_theories.o: combinatory_structure.h syntax_semantics.h measures.h
+lambda_theories.o: linalg.h priority_queue.h
 languages.o: languages.h definitions.h symbols.h nodes.h node_heap.h
 languages.o: aligned_alloc.h small_ptr.h linalg.h files.h version.h
 large_set.o: large_set.h definitions.h handling.h
@@ -93,12 +151,18 @@ node_heap.o: node_heap.h definitions.h aligned_alloc.h small_ptr.h nodes.h
 node_heap_test.o: definitions.h node_heap.h aligned_alloc.h small_ptr.h
 nodes.o: nodes.h node_heap.h definitions.h aligned_alloc.h small_ptr.h
 obs.o: obs.h definitions.h symbols.h nodes.h node_heap.h aligned_alloc.h
-obs.o: small_ptr.h reorder.h apply.h compose.h join.h combinatory_structure.h
-obs.o: order.h
+obs.o: small_ptr.h reorder.h apply.h ../include/pomagma/dense_bin_fun.hpp
+obs.o: ../include/pomagma/util.hpp ../include/pomagma/dense_set.hpp
+obs.o: ../include/pomagma/aligned_alloc.hpp
+obs.o: ../include/pomagma/splay_forest.hpp compose.h join.h
+obs.o: ../include/pomagma/dense_sym_fun.hpp combinatory_structure.h order.h
+obs.o: ../include/pomagma/dense_bin_rel.hpp
 optimization.o: optimization.h definitions.h moments.h linalg.h
 optimization_test.o: definitions.h linalg.h optimization.h moments.h
 order.o: order.h definitions.h nodes.h node_heap.h aligned_alloc.h
-order.o: small_ptr.h obs.h symbols.h reorder.h
+order.o: small_ptr.h ../include/pomagma/dense_bin_rel.hpp
+order.o: ../include/pomagma/util.hpp ../include/pomagma/dense_set.hpp
+order.o: ../include/pomagma/aligned_alloc.hpp obs.h symbols.h reorder.h
 parser.o: parser.h definitions.h expressions.h symbols.h large_set.h
 parser.o: handling.h hash_map.h substitute.h buffer.h output.h
 priority_queue_test.o: definitions.h priority_queue.h
@@ -124,15 +188,27 @@ statements.o: large_set.h hash_map.h
 substitute.o: substitute.h definitions.h symbols.h expressions.h large_set.h
 substitute.o: handling.h hash_map.h parser.h buffer.h output.h
 syntax_semantics.o: syntax_semantics.h definitions.h nodes.h node_heap.h
-syntax_semantics.o: aligned_alloc.h small_ptr.h order.h measures.h linalg.h
+syntax_semantics.o: aligned_alloc.h small_ptr.h order.h
+syntax_semantics.o: ../include/pomagma/dense_bin_rel.hpp
+syntax_semantics.o: ../include/pomagma/util.hpp
+syntax_semantics.o: ../include/pomagma/dense_set.hpp
+syntax_semantics.o: ../include/pomagma/aligned_alloc.hpp measures.h linalg.h
 syntax_semantics.o: expressions.h symbols.h large_set.h handling.h hash_map.h
-syntax_semantics.o: statements.h obs.h reorder.h apply.h compose.h join.h
+syntax_semantics.o: statements.h obs.h reorder.h apply.h
+syntax_semantics.o: ../include/pomagma/dense_bin_fun.hpp
+syntax_semantics.o: ../include/pomagma/splay_forest.hpp compose.h join.h
+syntax_semantics.o: ../include/pomagma/dense_sym_fun.hpp
 syntax_semantics.o: combinatory_structure.h brain.h languages.h fuzzy.h
 syntax_semantics.o: context.h lambda_theories.h thought.h
 thought.o: thought.h definitions.h nodes.h node_heap.h aligned_alloc.h
-thought.o: small_ptr.h order.h expressions.h symbols.h large_set.h handling.h
-thought.o: hash_map.h context.h statements.h measures.h linalg.h fuzzy.h
-thought.o: obs.h reorder.h apply.h compose.h join.h combinatory_structure.h
+thought.o: small_ptr.h order.h ../include/pomagma/dense_bin_rel.hpp
+thought.o: ../include/pomagma/util.hpp ../include/pomagma/dense_set.hpp
+thought.o: ../include/pomagma/aligned_alloc.hpp expressions.h symbols.h
+thought.o: large_set.h handling.h hash_map.h context.h statements.h
+thought.o: measures.h linalg.h fuzzy.h obs.h reorder.h apply.h
+thought.o: ../include/pomagma/dense_bin_fun.hpp
+thought.o: ../include/pomagma/splay_forest.hpp compose.h join.h
+thought.o: ../include/pomagma/dense_sym_fun.hpp combinatory_structure.h
 thought.o: lambda_theories.h syntax_semantics.h brain.h languages.h
 thought.o: complexity.h moments.h random_choice.h
 thread_tools.o: thread_tools.h definitions.h

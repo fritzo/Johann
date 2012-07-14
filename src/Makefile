@@ -264,7 +264,7 @@ clean: lclean oclean FORCE
 	rm -f tags TAGS
 
 depend:
-	@makedepend -D__GNUG__ -Y *.C -fC.depend 2> makedepend.log
+	@makedepend -D__GNUG__ -Y../include *.C -fC.depend 2> makedepend.log
 	@! grep -i error makedepend.log
 
 include C.depend
