@@ -14,49 +14,6 @@ void move_to (int i __attribute__((unused)), int j __attribute__((unused)))
     ++g_num_moved;
 }
 
-// TODO move to test_dens_set.cpp
-void test_dense_set (size_t N)
-{
-    POMAGMA_INFO("Testing dense_set");
-
-    //========================================================================
-    POMAGMA_INFO("creating dense_set of size " << N);
-    dense_set S(N);
-    POMAGMA_ASSERT(S.count_items() == 0, "set had nonzero size upon creation");
-
-    //========================================================================
-    POMAGMA_INFO("testing position insertion");
-    for (size_t i = 1; i <= N; ++i) {
-        S.insert(i);
-    }
-    POMAGMA_ASSERT(S.count_items() == N,
-            "set is not full after inserting all items");
-
-    //========================================================================
-    POMAGMA_INFO("testing position removal");
-    for (size_t i = 1; i <= N; ++i) {
-        S.remove(i);
-    }
-    POMAGMA_ASSERT(S.count_items() == 0,
-            "set is not empty after removing all items");
-
-    //========================================================================
-    POMAGMA_INFO("testing iteration");
-    for (size_t i = 1; i <= N / 2; ++i) {
-        S.insert(i);
-    }
-    POMAGMA_ASSERT(S.count_items() == N / 2,
-            "set is not half-full after inserting N/2 items");
-    unsigned item_count = 0;
-    for (dense_set::iterator iter(S); iter.ok(); iter.next()) {
-        POMAGMA_ASSERT(S.contains(*iter), "iterated over uncontained item");
-        ++item_count;
-    }
-    POMAGMA_INFO("found " << item_count << " / " << (N / 2) << " items");
-    POMAGMA_ASSERT(item_count <= (N / 2), "iterated over too many items");
-    POMAGMA_ASSERT(item_count == (N / 2), "iterated over too few items");
-}
-
 bool br_test1 (int i, int j) { return i and j and i % 61 <= j % 31; }
 bool br_test2 (int i, int j) { return i and j and i % 61 == j % 31; }
 
@@ -223,7 +180,6 @@ int main ()
 {
     Log::title("Running Binary Relation Test");
 
-    test_dense_set(3 + (1 << 16));
     test_dense_bin_rel(3 + (1 << 9), br_test1, br_test2);
 
     return 0;

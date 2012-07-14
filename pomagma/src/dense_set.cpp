@@ -7,7 +7,7 @@ namespace pomagma
 
 dense_set::dense_set (size_t num_items)
     : N(num_items),
-      M((N+LINE_STRIDE)/LINE_STRIDE),
+      M(line_count(N)),
       m_lines(pomagma::alloc_blocks<Line>(M)),
       m_alias(false)
 {
