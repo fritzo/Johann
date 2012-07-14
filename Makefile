@@ -26,7 +26,8 @@ test: kernel
 	echo '' > log/test.log
 	$(MAKE) -C pomagma test
 	$(MAKE) -C src test
-	bin/johann -l test.log scripts/test/main.jcode
+	@#bin/johann -l test.log scripts/test/main.jcode
+	bin/johann -l test.log < scripts/test/validate.jcode
 
 #-----------------------------------------------------------------------------
 # Running johann
