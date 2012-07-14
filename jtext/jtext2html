@@ -29,6 +29,8 @@ TODO = """\
 
 import re, os, sys, time, shutil, cgi, math, exceptions, traceback
 
+GITHUB = 'https://github.com/fritzo/Johann/blob/master'
+
 verbose = False
 glossary = []
 num_codes = 0
@@ -56,8 +58,6 @@ def boilerplate_navigator (prefix=""):
    title="glossary of terms in library">defs</a> -
 <a href="%sdoc/bib.html"
    title="references">bib</a> -
-<a href="%sdoxygen/index.html"
-   title="source code documentation">doxygen</a> -
 <a href="http://www.math.cmu.edu/~fho/johann/index.html"
    title="project description page" target="_blank">[web]</a>
 <hr />
@@ -149,11 +149,7 @@ def ref (m):
 def source (m):
     ref = m.group()
     file = ref[4:].replace(".","_8") + ".html"
-    return "<a class=file href=\"%s../doxygen/%s\" title=\"doxygen\">%s</a>" % (rootdir,file,ref)
-def namesp (m):
-    ref = m.group()[10:]
-    file = "namespace" + ref + ".html"
-    return "namespace <a href=\"%s../doxygen/%s\" title=\"doxygen\">%s</a>" % (rootdir,file,ref)
+    return '<a class=file href="%s/src/%s" title="github">%s</a>' % (GITHUB,rootdir,file,ref)
 def fileref (m): return "<tt>%s</tt>" % m.group()
 def href (m):
     file = m.group()
@@ -177,7 +173,6 @@ class ConvertText:
         self.html   = re.compile("\\b[a-z_:~./]+.html\\b")
         self.file   = re.compile("\\b[a-z_\-/]+.text\\b")
         self.source = re.compile("\\bcpp/[a-z0-9_]+.[lyCh]\\b")
-        self.namesp = re.compile("\\bnamespace [A-Za-z_0-9]+\\b")
         self.cite   = re.compile("\\b([A-Z][a-z]+)+[0-9X][0-9X][a-z]*\\b")
         self.label  = re.compile("\\\\label{sec:[-A-Za-z0-9_:/]+}")
         self.ref    = re.compile("\\\\ref{sec:[-A-Za-z0-9_:/]+}")
@@ -191,7 +186,6 @@ class ConvertText:
         text = self.html.sub(href, text)
         text = self.file.sub(fileref, text)
         text = self.source.sub(source, text)
-        text = self.namesp.sub(namesp, text)
         text = self.cite.sub(cite, text)
         text = self.label.sub(label, text)
         text = self.ref.sub(ref, text)

@@ -6,11 +6,6 @@
 #include <sys/resource.h> //for rusage
 #include <unistd.h> //for isatty
 
-/** \mainpage
- * most of the documentation is in the code, not doxygen.
- * see source files for details.
- */
-
 Int powi (Int x, Int y)
 {
     Int result = 1;

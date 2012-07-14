@@ -86,8 +86,8 @@ map_html = """\
    title="glossary of terms in library">defs</a> -
 <a href="bib.html"
    title="references">bib</a> -
-<a href="../doxygen/index.html"
-   title="source code documentation">doxygen</a> -
+<a href="https://github.com/fritzo/Johann"
+   title="source code repository">github</a> -
 <a href="http://www.math.cmu.edu/~fho/johann/index.html"
    title="project description page" target="_blank">[web]</a>
 <hr />

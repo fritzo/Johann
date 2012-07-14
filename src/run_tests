@@ -5,14 +5,12 @@
 echo "Running All Unit Tests"
 
 echo "  Testing optimization Module"    && ./optimization_test
-echo "  Testing stack Module"           && ./stack_test
 echo "  Testing priority_queue Module"  && ./priority_queue_test
 echo "  Testing linalg Module"          && ./linalg_test
 echo "  Testing visual Module"          && ./visual_test
 echo "  Testing handling Module"        && ./handling_test
 echo "  Testing moments Module"         && ./moments_test
 echo "  Testing expressions Module"     && ./expressions_test
-echo "  Testing binary_relation Module" && ./binary_relation_test
 #echo "  Testing node_heap Module"       && ./node_heap_test
 #echo "  Testing random_choice Module"   && ./random_choice_test
 echo "  Testing unification Module"     && ./unification_test

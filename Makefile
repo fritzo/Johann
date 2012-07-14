@@ -13,7 +13,6 @@ doc: FORCE
 pdf: FORCE
 	$(MAKE) -C scripts pdf
 html: pdf FORCE
-	$(MAKE) -C doxygen all
 	$(MAKE) -C html all
 	cp scripts/main.pdf html/fritz-thesis-draft.pdf
 	chmod 644 html/fritz-thesis-draft.pdf
@@ -93,7 +92,6 @@ clean:
 	$(MAKE) -C scripts clean
 	$(MAKE) -C data clean
 	$(MAKE) -C html clean
-	$(MAKE) -C doxygen clean
 	$(MAKE) -C pomagma clean
 
 cleaner: clean
