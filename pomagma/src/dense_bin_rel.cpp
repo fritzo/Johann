@@ -23,10 +23,6 @@ dense_bin_rel::dense_bin_rel (int num_items, bool is_full)
     // FIXME allow larger
     POMAGMA_ASSERT(N_up <= (1 << 16), "dense_bin_rel is too large");
 
-    POMAGMA_ASSERT(m_Lx_lines, "failed to allocate Lx lines");
-    POMAGMA_ASSERT(m_Rx_lines, "failed to allocate Rx lines");
-    POMAGMA_ASSERT(m_temp_line, "failed to allocate temp line");
-
     // initialize to zeros
     bzero(m_Lx_lines, sizeof(Line) * NUM_LINES);
     bzero(m_Rx_lines, sizeof(Line) * NUM_LINES);

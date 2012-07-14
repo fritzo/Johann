@@ -43,12 +43,11 @@ class dense_set
     inline bool_ref _bit (size_t i);
     inline bool _bit (size_t i) const;
 
-public:
-
     // line wrappers
     oid_t _lines () const { return M; }
     Line _line (size_t i) const { return m_lines[i]; }
     Line & _line (size_t i) { return m_lines[i]; }
+public:
     Line * data () { return m_lines; }
     static size_t line_count (size_t item_count)
     {

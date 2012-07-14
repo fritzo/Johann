@@ -20,11 +20,6 @@ dense_bin_fun::dense_bin_fun (int num_items)
     // FIXME allow larger
     POMAGMA_ASSERT(N < (1<<15), "dense_bin_fun is too large");
 
-    POMAGMA_ASSERT(m_blocks, "failed to allocate blocks");
-    POMAGMA_ASSERT(m_Lx_lines, "failed to allocate Lx lines");
-    POMAGMA_ASSERT(m_Rx_lines, "failed to allocate Rx lines");
-    POMAGMA_ASSERT(m_temp_line, "failed to allocate temp line");
-
     // initialize to zero
     bzero(m_blocks, M * M * sizeof(Block4x4W));
     bzero(m_Lx_lines, (N + 1) * m_line_count * sizeof(Line));

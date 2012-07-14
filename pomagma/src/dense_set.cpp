@@ -11,10 +11,8 @@ dense_set::dense_set (size_t num_items)
       m_lines(pomagma::alloc_blocks<Line>(M)),
       m_alias(false)
 {
-    POMAGMA_DEBUG("creating dense_set with "
-        << M << " lines");
+    POMAGMA_DEBUG("creating dense_set with " << M << " lines");
     POMAGMA_ASSERT(N < (1<<26), "dense_set is too large");
-    POMAGMA_ASSERT(m_lines, "failed to allocate lines");
 
     // initialize to zeros
     bzero(m_lines, sizeof(Line) * M);
