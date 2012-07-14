@@ -6,7 +6,7 @@
 namespace pomagma
 {
 
-//ctor & dtor
+// ctor & dtor
 dense_bin_rel::dense_bin_rel (int num_items, bool is_full)
     : N(num_items),
       M( (N+LINE_STRIDE) / LINE_STRIDE ),
@@ -18,17 +18,17 @@ dense_bin_rel::dense_bin_rel (int num_items, bool is_full)
       m_set(N,NULL),
       m_temp_line(pomagma::alloc_blocks<Line>(M))
 {
-    logger.debug() << "creating dense_bin_rel with " << M << " lines" |0;
-    POMAGMA_ASSERT (N_up <= (1<<16), "dense_bin_rel is too large");
-    POMAGMA_ASSERTP(m_Lx_lines, sizeof(Line), "Lx lines");
-    POMAGMA_ASSERTP(m_Rx_lines, sizeof(Line), "Rx lines");
-    POMAGMA_ASSERTP(m_temp_line, sizeof(Line), "temp line");
+    POMAGMA_DEBUG("creating dense_bin_rel with " << M << " lines");
+    POMAGMA_ASSERT(N_up <= (1<<16), "dense_bin_rel is too large");
+    POMAGMA_ASSERT(m_Lx_lines, "failed to allocate Lx lines");
+    POMAGMA_ASSERT(m_Rx_lines, "failed to allocate Rx lines");
+    POMAGMA_ASSERT(m_temp_line, "failed to allocate temp line");
 
-    //initialize to zeros
+    // initialize to zeros
     bzero(m_Lx_lines, sizeof(Line) * NUM_LINES);
     bzero(m_Rx_lines, sizeof(Line) * NUM_LINES);
 
-    //fill if necessary
+    // fill if necessary
     if (is_full) m_support.insert_all();
 }
 dense_bin_rel::~dense_bin_rel ()
@@ -37,23 +37,22 @@ dense_bin_rel::~dense_bin_rel ()
     pomagma::free_blocks(m_Rx_lines);
     pomagma::free_blocks(m_temp_line);
 }
-void dense_bin_rel::move_from (const dense_bin_rel& other, const Int* new2old)
+void dense_bin_rel::move_from (const dense_bin_rel& other, const oid_t* new2old)
 {
-    logger.debug() << "Copying dense_bin_rel" |0;
-    Logging::IndentBlock block;
+    POMAGMA_DEBUG("Copying dense_bin_rel");
 
-    if (DEBUG_LEVEL >= 4) other.validate();
+    if (POMAGMA_DEBUG_LEVEL >= 1) other.validate();
 
-    //copy support
+    // copy support
     m_support.move_from(other.m_support, new2old);
 
-    //WARNING: assumes this has been done
+    // WARNING: assumes this has been done
     //bzero(m_Lx_lines, sizeof(Line) * NUM_LINES);
     //bzero(m_Rx_lines, sizeof(Line) * NUM_LINES);
 
     if (new2old == NULL) {
-        logger.debug() << "copying by column and by row" |0;
-        //copy rows and columns
+        POMAGMA_DEBUG("copying by column and by row");
+        // copy rows and columns
         int minN = min(N, other.N);
         int minM = min(M, other.M);
         for (int i=1; i<=minN; ++i) {
@@ -61,8 +60,8 @@ void dense_bin_rel::move_from (const dense_bin_rel& other, const Int* new2old)
             memcpy(get_Rx_line(i), other.get_Rx_line(i), sizeof(Line) * minM);
         }
     } else {
-        logger.debug() << "copying and reordering" |0;
-        //copy & reorder WIKKIT SLOW
+        POMAGMA_DEBUG("copying and reordering");
+        // copy & reorder WIKKIT SLOW
         for (unsigned i_new=1; i_new<=N; ++i_new) {
             if (not supports(i_new)) continue;
             unsigned i_old = new2old[i_new];
@@ -75,12 +74,12 @@ void dense_bin_rel::move_from (const dense_bin_rel& other, const Int* new2old)
             }
         }
     }
-    if (DEBUG_LEVEL >= 4) validate();
+    if (POMAGMA_DEBUG_LEVEL >= 1) validate();
 }
 
-//diagnostics
+// diagnostics
 unsigned dense_bin_rel::size () const
-{//supa-slow, try not to use
+{// supa-slow, try not to use
     unsigned result = 0;
     for (dense_set::iterator i = m_support.begin(); i; i.next()) {
         result += _get_Lx_set(*i).size();
@@ -89,22 +88,21 @@ unsigned dense_bin_rel::size () const
 }
 void dense_bin_rel::validate () const
 {
-    logger.debug() << "Validating dense_bin_rel" |0;
-    Logging::IndentBlock block;
+    POMAGMA_DEBUG("Validating dense_bin_rel");
 
     m_support.validate();
 
     unsigned num_pairs = 0;
 
-    //validate sets
+    // validate sets
     for (unsigned i=0; i<N_up; ++i) {
         _get_Lx_set(i).validate();
         _get_Rx_set(i).validate();
     }
 
-    //check emptiness of null lines
-    POMAGMA_ASSERT (_get_Lx_set(0).empty(), "Lx(0) line not empty");
-    POMAGMA_ASSERT (_get_Rx_set(0).empty(), "Rx(0) line not empty");
+    // check emptiness of null lines
+    POMAGMA_ASSERT(_get_Lx_set(0).empty(), "Lx(0) line not empty");
+    POMAGMA_ASSERT(_get_Rx_set(0).empty(), "Rx(0) line not empty");
 
     dense_set Lx(N_up, NULL), Rx(N_up, NULL);
     for (unsigned i=1; i<=N; ++i) {
@@ -121,39 +119,38 @@ void dense_bin_rel::validate () const
             bool Rx_ij = Rx.contains(i);
             num_pairs += Rx_ij;
 
-            POMAGMA_ASSERT (Lx_ij == Rx_ij,
+            POMAGMA_ASSERT(Lx_ij == Rx_ij,
                     "invalid: Lx,Rx disagree at " << i << "," << j
                     << ", Lx is " << Lx_ij << ", Rx is " << Rx_ij  );
 
-            POMAGMA_ASSERT (sup_ij or not Lx_ij,
+            POMAGMA_ASSERT(sup_ij or not Lx_ij,
                     "invalid: Lx unsupported at " << i << "," << j );
 
-            POMAGMA_ASSERT (sup_ij or not Rx_ij,
+            POMAGMA_ASSERT(sup_ij or not Rx_ij,
                     "invalid: Rx unsupported at " << i << "," << j );
         }
     }
 
     unsigned true_size = size();
-    POMAGMA_ASSERT (num_pairs == true_size,
+    POMAGMA_ASSERT(num_pairs == true_size,
             "invalid: incorrect number of pairs: "
             << num_pairs << " should be " << true_size);
 }
 void dense_bin_rel::validate_disjoint (const dense_bin_rel& other) const
 {
-    logger.debug() << "Validating disjoint pair of dense_bin_rels" |0;
-    Logging::IndentBlock block;
+    POMAGMA_DEBUG("Validating disjoint pair of dense_bin_rels");
 
-    //validate supports agree
-    POMAGMA_ASSERT (m_support.capacity() == other.m_support.capacity(),
+    // validate supports agree
+    POMAGMA_ASSERT(m_support.capacity() == other.m_support.capacity(),
             "invalid: disjoint dense_bin_rel support capacities disagree");
-    POMAGMA_ASSERT (m_support.size() == other.m_support.size(),
+    POMAGMA_ASSERT(m_support.size() == other.m_support.size(),
             "invalid: disjoint dense_bin_rel support sizes disagree");
-    POMAGMA_ASSERT (m_support == other.m_support,
+    POMAGMA_ASSERT(m_support == other.m_support,
             "invalid: disjoint dense_bin_rel supports disagree");
 
-    //validate disjointness
+    // validate disjointness
     for (dense_set::iterator i = m_support.begin(); i; i.next()) {
-        POMAGMA_ASSERT (_get_Lx_set(*i).disjoint(other._get_Lx_set(*i)),
+        POMAGMA_ASSERT(_get_Lx_set(*i).disjoint(other._get_Lx_set(*i)),
                 "invalid: dense_bin_rels intersect at row " << i);
     }
 }
@@ -161,23 +158,23 @@ void dense_bin_rel::print_table (unsigned n) const
 {
     if (n == 0) n = N;
     for (unsigned i=1; i<=n; ++i) {
-        cout << '\n';
+        std::cout << '\n';
         for (unsigned j=1; j<=n; ++j) {
-            cout << (contains(i,j) ? 'O' : '.');
+            std::cout << (contains(i,j) ? 'O' : '.');
         }
     }
-    cout << std::endl;
+    std::cout << std::endl;
 }
 
-//dense_bin_rel operations
+// dense_bin_rel operations
 void dense_bin_rel::remove_Lx (const dense_set& is, int j)
 {
-    //slower version
+    // slower version
     //for (dense_set::iterator i = is.begin(); i; i.next()) {
     //    remove_Lx(*i,j);
     //}
 
-    //faster version
+    // faster version
     unsigned mask = ~(1 << (j % LINE_STRIDE));
     int offset = j / LINE_STRIDE;
     Line* lines = m_Lx_lines + offset;
@@ -187,12 +184,12 @@ void dense_bin_rel::remove_Lx (const dense_set& is, int j)
 }
 void dense_bin_rel::remove_Rx (int i, const dense_set& js)
 {
-    //slower version
+    // slower version
     //for (dense_set::iterator j = js.begin(); j; j.next()) {
     //    remove_Rx(i,*j);
     //}
 
-    //faster version
+    // faster version
     unsigned mask = ~(1 << (i % LINE_STRIDE));
     int offset = i / LINE_STRIDE;
     Line* lines = m_Rx_lines + offset;
@@ -204,8 +201,8 @@ void dense_bin_rel::remove (int i)
 {
     POMAGMA_ASSERT4(supports(i), "tried to remove unsupported element " << i);
 
-    _get_Lx_set(i);  remove_Rx(i,m_set);  m_set.zero();     //remove column
-    _get_Rx_set(i);  remove_Lx(m_set,i);  m_set.zero();     //remove row
+    _get_Lx_set(i);  remove_Rx(i,m_set);  m_set.zero();     // remove column
+    _get_Rx_set(i);  remove_Lx(m_set,i);  m_set.zero();     // remove row
 
     m_support.remove(i);
 }
@@ -231,16 +228,20 @@ void dense_bin_rel::ensure_inserted (const dense_set& is, int j,
         }
     }
 }
-void dense_bin_rel::merge (int i, int j,             //dep,rep
-                           void (*move_to)(int,int)) //typically enforce_
-{//policy: call move_to if i~k but not j~k
+
+// policy: call move_to if i~k but not j~k
+void dense_bin_rel::merge (
+        int i,                      // dep
+        int j,                      // rep
+        void (*move_to)(int,int))   // typically enforce_
+{
     POMAGMA_ASSERT4(j!=i, "dense_bin_rel tried to merge item with self");
     POMAGMA_ASSERT4(supports(i) and supports(j),
             "dense_bin_rel tried to merge unsupported items");
 
     dense_set diff(N,m_temp_line), rep(N,NULL), dep(N,NULL);
 
-    //merge rows (i,_) into (j,_)
+    // merge rows (i,_) into (j,_)
     dep.init(get_Lx_line(i));
     remove_Rx(i,dep);
     rep.init(get_Lx_line(j));
@@ -251,7 +252,7 @@ void dense_bin_rel::merge (int i, int j,             //dep,rep
         }
     }
 
-    //merge cols (_,i) into (_,j)
+    // merge cols (_,i) into (_,j)
     dep.init(get_Rx_line(i));
     remove_Lx(dep,i);
     rep.init(get_Rx_line(j));
@@ -265,8 +266,19 @@ void dense_bin_rel::merge (int i, int j,             //dep,rep
     m_support.merge(i,j);
 }
 
-//saving/loading, quicker rather than smaller
-Int dense_bin_rel::data_size () const
+// saving/loading, quicker rather than smaller
+inline void safe_fread (void * ptr, size_t size, size_t count, FILE * file)
+{
+    size_t read = fread(ptr, size, count, file);
+    POMAGMA_ASSERT(read == count, "fread failed");
+}
+inline void safe_fwrite (const void * ptr, size_t size, size_t count, FILE * file)
+{
+    size_t written = fwrite(ptr, size, count, file);
+    POMAGMA_ASSERT(written == count, "fwrite failed");
+}
+
+oid_t dense_bin_rel::data_size () const
 {
     return 2 * sizeof(Line) * NUM_LINES;
 }
@@ -277,19 +289,20 @@ void dense_bin_rel::write_to_file (FILE* file)
 }
 void dense_bin_rel::read_from_file (FILE* file)
 {
-    //WARNING: assumes support is full
+    // WARNING assumes support is full
     safe_fread(m_Lx_lines, sizeof(Line), NUM_LINES, file);
     safe_fread(m_Rx_lines, sizeof(Line), NUM_LINES, file);
 }
 
-//iteration
+// iteration
 void dense_bin_rel::iterator::_find_rhs ()
 {
     while (m_lhs) {
         m_rhs_set.init(m_rel.get_Lx_line(*m_lhs));
         m_rhs.begin();
         if (m_rhs) {
-            _rhs(); _lhs();
+            _rhs();
+            _lhs();
             POMAGMA_ASSERT5(m_rel.contains(m_pos),
                     "br::iterator landed outside of relation: "
                     << m_pos.lhs << "," << m_pos.rhs);

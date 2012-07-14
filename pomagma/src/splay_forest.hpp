@@ -40,8 +40,8 @@ private: // Splay tree operations
     static inline Pos RR (Pos p) { while (Pos next = R(p)) p = next; return p; }
 
     //node ordering = lexicographic key-value
-    typedef Int Rank;
-    static inline Rank rank (Int key, Int val) { return (key << 16) | val; }
+    typedef oid_t Rank;
+    static inline Rank rank (oid_t key, oid_t val) { return (key << 16) | val; }
     static inline Rank rank (Pos p) { return rank(get_key(p), get_val(p)); }
 
     //tree manupulation
@@ -97,7 +97,7 @@ public: // interface
 
         Ob m_key;
 
-        RangeIterator (Ob) { logger.error() << "this should not be called"; }
+        RangeIterator (Ob) { POMAGMA_ERROR("this should not be called"); }
     public:
         RangeIterator () : Iterator(), m_key(Ob(0)) {}
         RangeIterator (Ob root_ob, Ob key_ob) { begin(root_ob, key_ob); }
@@ -202,7 +202,7 @@ template<class X> typename X::Pos splay_forest<X>::find_key (Ob root_ob, Ob key)
 {//finds arbitrary pos in key range
     //find any key
     Pos p = root(root_ob); if (not p) return Pos(0);
-    Int here = get_key(p);
+    oid_t here = get_key(p);
     if (here == key) return p; //p is already root
     do {
         p = (key < here) ? L(p) : R(p);
@@ -340,7 +340,7 @@ template<class X> void splay_forest<X>::RangeIterator::begin(
     if (not p) return;
 
     //find any key
-    Int here;
+    oid_t here;
     while ((here = get_key(p)) != key) {
         p = (key < here) ? L(p) : R(p);
         if (not p) return;
@@ -376,14 +376,14 @@ template<class X> void splay_forest<X>::test_find (Pos eqn)
 {
     //test find_pair
     Pos pos = find_pair(get_root(eqn), get_key(eqn), get_val(eqn));
-    POMAGMA_ASSERT (pos, "invalid: eqn not found in own " << nameof<X>() << " tree");
-    POMAGMA_ASSERT (pos == eqn,
+    POMAGMA_ASSERT(pos, "invalid: eqn not found in own " << nameof<X>() << " tree");
+    POMAGMA_ASSERT(pos == eqn,
             "invalid: wrong eqn found in own " << nameof<X>() << " tree");
 
     //test find_key
     pos = find_key(get_root(eqn), get_key(eqn));
-    POMAGMA_ASSERT (pos, "invalid: key not found in own " << nameof<X>() << " tree");
-    POMAGMA_ASSERT (get_key(pos) == get_key(eqn),
+    POMAGMA_ASSERT(pos, "invalid: key not found in own " << nameof<X>() << " tree");
+    POMAGMA_ASSERT(get_key(pos) == get_key(eqn),
             "invalid: wrong key found in own " << nameof<X>() << " tree");
 }
 template<class X> void splay_forest<X>::test_contains (Pos eqn)
@@ -409,8 +409,7 @@ template<class X> void splay_forest<X>::test_range_contains (Pos eqn)
 }
 template<class X> void splay_forest<X>::validate_forest ()
 {
-    logger.debug() << "Validating " << nameof<X>() << " forest" |0;
-    Logging::IndentBlock block;
+    POMAGMA_DEBUG("Validating " << nameof<X>() << " forest");
 
     for (typename Pos::sparse_iterator iter=Pos::sbegin();
             iter!=Pos::send(); ++iter) {
@@ -421,25 +420,25 @@ template<class X> void splay_forest<X>::validate_forest ()
 
         //check L-U agreement
         if (Pos l = L(eqn)) {
-            POMAGMA_ASSERT (rank(l) < rank(eqn), "L-U out of order");
-            POMAGMA_ASSERT (U(l) == eqn, "invalid: runaway L-child");
+            POMAGMA_ASSERT(rank(l) < rank(eqn), "L-U out of order");
+            POMAGMA_ASSERT(U(l) == eqn, "invalid: runaway L-child");
         }
 
         //check R-U agreement
         if (Pos r = R(eqn)) {
-            POMAGMA_ASSERT (rank(eqn) < rank(r), "R-U out of order");
-            POMAGMA_ASSERT (U(r) == eqn, "invalid: runaway R-child");
+            POMAGMA_ASSERT(rank(eqn) < rank(r), "R-U out of order");
+            POMAGMA_ASSERT(U(r) == eqn, "invalid: runaway R-child");
         }
 
         //check U-_ agreement
         if (Pos u = U(eqn)) {
             if (rank(eqn) < rank(u)) {
-                POMAGMA_ASSERT (L(u) == eqn, "invalid: neglected L-child");
+                POMAGMA_ASSERT(L(u) == eqn, "invalid: neglected L-child");
             } else {
-                POMAGMA_ASSERT (R(u) == eqn, "invalid: neglected R-child");
+                POMAGMA_ASSERT(R(u) == eqn, "invalid: neglected R-child");
             }
         } else {
-            POMAGMA_ASSERT (root(eqn) == eqn, "invalid: root mismatch");
+            POMAGMA_ASSERT(root(eqn) == eqn, "invalid: root mismatch");
         }
     }
 }

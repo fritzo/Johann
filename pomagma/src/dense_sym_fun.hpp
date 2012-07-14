@@ -7,19 +7,19 @@
 namespace pomagma
 {
 
+// WARNING zero/null items are not allowed
 
 enum { DSF_STRIDE = 4 };
 
+// TODO try a redundant row-major + column-major representation
 typedef int Block4x4W[DSF_STRIDE * DSF_STRIDE];
 
-inline int isqr (int i) { return (i * (i+1)) / 2; }
+inline int unordered_pair_count (int i) { return (i * (i+1)) / 2; }
 inline void sort (int& i, int& j) { if (j < i) { int k=j; j=i; i=k;}  }
 
-//Note: zero/null items are not allowed
+// a tight binary function in 4x4 word blocks
 class dense_sym_fun
-{//a tight binary function in 4x4 word blocks
-    typedef dense_sym_fun MyType;
-
+{
     //data, in blocks
     const unsigned N,M;     //item,block dimension
     Block4x4W* const m_blocks;
@@ -30,8 +30,8 @@ class dense_sym_fun
     mutable Line* m_temp_line; //this is a temporary
 
     //block wrappers
-          int* _block (int i_, int j_)       { return m_blocks[isqr(j_) + i_]; }
-    const int* _block (int i_, int j_) const { return m_blocks[isqr(j_) + i_]; }
+          int* _block (int i_, int j_)       { return m_blocks[unordered_pair_count(j_) + i_]; }
+    const int* _block (int i_, int j_) const { return m_blocks[unordered_pair_count(j_) + i_]; }
     static int& _block2value (int* block, int i, int j)
     { return block[(j<<2) | i]; }
     static int _block2value (const int* block, int i, int j)
@@ -115,23 +115,31 @@ public:
 
         //construction
         Iterator (const dense_sym_fun* fun)
-            : m_set(fun->N, NULL), m_iter(&m_set), m_fun(fun),
-              m_fixed(0), m_moving(0) {}
+            : m_set(fun->N, NULL), m_iter(m_set, false), m_fun(fun),
+              m_fixed(0), m_moving(0)
+        {}
 
         Iterator (const dense_sym_fun* fun, int fixed)
             : m_set(fun->N, fun->get_Lx_line(fixed)),
-              m_iter(&m_set), m_fun(fun), m_fixed(fixed), m_moving(0)
-        { begin(); }
+              m_iter(m_set, false), m_fun(fun), m_fixed(fixed), m_moving(0)
+        {
+            begin();
+        }
 
         //dereferencing
     private:
         void _deref_assert () const
-        { POMAGMA_ASSERT5(not done(), "dereferenced done dense_set::iter"); }
+        {
+            POMAGMA_ASSERT5(not done(), "dereferenced done dense_set::iter");
+        }
     public:
         int fixed  () const { _deref_assert(); return m_fixed; }
         int moving () const { _deref_assert(); return m_moving; }
         int value  () const
-        { _deref_assert(); return m_fun->get_value(m_fixed,m_moving); }
+        {
+            _deref_assert();
+            return m_fun->get_value(m_fixed,m_moving);
+        }
     };
 
     //================ intersection iteration over 2 lines ================
@@ -160,7 +168,7 @@ public:
 
         //construction
         LLxx_Iter (const dense_sym_fun* fun)
-            : m_set(fun->N, NULL), m_iter(&m_set), m_fun(fun) {}
+            : m_set(fun->N, NULL), m_iter(m_set, false), m_fun(fun) {}
 
         //dereferencing
         int fixed1 () const { return m_fixed1; }

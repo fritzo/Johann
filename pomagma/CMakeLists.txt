@@ -10,7 +10,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -fno-rtti")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Woverloaded-virtual -Wsign-promo -Wundef -Wpointer-arith -Wcast-qual -Wcast-align -Wno-deprecated")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native -funswitch-loops -fomit-frame-pointer -pipe")
 
-add_definitions(-DPOMAGMA_DEBUG_LEVEL=3)
+add_definitions(-DPOMAGMA_DEBUG_LEVEL=0)
+#add_definitions(-DNDEBUG)
 
 enable_testing()
 
