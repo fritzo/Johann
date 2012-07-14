@@ -306,8 +306,6 @@ template<int X> LineIterator<X>::LineIterator ()
     : Base(g_comp_table) {}
 template<int X> LineIterator<X>::LineIterator (Ob fixed)
     : Base(g_comp_table, Int(fixed)) {}
-template<int X> LineIterator<X>::LineIterator (Ob fixed, Set& subset)
-    : Base(g_comp_table, Int(fixed), subset) {}
 RRxx_Iter::RRxx_Iter () : Base(g_comp_table) {}
 LRxx_Iter::LRxx_Iter () : Base(g_comp_table) {}
 LLxx_Iter::LLxx_Iter () : Base(g_comp_table) {}
@@ -411,10 +409,7 @@ template LineIterator<0>::LineIterator ();
 template LineIterator<1>::LineIterator ();
 template LineIterator<0>::LineIterator (Ob);
 template LineIterator<1>::LineIterator (Ob);
-template LineIterator<0>::LineIterator (Ob, Set&);
-template LineIterator<1>::LineIterator (Ob, Set&);
 
 }
 
-}
-
+} // namepace Compose

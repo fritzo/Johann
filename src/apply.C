@@ -301,13 +301,11 @@ void validate_agreement (Int level)
     }
 }
 
-//app table iteration
+// app table iteration
 template<int X> LineIterator<X>::LineIterator ()
     : Base(g_app_table) {}
 template<int X> LineIterator<X>::LineIterator (Ob fixed)
     : Base(g_app_table, int(fixed)) {}
-template<int X> LineIterator<X>::LineIterator (Ob fixed, Set& subset)
-    : Base(g_app_table, int(fixed), subset) {}
 RRxx_Iter::RRxx_Iter () : Base(g_app_table) {}
 LRxx_Iter::LRxx_Iter () : Base(g_app_table) {}
 LLxx_Iter::LLxx_Iter () : Base(g_app_table) {}
@@ -315,7 +313,7 @@ RRxx_Iter::RRxx_Iter (Ob x, Ob y) : Base(g_app_table) { begin(x, y); }
 LRxx_Iter::LRxx_Iter (Ob f, Ob x) : Base(g_app_table) { begin(f, x); }
 LLxx_Iter::LLxx_Iter (Ob f, Ob g) : Base(g_app_table) { begin(f, g); }
 
-//validation & testing tools
+// validation & testing tools
 template<int X> Ob  ob (Pos p) { return X ? get_rhs(p) : get_lhs(p); }
 template<int X> void test_line_contains (App eqn)
 {
@@ -411,10 +409,7 @@ template LineIterator<0>::LineIterator ();
 template LineIterator<1>::LineIterator ();
 template LineIterator<0>::LineIterator (Ob);
 template LineIterator<1>::LineIterator (Ob);
-template LineIterator<0>::LineIterator (Ob, Set&);
-template LineIterator<1>::LineIterator (Ob, Set&);
 
 }
 
-}
-
+} // namespace Apply

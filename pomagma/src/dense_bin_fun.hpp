@@ -142,19 +142,6 @@ public:
             begin();
         }
 
-        Iterator (const dense_bin_fun * fun, int fixed, dense_set & subset)
-            : m_set(fun->N, subset.data()),
-              m_iter(m_set, false),
-              m_fun(fun),
-              m_lhs(fixed),
-              m_rhs(fixed)
-        {
-            dense_set line(fun->N, idx ? fun->get_Rx_line(fixed)
-                                       : fun->get_Lx_line(fixed));
-            m_set *= line;
-            begin();
-        }
-
         // traversal
     private:
         void _set_pos () { if (idx) m_lhs = *m_iter; else m_rhs = *m_iter; }

@@ -167,7 +167,6 @@ template<int X> class LineIterator : public CompTable::Iterator<X>
 public:
     LineIterator ();
     LineIterator (Ob fixed);
-    LineIterator (Ob fixed, Set& subset);
 
     //iteration
     void begin () { Base::begin(); }

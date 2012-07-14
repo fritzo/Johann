@@ -168,7 +168,6 @@ template<int X> class LineIterator : public AppTable::Iterator<X>
 public:
     LineIterator ();
     LineIterator (Ob fixed);
-    LineIterator (Ob fixed, Set& subset);
 
     //iteration
     void begin () { Base::begin(); }
