@@ -7,7 +7,7 @@ kernel: FORCE
 server: FORCE
 	$(MAKE) -C src server
 jmapper: FORCE
-	$(MAKE) -C src/mapper jmapper
+	$(MAKE) -C mapper jmapper
 doc: FORCE
 	$(MAKE) -C scripts/doc all
 pdf: FORCE
@@ -22,15 +22,10 @@ all: kernel server jmapper html pdf
 #-----------------------------------------------------------------------------
 # Testing
 
-test: unit-test full-test
-
-unit-test:
+test:
 	echo '' > log/test.log
 	$(MAKE) -C pomagma test
 	$(MAKE) -C src test
-
-full-test: kernel
-	echo "" > log/test.log
 	bin/johann -l test.log scripts/test/main.jcode
 
 #-----------------------------------------------------------------------------
@@ -89,10 +84,11 @@ godels_T: kernel
 clean:
 	rm -f core core.* vgcore.* gmon.out *.prof temp.diff
 	$(MAKE) -C src clean
-	$(MAKE) -C scripts clean
-	$(MAKE) -C data clean
-	$(MAKE) -C html clean
 	$(MAKE) -C pomagma clean
+	$(MAKE) -C mapper clean
+	$(MAKE) -C scripts clean
+	$(MAKE) -C html clean
+	$(MAKE) -C data clean
 
 cleaner: clean
 	$(MAKE) -C data cleaner
