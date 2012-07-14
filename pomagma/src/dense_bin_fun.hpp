@@ -18,7 +18,8 @@ class dense_bin_fun
 {
     // data, in blocks
     // TODO switch usigned -> size_t
-    const unsigned N, M; // item,block dimension
+    const unsigned m_item_dim; // item dimension
+    const unsigned m_block_dim; // block dimension
     Block4x4W * const m_blocks;
 
     // dense sets for iteration
@@ -29,8 +30,14 @@ class dense_bin_fun
     mutable Line * m_temp_line; // TODO FIXME this is not thread-safe
 
     // block wrappers
-    int * _block (int i_, int j_) { return m_blocks[M * j_ + i_]; }
-    const int * _block (int i_, int j_) const { return m_blocks[M * j_ + i_]; }
+    int * _block (int i_, int j_)
+    {
+        return m_blocks[m_block_dim * j_ + i_];
+    }
+    const int * _block (int i_, int j_) const
+    {
+        return m_blocks[m_block_dim * j_ + i_];
+    }
     static int & _block2value (int * block, int i, int j)
     {
         return block[(j << 2) | i];
@@ -76,7 +83,7 @@ public:
 
     // attributes
     unsigned count_pairs () const; // slow!
-    unsigned sup_capacity () const { return N; }
+    unsigned item_capacity () const { return m_item_dim; }
     void validate () const;
 
     // element operations
@@ -123,7 +130,7 @@ public:
 
         // construction
         Iterator (const dense_bin_fun * fun)
-            : m_set(fun->N, NULL),
+            : m_set(fun->m_item_dim, NULL),
               m_iter(m_set, false),
               m_fun(fun),
               m_lhs(0),
@@ -131,7 +138,7 @@ public:
         {}
 
         Iterator (const dense_bin_fun * fun, int fixed)
-            : m_set(fun->N, idx ? fun->get_Rx_line(fixed)
+            : m_set(fun->m_item_dim, idx ? fun->get_Rx_line(fixed)
                                 : fun->get_Lx_line(fixed)),
               m_iter(m_set, false),
               m_fun(fun),
@@ -187,7 +194,7 @@ public:
 
         // construction
         RRxx_Iter (const dense_bin_fun * fun)
-            : m_set(fun->N, NULL),
+            : m_set(fun->m_item_dim, NULL),
               m_iter(m_set, false),
               m_fun(fun)
         {}
@@ -226,7 +233,7 @@ public:
 
         // construction
         LRxx_Iter (const dense_bin_fun * fun)
-            : m_set(fun->N, NULL),
+            : m_set(fun->m_item_dim, NULL),
               m_iter(m_set, false),
               m_fun(fun)
         {}
@@ -266,7 +273,7 @@ public:
 
         // construction
         LLxx_Iter (const dense_bin_fun * fun)
-            : m_set(fun->N, NULL),
+            : m_set(fun->m_item_dim, NULL),
               m_iter(m_set, false),
               m_fun(fun)
         {}
@@ -298,10 +305,10 @@ public:
 
 inline int & dense_bin_fun::value (int i, int j)
 {
-    POMAGMA_ASSERT5(0 <= i and i <= int(N),
-            "i=" << i << " out of bounds [1," << N << "]");
-    POMAGMA_ASSERT5(0 <= j and j <= int(N),
-            "j=" << j<< " out of bounds [1," << N << "]");
+    POMAGMA_ASSERT5(0 <= i and i <= int(m_item_dim),
+            "i=" << i << " out of bounds [1," << m_item_dim << "]");
+    POMAGMA_ASSERT5(0 <= j and j <= int(m_item_dim),
+            "j=" << j<< " out of bounds [1," << m_item_dim << "]");
 
     int * block = _block(i >> 2, j >> 2);
     return _block2value(block, i & 3, j & 3);
@@ -309,10 +316,10 @@ inline int & dense_bin_fun::value (int i, int j)
 
 inline int dense_bin_fun::value (int i, int j) const
 {
-    POMAGMA_ASSERT5(0 <= i and i <= int(N),
-            "i=" << i << " out of bounds [1," << N << "]");
-    POMAGMA_ASSERT5(0 <= j and j <= int(N),
-            "j=" << j <<" out of bounds [1," << N << "]");
+    POMAGMA_ASSERT5(0 <= i and i <= int(m_item_dim),
+            "i=" << i << " out of bounds [1," << m_item_dim << "]");
+    POMAGMA_ASSERT5(0 <= j and j <= int(m_item_dim),
+            "j=" << j <<" out of bounds [1," << m_item_dim << "]");
 
     const int * block = _block(i >> 2, j >> 2);
     return _block2value(block, i & 3, j & 3);

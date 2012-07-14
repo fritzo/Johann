@@ -7,23 +7,24 @@ namespace pomagma
 {
 
 dense_sym_fun::dense_sym_fun (int num_items)
-    : N(num_items),
-      M((N + DSF_STRIDE) / DSF_STRIDE),
-      m_blocks(pomagma::alloc_blocks<Block4x4W>(unordered_pair_count(M))),
-      m_line_count(dense_set::line_count(N)),
-      m_Lx_lines(pomagma::alloc_blocks<Line>((N + 1) * m_line_count)),
-      m_temp_set(N, NULL),
-      m_temp_line(pomagma::alloc_blocks<Line>(1 * m_line_count))
+    : m_item_dim(num_items),
+      m_block_dim((m_item_dim + DSF_STRIDE) / DSF_STRIDE),
+      m_blocks(pomagma::alloc_blocks<Block4x4W>(
+                  unordered_pair_count(m_block_dim))),
+      m_line_count(dense_set::line_count(m_item_dim)),
+      m_Lx_lines(pomagma::alloc_blocks<Line>((m_item_dim + 1) * m_line_count)),
+      m_temp_set(m_item_dim, NULL),
+      m_temp_line(pomagma::alloc_blocks<Line>(m_line_count))
 {
     POMAGMA_DEBUG("creating dense_sym_fun with "
-            << unordered_pair_count(M) << " blocks");
+            << unordered_pair_count(m_block_dim) << " blocks");
 
     // FIXME allow larger
-    POMAGMA_ASSERT(N < (1 << 15), "dense_sym_fun is too large");
+    POMAGMA_ASSERT(m_item_dim < (1 << 15), "dense_sym_fun is too large");
 
     // initialize to zero
-    bzero(m_blocks, unordered_pair_count(M) * sizeof(Block4x4W));
-    bzero(m_Lx_lines, (N + 1) * m_line_count * sizeof(Line));
+    bzero(m_blocks, unordered_pair_count(m_block_dim) * sizeof(Block4x4W));
+    bzero(m_Lx_lines, (m_item_dim + 1) * m_line_count * sizeof(Line));
 }
 
 dense_sym_fun::~dense_sym_fun ()
@@ -39,7 +40,7 @@ void dense_sym_fun::move_from (const dense_sym_fun & other)
     POMAGMA_DEBUG("Copying dense_sym_fun");
 
     // copy data
-    unsigned minM = min(M, other.M);
+    unsigned minM = min(m_block_dim, other.m_block_dim);
     for (unsigned j_ = 0; j_ < minM; ++j_) {
         int * destin = _block(0, j_);
         const int * source = other._block(0, j_);
@@ -47,7 +48,7 @@ void dense_sym_fun::move_from (const dense_sym_fun & other)
     }
 
     // copy sets
-    unsigned minN = min(N, other.N);
+    unsigned minN = min(m_item_dim, other.m_item_dim);
     unsigned minL = min(m_line_count, other.m_line_count);
     for (unsigned i = 1; i <= minN; ++i) {
         memcpy(get_Lx_line(i), other.get_Lx_line(i), sizeof(Line) * minL);
@@ -60,7 +61,7 @@ void dense_sym_fun::move_from (const dense_sym_fun & other)
 unsigned dense_sym_fun::count_pairs () const
 {
     unsigned result = 0;
-    for (unsigned i=1; i<=N; ++i) {
+    for (unsigned i = 1; i <= m_item_dim; ++i) {
         result += _get_Lx_set(i).count_items();
     }
     return result;
@@ -71,14 +72,16 @@ void dense_sym_fun::validate () const
     POMAGMA_DEBUG("Validating dense_sym_fun");
 
     POMAGMA_DEBUG("validating line-block consistency");
-    for (unsigned i_ = 0; i_ < M; ++i_) {
-    for (unsigned j_ = i_; j_ < M; ++j_) {
+    for (unsigned i_ = 0; i_ < m_block_dim; ++i_) {
+    for (unsigned j_ = i_; j_ < m_block_dim; ++j_) {
         const int * block = _block(i_, j_);
 
         for (unsigned _i = 0; _i < DSF_STRIDE; ++_i) {
         for (unsigned _j = 0; _j < DSF_STRIDE; ++_j) {
-            unsigned i = i_ * DSF_STRIDE + _i; if (i == 0 or N < i) continue;
-            unsigned j = j_ * DSF_STRIDE + _j; if (j < i or N < j) continue;
+            unsigned i = i_ * DSF_STRIDE + _i;
+            unsigned j = j_ * DSF_STRIDE + _j;
+            if (i == 0 or m_item_dim < i) continue;
+            if (j < i or m_item_dim < j) continue;
             int val = _block2value(block, _i, _j);
 
             if (val) {
@@ -99,7 +102,8 @@ void dense_sym_fun::remove(
         const int i,
         void remove_value(int)) // rem
 {
-    POMAGMA_ASSERT4(0<i and i<=int(N), "item out of bounds: " << i);
+    POMAGMA_ASSERT4(0 < i and i <= int(m_item_dim),
+            "item out of bounds: " << i);
 
     for (Iterator iter(this, i); iter.ok(); iter.next()) {
         int k = iter.moving();
@@ -119,9 +123,9 @@ void dense_sym_fun::merge(
 {
     POMAGMA_ASSERT4(j != i,
             "in dense_sym_fun::merge, tried to merge with self");
-    POMAGMA_ASSERT4(0 < i and i <= int(N),
+    POMAGMA_ASSERT4(0 < i and i <= int(m_item_dim),
             "dep out of bounds: " << i);
-    POMAGMA_ASSERT4(0 < j and j <= int(N),
+    POMAGMA_ASSERT4(0 < j and j <= int(m_item_dim),
             "rep out of bounds: " << j);
 
     // (i,i) -> (i,j)

@@ -272,8 +272,8 @@ void validate_join_table (Int level)
     logger.debug() << "Validating Join table" |0;
     Logging::IndentBlock block;
 
-    Assert (g_join_table->sup_capacity() == Ob::capacity(),
-            "join table has wrong size: " << g_join_table->sup_capacity());
+    Assert (g_join_table->item_capacity() == Ob::capacity(),
+            "join table has wrong size: " << g_join_table->item_capacity());
     if (level < 3) return;
     g_join_table->validate();
 }

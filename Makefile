@@ -27,7 +27,9 @@ test: kernel
 	$(MAKE) -C pomagma test
 	$(MAKE) -C src test
 	@#bin/johann -l test.log scripts/test/main.jcode
-	bin/johann -l test.log < scripts/test/validate.jcode
+	(bin/johann -l test.log < scripts/test/validate.jcode && \
+	echo 'Kernel Test Passed') || (echo 'Kernel Test Failed' && false)
+	@echo '----( All Tests Passed )----'
 
 #-----------------------------------------------------------------------------
 # Running johann

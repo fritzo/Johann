@@ -16,6 +16,6 @@ echo "  Testing expressions Module"     && ./expressions_test && \
 #echo "  Testing random_choice Module"   && ./random_choice_test && \
 echo "  Testing unification Module"     && ./unification_test && \
 #echo "  Testing measures-lite Module"   && ./meas_lite_test && \
-echo "Tests Succeeded.") || echo "Tests Failed."
+echo "Unit Tests Passed.") || (echo "Unit Tests Failed." && false)
 
 

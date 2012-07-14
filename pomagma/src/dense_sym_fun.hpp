@@ -11,18 +11,17 @@ namespace pomagma
 
 enum { DSF_STRIDE = 4 };
 
-// TODO try a redundant row-major + column-major representation
 typedef int Block4x4W[DSF_STRIDE * DSF_STRIDE];
 
-inline int unordered_pair_count (int i) { return (i * (i+1)) / 2; }
-inline void sort (int& i, int& j) { if (j < i) { int k=j; j=i; i=k;}  }
+inline size_t unordered_pair_count (size_t i) { return (i * (i + 1)) / 2; }
 
 // a tight binary function in 4x4 word blocks
 class dense_sym_fun
 {
     // data, in blocks
-    const unsigned N; // item count
-    const unsigned M; // block count
+    // TODO switch usigned -> size_t
+    const unsigned m_item_dim;
+    const unsigned m_block_dim;
     Block4x4W * const m_blocks;
 
     // dense sets for iteration
@@ -32,6 +31,8 @@ class dense_sym_fun
     mutable Line * m_temp_line; // TODO FIXME this is not thread-safe
 
     // block wrappers
+    template<class T>
+    static void sort (T & i, T & j) { if (j < i) { T k = j; j = i; i = k; }  }
     int * _block (int i_, int j_)
     {
         return m_blocks[unordered_pair_count(j_) + i_];
@@ -76,8 +77,8 @@ public:
     int get_value (int lhs, int rhs) const { return value(lhs, rhs); }
 
     // attributes
+    size_t item_capacity () const { return m_item_dim; }
     unsigned count_pairs () const; // slow!
-    unsigned sup_capacity () const { return N; }
     void validate () const;
 
     // element operations
@@ -122,14 +123,14 @@ public:
 
         // construction
         Iterator (const dense_sym_fun * fun)
-            : m_set(fun->N, NULL),
+            : m_set(fun->m_item_dim, NULL),
               m_iter(m_set, false),
               m_fun(fun),
               m_fixed(0),
               m_moving(0)
         {}
         Iterator (const dense_sym_fun * fun, int fixed)
-            : m_set(fun->N, fun->get_Lx_line(fixed)),
+            : m_set(fun->m_item_dim, fun->get_Lx_line(fixed)),
               m_iter(m_set, false),
               m_fun(fun),
               m_fixed(fixed),
@@ -184,7 +185,7 @@ public:
 
         // construction
         LLxx_Iter (const dense_sym_fun* fun)
-            : m_set(fun->N, NULL),
+            : m_set(fun->m_item_dim, NULL),
               m_iter(m_set, false),
               m_fun(fun)
         {}
@@ -219,10 +220,10 @@ public:
 inline int & dense_sym_fun::value (int i, int j)
 {
     sort(i, j);
-    POMAGMA_ASSERT5(0 <= i and i <= int(N),
-            "i=" << i << " out of bounds [1," << N << "]");
-    POMAGMA_ASSERT5(i <= j and j <= int(N),
-            "j=" << j << " out of bounds [" << i << "," << N << "]");
+    POMAGMA_ASSERT5(0 <= i and i <= int(m_item_dim),
+            "i=" << i << " out of bounds [1," << m_item_dim << "]");
+    POMAGMA_ASSERT5(i <= j and j <= int(m_item_dim),
+            "j=" << j << " out of bounds [" << i << "," << m_item_dim << "]");
 
     int * block = _block(i >> 2, j >> 2);
     return _block2value(block, i & 3, j & 3);
@@ -231,10 +232,10 @@ inline int & dense_sym_fun::value (int i, int j)
 inline int dense_sym_fun::value (int i, int j) const
 {
     sort(i, j);
-    POMAGMA_ASSERT5(0 <= i and i <= int(N),
-            "i=" << i << " out of bounds [1," << N << "]");
-    POMAGMA_ASSERT5(i <= j and j <= int(N),
-            "j=" << j << " out of bounds [" << i << "," << N << "]");
+    POMAGMA_ASSERT5(0 <= i and i <= int(m_item_dim),
+            "i=" << i << " out of bounds [1," << m_item_dim << "]");
+    POMAGMA_ASSERT5(i <= j and j <= int(m_item_dim),
+            "j=" << j << " out of bounds [" << i << "," << m_item_dim << "]");
 
     const int * block = _block(i >> 2, j >> 2);
     return _block2value(block, i & 3, j & 3);

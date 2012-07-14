@@ -84,8 +84,8 @@ public:
     void validate () const;
 
     // element operations
-    bool_ref operator() (size_t i)       { return _bit(i); }
-    bool     operator() (size_t i) const { return _bit(i); }
+    bool_ref operator() (size_t i) { return _bit(i); }
+    bool operator() (size_t i) const { return _bit(i); }
     bool contains (size_t i) const { return _bit(i); }
     inline void insert (size_t i);
     inline void remove (size_t i);

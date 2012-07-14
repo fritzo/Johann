@@ -27,6 +27,7 @@ class dense_bin_rel
     };
 
     // data
+    // TODO switch usigned -> size_t
     const unsigned N; // number of items per slice
     const unsigned m_line_count;
     const unsigned N_up; // N rounded up, = m_line_count * BITS_PER_LINE
@@ -66,9 +67,9 @@ public:
     void move_from (const dense_bin_rel & other, const oid_t* new2old=NULL);
 
     // attributes
+    const dense_set & support () const { return m_support; }
     unsigned count_pairs () const; // supa-slow, try not to use
     unsigned count_items_support () const { return m_support.count_items(); }
-    unsigned sup_capacity () const { return N; }
     void validate () const;
     void validate_disjoint (const dense_bin_rel& other) const;
     void print_table (unsigned n = 0) const;
@@ -257,22 +258,26 @@ public:
 // bit wrappers
 inline bool_ref dense_bin_rel::_bit_Lx (int i, int j)
 {
-    POMAGMA_ASSERT5(supports(i,j), "_bit_Lx called on unsupported pair "<<i<<','<<j);
+    POMAGMA_ASSERT5(supports(i, j),
+            "_bit_Lx called on unsupported pair " << i << ',' << j);
     return _get_Lx_set(i)(j);
 }
 inline bool_ref dense_bin_rel::_bit_Rx (int i, int j)
 {
-    POMAGMA_ASSERT5(supports(i,j), "_bit_Rx called on unsupported pair "<<i<<','<<j);
+    POMAGMA_ASSERT5(supports(i, j),
+            "_bit_Rx called on unsupported pair " << i << ',' << j);
     return _get_Rx_set(j)(i);
 }
 inline bool dense_bin_rel::_bit_Lx (int i, int j) const
 {
-    POMAGMA_ASSERT5(supports(i,j), "_bit_Lx called on unsupported pair "<<i<<','<<j);
+    POMAGMA_ASSERT5(supports(i,j),
+            "_bit_Lx called on unsupported pair " << i << ',' << j);
     return _get_Lx_set(i)(j);
 }
 inline bool dense_bin_rel::_bit_Rx (int i, int j) const
 {
-    POMAGMA_ASSERT5(supports(i,j), "_bit_Rx called on unsupported pair "<<i<<','<<j);
+    POMAGMA_ASSERT5(supports(i,j),
+            "_bit_Rx called on unsupported pair " << i << ',' << j);
     return _get_Rx_set(j)(i);
 }
 
