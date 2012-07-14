@@ -39,6 +39,8 @@ core.*
 *.vcproj.*
 *.suo
 *.ncb
-data/*
+data/
 stats/conjectures.text
 mapper/jmapper
+lib/
+include/

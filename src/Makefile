@@ -54,9 +54,9 @@ GL_CYGWIN = -lglut32 -lglu32 -lopengl32
 
 #LFLAGS = -d #flex is called manually below
 YFLAGS = -d
-CPPFLAGS = -I. -Wstrict-aliasing=0 --std=c++0x
+CPPFLAGS = -I. -I../include -Wstrict-aliasing=0 --std=c++0x
 CXXFLAGS = -fno-strict-aliasing
-LDFLAGS = -lpomagma
+LDFLAGS = -L../lib -lpomagma
 ifeq ($(COMPILE_TYPE), debug)
 	CPPFLAGS += -DDEBUG_LEVEL=$(DEBUG_LEVEL)
 	CXXFLAGS = $(WARNINGS) -ggdb

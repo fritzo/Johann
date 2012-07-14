@@ -9,7 +9,7 @@ add_library(pomagma SHARED
 	dense_bin_fun.cpp
 	dense_sym_fun.cpp
 	)
-install(TARGETS pomagma LIBRARY DESTINATION /usr/lib)
+install(TARGETS pomagma LIBRARY DESTINATION ${PROJECT_SOURCE_DIR}/../lib)
 
 add_executable(dense_set_test dense_set_test.cpp)
 target_link_libraries(dense_set_test pomagma)

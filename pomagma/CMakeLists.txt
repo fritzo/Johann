@@ -16,7 +16,7 @@ add_definitions(-DPOMAGMA_DEBUG_LEVEL=0)
 enable_testing()
 
 install(DIRECTORY src/
-	DESTINATION /usr/include/pomagma
+	DESTINATION ${PROJECT_SOURCE_DIR}/../include/pomagma
 	FILES_MATCHING PATTERN *.hpp)
 
 add_subdirectory(src)
