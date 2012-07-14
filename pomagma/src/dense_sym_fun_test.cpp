@@ -27,7 +27,7 @@ void test_dense_sym_fun (unsigned size)
             POMAGMA_ASSERT(fun.contains(i, j),
                     "function does not contain good pair " << i << ',' << j);
             POMAGMA_ASSERT(fun.get_value(i, j) == k,
-                    "function contains wrong value for " << i << ',' << j);
+                    "bad value at " << i << ',' << j);
             ++line_size[i];
         } else {
             POMAGMA_ASSERT(not fun.contains(i, j),
@@ -42,13 +42,11 @@ void test_dense_sym_fun (unsigned size)
         for (iter.begin(i); iter.ok(); iter.next()) {
             unsigned j = iter.moving();
             unsigned k = iter.value();
-            POMAGMA_ASSERT(gcd(i, j) == k and k >= 1,
-                    "iterator gave wrong function value for " << i << ',' << j);
+            POMAGMA_ASSERT(k, "null item at " << i << ',' << j);
+            POMAGMA_ASSERT(gcd(i, j) == k, "bad value at " << i << ',' << j);
             ++line_size_i;
         }
-        POMAGMA_ASSERT(line_size[i] == line_size_i,
-                "line sizes disagree: "
-                << line_size[i] << " != " << line_size_i);
+        POMAGMA_ASSERT_EQUAL(line_size[i], line_size_i);
     }
 
     POMAGMA_INFO("Validating");

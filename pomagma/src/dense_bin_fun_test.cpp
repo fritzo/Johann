@@ -28,14 +28,14 @@ void test_dense_bin_fun (unsigned size)
         int k = example_fun(i, j);
         if (k > 1) {
             POMAGMA_ASSERT(fun.contains(i, j),
-                    "function does not contain good pair " << i << ',' << j);
+                    "missing pair " << i << ',' << j);
             POMAGMA_ASSERT(fun.get_value(i, j) == k,
-                    "function contains wrong value for " << i << ',' << j);
+                    "bad value at " << i << ',' << j);
             ++Lx_line_size[i];
             ++Rx_line_size[j];
         } else {
             POMAGMA_ASSERT(not fun.contains(i, j),
-                    "function contains bad pair " << i << ',' << j);
+                    "unexpected pair " << i << ',' << j);
         }
     } }
 
@@ -47,13 +47,12 @@ void test_dense_bin_fun (unsigned size)
             for (iter.begin(i); iter.ok(); iter.next()) {
                 unsigned j = iter.rhs();
                 unsigned k = iter.value();
-                POMAGMA_ASSERT(example_fun(i, j) == k and k >= 1,
-                        "iterator gave wrong value at " << i << ',' << j);
+                POMAGMA_ASSERT(k, "null item at " << i << ',' << j);
+                POMAGMA_ASSERT(example_fun(i, j) == k,
+                        "bad value at " << i << ',' << j);
                 ++line_size_i;
             }
-            POMAGMA_ASSERT(Lx_line_size[i] == line_size_i,
-                    "line sizes disagree: "
-                    << Lx_line_size[i] << " != " << line_size_i);
+            POMAGMA_ASSERT_EQUAL(Lx_line_size[i], line_size_i);
         }
     }
 
@@ -65,13 +64,12 @@ void test_dense_bin_fun (unsigned size)
             for (iter.begin(j); iter.ok(); iter.next()) {
                 unsigned i = iter.lhs();
                 unsigned k = iter.value();
-                POMAGMA_ASSERT(example_fun(i, j) == k and k >= 1,
-                        "iterator gave wrong value at " << i << ',' << j);
+                POMAGMA_ASSERT(k >= 1, "missing value at " << i << ',' << j);
+                POMAGMA_ASSERT(example_fun(i, j) == k,
+                        "bad value at " << i << ',' << j);
                 ++line_size_j;
             }
-            POMAGMA_ASSERT(Rx_line_size[j] == line_size_j,
-                    "line sizes disagree: "
-                    << Rx_line_size[j] << " != " << line_size_j);
+            POMAGMA_ASSERT_EQUAL(Rx_line_size[j], line_size_j);
         }
     }
 

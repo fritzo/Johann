@@ -13,29 +13,25 @@ void test_misc (size_t size)
 
     POMAGMA_INFO("creating dense_set of size " << size);
     dense_set set(size);
-    POMAGMA_ASSERT(set.count_items() == 0,
-            "set had nonzero size upon creation");
+    POMAGMA_ASSERT_EQUAL(set.count_items(), 0);
 
     POMAGMA_INFO("testing position insertion");
     for (size_t i = 1; i <= size; ++i) {
         set.insert(i);
     }
-    POMAGMA_ASSERT(set.count_items() == size,
-            "set is not full after inserting all items");
+    POMAGMA_ASSERT_EQUAL(set.count_items(), size);
 
     POMAGMA_INFO("testing position removal");
     for (size_t i = 1; i <= size; ++i) {
         set.remove(i);
     }
-    POMAGMA_ASSERT(set.count_items() == 0,
-            "set is not empty after removing all items");
+    POMAGMA_ASSERT_EQUAL(set.count_items(), 0);
 
     POMAGMA_INFO("testing iteration");
     for (size_t i = 1; i <= size / 2; ++i) {
         set.insert(i);
     }
-    POMAGMA_ASSERT(set.count_items() == size / 2,
-            "set is not half-full after inserting size/2 items");
+    POMAGMA_ASSERT_EQUAL(set.count_items(), size / 2);
     unsigned item_count = 0;
     for (dense_set::iterator iter(set); iter.ok(); iter.next()) {
         POMAGMA_ASSERT(set.contains(*iter), "iterated over uncontained item");
@@ -43,7 +39,7 @@ void test_misc (size_t size)
     }
     POMAGMA_INFO("found " << item_count << " / " << (size / 2) << " items");
     POMAGMA_ASSERT(item_count <= (size / 2), "iterated over too many items");
-    POMAGMA_ASSERT(item_count == (size / 2), "iterated over too few items");
+    POMAGMA_ASSERT_EQUAL(item_count, size / 2);
 }
 
 void test_even (size_t size)

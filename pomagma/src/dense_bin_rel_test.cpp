@@ -36,8 +36,7 @@ void test_dense_bin_rel (
         R.insert(i);
         ++item_count;
     }
-    POMAGMA_ASSERT(item_count == R.count_items_support(),
-            "incorrect support size");
+    POMAGMA_ASSERT_EQUAL(item_count, R.count_items_support());
 
 
     POMAGMA_INFO("testing pair insertion");
@@ -51,8 +50,7 @@ void test_dense_bin_rel (
     } }
     POMAGMA_INFO("  " << num_pairs << " pairs inserted");
     R.validate();
-    POMAGMA_ASSERT(num_pairs == R.count_items(),
-            "dense_bin_rel contained incorrect number of pairs");
+    POMAGMA_ASSERT_EQUAL(num_pairs, R.count_items());
 
 
     POMAGMA_INFO("testing pair removal");
@@ -65,8 +63,7 @@ void test_dense_bin_rel (
     } }
     POMAGMA_INFO("  " << num_pairs << " pairs remain");
     R.validate();
-    POMAGMA_ASSERT(num_pairs == R.count_items(),
-            "dense_bin_rel contained incorrect number of pairs");
+    POMAGMA_ASSERT_EQUAL(num_pairs, R.count_items());
 
 
     POMAGMA_INFO("testing table iterator");
@@ -77,8 +74,7 @@ void test_dense_bin_rel (
     POMAGMA_INFO("  iterated over "
         << num_pairs_seen << " / " << num_pairs << " pairs");
     R.validate();
-    POMAGMA_ASSERT(num_pairs_seen == num_pairs,
-            "dense_bin_rel iterated over incorrect number of pairs");
+    POMAGMA_ASSERT_EQUAL(num_pairs_seen, num_pairs);
 
 
     POMAGMA_INFO("testing pair containment");
@@ -100,8 +96,7 @@ void test_dense_bin_rel (
     } }
     POMAGMA_INFO("  " << num_pairs << " pairs found");
     R.validate();
-    POMAGMA_ASSERT(num_pairs == R.count_items(),
-            "dense_bin_rel contained incorrect number of pairs");
+    POMAGMA_ASSERT_EQUAL(num_pairs, R.count_items());
 
 
     POMAGMA_INFO("testing position merging");
@@ -115,7 +110,7 @@ void test_dense_bin_rel (
     }
     POMAGMA_INFO("  " << g_num_moved << " pairs moved in merging");
     R.validate();
-    POMAGMA_ASSERT(item_count == R.count_items_support(), "incorrect support size");
+    POMAGMA_ASSERT_EQUAL(item_count, R.count_items_support());
 
 
     POMAGMA_INFO("testing table iterator again");
@@ -127,8 +122,7 @@ void test_dense_bin_rel (
     POMAGMA_INFO("  iterated over "
         << num_pairs_seen << " / " << num_pairs << " pairs");
     R.validate();
-    POMAGMA_ASSERT(num_pairs_seen == num_pairs,
-            "dense_bin_rel iterated over incorrect number of pairs");
+    POMAGMA_ASSERT_EQUAL(num_pairs_seen, num_pairs);
 
 
     POMAGMA_INFO("testing line Iterator<LHS_FIXED>");
@@ -146,12 +140,9 @@ void test_dense_bin_rel (
     POMAGMA_INFO("  Iterated over " << seen_item_count << " items");
     POMAGMA_INFO("  Iterated over " << num_pairs << " pairs");
     R.validate();
-    POMAGMA_ASSERT(seen_item_count == item_count,
-            "Iterator had incorrect support");
+    POMAGMA_ASSERT_EQUAL(seen_item_count, item_count);
     unsigned true_size = R.count_items();
-    POMAGMA_ASSERT(num_pairs == true_size, //each pair is seen twice
-            "dense_bin_rel Iterated over incorrect number of pairs"
-            << ": " << num_pairs << " vs " << true_size);
+    POMAGMA_ASSERT_EQUAL(num_pairs, true_size);
 
 
     POMAGMA_INFO("testing line Iterator<RHS_FIXED>");
@@ -168,11 +159,8 @@ void test_dense_bin_rel (
     POMAGMA_INFO("  Iterated over " << seen_item_count << " items");
     POMAGMA_INFO("  Iterated over " << num_pairs << " pairs");
     R.validate();
-    POMAGMA_ASSERT(seen_item_count == item_count,
-            "Iterator had incorrect support");
-    POMAGMA_ASSERT(num_pairs == true_size, //each pair is seen twice
-            "dense_bin_rel Iterated over incorrect number of pairs"
-            << ": " << num_pairs << " vs " << true_size);
+    POMAGMA_ASSERT_EQUAL(seen_item_count, item_count);
+    POMAGMA_ASSERT_EQUAL(num_pairs, true_size);
 }
 
 int main ()
