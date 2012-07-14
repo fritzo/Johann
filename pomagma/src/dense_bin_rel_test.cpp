@@ -17,34 +17,33 @@ void move_to (int i __attribute__((unused)), int j __attribute__((unused)))
 bool br_test1 (int i, int j) { return i and j and i % 61 <= j % 31; }
 bool br_test2 (int i, int j) { return i and j and i % 61 == j % 31; }
 
-typedef pomagma::dense_bin_rel Rel;
-enum Direction { LHS_FIXED=true, RHS_FIXED=false };
+typedef pomagma::dense_bin_rel dense_bin_rel;
 
 void test_dense_bin_rel (
-        size_t N,
+        size_t size,
         bool test1(int, int),
         bool test2(int, int))
 {
     POMAGMA_INFO("Testing dense_bin_rel");
 
-    POMAGMA_INFO("creating dense_bin_rel of size " << N);
-    Rel R(N);
+    POMAGMA_INFO("creating dense_bin_rel of size " << size);
+    dense_bin_rel R(size);
 
-    //========================================================================
+
     POMAGMA_INFO("testing position insertion");
     unsigned item_count=0;
-    for (size_t i = 1; i <= N; ++i) {
+    for (size_t i = 1; i <= size; ++i) {
         R.insert(i);
         ++item_count;
     }
     POMAGMA_ASSERT(item_count == R.count_items_support(),
             "incorrect support size");
 
-    //========================================================================
+
     POMAGMA_INFO("testing pair insertion");
     unsigned num_pairs = 0;
-    for (size_t i = 1; i <= N; ++i) {
-    for (size_t j = 1; j <= N; ++j) {
+    for (size_t i = 1; i <= size; ++i) {
+    for (size_t j = 1; j <= size; ++j) {
         if (test1(i, j)) {
             R.insert(i, j);
             ++num_pairs;
@@ -55,10 +54,10 @@ void test_dense_bin_rel (
     POMAGMA_ASSERT(num_pairs == R.count_items(),
             "dense_bin_rel contained incorrect number of pairs");
 
-    //========================================================================
+
     POMAGMA_INFO("testing pair removal");
-    for (size_t i = 1; i <= N; ++i) {
-    for (size_t j = 1; j <= N; ++j) {
+    for (size_t i = 1; i <= size; ++i) {
+    for (size_t j = 1; j <= size; ++j) {
         if (test1(i, j) and test2(i, j)) {
             R.remove(i, j);
             --num_pairs;
@@ -69,10 +68,10 @@ void test_dense_bin_rel (
     POMAGMA_ASSERT(num_pairs == R.count_items(),
             "dense_bin_rel contained incorrect number of pairs");
 
-    //========================================================================
+
     POMAGMA_INFO("testing table iterator");
     unsigned num_pairs_seen = 0;
-    for (Rel::iterator iter(&R); iter.ok(); iter.next()) {
+    for (dense_bin_rel::iterator iter(&R); iter.ok(); iter.next()) {
         ++num_pairs_seen;
     }
     POMAGMA_INFO("  iterated over "
@@ -81,11 +80,11 @@ void test_dense_bin_rel (
     POMAGMA_ASSERT(num_pairs_seen == num_pairs,
             "dense_bin_rel iterated over incorrect number of pairs");
 
-    //========================================================================
+
     POMAGMA_INFO("testing pair containment");
     num_pairs = 0;
-    for (size_t i = 1; i <= N; ++i) {
-    for (size_t j = 1; j <= N; ++j) {
+    for (size_t i = 1; i <= size; ++i) {
+    for (size_t j = 1; j <= size; ++j) {
         if (test1(i, j) and not test2(i, j)) {
             POMAGMA_ASSERT(R.contains_Lx(i, j),
                     "Lx relation doesn't contain what it should");
@@ -104,10 +103,10 @@ void test_dense_bin_rel (
     POMAGMA_ASSERT(num_pairs == R.count_items(),
             "dense_bin_rel contained incorrect number of pairs");
 
-    //========================================================================
+
     POMAGMA_INFO("testing position merging");
-    for (size_t i = 1; i <= N/3; ++i) {
-        size_t m=(2*i)%N, n=(2*(N-i-1)+1)%N;
+    for (size_t i = 1; i <= size/3; ++i) {
+        size_t m=(2*i)%size, n=(2*(size-i-1)+1)%size;
         if (not (R.supports(m,n) and R.contains(m,n))) continue;
         if (m == n) continue;
         if (m < n) std::swap(m,n);
@@ -118,10 +117,10 @@ void test_dense_bin_rel (
     R.validate();
     POMAGMA_ASSERT(item_count == R.count_items_support(), "incorrect support size");
 
-    //========================================================================
+
     POMAGMA_INFO("testing table iterator again");
     num_pairs_seen = 0;
-    for (Rel::iterator iter(&R); iter.ok(); iter.next()) {
+    for (dense_bin_rel::iterator iter(&R); iter.ok(); iter.next()) {
         ++num_pairs_seen;
     }
     num_pairs = R.count_items();
@@ -131,15 +130,15 @@ void test_dense_bin_rel (
     POMAGMA_ASSERT(num_pairs_seen == num_pairs,
             "dense_bin_rel iterated over incorrect number of pairs");
 
-    //========================================================================
+
     POMAGMA_INFO("testing line Iterator<LHS_FIXED>");
     num_pairs = 0;
     unsigned seen_item_count = 0;
     item_count = R.count_items_support();
-    for (size_t i = 1; i <= N; ++i) {
+    for (size_t i = 1; i <= size; ++i) {
         if (not R.supports(i)) continue;
         ++seen_item_count;
-        Rel::Iterator<LHS_FIXED> iter(i, &R);
+        dense_bin_rel::Iterator<dense_bin_rel::LHS_FIXED> iter(i, &R);
         for (iter.begin(); iter.ok(); iter.next()) {
             ++num_pairs;
         }
@@ -154,14 +153,14 @@ void test_dense_bin_rel (
             "dense_bin_rel Iterated over incorrect number of pairs"
             << ": " << num_pairs << " vs " << true_size);
 
-    //========================================================================
+
     POMAGMA_INFO("testing line Iterator<RHS_FIXED>");
     num_pairs = 0;
     seen_item_count = 0;
-    for (size_t i = 1; i <= N; ++i) {
+    for (size_t i = 1; i <= size; ++i) {
         if (not R.supports(i)) continue;
         ++seen_item_count;
-        Rel::Iterator<RHS_FIXED> iter(i, &R);
+        dense_bin_rel::Iterator<dense_bin_rel::RHS_FIXED> iter(i, &R);
         for (iter.begin(); iter.ok(); iter.next()) {
             ++num_pairs;
         }
@@ -180,7 +179,9 @@ int main ()
 {
     Log::title("Running Binary Relation Test");
 
-    test_dense_bin_rel(3 + (1 << 9), br_test1, br_test2);
+    for (size_t i = 0; i < 4; ++i) {
+        test_dense_bin_rel(i + (1 << 9), br_test1, br_test2);
+    }
 
     return 0;
 }

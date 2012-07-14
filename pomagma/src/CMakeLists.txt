@@ -19,10 +19,9 @@ add_executable(dense_bin_rel_test dense_bin_rel_test.cpp)
 target_link_libraries(dense_bin_rel_test pomagma)
 add_test(NAME dense_bin_rel COMMAND dense_bin_rel_test)
 
-# TODO
-#add_executable(dense_bin_fun_test dense_bin_fun_test.cpp)
-#target_link_libraries(dense_bin_fun_test pomagma)
-#add_test(NAME dense_bin_fun COMMAND dense_bin_fun_test)
+add_executable(dense_bin_fun_test dense_bin_fun_test.cpp)
+target_link_libraries(dense_bin_fun_test pomagma)
+add_test(NAME dense_bin_fun COMMAND dense_bin_fun_test)
 
 add_executable(dense_sym_fun_test dense_sym_fun_test.cpp)
 target_link_libraries(dense_sym_fun_test pomagma)

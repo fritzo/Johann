@@ -19,8 +19,8 @@ void test_dense_sym_fun (unsigned size)
     } }
 
     POMAGMA_INFO("Checking function values");
-    std::vector<unsigned> line_size(size + 1);
-    for (unsigned i = 1; i <= size; ++i) { line_size[i] = 0;
+    std::vector<unsigned> line_size(size + 1, 0);
+    for (unsigned i = 1; i <= size; ++i) {
     for (unsigned j = 1; j <= size; ++j) {
         int k = gcd(i,j);
         if (k > 1) {
@@ -59,7 +59,9 @@ int main ()
 {
     Log::title("Dense Symmetric Function Test");
 
-    test_dense_sym_fun(3 + (1 << 9));
+    for (size_t i = 0; i < 4; ++i) {
+        test_dense_sym_fun(i + (1 << 9));
+    }
 
     for (size_t exponent = 0; exponent < 10; ++exponent) {
         test_dense_sym_fun(1 << exponent);
