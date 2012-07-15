@@ -27,5 +27,9 @@ add_executable(dense_sym_fun_test dense_sym_fun_test.cpp)
 target_link_libraries(dense_sym_fun_test pomagma)
 add_test(NAME dense_sym_fun COMMAND dense_sym_fun_test)
 
+add_executable(inverse_bin_fun_test inverse_bin_fun_test.cpp)
+target_link_libraries(inverse_bin_fun_test pomagma)
+add_test(NAME inverse_bin_fun COMMAND inverse_bin_fun_test)
+
 #install(TARGETS pomagma LIBRARY DESTINATION ${LIBRARY_OUTPUT_PATH})
 

@@ -1,5 +1,5 @@
-#ifndef POMAGMA_SPLAY_H
-#define POMAGMA_SPLAY_H
+#ifndef POMAGMA_SPLAY_FOREST_HPP
+#define POMAGMA_SPLAY_FOREST_HPP
 
 #include "util.hpp"
 
@@ -442,6 +442,6 @@ template<class X> void splay_forest<X>::validate_forest ()
     }
 }
 
-}
+} // namespace pomagma
 
-#endif
+#endif // POMAGMA_SPLAY_FOREST_HPP

@@ -49,8 +49,6 @@ typedef uint32_t Word; // TODO switch to uint64_t
 const size_t BITS_PER_WORD = 8 * sizeof(Word);
 const size_t WORD_POS_MASK = BITS_PER_WORD - 1;
 
-struct ooo_t { oid_t lhs, rhs, val; };
-
 //----------------------------------------------------------------------------
 // Convenience
 

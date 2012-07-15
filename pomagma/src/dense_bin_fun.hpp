@@ -88,17 +88,25 @@ public:
     void validate () const;
 
     // element operations
+    // TODO add a replace method for merging
+    // TODO add a return value for atomic operations
     void insert (oid_t lhs, oid_t rhs, oid_t val)
     {
-        value(lhs, rhs) = val;
+        oid_t & old_val = value(lhs, rhs);
+        POMAGMA_ASSERT2(old_val, "double insertion: " << lhs << "," << rhs);
+        old_val = val;
         _get_Lx_set(lhs).insert(rhs);
         _get_Rx_set(rhs).insert(lhs);
+        //return was_inserted; // TODO
     }
     void remove (oid_t lhs, oid_t rhs)
     {
-        value(lhs, rhs) = 0;
+        oid_t & old_val = value(lhs, rhs);
+        POMAGMA_ASSERT2(old_val, "double removal: " << lhs << "," << rhs);
+        old_val = 0;
         _get_Lx_set(lhs).remove(rhs);
         _get_Rx_set(rhs).remove(lhs);
+        //return was_removed; // TODO
     }
     bool contains (oid_t lhs, oid_t rhs) const
     {
