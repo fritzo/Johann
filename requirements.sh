@@ -6,7 +6,7 @@ i='sudo apt-get install -y'
 
 # install developer tools
 
-$i make
+$i make cmake
 $i g++
 $i makedepend || $i xutils-dev
 $i flex bison
@@ -16,5 +16,6 @@ $i libatlas-dev
 $i freeglut3-dev
 $i libpng-dev
 $i libbz2-dev
+$i libtbb-dev
 $i python-numpy python-scipy python-matplotlib python-dev
 

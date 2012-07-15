@@ -47,8 +47,14 @@ public:
     Word * get_Lx_line (oid_t i) const { return m_Lx_lines + (i * m_word_dim); }
     Word * get_Rx_line (oid_t i) const { return m_Rx_lines + (i * m_word_dim); }
 private:
-    dense_set & _get_Lx_set (oid_t i) { return m_temp_set.init(get_Lx_line(i)); }
-    dense_set & _get_Rx_set (oid_t i) { return m_temp_set.init(get_Rx_line(i)); }
+    dense_set & _get_Lx_set (oid_t i)
+    {
+        return m_temp_set.init(get_Lx_line(i));
+    }
+    dense_set & _get_Rx_set (oid_t i)
+    {
+        return m_temp_set.init(get_Rx_line(i));
+    }
     const dense_set & _get_Lx_set (oid_t i) const
     {
         return m_temp_set.init(get_Lx_line(i));
@@ -74,7 +80,7 @@ private:
     inline oid_t & value (oid_t lhs, oid_t rhs);
 public:
     inline oid_t value (oid_t lhs, oid_t rhs) const;
-    oid_t  get_value (oid_t lhs, oid_t rhs) const { return value(lhs, rhs); }
+    oid_t get_value (oid_t lhs, oid_t rhs) const { return value(lhs, rhs); }
 
     // attributes
     size_t count_pairs () const; // slow!
@@ -109,11 +115,14 @@ public:
             void merge_values(oid_t, oid_t), // dep,rep
             void move_value(oid_t, oid_t, oid_t)); // moved,lhs,rhs
 
+    // TODO add full table iterator
+
     //------------------------------------------------------------------------
     // Iteration over a line
 
     enum { LHS_FIXED = false, RHS_FIXED = true };
-    template<bool idx> class Iterator : noncopyable
+    template<bool idx>
+    class Iterator : noncopyable
     {
         dense_set m_set;
         dense_set::iterator m_iter;
