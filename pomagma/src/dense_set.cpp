@@ -281,8 +281,6 @@ void dense_set::iterator::_next_block ()
         POMAGMA_ASSERT4(m_rem != BITS_PER_WORD, "found no bits");
     }
     m_i = m_rem + BITS_PER_WORD * m_quot;
-    POMAGMA_ASSERT5(0 < m_i and m_i <= m_set.m_item_dim,
-            "out of range " << m_i);
     POMAGMA_ASSERT5(m_set.contains(m_i), "landed on empty pos " << m_i);
 }
 
@@ -298,8 +296,6 @@ void dense_set::iterator::next ()
         else { _next_block(); return; }
     } while (!(m_mask & word));
     m_i = m_rem + BITS_PER_WORD * m_quot;
-    POMAGMA_ASSERT5(0 < m_i and m_i <= m_set.m_item_dim,
-            "out of range " << m_i);
     POMAGMA_ASSERT5(m_set.contains(m_i), "landed on empty pos " << m_i);
 }
 

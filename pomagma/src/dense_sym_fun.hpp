@@ -36,14 +36,6 @@ class dense_sym_fun
     {
         return m_blocks[unordered_pair_count(j_) + i_];
     }
-    static oid_t & _block2value (oid_t * block, oid_t i, oid_t j)
-    {
-        return block[(j << 2) | i];
-    }
-    static oid_t _block2value (const oid_t * block, oid_t i, oid_t j)
-    {
-        return block[(j << 2) | i];
-    }
 
     // set wrappers
 public:
@@ -104,114 +96,10 @@ public:
             void merge_values(oid_t, oid_t),     // dep, rep
             void move_value(oid_t, oid_t, oid_t)); // moved, lhs, rhs
 
-    //------------------------------------------------------------------------
-    // Iteration over a line
-
-    class Iterator : noncopyable
-    {
-        dense_set m_set;
-        dense_set::iterator m_iter;
-        const dense_sym_fun * m_fun;
-        oid_t m_fixed;
-        oid_t m_moving;
-
-    public:
-
-        // construction
-        Iterator (const dense_sym_fun * fun)
-            : m_set(fun->m_item_dim, NULL),
-              m_iter(m_set, false),
-              m_fun(fun),
-              m_fixed(0),
-              m_moving(0)
-        {}
-        Iterator (const dense_sym_fun * fun, oid_t fixed)
-            : m_set(fun->m_item_dim, fun->get_Lx_line(fixed)),
-              m_iter(m_set, false),
-              m_fun(fun),
-              m_fixed(fixed),
-              m_moving(0)
-        {
-            begin();
-        }
-
-        // traversal
-    private:
-        void _set_pos () { m_moving = *m_iter; }
-    public:
-        bool ok () const { return m_iter.ok(); }
-        void begin () { m_iter.begin(); if (ok()) _set_pos(); }
-        void begin (oid_t fixed)
-        {
-            m_fixed=fixed;
-            m_set.init(m_fun->get_Lx_line(fixed));
-            begin();
-        }
-        void next () { m_iter.next(); if (ok()) _set_pos(); }
-
-        // dereferencing
-    private:
-        void _deref_assert () const
-        {
-            POMAGMA_ASSERT5(ok(), "dereferenced done dense_set::iter");
-        }
-    public:
-        oid_t fixed () const { _deref_assert(); return m_fixed; }
-        oid_t moving () const { _deref_assert(); return m_moving; }
-        oid_t value () const
-        {
-            _deref_assert();
-            return m_fun->get_value(m_fixed,m_moving);
-        }
-    };
-
-    //------------------------------------------------------------------------
-    // Intersection iteration over 2 lines
-
-    class LLxx_Iter : noncopyable
-    {
-        dense_set m_set;
-        dense_set::iterator m_iter;
-        const dense_sym_fun * m_fun;
-        oid_t m_fixed1;
-        oid_t m_fixed2;
-        oid_t m_moving;
-
-    public:
-
-        // construction
-        LLxx_Iter (const dense_sym_fun* fun)
-            : m_set(fun->m_item_dim, NULL),
-              m_iter(m_set, false),
-              m_fun(fun)
-        {}
-
-        // traversal
-        void begin () { m_iter.begin(); if (ok()) m_moving = *m_iter; }
-        void begin (oid_t fixed1, oid_t fixed2)
-        {
-            m_set.init(m_fun->_get_LLx_line(fixed1, fixed2));
-            m_iter.begin();
-            if (ok()) {
-                m_fixed1 = fixed1;
-                m_fixed2 = fixed2;
-                m_moving = *m_iter;
-            }
-        }
-        bool ok () const { return m_iter.ok(); }
-        void next () { m_iter.next(); if (ok()) m_moving = *m_iter; }
-
-        // dereferencing
-        oid_t fixed1 () const { return m_fixed1; }
-        oid_t fixed2 () const { return m_fixed2; }
-        oid_t moving () const { return m_moving; }
-        oid_t value1 () const { return m_fun->get_value(m_fixed1, m_moving); }
-        oid_t value2 () const { return m_fun->get_value(m_fixed2, m_moving); }
-    };
+    // iteration
+    class Iterator;
+    class LLxx_Iter;
 };
-
-//----------------------------------------------------------------------------
-// Function calling
 
 inline oid_t & dense_sym_fun::value (oid_t i, oid_t j)
 {
@@ -221,8 +109,8 @@ inline oid_t & dense_sym_fun::value (oid_t i, oid_t j)
     POMAGMA_ASSERT5(i < j and j <= m_item_dim,
             "j=" << j << " out of bounds [" << i << "," << m_item_dim << "]");
 
-    oid_t * block = _block(i >> 2, j >> 2);
-    return _block2value(block, i & 3, j & 3);
+    oid_t * block = _block(i / ITEMS_PER_BLOCK, j / ITEMS_PER_BLOCK);
+    return _block2value(block, i & BLOCK_POS_MASK, j & BLOCK_POS_MASK);
 }
 
 inline oid_t dense_sym_fun::value (oid_t i, oid_t j) const
@@ -233,9 +121,114 @@ inline oid_t dense_sym_fun::value (oid_t i, oid_t j) const
     POMAGMA_ASSERT5(i < j and j <= m_item_dim,
             "j=" << j << " out of bounds [" << i << "," << m_item_dim << "]");
 
-    const oid_t * block = _block(i >> 2, j >> 2);
-    return _block2value(block, i & 3, j & 3);
+    const oid_t * block = _block(i / ITEMS_PER_BLOCK, j / ITEMS_PER_BLOCK);
+    return _block2value(block, i & BLOCK_POS_MASK, j & BLOCK_POS_MASK);
 }
+
+//----------------------------------------------------------------------------
+// Iteration over a line
+
+class dense_sym_fun::Iterator : noncopyable
+{
+    dense_set m_set;
+    dense_set::iterator m_iter;
+    const dense_sym_fun * m_fun;
+    oid_t m_fixed;
+    oid_t m_moving;
+
+public:
+
+    // construction
+    Iterator (const dense_sym_fun * fun)
+        : m_set(fun->m_item_dim, NULL),
+          m_iter(m_set, false),
+          m_fun(fun),
+          m_fixed(0),
+          m_moving(0)
+    {}
+    Iterator (const dense_sym_fun * fun, oid_t fixed)
+        : m_set(fun->m_item_dim, fun->get_Lx_line(fixed)),
+          m_iter(m_set, false),
+          m_fun(fun),
+          m_fixed(fixed),
+          m_moving(0)
+    {
+        begin();
+    }
+
+    // traversal
+private:
+    void _set_pos () { m_moving = *m_iter; }
+public:
+    bool ok () const { return m_iter.ok(); }
+    void begin () { m_iter.begin(); if (ok()) _set_pos(); }
+    void begin (oid_t fixed)
+    {
+        m_fixed=fixed;
+        m_set.init(m_fun->get_Lx_line(fixed));
+        begin();
+    }
+    void next () { m_iter.next(); if (ok()) _set_pos(); }
+
+    // dereferencing
+private:
+    void _deref_assert () const
+    {
+        POMAGMA_ASSERT5(ok(), "dereferenced done dense_set::iter");
+    }
+public:
+    oid_t fixed () const { _deref_assert(); return m_fixed; }
+    oid_t moving () const { _deref_assert(); return m_moving; }
+    oid_t value () const
+    {
+        _deref_assert();
+        return m_fun->get_value(m_fixed,m_moving);
+    }
+};
+
+//------------------------------------------------------------------------
+// Intersection iteration over 2 lines
+
+class dense_sym_fun::LLxx_Iter : noncopyable
+{
+    dense_set m_set;
+    dense_set::iterator m_iter;
+    const dense_sym_fun * m_fun;
+    oid_t m_fixed1;
+    oid_t m_fixed2;
+    oid_t m_moving;
+
+public:
+
+    // construction
+    LLxx_Iter (const dense_sym_fun* fun)
+        : m_set(fun->m_item_dim, NULL),
+          m_iter(m_set, false),
+          m_fun(fun)
+    {}
+
+    // traversal
+    void begin () { m_iter.begin(); if (ok()) m_moving = *m_iter; }
+    void begin (oid_t fixed1, oid_t fixed2)
+    {
+        m_set.init(m_fun->_get_LLx_line(fixed1, fixed2));
+        m_iter.begin();
+        if (ok()) {
+            m_fixed1 = fixed1;
+            m_fixed2 = fixed2;
+            m_moving = *m_iter;
+        }
+    }
+    bool ok () const { return m_iter.ok(); }
+    void next () { m_iter.next(); if (ok()) m_moving = *m_iter; }
+
+    // dereferencing
+    oid_t fixed1 () const { return m_fixed1; }
+    oid_t fixed2 () const { return m_fixed2; }
+    oid_t moving () const { return m_moving; }
+    oid_t value1 () const { return m_fun->get_value(m_fixed1, m_moving); }
+    oid_t value2 () const { return m_fun->get_value(m_fixed2, m_moving); }
+};
 
 } // namespace pomagma
 

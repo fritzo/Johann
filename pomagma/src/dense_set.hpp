@@ -10,36 +10,6 @@ namespace pomagma
 // WARNING zero/null items are not allowed
 
 //----------------------------------------------------------------------------
-// Bool reference
-
-class bool_ref
-{
-    Word & m_word;
-    const Word m_mask;
-
-public:
-
-    bool_ref (Word & word, size_t _i)
-        : m_word(word),
-          m_mask(1 << _i)
-    {
-        POMAGMA_ASSERT6(_i < BITS_PER_WORD, "out of range: " << _i);
-    }
-    static bool_ref index (Word * line, size_t i)
-    {
-        auto I = div(i, BITS_PER_WORD); // either div_t or ldiv_t
-        return bool_ref(line[I.quot], I.rem);
-    }
-
-    operator bool () const { return m_word & m_mask; } // ATOMIC
-    void operator |= (bool b) { m_word |= b * m_mask; } // ATOMIC
-    void operator &= (bool b) { m_word &= ~(!b * m_mask); } // ATOMIC
-    void zero () { m_word &= ~m_mask; } // ATOMIC
-    void one () { m_word |= m_mask; } // ATOMIC
-    void invert () { m_word ^= m_mask; } // ATOMIC
-};
-
-//----------------------------------------------------------------------------
 // Dense set - basically a bitfield
 
 class dense_set
@@ -120,45 +90,8 @@ public:
     bool ensure      (const dense_set & dep, dense_set & diff);
     // returns true if anything in rep changes
 
-    // TODO move iterator out of class
-    //------------------------------------------------------------------------
-    // Iteration
-    class iterator : noncopyable
-    {
-        size_t m_i;
-        size_t m_rem;
-        size_t m_quot;
-        Word m_mask;
-        const dense_set & m_set;
-
-    public:
-
-        // construction
-        iterator (const dense_set & set, bool b = true)
-            : m_set(set)
-        {
-            if (b) { begin(); }
-        }
-
-        // traversal
-    private:
-        void _next_block ();
-    public:
-        inline void begin ();
-        void next ();
-        bool ok () const { return m_i; }
-
-        // dereferencing
-        size_t         operator *  () const { POMAGMA_ASSERT_OK return m_i; }
-        const size_t * operator -> () const { POMAGMA_ASSERT_OK return & m_i; }
-
-        // access
-        // TODO remove these
-        size_t rem () const { return m_rem; }
-        size_t quot () const { return m_quot; }
-        size_t mask () const { return m_mask; }
-        const dense_set & set () const { return m_set; };
-    };
+    // iteration
+    class iterator;
 };
 
 inline bool_ref dense_set::_bit (size_t i)
@@ -192,6 +125,39 @@ inline void dense_set::merge (size_t i, size_t j __attribute__((unused)))
     POMAGMA_ASSERT4(contains(j), "merge dep not contained: " << j);
     _bit(i).zero();
 }
+
+//----------------------------------------------------------------------------
+// Iteration
+
+class dense_set::iterator : noncopyable
+{
+    size_t m_i;
+    size_t m_rem;
+    size_t m_quot;
+    Word m_mask;
+    const dense_set & m_set;
+
+public:
+
+    // construction
+    iterator (const dense_set & set, bool b = true)
+        : m_set(set)
+    {
+        if (b) { begin(); }
+    }
+
+    // traversal
+private:
+    void _next_block ();
+public:
+    inline void begin ();
+    void next ();
+    bool ok () const { return m_i; }
+
+    // dereferencing
+    size_t operator * () const { POMAGMA_ASSERT_OK return m_i; }
+    const size_t * operator -> () const { POMAGMA_ASSERT_OK return &m_i; }
+};
 
 inline void dense_set::iterator::begin ()
 {

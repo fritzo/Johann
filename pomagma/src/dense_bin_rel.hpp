@@ -128,141 +128,10 @@ public:
     void write_to_file (FILE* file);
     void read_from_file (FILE* file);
 
-    //------------------------------------------------------------------------
-    // Iteration, always LR
-
-    class iterator : noncopyable
-    {
-        dense_set::iterator m_lhs;
-        dense_set::iterator m_rhs;
-        dense_set m_rhs_set;
-        const dense_bin_rel & m_rel;
-        Pos m_pos;
-
-    public:
-
-        // construction
-        iterator (const dense_bin_rel * rel)
-            : m_lhs(rel->m_support, false),
-              m_rhs(m_rhs_set, false),
-              m_rhs_set(rel->m_item_dim, NULL),
-              m_rel(*rel)
-        {
-            begin();
-        }
-
-        // traversal
-    private:
-        void _update_lhs () { m_pos.lhs = *m_lhs; }
-        void _update_rhs () { m_pos.rhs = *m_rhs; }
-        void _finish () { m_pos.lhs = m_pos.rhs = 0; }
-        void _find_rhs (); // finds first rhs, possibly incrementing lhs
-    public:
-        void begin () { m_lhs.begin(); _find_rhs(); }
-        void next ()
-        {
-            m_rhs.next();
-            if (m_rhs.ok()) {
-                _update_rhs();
-            } else {
-                m_lhs.next();
-                _find_rhs();
-            }
-        }
-        bool ok () const { return m_lhs.ok(); }
-
-        // dereferencing
-    private:
-        void _deref_assert () const
-        {
-            POMAGMA_ASSERT5(ok(), "dereferenced done br::iterator");
-        }
-    public:
-        const Pos & operator *  () const { _deref_assert(); return m_pos; }
-        const Pos * operator -> () const { _deref_assert(); return &m_pos; }
-
-        // access
-        oid_t lhs () const { return m_pos.lhs; }
-        oid_t rhs () const { return m_pos.rhs; }
-    };
-
-    //------------------------------------------------------------------------
-    // Iteration over a line, LR or RL
-
+    // iteration
+    class iterator;
     enum Direction { LHS_FIXED=true, RHS_FIXED=false };
-    template<bool dir> // REQUIRES Direction dir and Complement comp
-    class Iterator : noncopyable
-    {
-    protected:
-        dense_set m_temp_set;
-        dense_set::iterator m_moving;
-        oid_t m_fixed;
-        Pos m_pos;
-        const dense_bin_rel & m_rel;
-
-    public:
-
-        // construction
-        Iterator (oid_t fixed, const dense_bin_rel * rel)
-            : m_temp_set(rel->m_item_dim, dir ? rel->get_Lx_line(fixed)
-                                : rel->get_Rx_line(fixed)),
-              m_moving(m_temp_set, false),
-              m_fixed(fixed),
-              m_rel(*rel)
-        {
-            POMAGMA_ASSERT2(m_rel.supports(fixed),
-                    "br::Iterator's fixed pos is unsupported");
-            begin();
-        }
-        Iterator (const dense_bin_rel * rel)
-            : m_temp_set(rel->m_item_dim, NULL),
-              m_moving(m_temp_set, false),
-              m_fixed(0),
-              m_rel(*rel)
-        {}
-
-        // traversal
-    private:
-        void _fix  () { (dir ? m_pos.lhs : m_pos.rhs) = m_fixed; }
-        void _move () { (dir ? m_pos.rhs : m_pos.lhs) = *m_moving; }
-    public:
-        void begin ()
-        {
-            POMAGMA_ASSERT(m_fixed, "tried to begin() a null br::Iterator");
-            m_moving.begin();
-            if (m_moving.ok()) { _fix(); _move(); }
-        }
-        void begin (oid_t fixed)
-        {   POMAGMA_ASSERT2(m_rel.supports(fixed),
-                    "br::Iterator's fixed pos is unsupported");
-            m_fixed = fixed;
-            m_temp_set.init(dir ? m_rel.get_Lx_line(fixed)
-                                : m_rel.get_Rx_line(fixed));
-            begin();
-        }
-        void next ()
-        {
-            m_moving.next();
-            if (m_moving.ok()) { _move(); }
-        }
-        bool ok () const { return m_moving.ok(); }
-
-        // dereferencing
-    private:
-        void _deref_assert () const
-        {
-            POMAGMA_ASSERT5(ok(), "dereferenced done dense_bin_rel'n::iter");
-        }
-    public:
-        const Pos & operator *  () const { _deref_assert(); return m_pos; }
-        const Pos * operator -> () const { _deref_assert(); return &m_pos; }
-
-        // access
-        oid_t fixed () const { return m_fixed; }
-        oid_t moving () const { return * m_moving; }
-        oid_t lhs () const { return m_pos.lhs; }
-        oid_t rhs () const { return m_pos.rhs; }
-    };
+    template<bool dir> class Iterator;
 };
 
 // bit wrappers
@@ -313,6 +182,142 @@ inline bool dense_bin_rel::ensure_inserted_Rx (oid_t i, oid_t j)
     insert_Lx(i,j);
     return true;
 }
+
+//----------------------------------------------------------------------------
+// Iteration, always LR
+
+class dense_bin_rel::iterator : noncopyable
+{
+    dense_set::iterator m_lhs;
+    dense_set::iterator m_rhs;
+    dense_set m_rhs_set;
+    const dense_bin_rel & m_rel;
+    Pos m_pos;
+
+public:
+
+    // construction
+    iterator (const dense_bin_rel * rel)
+        : m_lhs(rel->m_support, false),
+          m_rhs(m_rhs_set, false),
+          m_rhs_set(rel->m_item_dim, NULL),
+          m_rel(*rel)
+    {
+        begin();
+    }
+
+    // traversal
+private:
+    void _update_lhs () { m_pos.lhs = *m_lhs; }
+    void _update_rhs () { m_pos.rhs = *m_rhs; }
+    void _finish () { m_pos.lhs = m_pos.rhs = 0; }
+    void _find_rhs (); // finds first rhs, possibly incrementing lhs
+public:
+    void begin () { m_lhs.begin(); _find_rhs(); }
+    void next ()
+    {
+        m_rhs.next();
+        if (m_rhs.ok()) {
+            _update_rhs();
+        } else {
+            m_lhs.next();
+            _find_rhs();
+        }
+    }
+    bool ok () const { return m_lhs.ok(); }
+
+    // dereferencing
+private:
+    void _deref_assert () const
+    {
+        POMAGMA_ASSERT5(ok(), "dereferenced done br::iterator");
+    }
+public:
+    const Pos & operator *  () const { _deref_assert(); return m_pos; }
+    const Pos * operator -> () const { _deref_assert(); return &m_pos; }
+
+    // access
+    oid_t lhs () const { return m_pos.lhs; }
+    oid_t rhs () const { return m_pos.rhs; }
+};
+
+//----------------------------------------------------------------------------
+// Iteration over a line, LR or RL
+
+enum Direction { LHS_FIXED=true, RHS_FIXED=false };
+template<bool dir>
+class dense_bin_rel::Iterator : noncopyable
+{
+protected:
+    dense_set m_temp_set;
+    dense_set::iterator m_moving;
+    oid_t m_fixed;
+    Pos m_pos;
+    const dense_bin_rel & m_rel;
+
+public:
+
+    // construction
+    Iterator (oid_t fixed, const dense_bin_rel * rel)
+        : m_temp_set(rel->m_item_dim, dir ? rel->get_Lx_line(fixed)
+                            : rel->get_Rx_line(fixed)),
+          m_moving(m_temp_set, false),
+          m_fixed(fixed),
+          m_rel(*rel)
+    {
+        POMAGMA_ASSERT2(m_rel.supports(fixed),
+                "br::Iterator's fixed pos is unsupported");
+        begin();
+    }
+    Iterator (const dense_bin_rel * rel)
+        : m_temp_set(rel->m_item_dim, NULL),
+          m_moving(m_temp_set, false),
+          m_fixed(0),
+          m_rel(*rel)
+    {}
+
+    // traversal
+private:
+    void _fix  () { (dir ? m_pos.lhs : m_pos.rhs) = m_fixed; }
+    void _move () { (dir ? m_pos.rhs : m_pos.lhs) = *m_moving; }
+public:
+    void begin ()
+    {
+        POMAGMA_ASSERT(m_fixed, "tried to begin() a null br::Iterator");
+        m_moving.begin();
+        if (m_moving.ok()) { _fix(); _move(); }
+    }
+    void begin (oid_t fixed)
+    {   POMAGMA_ASSERT2(m_rel.supports(fixed),
+                "br::Iterator's fixed pos is unsupported");
+        m_fixed = fixed;
+        m_temp_set.init(dir ? m_rel.get_Lx_line(fixed)
+                            : m_rel.get_Rx_line(fixed));
+        begin();
+    }
+    void next ()
+    {
+        m_moving.next();
+        if (m_moving.ok()) { _move(); }
+    }
+    bool ok () const { return m_moving.ok(); }
+
+    // dereferencing
+private:
+    void _deref_assert () const
+    {
+        POMAGMA_ASSERT5(ok(), "dereferenced done dense_bin_rel'n::iter");
+    }
+public:
+    const Pos & operator *  () const { _deref_assert(); return m_pos; }
+    const Pos * operator -> () const { _deref_assert(); return &m_pos; }
+
+    // access
+    oid_t fixed () const { return m_fixed; }
+    oid_t moving () const { return * m_moving; }
+    oid_t lhs () const { return m_pos.lhs; }
+    oid_t rhs () const { return m_pos.rhs; }
+};
 
 } // namespace pomagma
 

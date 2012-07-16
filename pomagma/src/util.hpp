@@ -1,5 +1,5 @@
-#ifndef POMAGMA_DEFINITIONS_H
-#define POMAGMA_DEFINITIONS_H
+#ifndef POMAGMA_UTIL_HPP
+#define POMAGMA_UTIL_HPP
 
 #include <stdint.h>
 #include <cstdlib> // for exit() & abort();
@@ -8,6 +8,9 @@
 #include <sstream>
 #include <fstream>
 #include <iomanip>
+
+namespace pomagma
+{
 
 //----------------------------------------------------------------------------
 // Compiler-specific
@@ -31,23 +34,6 @@
 #ifndef POMAGMA_DEBUG_LEVEL
 #define POMAGMA_DEBUG_LEVEL 0
 #endif // POMAGMA_DEBUG_LEVEL
-
-namespace pomagma
-{
-
-//----------------------------------------------------------------------------
-// Data types
-
-typedef uint32_t oid_t; // object id TODO switch to uint16_t
-const size_t MAX_ITEM_DIM = 0xffffUL;
-
-const size_t ITEMS_PER_BLOCK = 4;
-const size_t BLOCK_POS_MASK = ITEMS_PER_BLOCK - 1;
-typedef oid_t Block4x4[ITEMS_PER_BLOCK * ITEMS_PER_BLOCK];
-
-typedef uint32_t Word; // TODO switch to uint64_t
-const size_t BITS_PER_WORD = 8 * sizeof(Word);
-const size_t WORD_POS_MASK = BITS_PER_WORD - 1;
 
 //----------------------------------------------------------------------------
 // Convenience
@@ -164,6 +150,68 @@ public:
 #define POMAGMA_ASSERT_OK \
     POMAGMA_ASSERT5(ok(), "tried to use done iterator")
 
+//----------------------------------------------------------------------------
+// Data types
+
+typedef uint32_t oid_t; // object id TODO switch to uint16_t
+const size_t MAX_ITEM_DIM = 0xffffUL;
+
+//----------------------------------------------------------------------------
+// Words of bits
+
+typedef uint32_t Word; // TODO switch to uint64_t
+const size_t BITS_PER_WORD = 8 * sizeof(Word);
+const size_t WORD_POS_MASK = BITS_PER_WORD - 1;
+
+class bool_ref
+{
+    Word & m_word;
+    const Word m_mask;
+
+public:
+
+    bool_ref (Word & word, size_t _i)
+        : m_word(word),
+          m_mask(1 << _i)
+    {
+        POMAGMA_ASSERT6(_i < BITS_PER_WORD, "out of range: " << _i);
+    }
+    static bool_ref index (Word * line, size_t i)
+    {
+        auto I = div(i, BITS_PER_WORD); // either div_t or ldiv_t
+        return bool_ref(line[I.quot], I.rem);
+    }
+
+    operator bool () const { return m_word & m_mask; } // ATOMIC
+    void operator |= (bool b) { m_word |= b * m_mask; } // ATOMIC
+    void operator &= (bool b) { m_word &= ~(!b * m_mask); } // ATOMIC
+    void zero () { m_word &= ~m_mask; } // ATOMIC
+    void one () { m_word |= m_mask; } // ATOMIC
+    void invert () { m_word ^= m_mask; } // ATOMIC
+};
+
+//----------------------------------------------------------------------------
+// Blocks of oid_t
+
+const size_t LOG2_ITEMS_PER_BLOCK = 2;
+const size_t ITEMS_PER_BLOCK = 1 << LOG2_ITEMS_PER_BLOCK;
+const size_t BLOCK_POS_MASK = ITEMS_PER_BLOCK - 1;
+typedef oid_t Block4x4[ITEMS_PER_BLOCK * ITEMS_PER_BLOCK];
+
+inline oid_t & _block2value (oid_t * block, oid_t i, oid_t j)
+{
+    POMAGMA_ASSERT6(i < ITEMS_PER_BLOCK, "out of range " << i);
+    POMAGMA_ASSERT6(j < ITEMS_PER_BLOCK, "out of range " << j);
+    return block[(j << LOG2_ITEMS_PER_BLOCK) | i];
+}
+
+inline oid_t _block2value (const oid_t * block, oid_t i, oid_t j)
+{
+    POMAGMA_ASSERT6(i < ITEMS_PER_BLOCK, "out of range " << i);
+    POMAGMA_ASSERT6(j < ITEMS_PER_BLOCK, "out of range " << j);
+    return block[(j << LOG2_ITEMS_PER_BLOCK) | i];
+}
+
 } // namespace pomagma
 
-#endif
+#endif // POMAGMA_UTIL_HPP
