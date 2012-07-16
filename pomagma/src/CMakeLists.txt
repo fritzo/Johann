@@ -5,6 +5,7 @@ add_library(pomagma SHARED
 	util.cpp
 	aligned_alloc.cpp
 	dense_set.cpp
+	base_bin_rel.cpp
 	dense_bin_rel.cpp
 	dense_bin_fun.cpp
 	dense_sym_fun.cpp

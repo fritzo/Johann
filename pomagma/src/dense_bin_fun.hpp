@@ -3,6 +3,7 @@
 
 #include "util.hpp"
 #include "dense_set.hpp"
+#include "base_bin_rel.hpp"
 
 namespace pomagma
 {
@@ -10,17 +11,16 @@ namespace pomagma
 // WARNING zero/null items are not allowed
 
 // a tight binary function in 4x4 word blocks
-class dense_bin_fun
+class dense_bin_fun : noncopyable
 {
     // data, in blocks
     const size_t m_item_dim;
-    const size_t m_block_dim;
     const size_t m_word_dim;
+    const size_t m_block_dim;
     Block4x4 * const m_blocks;
 
     // dense sets for iteration
-    Word * const m_Lx_lines;
-    Word * const m_Rx_lines;
+    base_bin_rel m_lines;
     mutable Word * m_temp_line; // TODO FIXME this is not thread-safe
 
     // block wrappers
@@ -31,40 +31,6 @@ class dense_bin_fun
     const oid_t * _block (size_t i_, size_t j_) const
     {
         return m_blocks[m_block_dim * j_ + i_];
-    }
-
-    // set wrappers
-public:
-    Word * get_Lx_line (oid_t lhs) const
-    {
-        POMAGMA_ASSERT_RANGE_(5, lhs, m_item_dim);
-        return m_Lx_lines + (lhs * m_word_dim);
-    }
-    Word * get_Rx_line (oid_t rhs) const
-    {
-        POMAGMA_ASSERT_RANGE_(5, rhs, m_item_dim);
-        return m_Rx_lines + (rhs * m_word_dim);
-    }
-private:
-    bool _get_Lx_bit (oid_t lhs, oid_t rhs) const
-    {
-        POMAGMA_ASSERT_RANGE_(5, rhs, m_item_dim);
-        return bool_ref::index(get_Lx_line(lhs), rhs);
-    }
-    bool _get_Rx_bit (oid_t lhs, oid_t rhs) const
-    {
-        POMAGMA_ASSERT_RANGE_(5, lhs, m_item_dim);
-        return bool_ref::index(get_Rx_line(rhs), lhs);
-    }
-    bool_ref _get_Lx_bit (oid_t lhs, oid_t rhs)
-    {
-        POMAGMA_ASSERT_RANGE_(5, rhs, m_item_dim);
-        return bool_ref::index(get_Lx_line(lhs), rhs);
-    }
-    bool_ref _get_Rx_bit (oid_t lhs, oid_t rhs)
-    {
-        POMAGMA_ASSERT_RANGE_(5, lhs, m_item_dim);
-        return bool_ref::index(get_Rx_line(rhs), lhs);
     }
 
     // TODO force callee to provide the dense_set
@@ -97,7 +63,7 @@ public:
     void remove (oid_t lhs, oid_t rhs);
     bool contains (oid_t lhs, oid_t rhs) const
     {
-        return _get_Lx_bit(lhs, rhs);
+        return m_lines.Lx(lhs, rhs);
     }
 
     // support operations
@@ -143,11 +109,11 @@ inline void dense_bin_fun::insert (oid_t lhs, oid_t rhs, oid_t val)
     POMAGMA_ASSERT2(old_val, "double insertion: " << lhs << "," << rhs);
     old_val = val;
 
-    bool_ref Lx_bit = _get_Lx_bit(lhs, rhs);
+    bool_ref Lx_bit = m_lines.Lx(lhs, rhs);
     POMAGMA_ASSERT4(not Lx_bit, "double insertion: " << lhs << "," << rhs);
     Lx_bit.one();
 
-    bool_ref Rx_bit = _get_Rx_bit(lhs, rhs);
+    bool_ref Rx_bit = m_lines.Rx(lhs, rhs);
     POMAGMA_ASSERT4(not Rx_bit, "double insertion: " << lhs << "," << rhs);
     Rx_bit.one();
 }
@@ -158,11 +124,11 @@ inline void dense_bin_fun::remove (oid_t lhs, oid_t rhs)
     POMAGMA_ASSERT2(old_val, "double removal: " << lhs << "," << rhs);
     old_val = 0;
 
-    bool_ref Lx_bit = _get_Lx_bit(lhs, rhs);
+    bool_ref Lx_bit = m_lines.Lx(lhs, rhs);
     POMAGMA_ASSERT4(Lx_bit, "double removal: " << lhs << "," << rhs);
     Lx_bit.zero();
 
-    bool_ref Rx_bit = _get_Rx_bit(lhs, rhs);
+    bool_ref Rx_bit = m_lines.Rx(lhs, rhs);
     POMAGMA_ASSERT4(Rx_bit, "double removal: " << lhs << "," << rhs);
     Rx_bit.zero();
 }
@@ -183,7 +149,7 @@ public:
     lr_iterator (const dense_bin_fun & fun)
         : m_fun(fun),
           m_lhs(1),
-          m_rhs_set(fun.item_dim(), fun.get_Lx_line(1)),
+          m_rhs_set(fun.item_dim(), fun.m_lines.Lx(1)),
           m_rhs_iter(m_rhs_set)
     {
         _find_nonempty_rhs();
@@ -199,7 +165,7 @@ private:
                 m_lhs = 0;
                 return;
             }
-            m_rhs_set.init(m_fun.get_Lx_line(m_lhs));
+            m_rhs_set.init(m_fun.m_lines.Lx(m_lhs));
             m_rhs_iter.begin();
         }
     }
@@ -207,7 +173,7 @@ public:
     void begin ()
     {
         m_lhs = 1;
-        m_rhs_set.init(m_fun.get_Lx_line(1));
+        m_rhs_set.init(m_fun.m_lines.Lx(1));
         m_rhs_iter.begin();
         _find_nonempty_rhs();
     }
@@ -254,8 +220,8 @@ public:
     }
     Iterator (const dense_bin_fun * fun, oid_t fixed)
         : m_set(fun->m_item_dim,
-                idx ? fun->get_Rx_line(fixed)
-                    : fun->get_Lx_line(fixed)),
+                idx ? fun->m_lines.Rx(fixed)
+                    : fun->m_lines.Lx(fixed)),
           m_iter(m_set, false),
           m_fun(*fun),
           m_lhs(fixed),
@@ -272,8 +238,8 @@ public:
     void begin () { m_iter.begin(); if (ok()) _set_pos(); }
     void begin (oid_t fixed)
     {
-        if (idx) { m_rhs=fixed; m_set.init(m_fun.get_Rx_line(fixed)); }
-        else     { m_lhs=fixed; m_set.init(m_fun.get_Lx_line(fixed)); }
+        if (idx) { m_rhs=fixed; m_set.init(m_fun.m_lines.Rx(fixed)); }
+        else     { m_lhs=fixed; m_set.init(m_fun.m_lines.Lx(fixed)); }
         begin();
     }
     void next () { m_iter.next(); if (ok()) _set_pos(); }
