@@ -13,7 +13,6 @@ dense_sym_fun::dense_sym_fun (size_t item_dim)
       m_blocks(pomagma::alloc_blocks<Block4x4>(
                   unordered_pair_count(m_block_dim))),
       m_Lx_lines(pomagma::alloc_blocks<Word>((m_item_dim + 1) * m_word_dim)),
-      m_temp_set(m_item_dim, NULL),
       m_temp_line(pomagma::alloc_blocks<Word>(m_word_dim))
 {
     POMAGMA_DEBUG("creating dense_sym_fun with "
@@ -60,9 +59,12 @@ void dense_sym_fun::move_from (const dense_sym_fun & other)
 
 unsigned dense_sym_fun::count_pairs () const
 {
+    dense_set set(m_item_dim, NULL);
+
     unsigned result = 0;
     for (unsigned i = 1; i <= m_item_dim; ++i) {
-        result += _get_Lx_set(i).count_items();
+        set.init(get_Lx_line(i));
+        result += set.count_items();
     }
     return result;
 }
@@ -99,68 +101,73 @@ void dense_sym_fun::validate () const
 // Operations
 
 void dense_sym_fun::remove(
-        const oid_t i,
+        const oid_t dep,
         void remove_value(oid_t)) // rem
 {
-    POMAGMA_ASSERT4(0 < i and i <= oid_t(m_item_dim),
-            "item out of bounds: " << i);
+    POMAGMA_ASSERT_RANGE_(4, dep, m_item_dim);
 
-    for (Iterator iter(this, i); iter.ok(); iter.next()) {
-        oid_t k = iter.moving();
-        oid_t& dep = value(k, i);
-        remove_value(dep);
-        _get_Lx_set(k).remove(i);
-        dep = 0;
+    dense_set set(m_item_dim, NULL);
+
+    for (Iterator iter(this, dep); iter.ok(); iter.next()) {
+        oid_t rhs = iter.moving();
+        oid_t & dep_val = value(rhs, dep);
+        remove_value(dep_val);
+        set.init(get_Lx_line(rhs));
+        set.remove(dep);
+        dep_val = 0;
     }
-    _get_Lx_set(i).zero();
+    set.init(get_Lx_line(dep));
+    set.zero();
 }
 
 void dense_sym_fun::merge(
-        const oid_t i, // dep
-        const oid_t j, // rep
-        void merge_values(oid_t, oid_t), // dep, rep
+        const oid_t dep, // dep_val
+        const oid_t rep, // rep_val
+        void merge_values(oid_t, oid_t), // dep_val, rep_val
         void move_value(oid_t, oid_t, oid_t)) // moved, lhs, rhs
 {
-    POMAGMA_ASSERT4(j != i,
-            "in dense_sym_fun::merge, tried to merge with self");
-    POMAGMA_ASSERT4(0 < i and i <= oid_t(m_item_dim),
-            "dep out of bounds: " << i);
-    POMAGMA_ASSERT4(0 < j and j <= oid_t(m_item_dim),
-            "rep out of bounds: " << j);
+    POMAGMA_ASSERT4(rep != dep, "self merge: " << dep << "," << rep);
+    POMAGMA_ASSERT_RANGE_(4, dep, m_item_dim);
+    POMAGMA_ASSERT_RANGE_(4, rep, m_item_dim);
 
-    // (i,i) -> (i,j)
-    if (contains(i,i)) {
-        oid_t & dep = value(i, i);
-        oid_t & rep = value(j, j);
-        _get_Lx_set(i).remove(i);
-        if (rep) {
-            merge_values(dep,rep);
+    dense_set set(m_item_dim, NULL);
+
+    // (dep, dep) -> (dep, rep)
+    if (contains(dep, dep)) {
+        oid_t & dep_val = value(dep, dep);
+        oid_t & rep_val = value(rep, rep);
+        set.init(get_Lx_line(dep));
+        set.remove(dep);
+        if (rep_val) {
+            merge_values(dep_val, rep_val);
         } else {
-            move_value(dep, j, j);
-            _get_Lx_set(j).insert(j);
-            rep = dep;
+            move_value(dep_val, rep, rep);
+            set.init(get_Lx_line(rep));
+            set.insert(rep);
+            rep_val = dep_val;
         }
-        dep = 0;
+        dep_val = 0;
     }
 
-    // (k,i) --> (j,j) for k != i
-    for (Iterator iter(this, i); iter.ok(); iter.next()) {
-        oid_t k = iter.moving();
-        oid_t & dep = value(k, i);
-        oid_t & rep = value(k, j);
-        _get_Lx_set(k).remove(i); // sets m_temp_set
-        if (rep) {
-            merge_values(dep,rep);
+    // (dep, rhs) --> (rep, rep) for rhs != dep
+    for (Iterator iter(this, dep); iter.ok(); iter.next()) {
+        oid_t rhs = iter.moving();
+        oid_t & dep_val = value(rhs, dep);
+        oid_t & rep_val = value(rhs, rep);
+        set.init(get_Lx_line(rhs));
+        set.remove(dep);
+        if (rep_val) {
+            merge_values(dep_val,rep_val);
         } else {
-            move_value(dep, k, j);
-            m_temp_set.insert(j); // ie, _get_Lx_set(k).insert(j), as above
-            rep = dep;
+            move_value(dep_val, rhs, rep);
+            set.insert(rep);
+            rep_val = dep_val;
         }
-        dep = 0;
+        dep_val = 0;
     }
-    dense_set Lx_rep = _get_Lx_set(j);
-    dense_set Lx_dep = _get_Lx_set(i);
-    Lx_rep.merge(Lx_dep);
+    dense_set rep_set(m_item_dim, get_Lx_line(rep));
+    dense_set dep_set(m_item_dim, get_Lx_line(dep));
+    rep_set.merge(dep_set);
 }
 
 //----------------------------------------------------------------------------

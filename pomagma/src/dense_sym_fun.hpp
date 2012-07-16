@@ -22,7 +22,6 @@ class dense_sym_fun
 
     // dense sets for iteration
     Word * const m_Lx_lines;
-    mutable dense_set m_temp_set; // TODO FIXME this is not thread-safe
     mutable Word * m_temp_line; // TODO FIXME this is not thread-safe
 
     // block wrappers
@@ -39,15 +38,25 @@ class dense_sym_fun
 
     // set wrappers
 public:
-    Word * get_Lx_line (oid_t i) const { return m_Lx_lines + (i * m_word_dim); }
-private:
-    dense_set & _get_Lx_set (oid_t i) { return m_temp_set.init(get_Lx_line(i)); }
-    const dense_set & _get_Lx_set (oid_t i) const
+    Word * get_Lx_line (oid_t lhs) const
     {
-        return m_temp_set.init(get_Lx_line(i));
+        POMAGMA_ASSERT_RANGE_(5, lhs, m_item_dim);
+        return m_Lx_lines + (lhs * m_word_dim);
+    }
+private:
+    bool _get_Lx_bit (oid_t lhs, oid_t rhs) const
+    {
+        POMAGMA_ASSERT_RANGE_(5, rhs, m_item_dim);
+        return bool_ref::index(get_Lx_line(lhs), rhs);
+    }
+    bool_ref _get_Lx_bit (oid_t lhs, oid_t rhs)
+    {
+        POMAGMA_ASSERT_RANGE_(5, rhs, m_item_dim);
+        return bool_ref::index(get_Lx_line(lhs), rhs);
     }
 
     // intersection wrappers
+    // TODO force callee to allocate the result
     Word * _get_LLx_line (oid_t i, oid_t j) const;
 
     // ctors & dtors
@@ -69,21 +78,11 @@ public:
     void validate () const;
 
     // element operations
-    void insert (oid_t lhs, oid_t rhs, oid_t val)
-    {
-        value(lhs,rhs) = val;
-        _get_Lx_set(lhs).insert(rhs); if (lhs == rhs) return;
-        _get_Lx_set(rhs).insert(lhs);
-    }
-    void remove (oid_t lhs, oid_t rhs)
-    {
-        value(lhs,rhs) = 0;
-        _get_Lx_set(lhs).remove(rhs); if (lhs == rhs) return;
-        _get_Lx_set(rhs).remove(lhs);
-    }
+    void insert (oid_t lhs, oid_t rhs, oid_t val);
+    void remove (oid_t lhs, oid_t rhs);
     bool contains (oid_t lhs, oid_t rhs) const
     {
-        return _get_Lx_set(lhs).contains(rhs);
+        return _get_Lx_bit(lhs, rhs);
     }
 
     // support operations
@@ -104,10 +103,9 @@ public:
 inline oid_t & dense_sym_fun::value (oid_t i, oid_t j)
 {
     sort(i, j);
-    POMAGMA_ASSERT5(0 < i and i <= m_item_dim,
-            "i=" << i << " out of bounds [1," << m_item_dim << "]");
-    POMAGMA_ASSERT5(i < j and j <= m_item_dim,
-            "j=" << j << " out of bounds [" << i << "," << m_item_dim << "]");
+
+    POMAGMA_ASSERT_RANGE_(5, i, m_item_dim);
+    POMAGMA_ASSERT_RANGE_(5, j, m_item_dim);
 
     oid_t * block = _block(i / ITEMS_PER_BLOCK, j / ITEMS_PER_BLOCK);
     return _block2value(block, i & BLOCK_POS_MASK, j & BLOCK_POS_MASK);
@@ -116,13 +114,46 @@ inline oid_t & dense_sym_fun::value (oid_t i, oid_t j)
 inline oid_t dense_sym_fun::value (oid_t i, oid_t j) const
 {
     sort(i, j);
-    POMAGMA_ASSERT5(0 < i and i <= m_item_dim,
-            "i=" << i << " out of bounds [1," << m_item_dim << "]");
-    POMAGMA_ASSERT5(i < j and j <= m_item_dim,
-            "j=" << j << " out of bounds [" << i << "," << m_item_dim << "]");
+
+    POMAGMA_ASSERT_RANGE_(5, i, m_item_dim);
+    POMAGMA_ASSERT_RANGE_(5, j, m_item_dim);
 
     const oid_t * block = _block(i / ITEMS_PER_BLOCK, j / ITEMS_PER_BLOCK);
     return _block2value(block, i & BLOCK_POS_MASK, j & BLOCK_POS_MASK);
+}
+
+inline void dense_sym_fun::insert (oid_t lhs, oid_t rhs, oid_t val)
+{
+    oid_t & old_val = value(lhs, rhs);
+    POMAGMA_ASSERT2(old_val, "double insertion: " << lhs << "," << rhs);
+    old_val = val;
+
+    bool_ref Lx_bit = _get_Lx_bit(lhs, rhs);
+    POMAGMA_ASSERT4(not Lx_bit, "double insertion: " << lhs << "," << rhs);
+    Lx_bit.one();
+
+    if (lhs == rhs) return;
+
+    bool_ref Rx_bit = _get_Lx_bit(rhs, lhs);
+    POMAGMA_ASSERT4(not Rx_bit, "double insertion: " << lhs << "," << rhs);
+    Rx_bit.one();
+}
+
+inline void dense_sym_fun::remove (oid_t lhs, oid_t rhs)
+{
+    oid_t & old_val = value(lhs, rhs);
+    POMAGMA_ASSERT2(old_val, "double removal: " << lhs << "," << rhs);
+    old_val = 0;
+
+    bool_ref Lx_bit = _get_Lx_bit(lhs, rhs);
+    POMAGMA_ASSERT4(Lx_bit, "double removal: " << lhs << "," << rhs);
+    Lx_bit.zero();
+
+    if (lhs == rhs) return;
+
+    bool_ref Rx_bit = _get_Lx_bit(rhs, lhs);
+    POMAGMA_ASSERT4(Rx_bit, "double removal: " << lhs << "," << rhs);
+    Rx_bit.zero();
 }
 
 //----------------------------------------------------------------------------

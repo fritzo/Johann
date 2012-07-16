@@ -50,6 +50,7 @@ public:
     //}
     ~dense_set ();
     void move_from (const dense_set & other, const oid_t * new2old = NULL);
+    // TODO return void instead of reference to self
     dense_set & init (Word * line)
     {
         POMAGMA_ASSERT4(m_alias, "tried to init() non-alias dense set");

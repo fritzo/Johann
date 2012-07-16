@@ -122,41 +122,43 @@ void dense_bin_fun::validate () const
 // Operations
 
 void dense_bin_fun::remove(
-        const oid_t i,
+        const oid_t dep,
         void remove_value(oid_t)) // rem
 {
-    POMAGMA_ASSERT_RANGE_(4, i, m_item_dim);
+    POMAGMA_ASSERT_RANGE_(4, dep, m_item_dim);
 
     dense_set set(m_item_dim, NULL);
 
-    // (lhs, i)
-    for (Iterator<RHS_FIXED> iter(this, i); iter.ok(); iter.next()) {
+    // (lhs, dep)
+    for (Iterator<RHS_FIXED> iter(this, dep); iter.ok(); iter.next()) {
         oid_t lhs = iter.lhs();
-        oid_t & dep = value(lhs, i);
-        remove_value(dep);
+        oid_t & dep_val = value(lhs, dep);
+        remove_value(dep_val);
         set.init(get_Lx_line(lhs));
-        set.remove(i);
-        dep = 0;
+        set.remove(dep);
+        dep_val = 0;
     }
-    set.init(get_Rx_line(i)).zero();
+    set.init(get_Rx_line(dep));
+    set.zero();
 
-    // (i, rhs)
-    for (Iterator<LHS_FIXED> iter(this, i); iter.ok(); iter.next()) {
+    // (dep, rhs)
+    for (Iterator<LHS_FIXED> iter(this, dep); iter.ok(); iter.next()) {
         oid_t rhs = iter.rhs();
-        oid_t & dep = value(i, rhs);
-        remove_value(dep);
+        oid_t & dep_val = value(dep, rhs);
+        remove_value(dep_val);
         set.init(get_Rx_line(rhs));
-        set.remove(i);
-        dep = 0;
+        set.remove(dep);
+        dep_val = 0;
     }
-    set.init(get_Lx_line(i)).zero();
+    set.init(get_Lx_line(dep));
+    set.zero();
 }
 
 void dense_bin_fun::merge(
-        const oid_t dep, // dep
-        const oid_t rep, // rep
-        void merge_values(oid_t, oid_t), // dep,rep
-        void move_value(oid_t, oid_t, oid_t)) // moved,lhs,rhs
+        const oid_t dep,
+        const oid_t rep,
+        void merge_values(oid_t, oid_t), // dep, rep
+        void move_value(oid_t, oid_t, oid_t)) // moved, lhs, rhs
 {
     POMAGMA_ASSERT4(rep != dep, "self merge: " << dep << "," << rep);
     POMAGMA_ASSERT_RANGE_(4, dep, m_item_dim);
