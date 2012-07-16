@@ -274,8 +274,8 @@ void validate_comp_table (Int level)
     logger.debug() << "Validating Comp table" |0;
     Logging::IndentBlock block;
 
-    Assert (g_comp_table->item_capacity() == Ob::capacity(),
-            "comp table has wrong size: " << g_comp_table->item_capacity());
+    Assert (g_comp_table->item_dim() == Ob::capacity(),
+            "comp table has wrong size: " << g_comp_table->item_dim());
     if (level < 3) return;
     g_comp_table->validate();
 }

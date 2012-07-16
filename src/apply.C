@@ -280,8 +280,8 @@ void validate_app_table (Int level)
     logger.debug() << "Validating App table" |0;
     Logging::IndentBlock block;
 
-    Assert (g_app_table->item_capacity() == Ob::capacity(),
-            "app table has wrong size: " << g_app_table->item_capacity());
+    Assert (g_app_table->item_dim() == Ob::capacity(),
+            "app table has wrong size: " << g_app_table->item_dim());
     if (level < 3) return;
     g_app_table->validate();
 }

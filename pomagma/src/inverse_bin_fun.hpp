@@ -12,11 +12,26 @@ namespace pomagma
 {
 
 typedef std::vector<
-    tbb::concurrent_unordered_set<std::pair<oid_t, oid_t>>> Vxx_Data;
+    tbb::concurrent_unordered_set<std::pair<oid_t, oid_t>>> Vlr_Data;
 
 typedef tbb::concurrent_unordered_map<
     std::pair<oid_t, oid_t>,
     tbb::concurrent_unordered_set<oid_t>> VXx_Data;
+
+inline bool contains (const Vlr_Data & Vlr_data, oid_t V, oid_t l, oid_t r)
+{
+    auto & lr_set = Vlr_data[V];
+    return lr_set.find(std::make_pair(l, r)) != lr_set.end();
+}
+
+inline bool contains (const VXx_Data & VXx_data, oid_t V, oid_t X, oid_t x)
+{
+    auto i = VXx_data.find(std::make_pair(V, X));
+    if (i == VXx_data.end()) {
+        return false;
+    }
+    return i->second.find(x) != i->second.end();
+}
 
 inline void unsafe_erase (VXx_Data & VXx_data, oid_t V, oid_t X, oid_t x)
 {
@@ -29,11 +44,14 @@ inline void unsafe_erase (VXx_Data & VXx_data, oid_t V, oid_t X, oid_t x)
     }
 }
 
+//----------------------------------------------------------------------------
+// Inverse binary function
+
 class inverse_bin_fun : noncopyable
 {
     const size_t m_item_dim;
 
-    Vxx_Data m_Vlr_data;
+    Vlr_Data m_Vlr_data;
     VXx_Data m_VLr_data;
     VXx_Data m_VRl_data;
 
@@ -44,10 +62,6 @@ public:
           m_Vlr_data(m_item_dim),
           m_VLr_data(),
           m_VRl_data()
-    {
-    }
-
-    ~inverse_bin_fun ()
     {
     }
 
@@ -113,16 +127,9 @@ public:
     void next () { ++m_iter; }
 
     // dereferencing
-private:
-    void _deref_assert () const
-    {
-        POMAGMA_ASSERT5(m_val and ok(),
-                "dereferenced done inverse_bin_fun::Iterator");
-    }
-public:
-    oid_t value () const { _deref_assert(); return m_val; }
-    oid_t lhs () const { _deref_assert(); return m_iter->first; }
-    oid_t rhs () const { _deref_assert(); return m_iter->second; }
+    oid_t value () const { POMAGMA_ASSERT_OK return m_val; }
+    oid_t lhs () const { POMAGMA_ASSERT_OK return m_iter->first; }
+    oid_t rhs () const { POMAGMA_ASSERT_OK return m_iter->second; }
 };
 
 //----------------------------------------------------------------------------
@@ -172,16 +179,9 @@ public:
     void next  () { ++m_iter; }
 
     // dereferencing
-private:
-    void _deref_assert () const
-    {
-        POMAGMA_ASSERT5(m_pair.first and  m_pair.second and ok(),
-                "dereferenced done inverse_bin_fun::RangeIterator");
-    }
-public:
-    oid_t value () const { _deref_assert(); return m_pair.first; }
-    oid_t fixed () const { _deref_assert(); return m_pair.second; }
-    oid_t moving () const { _deref_assert(); return *m_iter; }
+    oid_t value () const { POMAGMA_ASSERT_OK return m_pair.first; }
+    oid_t fixed () const { POMAGMA_ASSERT_OK return m_pair.second; }
+    oid_t moving () const { POMAGMA_ASSERT_OK return *m_iter; }
     oid_t lhs () const { return idx ? moving() : fixed(); }
     oid_t rhs () const { return idx ? fixed() : moving(); }
 };

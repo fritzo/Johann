@@ -1,5 +1,6 @@
 
 #include "dense_set.hpp"
+#include "aligned_alloc.hpp"
 #include <cstring>
 
 namespace pomagma
@@ -57,7 +58,7 @@ size_t dense_set::count_items () const
 {
     unsigned result = 0;
     for (size_t m = 0; m < m_word_dim; ++m) {
-        // WARNING: only unsigned's work with >>
+        // WARNING only unsigned's work with >>
         static_assert(Word(1) >> 1 == 0, "bitshifting Word fails");
         for (Word word = m_line[m]; word; word>>=1) {
             result += word & 1;
@@ -68,7 +69,7 @@ size_t dense_set::count_items () const
 
 void dense_set::validate () const
 {
-    // make sure extra bits aren't used
+    // make sure padding bits are zero
     POMAGMA_ASSERT(not (m_line[0] & 1), "dense set contains null item");
     size_t end = (m_item_dim + 1) % BITS_PER_WORD; // bit count in partially-filled block
     if (end == 0) return;
@@ -101,8 +102,7 @@ void dense_set::zero ()
 
 bool dense_set::operator== (const dense_set & other) const
 {
-    POMAGMA_ASSERT1(item_dim() == other.item_dim(),
-            "tried to == compare dense_sets of different item_dim");
+    POMAGMA_ASSERT1(item_dim() == other.item_dim(), "item_dim mismatch");
 
     for (size_t m = 0; m < m_word_dim; ++m) {
         if (m_line[m] != other.m_line[m]) return false;
@@ -112,8 +112,7 @@ bool dense_set::operator== (const dense_set & other) const
 
 bool dense_set::operator<= (const dense_set & other) const
 {
-    POMAGMA_ASSERT1(item_dim() == other.item_dim(),
-            "tried to <= compare dense_sets of different item_dim");
+    POMAGMA_ASSERT1(item_dim() == other.item_dim(), "item_dim mismatch");
 
     for (size_t m = 0; m < m_word_dim; ++m) {
         if (m_line[m] & ~other.m_line[m]) return false;
@@ -123,8 +122,7 @@ bool dense_set::operator<= (const dense_set & other) const
 
 bool dense_set::disjoint (const dense_set & other) const
 {
-    POMAGMA_ASSERT1(item_dim() == other.item_dim(),
-            "tried to disjoint-compare dense_sets of different item_dim");
+    POMAGMA_ASSERT1(item_dim() == other.item_dim(), "item_dim mismatch");
 
     for (size_t m = 0; m < m_word_dim; ++m) {
         if (m_line[m] & other.m_line[m]) return false;
@@ -135,6 +133,8 @@ bool dense_set::disjoint (const dense_set & other) const
 // inplace union
 void dense_set::operator += (const dense_set & other)
 {
+    POMAGMA_ASSERT1(item_dim() == other.item_dim(), "item_dim mismatch");
+
     const Word * restrict s = other.m_line;
     Word * restrict t = m_line;
 
@@ -146,6 +146,8 @@ void dense_set::operator += (const dense_set & other)
 // inplace intersection
 void dense_set::operator *= (const dense_set & other)
 {
+    POMAGMA_ASSERT1(item_dim() == other.item_dim(), "item_dim mismatch");
+
     const Word * restrict s = other.m_line;
     Word * restrict t = m_line;
 
@@ -156,6 +158,9 @@ void dense_set::operator *= (const dense_set & other)
 
 void dense_set::set_union (const dense_set & lhs, const dense_set & rhs)
 {
+    POMAGMA_ASSERT1(item_dim() == lhs.item_dim(), "lhs.item_dim mismatch");
+    POMAGMA_ASSERT1(item_dim() == rhs.item_dim(), "rhs.item_dim mismatch");
+
     const Word * restrict s = lhs.m_line;
     const Word * restrict t = rhs.m_line;
     Word * restrict u = m_line;
@@ -167,6 +172,9 @@ void dense_set::set_union (const dense_set & lhs, const dense_set & rhs)
 
 void dense_set::set_diff (const dense_set & lhs, const dense_set & rhs)
 {
+    POMAGMA_ASSERT1(item_dim() == lhs.item_dim(), "lhs.item_dim mismatch");
+    POMAGMA_ASSERT1(item_dim() == rhs.item_dim(), "rhs.item_dim mismatch");
+
     const Word * restrict s = lhs.m_line;
     const Word * restrict t = rhs.m_line;
     Word * restrict u = m_line;
@@ -178,6 +186,9 @@ void dense_set::set_diff (const dense_set & lhs, const dense_set & rhs)
 
 void dense_set::set_insn (const dense_set & lhs, const dense_set & rhs)
 {
+    POMAGMA_ASSERT1(item_dim() == lhs.item_dim(), "lhs.item_dim mismatch");
+    POMAGMA_ASSERT1(item_dim() == rhs.item_dim(), "rhs.item_dim mismatch");
+
     const Word * restrict s = lhs.m_line;
     const Word * restrict t = rhs.m_line;
     Word * restrict u = m_line;
@@ -189,6 +200,9 @@ void dense_set::set_insn (const dense_set & lhs, const dense_set & rhs)
 
 void dense_set::set_nor (const dense_set & lhs, const dense_set & rhs)
 {
+    POMAGMA_ASSERT1(item_dim() == lhs.item_dim(), "lhs.item_dim mismatch");
+    POMAGMA_ASSERT1(item_dim() == rhs.item_dim(), "rhs.item_dim mismatch");
+
     const Word * restrict s = lhs.m_line;
     const Word * restrict t = rhs.m_line;
     Word * restrict u = m_line;
@@ -201,7 +215,7 @@ void dense_set::set_nor (const dense_set & lhs, const dense_set & rhs)
 // this += dep; dep = 0;
 void dense_set::merge (dense_set & dep)
 {
-    POMAGMA_ASSERT4(m_item_dim == dep.m_item_dim, "dep has wrong size in rep.merge(dep)");
+    POMAGMA_ASSERT4(m_item_dim == dep.m_item_dim, "dep has wrong size");
 
     Word * restrict d = dep.m_line;
     Word * restrict r = m_line;
@@ -215,8 +229,8 @@ void dense_set::merge (dense_set & dep)
 // diff = dep - this; this += dep; dep = 0; return diff not empty;
 bool dense_set::merge (dense_set & dep, dense_set & diff)
 {
-    POMAGMA_ASSERT4(m_item_dim == dep.m_item_dim, "dep has wrong size in rep.merge(dep,diff)");
-    POMAGMA_ASSERT4(m_item_dim == diff.m_item_dim, "diff has wrong size in rep.merge(dep,diff)");
+    POMAGMA_ASSERT4(m_item_dim == dep.m_item_dim, "dep has wrong size");
+    POMAGMA_ASSERT4(m_item_dim == diff.m_item_dim, "diff has wrong size");
 
     Word * restrict d = dep.m_line;
     Word * restrict r = m_line;
@@ -235,8 +249,8 @@ bool dense_set::merge (dense_set & dep, dense_set & diff)
 // diff = src - this; this += src; return diff not empty;
 bool dense_set::ensure (const dense_set & src, dense_set & diff)
 {
-    POMAGMA_ASSERT4(m_item_dim == src.m_item_dim, "src has wrong size in rep.ensure(src,diff)");
-    POMAGMA_ASSERT4(m_item_dim == diff.m_item_dim, "diff has wrong size in rep.ensure(src,diff)");
+    POMAGMA_ASSERT4(m_item_dim == src.m_item_dim, "src has wrong size");
+    POMAGMA_ASSERT4(m_item_dim == diff.m_item_dim, "diff has wrong size");
 
     const Word * restrict d = src.m_line;
     Word * restrict r = m_line;
@@ -264,20 +278,18 @@ void dense_set::iterator::_next_block ()
     // traverse to first nonempty bit in a nonempty block
     Word word = lines[m_quot];
     for (m_rem = 0, m_mask = 1; !(m_mask & word); ++m_rem, m_mask <<= 1) {
-        POMAGMA_ASSERT4(m_rem != BITS_PER_WORD,
-                "dense_set::_next_block found no bits");
+        POMAGMA_ASSERT4(m_rem != BITS_PER_WORD, "found no bits");
     }
     m_i = m_rem + BITS_PER_WORD * m_quot;
     POMAGMA_ASSERT5(0 < m_i and m_i <= m_set.m_item_dim,
-            "dense_set::iterator::_next_block landed on invalid pos " << m_i);
-    POMAGMA_ASSERT5(m_set.contains(m_i),
-            "dense_set::iterator::_next_block landed on empty pos " << m_i);
+            "out of range " << m_i);
+    POMAGMA_ASSERT5(m_set.contains(m_i), "landed on empty pos " << m_i);
 }
 
 // PROFILE this is one of the slowest methods
 void dense_set::iterator::next ()
 {
-    POMAGMA_ASSERT5(ok(), "tried to increment a finished dense_set::iterator");
+    POMAGMA_ASSERT_OK
     Word word = m_set.m_line[m_quot];
     do {
         ++m_rem;
@@ -287,9 +299,8 @@ void dense_set::iterator::next ()
     } while (!(m_mask & word));
     m_i = m_rem + BITS_PER_WORD * m_quot;
     POMAGMA_ASSERT5(0 < m_i and m_i <= m_set.m_item_dim,
-            "dense_set::iterator::next landed on invalid pos " << m_i);
-    POMAGMA_ASSERT5(m_set.contains(m_i),
-            "dense_set::iterator::next landed on empty pos " << m_i);
+            "out of range " << m_i);
+    POMAGMA_ASSERT5(m_set.contains(m_i), "landed on empty pos " << m_i);
 }
 
 } // namespace pomagma

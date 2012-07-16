@@ -41,7 +41,7 @@ namespace pomagma
 typedef uint32_t oid_t; // object id TODO switch to uint16_t
 const size_t MAX_ITEM_DIM = 0xffffUL;
 
-const size_t ITEMS_PER_BLOCK = 4; // TODO switch to 8
+const size_t ITEMS_PER_BLOCK = 4;
 const size_t BLOCK_POS_MASK = ITEMS_PER_BLOCK - 1;
 typedef oid_t Block4x4[ITEMS_PER_BLOCK * ITEMS_PER_BLOCK];
 
@@ -154,10 +154,15 @@ public:
 #define POMAGMA_ASSERT3(cond, mess) POMAGMA_ASSERT_(3, cond, mess)
 #define POMAGMA_ASSERT4(cond, mess) POMAGMA_ASSERT_(4, cond, mess)
 #define POMAGMA_ASSERT5(cond, mess) POMAGMA_ASSERT_(5, cond, mess)
+#define POMAGMA_ASSERT5(cond, mess) POMAGMA_ASSERT_(5, cond, mess)
+#define POMAGMA_ASSERT6(cond, mess) POMAGMA_ASSERT_(6, cond, mess)
 
 #define POMAGMA_ASSERT_EQUAL(x, y) \
     POMAGMA_ASSERT((x) == (y), \
             "expected " #x " == " #y "; actual " << (x) << " vs " << (y))
+
+#define POMAGMA_ASSERT_OK \
+    POMAGMA_ASSERT5(ok(), "tried to use done iterator")
 
 } // namespace pomagma
 

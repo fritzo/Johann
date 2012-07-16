@@ -56,7 +56,7 @@ GL_CYGWIN = -lglut32 -lglu32 -lopengl32
 YFLAGS = -d
 CPPFLAGS = -I. -I../include -Wstrict-aliasing=0 --std=c++0x
 CXXFLAGS = -fno-strict-aliasing
-LDFLAGS = -L../lib -lpomagma
+LDFLAGS = -L../lib -lpomagma -ltbb
 ifeq ($(COMPILE_TYPE), debug)
 	CPPFLAGS += -DDEBUG_LEVEL=$(DEBUG_LEVEL)
 	CXXFLAGS = $(WARNINGS) -ggdb

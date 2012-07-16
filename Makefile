@@ -35,12 +35,12 @@ test: kernel
 # Running johann
 
 run_johann: kernel
-	echo "" > log/default.log
+	echo '' > log/default.log
 	bin/johann
 time: kernel
 	bash -c "time bin/johann scripts/test/build.jcode"
 profile: kernel
-	echo "" > log/test.log
+	echo '' > log/test.log
 	gcov src/lambda_theories.h
 	gcov src/measures.C
 	gcov src/complexity.C
@@ -50,35 +50,35 @@ profile: kernel
 	gprof -I src -l -b bin/johann | ./profile_subs > johann.prof
 	gvim johann.prof &
 memtest: kernel
-	echo "" > log/test.log
+	echo '' > log/test.log
 	valgrind --leak-check=yes bin/johann -l test.log scripts/test/memtest.jcode
 cachetest: kernel
-	echo "" > log/tests.log
+	echo '' > log/tests.log
 	valgrind --tool=cachegrind bin/johann -l test.log scripts/test/cachetest.jcode
 
 #-----------------------------------------------------------------------------
 # Building cores
 
 default: kernel
-	echo "" > log/build.log
+	echo '' > log/default.log
 	bin/johann scripts/build/default.jcode -l default.log
 skr: kernel
-	echo "" > log/build.log
+	echo '' > log/skr.log
 	bin/johann scripts/build/skr.jcode -l skr.log
 skj: kernel
-	echo "" > log/build.log
+	echo '' > log/skj.log
 	bin/johann scripts/build/skj.jcode -l skj.log
 skrj: kernel
-	echo "" > log/build.log
+	echo '' > log/skrj.log
 	bin/johann scripts/build/skrj.jcode -l skrj.log
 skjo: kernel
-	echo "" > log/build.log
+	echo '' > log/skjo.log
 	bin/johann scripts/build/skjo.jcode -l skjo.log
 literate: kernel
-	echo "" > log/build.log
+	echo '' > log/literate.log
 	bin/johann scripts/build/literate.jcode -l literate.log
 godels_T: kernel
-	echo "" > log/build.log
+	echo '' > log/godels_T.log
 	bin/johann scripts/build/godels_T.jcode -l godels_T.log
 
 #-----------------------------------------------------------------------------
