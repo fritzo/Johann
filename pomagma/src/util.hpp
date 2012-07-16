@@ -140,7 +140,6 @@ public:
 #define POMAGMA_ASSERT3(cond, mess) POMAGMA_ASSERT_(3, cond, mess)
 #define POMAGMA_ASSERT4(cond, mess) POMAGMA_ASSERT_(4, cond, mess)
 #define POMAGMA_ASSERT5(cond, mess) POMAGMA_ASSERT_(5, cond, mess)
-#define POMAGMA_ASSERT5(cond, mess) POMAGMA_ASSERT_(5, cond, mess)
 #define POMAGMA_ASSERT6(cond, mess) POMAGMA_ASSERT_(6, cond, mess)
 
 #define POMAGMA_ASSERT_EQUAL(x, y) \
@@ -149,6 +148,11 @@ public:
 
 #define POMAGMA_ASSERT_OK \
     POMAGMA_ASSERT5(ok(), "tried to use done iterator")
+
+#define POMAGMA_ASSERT_RANGE_(POMAGMA_level, POMAGMA_i, POMAGMA_dim)\
+    POMAGMA_ASSERT_(POMAGMA_level,\
+        1 < (POMAGMA_i) and (POMAGMA_i) <= (POMAGMA_dim),\
+        "out of range: " #POMAGMA_i " = " << (POMAGMA_i))
 
 //----------------------------------------------------------------------------
 // Data types

@@ -96,18 +96,18 @@ public:
 
 inline bool_ref dense_set::_bit (size_t i)
 {
-    POMAGMA_ASSERT5(0 < i and i <= m_item_dim, "out of range: " << i);
+    POMAGMA_ASSERT_RANGE_(5, i, m_item_dim);
     return bool_ref::index(m_line, i);
 }
 inline bool dense_set::_bit (size_t i) const
 {
-    POMAGMA_ASSERT5(0 < i and i <= m_item_dim, "out of range: " << i);
+    POMAGMA_ASSERT_RANGE_(5, i, m_item_dim);
     return bool_ref::index(m_line, i);
 }
 
 inline void dense_set::insert (size_t i)
 {
-    POMAGMA_ASSERT4(not contains(i), "double insertion " << i);
+    POMAGMA_ASSERT4(not contains(i), "double insertion: " << i);
     _bit(i).one();
 }
 inline void dense_set::remove (size_t i)

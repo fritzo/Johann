@@ -12,7 +12,6 @@ dense_bin_fun::dense_bin_fun (size_t item_dim)
       m_blocks(pomagma::alloc_blocks<Block4x4>(m_block_dim * m_block_dim)),
       m_Lx_lines(pomagma::alloc_blocks<Word>((m_item_dim + 1) * m_word_dim)),
       m_Rx_lines(pomagma::alloc_blocks<Word>((m_item_dim + 1) * m_word_dim)),
-      m_temp_set(m_item_dim, NULL),
       m_temp_line(pomagma::alloc_blocks<Word>(m_word_dim))
 {
     POMAGMA_DEBUG("creating dense_bin_fun with "
@@ -62,9 +61,11 @@ void dense_bin_fun::move_from (const dense_bin_fun & other)
 
 size_t dense_bin_fun::count_pairs () const
 {
+    dense_set Lx_set(m_item_dim, NULL);
     size_t result = 0;
     for (size_t i = 1; i <= m_item_dim; ++i) {
-        result += _get_Lx_set(i).count_items();
+        Lx_set.init(get_Lx_line(i));
+        result += Lx_set.count_items();
     }
     return result;
 }
@@ -100,10 +101,10 @@ void dense_bin_fun::validate () const
 
     POMAGMA_DEBUG("validating left-right line consistency");
     for (size_t i = 1; i <= m_item_dim; ++i) {
-        dense_set L_set(_get_Lx_set(i));
+        dense_set L_set(m_item_dim, get_Lx_line(i));
 
         for (size_t j = 1; j <= m_item_dim; ++j) {
-            dense_set R_set(_get_Rx_set(j));
+            dense_set R_set(m_item_dim, get_Rx_line(j));
 
             if (L_set.contains(j) and not R_set.contains(i)) {
                 POMAGMA_ERROR("invalid: L-set exceeds R-set: "
@@ -124,80 +125,90 @@ void dense_bin_fun::remove(
         const oid_t i,
         void remove_value(oid_t)) // rem
 {
-    POMAGMA_ASSERT4(0 < i and i <= m_item_dim,
-            "item out of bounds: " << i);
+    POMAGMA_ASSERT_RANGE_(4, i, m_item_dim);
 
-    // (k,i)
+    dense_set set(m_item_dim, NULL);
+
+    // (lhs, i)
     for (Iterator<RHS_FIXED> iter(this, i); iter.ok(); iter.next()) {
-        oid_t k = iter.lhs();
-        oid_t & dep = value(k, i);
+        oid_t lhs = iter.lhs();
+        oid_t & dep = value(lhs, i);
         remove_value(dep);
-        _get_Lx_set(k).remove(i);
+        set.init(get_Lx_line(lhs));
+        set.remove(i);
         dep = 0;
     }
-    _get_Rx_set(i).zero();
+    set.init(get_Rx_line(i)).zero();
 
-    // (i,k)
+    // (i, rhs)
     for (Iterator<LHS_FIXED> iter(this, i); iter.ok(); iter.next()) {
-        oid_t k = iter.rhs();
-        oid_t & dep = value(i, k);
+        oid_t rhs = iter.rhs();
+        oid_t & dep = value(i, rhs);
         remove_value(dep);
-        _get_Rx_set(k).remove(i);
+        set.init(get_Rx_line(rhs));
+        set.remove(i);
         dep = 0;
     }
-    _get_Lx_set(i).zero();
+    set.init(get_Lx_line(i)).zero();
 }
 
 void dense_bin_fun::merge(
-        const oid_t i, // dep
-        const oid_t j, // rep
+        const oid_t dep, // dep
+        const oid_t rep, // rep
         void merge_values(oid_t, oid_t), // dep,rep
         void move_value(oid_t, oid_t, oid_t)) // moved,lhs,rhs
 {
-    POMAGMA_ASSERT4(j != i,
-            "in dense_bin_fun::merge, tried to merge with self");
-    POMAGMA_ASSERT4(0 < i and i <= m_item_dim, "dep out of bounds: " << i);
-    POMAGMA_ASSERT4(0 < j and j <= m_item_dim, "rep out of bounds: " << j);
+    POMAGMA_ASSERT4(rep != dep, "self merge: " << dep << "," << rep);
+    POMAGMA_ASSERT_RANGE_(4, dep, m_item_dim);
+    POMAGMA_ASSERT_RANGE_(4, rep, m_item_dim);
 
-    // Note: the spacial case (i,i) --> (i,j) --> (j,j) merges in two steps
+    dense_set set(m_item_dim, NULL);
+    dense_set dep_set(m_item_dim, NULL);
+    dense_set rep_set(m_item_dim, NULL);
 
-    // (k,i) --> (k,j)
-    for (Iterator<RHS_FIXED> iter(this,i); iter.ok(); iter.next()) {
-        oid_t k = iter.lhs();
-        oid_t & dep = value(k,i);
-        oid_t & rep = value(k,j);
-        _get_Lx_set(k).remove(i); // sets m_temp_set
-        if (rep) {
-            merge_values(dep, rep);
+    // Note: the spacial case
+    //   (dep, dep) --> (dep, rep) --> (rep, rep)
+    // merges in two steps
+
+    // (lhs, dep) --> (lhs, rep)
+    for (Iterator<RHS_FIXED> iter(this, dep); iter.ok(); iter.next()) {
+        oid_t lhs = iter.lhs();
+        oid_t & dep_val = value(lhs,dep);
+        oid_t & rep_val = value(lhs,rep);
+        set.init(get_Lx_line(lhs));
+        set.remove(dep);
+        if (rep_val) {
+            merge_values(dep_val, rep_val);
         } else {
-            move_value(dep, k, j);
-            m_temp_set.insert(j); // ie, _get_Lx_set(k).insert(j), as above
-            rep = dep;
+            move_value(dep_val, lhs, rep);
+            set.insert(rep);
+            rep_val = dep_val;
         }
-        dep = 0;
+        dep_val = 0;
     }
-    dense_set Rx_rep = _get_Rx_set(j);
-    dense_set Rx_dep = _get_Rx_set(i);
-    Rx_rep.merge(Rx_dep);
+    rep_set.init(get_Rx_line(rep));
+    dep_set.init(get_Rx_line(dep));
+    rep_set.merge(dep_set);
 
-    // (i,k) --> (j,k)
-    for (Iterator<LHS_FIXED> iter(this,i); iter.ok(); iter.next()) {
-        oid_t k = iter.rhs();
-        oid_t & dep = value(i, k);
-        oid_t & rep = value(j, k);
-        _get_Rx_set(k).remove(i); // sets m_temp_set
-        if (rep) {
-            merge_values(dep,rep);
+    // (dep, rhs) --> (rep, rhs)
+    for (Iterator<LHS_FIXED> iter(this, dep); iter.ok(); iter.next()) {
+        oid_t rhs = iter.rhs();
+        oid_t & dep_val = value(dep, rhs);
+        oid_t & rep_val = value(rep, rhs);
+        set.init(get_Rx_line(rhs));
+        set.remove(dep);
+        if (rep_val) {
+            merge_values(dep_val, rep_val);
         } else {
-            move_value(dep, j, k);
-            m_temp_set.insert(j); // ie, _get_Rx_set(k).insert(j), as above
-            rep = dep;
+            move_value(dep_val, rep, rhs);
+            set.insert(rep);
+            rep_val = dep_val;
         }
-        dep = 0;
+        dep_val = 0;
     }
-    dense_set Lx_rep = _get_Lx_set(j);
-    dense_set Lx_dep = _get_Lx_set(i);
-    Lx_rep.merge(Lx_dep);
+    rep_set.init(get_Lx_line(rep));
+    dep_set.init(get_Lx_line(dep));
+    rep_set.merge(dep_set);
 }
 
 // intersection iteration

@@ -21,7 +21,6 @@ class dense_bin_fun
     // dense sets for iteration
     Word * const m_Lx_lines;
     Word * const m_Rx_lines;
-    mutable dense_set m_temp_set; // TODO FIXME this is not thread-safe
     mutable Word * m_temp_line; // TODO FIXME this is not thread-safe
 
     // block wrappers
@@ -36,25 +35,36 @@ class dense_bin_fun
 
     // set wrappers
 public:
-    Word * get_Lx_line (oid_t i) const { return m_Lx_lines + (i * m_word_dim); }
-    Word * get_Rx_line (oid_t i) const { return m_Rx_lines + (i * m_word_dim); }
+    Word * get_Lx_line (oid_t lhs) const
+    {
+        POMAGMA_ASSERT_RANGE_(5, lhs, m_item_dim);
+        return m_Lx_lines + (lhs * m_word_dim);
+    }
+    Word * get_Rx_line (oid_t rhs) const
+    {
+        POMAGMA_ASSERT_RANGE_(5, rhs, m_item_dim);
+        return m_Rx_lines + (rhs * m_word_dim);
+    }
 private:
-    // TODO remove these
-    dense_set & _get_Lx_set (oid_t i)
+    bool _get_Lx_bit (oid_t lhs, oid_t rhs) const
     {
-        return m_temp_set.init(get_Lx_line(i));
+        POMAGMA_ASSERT_RANGE_(5, rhs, m_item_dim);
+        return bool_ref::index(get_Lx_line(lhs), rhs);
     }
-    dense_set & _get_Rx_set (oid_t i)
+    bool _get_Rx_bit (oid_t lhs, oid_t rhs) const
     {
-        return m_temp_set.init(get_Rx_line(i));
+        POMAGMA_ASSERT_RANGE_(5, lhs, m_item_dim);
+        return bool_ref::index(get_Rx_line(rhs), lhs);
     }
-    const dense_set & _get_Lx_set (oid_t i) const
+    bool_ref _get_Lx_bit (oid_t lhs, oid_t rhs)
     {
-        return m_temp_set.init(get_Lx_line(i));
+        POMAGMA_ASSERT_RANGE_(5, rhs, m_item_dim);
+        return bool_ref::index(get_Lx_line(lhs), rhs);
     }
-    const dense_set & _get_Rx_set (oid_t i) const
+    bool_ref _get_Rx_bit (oid_t lhs, oid_t rhs)
     {
-        return m_temp_set.init(get_Rx_line(i));
+        POMAGMA_ASSERT_RANGE_(5, lhs, m_item_dim);
+        return bool_ref::index(get_Rx_line(rhs), lhs);
     }
 
     // intersection wrappers
@@ -82,28 +92,37 @@ public:
 
     // element operations
     // TODO add a replace method for merging
-    // TODO add a return value for atomic operations
     void insert (oid_t lhs, oid_t rhs, oid_t val)
     {
         oid_t & old_val = value(lhs, rhs);
         POMAGMA_ASSERT2(old_val, "double insertion: " << lhs << "," << rhs);
         old_val = val;
-        _get_Lx_set(lhs).insert(rhs);
-        _get_Rx_set(rhs).insert(lhs);
-        //return was_inserted; // TODO
+
+        bool_ref Lx_bit = _get_Lx_bit(lhs, rhs);
+        POMAGMA_ASSERT4(not Lx_bit, "double insertion: " << lhs << "," << rhs);
+        Lx_bit.one();
+
+        bool_ref Rx_bit = _get_Rx_bit(lhs, rhs);
+        POMAGMA_ASSERT4(not Rx_bit, "double insertion: " << lhs << "," << rhs);
+        Rx_bit.one();
     }
     void remove (oid_t lhs, oid_t rhs)
     {
         oid_t & old_val = value(lhs, rhs);
         POMAGMA_ASSERT2(old_val, "double removal: " << lhs << "," << rhs);
         old_val = 0;
-        _get_Lx_set(lhs).remove(rhs);
-        _get_Rx_set(rhs).remove(lhs);
-        //return was_removed; // TODO
+
+        bool_ref Lx_bit = _get_Lx_bit(lhs, rhs);
+        POMAGMA_ASSERT4(Lx_bit, "double removal: " << lhs << "," << rhs);
+        Lx_bit.zero();
+
+        bool_ref Rx_bit = _get_Rx_bit(lhs, rhs);
+        POMAGMA_ASSERT4(Rx_bit, "double removal: " << lhs << "," << rhs);
+        Rx_bit.zero();
     }
     bool contains (oid_t lhs, oid_t rhs) const
     {
-        return _get_Lx_set(lhs).contains(rhs);
+        return _get_Lx_bit(lhs, rhs);
     }
 
     // support operations
