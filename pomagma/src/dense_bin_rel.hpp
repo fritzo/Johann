@@ -50,15 +50,25 @@ public:
     Word * get_Lx_line (oid_t i) const { return m_Lx_lines + i * m_word_dim; }
     Word * get_Rx_line (oid_t i) const { return m_Rx_lines + i * m_word_dim; }
 private:
-    dense_set & _get_Lx_set (oid_t i) { return m_temp_set.init(get_Lx_line(i)); }
-    dense_set & _get_Rx_set (oid_t i) { return m_temp_set.init(get_Rx_line(i)); }
+    dense_set & _get_Lx_set (oid_t i)
+    {
+        m_temp_set.init(get_Lx_line(i));
+        return m_temp_set;
+    }
+    dense_set & _get_Rx_set (oid_t i)
+    {
+        m_temp_set.init(get_Rx_line(i));
+        return m_temp_set;
+    }
     const dense_set & _get_Lx_set (oid_t i) const
     {
-        return m_temp_set.init(get_Lx_line(i));
+        m_temp_set.init(get_Lx_line(i));
+        return m_temp_set;
     }
     const dense_set & _get_Rx_set (oid_t i) const
     {
-        return m_temp_set.init(get_Rx_line(i));
+        m_temp_set.init(get_Rx_line(i));
+        return m_temp_set;
     }
 
     // ctors & dtors
