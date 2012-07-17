@@ -102,6 +102,7 @@ public:
     {
        m_message << std::endl;
        s_log_file << m_message.str() << std::flush;
+       std::cerr << m_message.str() << std::flush; // DEBUG
     }
 
     template<class T> Log & operator<< (const T & t)

@@ -18,8 +18,10 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -DNDEBUG=1")
 
 enable_testing()
 
+if(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
 install(DIRECTORY src/
 	DESTINATION ${PROJECT_SOURCE_DIR}/../include/pomagma
 	FILES_MATCHING PATTERN *.hpp)
+endif()
 
 add_subdirectory(src)
