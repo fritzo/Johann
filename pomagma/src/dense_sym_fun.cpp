@@ -12,8 +12,7 @@ dense_sym_fun::dense_sym_fun (size_t item_dim)
       m_word_dim(dense_set::word_count(m_item_dim)),
       m_blocks(pomagma::alloc_blocks<Block4x4>(
                   unordered_pair_count(m_block_dim))),
-      m_Lx_lines(pomagma::alloc_blocks<Word>((m_item_dim + 1) * m_word_dim)),
-      m_temp_line(pomagma::alloc_blocks<Word>(m_word_dim))
+      m_lines(item_dim, true)
 {
     POMAGMA_DEBUG("creating dense_sym_fun with "
             << unordered_pair_count(m_block_dim) << " blocks");
@@ -23,14 +22,11 @@ dense_sym_fun::dense_sym_fun (size_t item_dim)
 
     // initialize to zero
     bzero(m_blocks, unordered_pair_count(m_block_dim) * sizeof(Block4x4));
-    bzero(m_Lx_lines, (m_item_dim + 1) * m_word_dim * sizeof(Word));
 }
 
 dense_sym_fun::~dense_sym_fun ()
 {
     pomagma::free_blocks(m_blocks);
-    pomagma::free_blocks(m_Lx_lines);
-    pomagma::free_blocks(m_temp_line);
 }
 
 // for growing
@@ -50,7 +46,7 @@ void dense_sym_fun::move_from (const dense_sym_fun & other)
     unsigned minN = min(m_item_dim, other.m_item_dim);
     unsigned minL = min(m_word_dim, other.m_word_dim);
     for (unsigned i = 1; i <= minN; ++i) {
-        memcpy(get_Lx_line(i), other.get_Lx_line(i), sizeof(Word) * minL);
+        memcpy(m_lines.Lx(i), other.m_lines.Lx(i), sizeof(Word) * minL);
     }
 }
 
@@ -63,7 +59,7 @@ unsigned dense_sym_fun::count_pairs () const
 
     unsigned result = 0;
     for (unsigned i = 1; i <= m_item_dim; ++i) {
-        set.init(get_Lx_line(i));
+        set.init(m_lines.Lx(i));
         result += set.count_items();
     }
     return result;
@@ -112,11 +108,11 @@ void dense_sym_fun::remove(
         oid_t rhs = iter.moving();
         oid_t & dep_val = value(rhs, dep);
         remove_value(dep_val);
-        set.init(get_Lx_line(rhs));
+        set.init(m_lines.Lx(rhs));
         set.remove(dep);
         dep_val = 0;
     }
-    set.init(get_Lx_line(dep));
+    set.init(m_lines.Lx(dep));
     set.zero();
 }
 
@@ -131,18 +127,20 @@ void dense_sym_fun::merge(
     POMAGMA_ASSERT_RANGE_(4, rep, m_item_dim);
 
     dense_set set(m_item_dim, NULL);
+    dense_set dep_set(m_item_dim, NULL);
+    dense_set rep_set(m_item_dim, NULL);
 
     // (dep, dep) -> (dep, rep)
     if (contains(dep, dep)) {
         oid_t & dep_val = value(dep, dep);
         oid_t & rep_val = value(rep, rep);
-        set.init(get_Lx_line(dep));
+        set.init(m_lines.Lx(dep));
         set.remove(dep);
         if (rep_val) {
             merge_values(dep_val, rep_val);
         } else {
             move_value(dep_val, rep, rep);
-            set.init(get_Lx_line(rep));
+            set.init(m_lines.Lx(rep));
             set.insert(rep);
             rep_val = dep_val;
         }
@@ -154,7 +152,7 @@ void dense_sym_fun::merge(
         oid_t rhs = iter.moving();
         oid_t & dep_val = value(rhs, dep);
         oid_t & rep_val = value(rhs, rep);
-        set.init(get_Lx_line(rhs));
+        set.init(m_lines.Lx(rhs));
         set.remove(dep);
         if (rep_val) {
             merge_values(dep_val,rep_val);
@@ -165,24 +163,9 @@ void dense_sym_fun::merge(
         }
         dep_val = 0;
     }
-    dense_set rep_set(m_item_dim, get_Lx_line(rep));
-    dense_set dep_set(m_item_dim, get_Lx_line(dep));
+    rep_set.init(m_lines.Lx(rep));
+    dep_set.init(m_lines.Lx(dep));
     rep_set.merge(dep_set);
 }
 
-//----------------------------------------------------------------------------
-// Intersection iteration
-
-Word * dense_sym_fun::_get_LLx_line (oid_t i, oid_t j) const
-{
-    Word * i_line = get_Lx_line(i);
-    Word * j_line = get_Lx_line(j);
-    for (oid_t k_ = 0; k_ < m_word_dim; ++k_) {
-        m_temp_line[k_] = i_line[k_] & j_line[k_];
-    }
-    return m_temp_line;
-}
-
-}
-
-
+} // namespace pomagma

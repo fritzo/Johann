@@ -10,8 +10,7 @@ dense_bin_fun::dense_bin_fun (size_t item_dim)
       m_word_dim(dense_set::word_count(m_item_dim)),
       m_block_dim((m_item_dim + ITEMS_PER_BLOCK) / ITEMS_PER_BLOCK),
       m_blocks(pomagma::alloc_blocks<Block4x4>(m_block_dim * m_block_dim)),
-      m_lines(item_dim, false),
-      m_temp_line(pomagma::alloc_blocks<Word>(m_word_dim))
+      m_lines(item_dim, false)
 {
     POMAGMA_DEBUG("creating dense_bin_fun with "
             << (m_block_dim * m_block_dim) << " blocks");
@@ -26,7 +25,6 @@ dense_bin_fun::dense_bin_fun (size_t item_dim)
 dense_bin_fun::~dense_bin_fun ()
 {
     pomagma::free_blocks(m_blocks);
-    pomagma::free_blocks(m_temp_line);
 }
 
 // for growing

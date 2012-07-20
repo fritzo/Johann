@@ -13,15 +13,11 @@ namespace pomagma
 // a tight binary function in 4x4 word blocks
 class dense_bin_fun : noncopyable
 {
-    // data, in blocks
     const size_t m_item_dim;
     const size_t m_word_dim;
     const size_t m_block_dim;
     Block4x4 * const m_blocks;
-
-    // dense sets for iteration
     base_bin_rel m_lines;
-    mutable Word * m_temp_line; // TODO FIXME this is not thread-safe
 
     // block wrappers
     oid_t * _block (size_t i_, size_t j_)
@@ -66,10 +62,7 @@ public:
     // TODO add a replace method for merging
     void insert (oid_t lhs, oid_t rhs, oid_t val);
     void remove (oid_t lhs, oid_t rhs);
-    bool contains (oid_t lhs, oid_t rhs) const
-    {
-        return m_lines.Lx(lhs, rhs);
-    }
+    bool contains (oid_t lhs, oid_t rhs) const { return m_lines.Lx(lhs, rhs); }
 
     // support operations
     void remove (
@@ -111,7 +104,7 @@ inline oid_t dense_bin_fun::value (oid_t i, oid_t j) const
 inline void dense_bin_fun::insert (oid_t lhs, oid_t rhs, oid_t val)
 {
     oid_t & old_val = value(lhs, rhs);
-    POMAGMA_ASSERT2(old_val, "double insertion: " << lhs << "," << rhs);
+    POMAGMA_ASSERT2(not old_val, "double insertion: " << lhs << "," << rhs);
     old_val = val;
 
     bool_ref Lx_bit = m_lines.Lx(lhs, rhs);
