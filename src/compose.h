@@ -97,10 +97,8 @@ inline Comp find_comp_eqn (Ob lhs, Ob rhs); //only used in Ob parsing
 inline Ob find_comp  (Ob lhs, Ob rhs);
 inline Ob find_linv_comp (Ob lhs, Ob comp);
 inline Ob find_rinv_comp (Ob comp, Ob rhs);
-inline const Set Lx_support (Ob ob)
-    { return Set(Ob::size(), g_comp_table->get_Lx_line(ob)); }
-inline const Set Rx_support (Ob ob)
-    { return Set(Ob::size(), g_comp_table->get_Rx_line(ob)); }
+inline const Set Lx_support (Ob ob) { return g_comp_table->get_Lx_set(ob); }
+inline const Set Rx_support (Ob ob) { return g_comp_table->get_Rx_set(ob); }
 
 //insertion/creation, deletion
 Comp create (Ob comp, Ob lhs, Ob rhs);

@@ -105,8 +105,7 @@ void validate (Int level);
 //finding functions (inlines defined below
 inline Join find_join_eqn (Ob lhs, Ob rhs); //only used in Ob parsing
 inline Ob find_join  (Ob lhs, Ob rhs);
-inline const Set Lx_support (Ob ob)
-    { return Set(Ob::size(), g_join_table->get_Lx_line(ob)); }
+inline const Set Lx_support (Ob ob) { return g_join_table->get_Lx_set(ob); }
 
 //insertion/creation, deletion
 Join create (Ob join, Ob lhs, Ob rhs);

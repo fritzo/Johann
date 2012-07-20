@@ -46,9 +46,17 @@ class dense_bin_rel
     inline bool _bit_Rx (oid_t i, oid_t j) const;
 
     // set wrappers
-public:
     Word * get_Lx_line (oid_t i) const { return m_Lx_lines + i * m_word_dim; }
     Word * get_Rx_line (oid_t i) const { return m_Rx_lines + i * m_word_dim; }
+public:
+    dense_set get_Lx_set (oid_t lhs)
+    {
+        return dense_set(m_item_dim, get_Lx_line(lhs));
+    }
+    dense_set get_Rx_set (oid_t rhs)
+    {
+        return dense_set(m_item_dim, get_Rx_line(rhs));
+    }
 private:
     dense_set & _get_Lx_set (oid_t i)
     {

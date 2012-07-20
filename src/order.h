@@ -23,7 +23,7 @@ typedef pomagma::dense_bin_rel OrdTable;
 extern OrdTable * g_pos_table; // should be private
 extern OrdTable * g_neg_table; // should be private
 enum { NUM_TEMP_SETS = 4 };
-extern Set * g_temp_sets[NUM_TEMP_SETS]; // should be private
+extern Set * g_temp_sets[NUM_TEMP_SETS]; // TODO allocate per-worker, not here
 inline Set & temp_set (unsigned n=0)
 {
     Assert (n < NUM_TEMP_SETS, "too few temp sets");
@@ -157,14 +157,10 @@ inline void ensure_nless (const Set& xs, Ob y)
     { g_neg_table->ensure_inserted(xs,y, CS::enforce_nless); }
 
 // set access
-inline const Set above (Ob x)
-    { return Set(Ob::capacity(), g_pos_table->get_Lx_line(x)); }
-inline const Set below (Ob x)
-    { return Set(Ob::capacity(), g_pos_table->get_Rx_line(x)); }
-inline const Set nabove (Ob x)
-    { return Set(Ob::capacity(), g_neg_table->get_Lx_line(x)); }
-inline const Set nbelow (Ob x)
-    { return Set(Ob::capacity(), g_neg_table->get_Rx_line(x)); }
+inline const Set above (Ob x) { return g_pos_table->get_Lx_set(x); }
+inline const Set below (Ob x) { return g_pos_table->get_Rx_set(x); }
+inline const Set nabove (Ob x) { return g_neg_table->get_Lx_set(x); }
+inline const Set nbelow (Ob x) { return g_neg_table->get_Rx_set(x); }
 
 // ob support (used obs) access
 inline void insert (Ob ob) { g_pos_table->insert(ob); g_neg_table->insert(ob); }

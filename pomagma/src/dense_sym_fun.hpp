@@ -37,11 +37,16 @@ class dense_sym_fun
     }
 
     // set wrappers
-public:
     Word * get_Lx_line (oid_t lhs) const
     {
         POMAGMA_ASSERT_RANGE_(5, lhs, m_item_dim);
         return m_Lx_lines + (lhs * m_word_dim);
+    }
+public:
+    dense_set get_Lx_set (oid_t lhs) const
+    {
+        POMAGMA_ASSERT_RANGE_(5, lhs, m_item_dim);
+        return dense_set(m_item_dim, get_Lx_line(lhs));
     }
 private:
     bool _get_Lx_bit (oid_t lhs, oid_t rhs) const

@@ -41,6 +41,14 @@ public:
           m_alias(true)
     {
     }
+    dense_set (const dense_set & other)
+        : m_item_dim(other.m_item_dim),
+          m_word_dim(other.m_word_dim),
+          m_line(other.m_line),
+          m_alias(true)
+    {
+        POMAGMA_ASSERT(other.m_alias, "copy-constructed a non-alias dense_set");
+    }
     //dense_set (size_t item_dim, AlignedBuffer<Word> & buffer)
     //    : m_item_dim(item_dim),
     //      m_word_dim(word_count(item_dim)),

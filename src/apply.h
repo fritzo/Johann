@@ -98,10 +98,8 @@ inline App find_app_eqn (Ob lhs, Ob rhs); //only used in Ob parsing
 inline Ob find_app  (Ob lhs, Ob rhs);
 inline Ob find_ldiv (Ob lhs, Ob app);
 inline Ob find_rdiv (Ob app, Ob rhs);
-inline const Set Lx_support (Ob ob)
-    { return Set(Ob::size(), g_app_table->get_Lx_line(ob)); }
-inline const Set Rx_support (Ob ob)
-    { return Set(Ob::size(), g_app_table->get_Rx_line(ob)); }
+inline const Set Lx_support (Ob ob) { return g_app_table->get_Lx_set(ob); }
+inline const Set Rx_support (Ob ob) { return g_app_table->get_Rx_set(ob); }
 
 //insertion/creation, deletion
 App create (Ob app, Ob lhs, Ob rhs);

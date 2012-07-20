@@ -35,8 +35,14 @@ class dense_bin_fun : noncopyable
 
     // set wrappers
 public:
-    Word * get_Lx_line (oid_t lhs) { return m_lines.Lx(lhs); }
-    Word * get_Rx_line (oid_t rhs) { return m_lines.Rx(rhs); }
+    dense_set get_Lx_set (oid_t lhs)
+    {
+        return dense_set(m_item_dim, m_lines.Lx(lhs));
+    }
+    dense_set get_Rx_set (oid_t rhs)
+    {
+        return dense_set(m_item_dim, m_lines.Rx(rhs));
+    }
 private:
 
     // TODO force callee to provide the dense_set
