@@ -202,33 +202,4 @@ void dense_bin_fun::merge(
     rep_set.merge(dep_set);
 }
 
-// intersection iteration
-Word * dense_bin_fun::_get_RRx_line (oid_t i, oid_t j) const
-{
-    Word * i_line = m_lines.Rx(i);
-    Word * j_line = m_lines.Rx(j);
-    for (size_t k_ = 0; k_ < m_word_dim; ++k_) {
-        m_temp_line[k_] = i_line[k_] & j_line[k_];
-    }
-    return m_temp_line;
-}
-Word * dense_bin_fun::_get_LRx_line (oid_t i, oid_t j) const
-{
-    Word * i_line = m_lines.Lx(i);
-    Word * j_line = m_lines.Rx(j);
-    for (size_t k_ = 0; k_ < m_word_dim; ++k_) {
-        m_temp_line[k_] = i_line[k_] & j_line[k_];
-    }
-    return m_temp_line;
-}
-Word * dense_bin_fun::_get_LLx_line (oid_t i, oid_t j) const
-{
-    Word * i_line = m_lines.Lx(i);
-    Word * j_line = m_lines.Lx(j);
-    for (size_t k_ = 0; k_ < m_word_dim; ++k_) {
-        m_temp_line[k_] = i_line[k_] & j_line[k_];
-    }
-    return m_temp_line;
-}
-
 } // namespace pomagma

@@ -1,5 +1,5 @@
-#ifndef POMAGMA_DENSE_BIN_FUN_H
-#define POMAGMA_DENSE_BIN_FUN_H
+#ifndef POMAGMA_DENSE_BIN_FUN_HPP
+#define POMAGMA_DENSE_BIN_FUN_HPP
 
 #include "util.hpp"
 #include "dense_set.hpp"
@@ -33,26 +33,19 @@ class dense_bin_fun : noncopyable
         return m_blocks[m_block_dim * j_ + i_];
     }
 
-    // set wrappers
 public:
-    dense_set get_Lx_set (oid_t lhs)
+
+    // set wrappers
+    dense_set get_Lx_set (oid_t lhs) const
     {
         return dense_set(m_item_dim, m_lines.Lx(lhs));
     }
-    dense_set get_Rx_set (oid_t rhs)
+    dense_set get_Rx_set (oid_t rhs) const
     {
         return dense_set(m_item_dim, m_lines.Rx(rhs));
     }
-private:
-
-    // TODO force callee to provide the dense_set
-    // intersection wrappers
-    Word * _get_RRx_line (oid_t i, oid_t j) const;
-    Word * _get_LRx_line (oid_t i, oid_t j) const;
-    Word * _get_LLx_line (oid_t i, oid_t j) const;
 
     // ctors & dtors
-public:
     dense_bin_fun (size_t item_dim);
     ~dense_bin_fun ();
     void move_from (const dense_bin_fun & other); // for growing
@@ -282,16 +275,19 @@ public:
 
     // construction
     RRxx_Iter (const dense_bin_fun * fun)
-        : m_set(fun->m_item_dim, NULL),
+        : m_set(fun->m_item_dim),
           m_iter(m_set, false),
           m_fun(*fun)
-    {}
+    {
+    }
 
     // traversal
     void begin () { m_iter.begin(); if (ok()) m_lhs = *m_iter; }
     void begin (oid_t fixed1, oid_t fixed2)
     {
-        m_set.init(m_fun._get_RRx_line(fixed1, fixed2));
+        dense_set set1 = m_fun.get_Rx_set(fixed1);
+        dense_set set2 = m_fun.get_Rx_set(fixed2);
+        m_set.set_insn(set1, set2);
         m_iter.begin();
         if (ok()) {
             m_rhs1 = fixed1;
@@ -329,16 +325,19 @@ public:
 
     // construction
     LRxx_Iter (const dense_bin_fun * fun)
-        : m_set(fun->m_item_dim, NULL),
+        : m_set(fun->m_item_dim),
           m_iter(m_set, false),
           m_fun(*fun)
-    {}
+    {
+    }
 
     // traversal
     void begin () { m_iter.begin(); if (ok()) m_rhs1 = *m_iter; }
     void begin (oid_t fixed1, oid_t fixed2)
     {
-        m_set.init(m_fun._get_LRx_line(fixed1, fixed2));
+        dense_set set1 = m_fun.get_Lx_set(fixed1);
+        dense_set set2 = m_fun.get_Rx_set(fixed2);
+        m_set.set_insn(set1, set2);
         m_iter.begin();
         if (ok()) {
             m_lhs1 = fixed1;
@@ -377,7 +376,7 @@ public:
 
     // construction
     LLxx_Iter (const dense_bin_fun * fun)
-        : m_set(fun->m_item_dim, NULL),
+        : m_set(fun->m_item_dim),
           m_iter(m_set, false),
           m_fun(*fun)
     {
@@ -387,7 +386,9 @@ public:
     void begin () { m_iter.begin(); if (ok()) m_rhs = *m_iter; }
     void begin (oid_t fixed1, oid_t fixed2)
     {
-        m_set.init(m_fun._get_LLx_line(fixed1, fixed2));
+        dense_set set1 = m_fun.get_Lx_set(fixed1);
+        dense_set set2 = m_fun.get_Lx_set(fixed2);
+        m_set.set_insn(set1, set2);
         m_iter.begin();
         if (ok()) {
             m_lhs1 = fixed1;
@@ -414,5 +415,4 @@ public:
 
 } // namespace pomagma
 
-#endif // POMAGMA_DENSE_BIN_FUN_H
-
+#endif // POMAGMA_DENSE_BIN_FUN_HPP

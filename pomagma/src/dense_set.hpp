@@ -1,5 +1,5 @@
-#ifndef POMAGMA_DENSE_SET_H
-#define POMAGMA_DENSE_SET_H
+#ifndef POMAGMA_DENSE_SET_HPP
+#define POMAGMA_DENSE_SET_HPP
 
 #include "util.hpp"
 //#include "aligned_alloc.hpp"
@@ -178,4 +178,4 @@ inline void dense_set::iterator::begin ()
 
 } // namespace pomagma
 
-#endif // POMAGMA_DENSE_SET_H
+#endif // POMAGMA_DENSE_SET_HPP

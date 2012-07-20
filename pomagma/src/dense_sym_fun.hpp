@@ -1,5 +1,5 @@
-#ifndef POMAGMA_DENSE_SYM_FUN_H
-#define POMAGMA_DENSE_SYM_FUN_H
+#ifndef POMAGMA_DENSE_SYM_FUN_HPP
+#define POMAGMA_DENSE_SYM_FUN_HPP
 
 #include "util.hpp"
 #include "dense_set.hpp"
@@ -268,4 +268,4 @@ public:
 
 } // namespace pomagma
 
-#endif // POMAGMA_DENSE_SYM_FUN_H
+#endif // POMAGMA_DENSE_SYM_FUN_HPP

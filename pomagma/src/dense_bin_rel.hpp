@@ -1,5 +1,5 @@
-#ifndef POMAGMA_DENSE_BIN_REL_H
-#define POMAGMA_DENSE_BIN_REL_H
+#ifndef POMAGMA_DENSE_BIN_REL_HPP
+#define POMAGMA_DENSE_BIN_REL_HPP
 
 #include "util.hpp"
 #include "dense_set.hpp"
@@ -49,11 +49,11 @@ class dense_bin_rel
     Word * get_Lx_line (oid_t i) const { return m_Lx_lines + i * m_word_dim; }
     Word * get_Rx_line (oid_t i) const { return m_Rx_lines + i * m_word_dim; }
 public:
-    dense_set get_Lx_set (oid_t lhs)
+    dense_set get_Lx_set (oid_t lhs) const
     {
         return dense_set(m_item_dim, get_Lx_line(lhs));
     }
-    dense_set get_Rx_set (oid_t rhs)
+    dense_set get_Rx_set (oid_t rhs) const
     {
         return dense_set(m_item_dim, get_Rx_line(rhs));
     }
@@ -339,4 +339,4 @@ public:
 
 } // namespace pomagma
 
-#endif // POMAGMA_DENSE_BIN_REL_H
+#endif // POMAGMA_DENSE_BIN_REL_HPP

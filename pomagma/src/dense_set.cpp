@@ -47,7 +47,7 @@ void dense_set::move_from (const dense_set & other, const oid_t * new2old)
 // not fast
 bool dense_set::empty () const
 {
-    for (size_t m = 0; m < m_word_dim; ++m) {
+    for (size_t m = 0, M = m_word_dim; m < M; ++m) {
         if (m_line[m]) return false;
     }
     return true;
@@ -57,7 +57,7 @@ bool dense_set::empty () const
 size_t dense_set::count_items () const
 {
     unsigned result = 0;
-    for (size_t m = 0; m < m_word_dim; ++m) {
+    for (size_t m = 0, M = m_word_dim; m < M; ++m) {
         // WARNING only unsigned's work with >>
         static_assert(Word(1) >> 1 == 0, "bitshifting Word fails");
         for (Word word = m_line[m]; word; word>>=1) {
@@ -104,7 +104,7 @@ bool dense_set::operator== (const dense_set & other) const
 {
     POMAGMA_ASSERT1(item_dim() == other.item_dim(), "item_dim mismatch");
 
-    for (size_t m = 0; m < m_word_dim; ++m) {
+    for (size_t m = 0, M = m_word_dim; m < M; ++m) {
         if (m_line[m] != other.m_line[m]) return false;
     }
     return true;
@@ -114,7 +114,7 @@ bool dense_set::operator<= (const dense_set & other) const
 {
     POMAGMA_ASSERT1(item_dim() == other.item_dim(), "item_dim mismatch");
 
-    for (size_t m = 0; m < m_word_dim; ++m) {
+    for (size_t m = 0, M = m_word_dim; m < M; ++m) {
         if (m_line[m] & ~other.m_line[m]) return false;
     }
     return true;
@@ -124,7 +124,7 @@ bool dense_set::disjoint (const dense_set & other) const
 {
     POMAGMA_ASSERT1(item_dim() == other.item_dim(), "item_dim mismatch");
 
-    for (size_t m = 0; m < m_word_dim; ++m) {
+    for (size_t m = 0, M = m_word_dim; m < M; ++m) {
         if (m_line[m] & other.m_line[m]) return false;
     }
     return true;
@@ -138,7 +138,7 @@ void dense_set::operator += (const dense_set & other)
     const Word * restrict s = other.m_line;
     Word * restrict t = m_line;
 
-    for (size_t m = 0; m < m_word_dim; ++m) {
+    for (size_t m = 0, M = m_word_dim; m < M; ++m) {
         t[m] |= s[m];
     }
 }
@@ -151,7 +151,7 @@ void dense_set::operator *= (const dense_set & other)
     const Word * restrict s = other.m_line;
     Word * restrict t = m_line;
 
-    for (size_t m = 0; m < m_word_dim; ++m) {
+    for (size_t m = 0, M = m_word_dim; m < M; ++m) {
         t[m] &= s[m];
     }
 }
@@ -165,7 +165,7 @@ void dense_set::set_union (const dense_set & lhs, const dense_set & rhs)
     const Word * restrict t = rhs.m_line;
     Word * restrict u = m_line;
 
-    for (size_t m = 0; m < m_word_dim; ++m) {
+    for (size_t m = 0, M = m_word_dim; m < M; ++m) {
         u[m] = s[m] | t[m];
     }
 }
@@ -179,7 +179,7 @@ void dense_set::set_diff (const dense_set & lhs, const dense_set & rhs)
     const Word * restrict t = rhs.m_line;
     Word * restrict u = m_line;
 
-    for (size_t m = 0; m < m_word_dim; ++m) {
+    for (size_t m = 0, M = m_word_dim; m < M; ++m) {
         u[m] = s[m] & ~t[m];
     }
 }
@@ -193,7 +193,7 @@ void dense_set::set_insn (const dense_set & lhs, const dense_set & rhs)
     const Word * restrict t = rhs.m_line;
     Word * restrict u = m_line;
 
-    for (size_t m = 0; m < m_word_dim; ++m) {
+    for (size_t m = 0, M = m_word_dim; m < M; ++m) {
         u[m] = s[m] & t[m];
     }
 }
@@ -207,7 +207,7 @@ void dense_set::set_nor (const dense_set & lhs, const dense_set & rhs)
     const Word * restrict t = rhs.m_line;
     Word * restrict u = m_line;
 
-    for (size_t m = 0; m < m_word_dim; ++m) {
+    for (size_t m = 0, M = m_word_dim; m < M; ++m) {
         u[m] = ~ (s[m] | t[m]);
     }
 }
@@ -220,7 +220,7 @@ void dense_set::merge (dense_set & dep)
     Word * restrict d = dep.m_line;
     Word * restrict r = m_line;
 
-    for (size_t m = 0; m < m_word_dim; ++m) {
+    for (size_t m = 0, M = m_word_dim; m < M; ++m) {
         r[m] |= d[m];
         d[m] = 0;
     }
@@ -237,7 +237,7 @@ bool dense_set::merge (dense_set & dep, dense_set & diff)
     Word * restrict c = diff.m_line;
 
     Word changed = 0;
-    for (size_t m = 0; m < m_word_dim; ++m) {
+    for (size_t m = 0, M = m_word_dim; m < M; ++m) {
         changed |= (c[m] = d[m] & ~r[m]);
         r[m] |= d[m];
         d[m] = 0;
@@ -257,7 +257,7 @@ bool dense_set::ensure (const dense_set & src, dense_set & diff)
     Word * restrict c = diff.m_line;
 
     Word changed = 0;
-    for (size_t m = 0; m < m_word_dim; ++m) {
+    for (size_t m = 0, M = m_word_dim; m < M; ++m) {
         changed |= (c[m] = d[m] & ~r[m]);
         r[m] |= d[m];
     }
@@ -300,4 +300,3 @@ void dense_set::iterator::next ()
 }
 
 } // namespace pomagma
-
