@@ -33,6 +33,12 @@ class dense_bin_fun : noncopyable
         return m_blocks[m_block_dim * j_ + i_];
     }
 
+    // set wrappers
+public:
+    Word * get_Lx_line (oid_t lhs) { return m_lines.Lx(lhs); }
+    Word * get_Rx_line (oid_t rhs) { return m_lines.Rx(rhs); }
+private:
+
     // TODO force callee to provide the dense_set
     // intersection wrappers
     Word * _get_RRx_line (oid_t i, oid_t j) const;
