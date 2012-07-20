@@ -33,7 +33,7 @@ class dense_bin_rel : noncopyable
     const size_t m_word_dim;
     const size_t m_round_item_dim; // = m_word_dim * BITS_PER_WORD
     const size_t m_round_word_dim; // = m_round_item_dim * BITS_PER_WORD
-    dense_set m_support;
+    dense_set m_support; // TODO move to const dense_set & base_bin_rel::...
     base_bin_rel m_lines;
     mutable Word * m_temp_line; // TODO FIXME this is not thread-safe
 

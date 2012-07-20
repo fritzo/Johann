@@ -17,6 +17,7 @@ class base_bin_rel : noncopyable
     const size_t m_round_word_dim;
     Word * const m_Lx_lines;
     Word * const m_Rx_lines;
+    //const dense_set & m_support; // TODO add for validation
 
     bool _symmetric () const { return m_Lx_lines == m_Rx_lines; }
 
