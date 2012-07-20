@@ -21,7 +21,7 @@ test: build/debug log
 	$(MAKE) -C build/debug
 	echo '' > log/test.log
 	POMAGMA_LOG_LEVEL=3 \
-	POMAGMA_LOG_FILE=log/test.log \
+	POMAGMA_LOG_FILE=$(CURDIR)/log/test.log \
 	$(MAKE) -C build/debug test \
 	|| (grep -C3 -i error log/test.log && false)
 

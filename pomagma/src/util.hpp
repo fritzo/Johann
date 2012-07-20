@@ -152,7 +152,7 @@ public:
 
 #define POMAGMA_ASSERT_RANGE_(POMAGMA_level, POMAGMA_i, POMAGMA_dim)\
     POMAGMA_ASSERT_(POMAGMA_level,\
-        1 < (POMAGMA_i) and (POMAGMA_i) <= (POMAGMA_dim),\
+        1 <= (POMAGMA_i) and (POMAGMA_i) <= (POMAGMA_dim),\
         "out of range: " #POMAGMA_i " = " << (POMAGMA_i))
 
 //----------------------------------------------------------------------------
