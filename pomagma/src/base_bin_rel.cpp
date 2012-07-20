@@ -55,4 +55,56 @@ void base_bin_rel::move_from (const base_bin_rel & other)
     }
 }
 
+void base_bin_rel::validate() const
+{
+    if (_symmetric()) {
+
+        // check emptiness outside of support
+        dense_set set(m_item_dim, NULL);
+        dense_set round_set(m_round_item_dim, NULL);
+        for (oid_t i = 0; i < m_round_item_dim; ++i) {
+            if (1 <= i and i <= m_item_dim) {
+                set.init(Lx(i));
+                set.validate();
+            } else {
+                round_set.init(m_Lx_lines + m_word_dim * i);
+                POMAGMA_ASSERT(round_set.empty(), "Lx(" << i << ") not empty");
+            }
+        }
+
+        // check for Lx/Rx agreement
+        for (oid_t i = 1; i <= m_item_dim; ++i) {
+        for (oid_t j = i; j <= m_item_dim; ++j) {
+            POMAGMA_ASSERT(Lx(i, j) == Rx(i, j),
+                    "Lx, Rx disagree at " << i << ',' << j);
+        }}
+
+    } else {
+
+        // check emptiness outside of support
+        dense_set set(m_item_dim, NULL);
+        dense_set round_set(m_round_item_dim, NULL);
+        for (oid_t i = 0; i < m_round_item_dim; ++i) {
+            if (1 <= i and i <= m_item_dim) {
+                set.init(Lx(i));
+                set.validate();
+                set.init(Rx(i));
+                set.validate();
+            } else {
+                round_set.init(m_Lx_lines + m_word_dim * i);
+                POMAGMA_ASSERT(round_set.empty(), "Lx(" << i << ") not empty");
+                round_set.init(m_Rx_lines + m_word_dim * i);
+                POMAGMA_ASSERT(round_set.empty(), "Rx(" << i << ") not empty");
+            }
+        }
+
+        // check for Lx/Rx agreement
+        for (oid_t i = 1; i <= m_item_dim; ++i) {
+        for (oid_t j = 1; j <= m_item_dim; ++j) {
+            POMAGMA_ASSERT(Lx(i, j) == Rx(i, j),
+                    "Lx, Rx disagree at " << i << ',' << j);
+        }}
+    }
+}
+
 } // namespace pomagma

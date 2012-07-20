@@ -3,6 +3,7 @@
 
 #include "util.hpp"
 #include "dense_set.hpp"
+#include "base_bin_rel.hpp"
 
 namespace pomagma
 {
@@ -10,7 +11,7 @@ namespace pomagma
 // WARNING zero/null items are not allowed
 
 // a pair of dense sets of dense sets, one col-row, one row-col
-class dense_bin_rel
+class dense_bin_rel : noncopyable
 {
     struct Pos
     {
@@ -28,59 +29,27 @@ class dense_bin_rel
     };
 
     // data
-    // TODO switch usigned -> size_t
     const size_t m_item_dim; // number of items per slice
     const size_t m_word_dim;
     const size_t m_round_item_dim; // = m_word_dim * BITS_PER_WORD
     const size_t m_round_word_dim; // = m_round_item_dim * BITS_PER_WORD
     dense_set m_support;
-    Word * m_Lx_lines;
-    Word * m_Rx_lines;
-    mutable dense_set m_temp_set; // TODO FIXME this is not thread-safe
+    base_bin_rel m_lines;
     mutable Word * m_temp_line; // TODO FIXME this is not thread-safe
 
-    // bit wrappers
-    inline bool_ref _bit_Lx (oid_t i, oid_t j);
-    inline bool_ref _bit_Rx (oid_t i, oid_t j);
-    inline bool _bit_Lx (oid_t i, oid_t j) const;
-    inline bool _bit_Rx (oid_t i, oid_t j) const;
+public:
 
     // set wrappers
-    Word * get_Lx_line (oid_t i) const { return m_Lx_lines + i * m_word_dim; }
-    Word * get_Rx_line (oid_t i) const { return m_Rx_lines + i * m_word_dim; }
-public:
     dense_set get_Lx_set (oid_t lhs) const
     {
-        return dense_set(m_item_dim, get_Lx_line(lhs));
+        return dense_set(m_item_dim, m_lines.Lx(lhs));
     }
     dense_set get_Rx_set (oid_t rhs) const
     {
-        return dense_set(m_item_dim, get_Rx_line(rhs));
-    }
-private:
-    dense_set & _get_Lx_set (oid_t i)
-    {
-        m_temp_set.init(get_Lx_line(i));
-        return m_temp_set;
-    }
-    dense_set & _get_Rx_set (oid_t i)
-    {
-        m_temp_set.init(get_Rx_line(i));
-        return m_temp_set;
-    }
-    const dense_set & _get_Lx_set (oid_t i) const
-    {
-        m_temp_set.init(get_Lx_line(i));
-        return m_temp_set;
-    }
-    const dense_set & _get_Rx_set (oid_t i) const
-    {
-        m_temp_set.init(get_Rx_line(i));
-        return m_temp_set;
+        return dense_set(m_item_dim, m_lines.Rx(rhs));
     }
 
     // ctors & dtors
-public:
     dense_bin_rel (size_t item_dim, bool is_full = false);
     ~dense_bin_rel ();
     void move_from (const dense_bin_rel & other, const oid_t* new2old=NULL);
@@ -94,8 +63,8 @@ public:
     void print_table (size_t n = 0) const;
 
     // element operations
-    bool contains_Lx (oid_t i, oid_t j) const { return _bit_Lx(i, j); }
-    bool contains_Rx (oid_t i, oid_t j) const { return _bit_Rx(i, j); }
+    bool contains_Lx (oid_t i, oid_t j) const { return m_lines.Lx(i, j); }
+    bool contains_Rx (oid_t i, oid_t j) const { return m_lines.Rx(i, j); }
     bool contains (oid_t i, oid_t j) const { return contains_Lx(i, j); }
     bool contains (const Pos & p) const { return contains_Lx(p); }
     bool contains_Lx (const Pos & p) const
@@ -108,10 +77,10 @@ public:
     }
 private:
     // one-sided versions
-    void insert_Lx (oid_t i, oid_t j) { _bit_Lx(i,j).one(); }
-    void insert_Rx (oid_t i, oid_t j) { _bit_Rx(i,j).one(); }
-    void remove_Lx (oid_t i, oid_t j) { _bit_Lx(i,j).zero(); }
-    void remove_Rx (oid_t i, oid_t j) { _bit_Rx(i,j).zero(); }
+    void insert_Lx (oid_t i, oid_t j) { m_lines.Lx(i,j).one(); }
+    void insert_Rx (oid_t i, oid_t j) { m_lines.Rx(i,j).one(); }
+    void remove_Lx (oid_t i, oid_t j) { m_lines.Lx(i,j).zero(); }
+    void remove_Rx (oid_t i, oid_t j) { m_lines.Rx(i,j).zero(); }
     void remove_Lx (const dense_set & is, oid_t i);
     void remove_Rx (oid_t i, const dense_set& js);
 public:
@@ -152,39 +121,13 @@ public:
     template<bool dir> class Iterator;
 };
 
-// bit wrappers
-inline bool_ref dense_bin_rel::_bit_Lx (oid_t i, oid_t j)
-{
-    POMAGMA_ASSERT5(supports(i, j),
-            "_bit_Lx called on unsupported pair " << i << ',' << j);
-    return _get_Lx_set(i)(j);
-}
-inline bool_ref dense_bin_rel::_bit_Rx (oid_t i, oid_t j)
-{
-    POMAGMA_ASSERT5(supports(i, j),
-            "_bit_Rx called on unsupported pair " << i << ',' << j);
-    return _get_Rx_set(j)(i);
-}
-inline bool dense_bin_rel::_bit_Lx (oid_t i, oid_t j) const
-{
-    POMAGMA_ASSERT5(supports(i,j),
-            "_bit_Lx called on unsupported pair " << i << ',' << j);
-    return _get_Lx_set(i)(j);
-}
-inline bool dense_bin_rel::_bit_Rx (oid_t i, oid_t j) const
-{
-    POMAGMA_ASSERT5(supports(i,j),
-            "_bit_Rx called on unsupported pair " << i << ',' << j);
-    return _get_Rx_set(j)(i);
-}
-
 //----------------------------------------------------------------------------
 // Operations
 
 // returns whether there was a change
 inline bool dense_bin_rel::ensure_inserted_Lx (oid_t i, oid_t j)
 {
-    bool_ref contained = _bit_Lx(i,j);
+    bool_ref contained = m_lines.Lx(i,j);
     if (contained) return false;
     contained.one();
     insert_Rx(i,j);
@@ -194,7 +137,7 @@ inline bool dense_bin_rel::ensure_inserted_Lx (oid_t i, oid_t j)
 // returns whether there was a change
 inline bool dense_bin_rel::ensure_inserted_Rx (oid_t i, oid_t j)
 {
-    bool_ref contained = _bit_Rx(i,j);
+    bool_ref contained = m_lines.Rx(i,j);
     if (contained) return false;
     contained.one();
     insert_Lx(i,j);
@@ -277,8 +220,8 @@ public:
 
     // construction
     Iterator (oid_t fixed, const dense_bin_rel * rel)
-        : m_temp_set(rel->m_item_dim, dir ? rel->get_Lx_line(fixed)
-                            : rel->get_Rx_line(fixed)),
+        : m_temp_set(rel->m_item_dim, dir ? rel->m_lines.Lx(fixed)
+                            : rel->m_lines.Rx(fixed)),
           m_moving(m_temp_set, false),
           m_fixed(fixed),
           m_rel(*rel)
@@ -309,8 +252,8 @@ public:
     {   POMAGMA_ASSERT2(m_rel.supports(fixed),
                 "br::Iterator's fixed pos is unsupported");
         m_fixed = fixed;
-        m_temp_set.init(dir ? m_rel.get_Lx_line(fixed)
-                            : m_rel.get_Rx_line(fixed));
+        m_temp_set.init(dir ? m_rel.m_lines.Lx(fixed)
+                            : m_rel.m_lines.Rx(fixed));
         begin();
     }
     void next ()

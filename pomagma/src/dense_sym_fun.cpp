@@ -69,6 +69,8 @@ void dense_sym_fun::validate () const
 {
     POMAGMA_DEBUG("Validating dense_sym_fun");
 
+    m_lines.validate();
+
     POMAGMA_DEBUG("validating line-block consistency");
     for (unsigned i_ = 0; i_ < m_block_dim; ++i_) {
     for (unsigned j_ = i_; j_ < m_block_dim; ++j_) {
@@ -84,10 +86,10 @@ void dense_sym_fun::validate () const
 
             if (val) {
                 POMAGMA_ASSERT(contains(i,j),
-                        "invalid: found unsupported value: "<<i<<','<<j);
+                        "found unsupported value: "<<i<<','<<j);
             } else {
                 POMAGMA_ASSERT(not contains(i,j),
-                        "invalid: found supported null value: "<<i<<','<<j);
+                        "found supported null value: "<<i<<','<<j);
             }
         }}
     }}

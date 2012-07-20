@@ -5,7 +5,7 @@
 
 using namespace pomagma;
 
-unsigned g_num_moved(0);
+size_t g_num_moved(0);
 void move_to (oid_t i __attribute__((unused)), oid_t j __attribute__((unused)))
 {
     //std::cout << i << '-' << j << ' ' << std::flush; //DEBUG
@@ -29,8 +29,8 @@ void test_dense_bin_rel (
 
 
     POMAGMA_INFO("testing position insertion");
-    unsigned item_count=0;
-    for (size_t i = 1; i <= size; ++i) {
+    size_t item_count = 0;
+    for (oid_t i = 1; i <= size; ++i) {
         rel.insert(i);
         ++item_count;
     }
@@ -38,9 +38,9 @@ void test_dense_bin_rel (
 
 
     POMAGMA_INFO("testing pair insertion");
-    unsigned num_pairs = 0;
-    for (size_t i = 1; i <= size; ++i) {
-    for (size_t j = 1; j <= size; ++j) {
+    size_t num_pairs = 0;
+    for (oid_t i = 1; i <= size; ++i) {
+    for (oid_t j = 1; j <= size; ++j) {
         if (test1(i, j)) {
             rel.insert(i, j);
             ++num_pairs;
@@ -52,8 +52,8 @@ void test_dense_bin_rel (
 
 
     POMAGMA_INFO("testing pair removal");
-    for (size_t i = 1; i <= size; ++i) {
-    for (size_t j = 1; j <= size; ++j) {
+    for (oid_t i = 1; i <= size; ++i) {
+    for (oid_t j = 1; j <= size; ++j) {
         if (test1(i, j) and test2(i, j)) {
             rel.remove(i, j);
             --num_pairs;
@@ -65,7 +65,7 @@ void test_dense_bin_rel (
 
 
     POMAGMA_INFO("testing table iterator");
-    unsigned num_pairs_seen = 0;
+    size_t num_pairs_seen = 0;
     for (dense_bin_rel::iterator iter(&rel); iter.ok(); iter.next()) {
         ++num_pairs_seen;
     }
@@ -77,19 +77,19 @@ void test_dense_bin_rel (
 
     POMAGMA_INFO("testing pair containment");
     num_pairs = 0;
-    for (size_t i = 1; i <= size; ++i) {
-    for (size_t j = 1; j <= size; ++j) {
+    for (oid_t i = 1; i <= size; ++i) {
+    for (oid_t j = 1; j <= size; ++j) {
         if (test1(i, j) and not test2(i, j)) {
             POMAGMA_ASSERT(rel.contains_Lx(i, j),
-                    "Lx relation doesn't contain what it should");
+                    "Lx relation missing " << i << ',' << j);
             POMAGMA_ASSERT(rel.contains_Rx(i, j),
-                    "Rx relation doesn't contain what it should");
+                    "Rx relation missing " << i << ',' << j);
             ++num_pairs;
         } else {
             POMAGMA_ASSERT(not rel.contains_Lx(i, j),
-                    "Lx relation contains what it shouldn't");
+                    "Lx relation has extra " << i << ',' << j);
             POMAGMA_ASSERT(not rel.contains_Rx(i, j),
-                    "Rx relation contains what it shouldn't");
+                    "Rx relation has extra " << i << ',' << j);
         }
     } }
     POMAGMA_INFO("  " << num_pairs << " pairs found");
@@ -126,9 +126,9 @@ void test_dense_bin_rel (
 
     POMAGMA_INFO("testing line Iterator<LHS_FIXED>");
     num_pairs = 0;
-    unsigned seen_item_count = 0;
+    size_t seen_item_count = 0;
     item_count = rel.count_items_support();
-    for (size_t i = 1; i <= size; ++i) {
+    for (oid_t i = 1; i <= size; ++i) {
         if (not rel.supports(i)) continue;
         ++seen_item_count;
         dense_bin_rel::Iterator<dense_bin_rel::LHS_FIXED> iter(i, &rel);
@@ -140,7 +140,7 @@ void test_dense_bin_rel (
     POMAGMA_INFO("  Iterated over " << num_pairs << " pairs");
     rel.validate();
     POMAGMA_ASSERT_EQUAL(seen_item_count, item_count);
-    unsigned true_size = rel.count_pairs();
+    size_t true_size = rel.count_pairs();
     POMAGMA_ASSERT_EQUAL(num_pairs, true_size);
 
 

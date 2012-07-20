@@ -11,15 +11,10 @@ namespace pomagma
 
 class base_bin_rel : noncopyable
 {
-protected:
-
-    // data, in blocks
     const size_t m_item_dim;
     const size_t m_word_dim;
     const size_t m_round_item_dim;
     const size_t m_round_word_dim;
-
-    // dense sets for iteration
     Word * const m_Lx_lines;
     Word * const m_Rx_lines;
 
@@ -68,6 +63,9 @@ public:
         POMAGMA_ASSERT_RANGE_(5, lhs, m_item_dim);
         return bool_ref::index(Rx(rhs), lhs);
     }
+
+    // access
+    void validate () const;
 };
 
 } // namespace pomagma

@@ -61,6 +61,8 @@ void dense_bin_fun::validate () const
 {
     POMAGMA_DEBUG("Validating dense_bin_fun");
 
+    m_lines.validate();
+
     POMAGMA_DEBUG("validating line-block consistency");
     for (size_t i_ = 0; i_ < m_block_dim; ++i_) {
     for (size_t j_ = 0; j_ < m_block_dim; ++j_) {
@@ -76,33 +78,13 @@ void dense_bin_fun::validate () const
 
             if (val) {
                 POMAGMA_ASSERT(contains(i, j),
-                        "invalid: found unsupported value: "
-                        << i << ',' << j);
+                        "found unsupported value: " << i << ',' << j);
             } else {
                 POMAGMA_ASSERT(not contains(i, j),
-                        "invalid: found supported null value: "
-                        << i << ',' << j);
+                        "found supported null value: " << i << ',' << j);
             }
         }}
     }}
-
-    POMAGMA_DEBUG("validating left-right line consistency");
-    for (size_t i = 1; i <= m_item_dim; ++i) {
-        dense_set L_set(m_item_dim, m_lines.Lx(i));
-
-        for (size_t j = 1; j <= m_item_dim; ++j) {
-            dense_set R_set(m_item_dim, m_lines.Rx(j));
-
-            if (L_set.contains(j) and not R_set.contains(i)) {
-                POMAGMA_ERROR("invalid: L-set exceeds R-set: "
-                        << i << "," << j);
-            }
-            if (R_set.contains(i) and not L_set.contains(j)) {
-                POMAGMA_ERROR("invalid: R-set exceeds L-set: "
-                        << i << "," << j);
-            }
-        }
-    }
 }
 
 //----------------------------------------------------------------------------
