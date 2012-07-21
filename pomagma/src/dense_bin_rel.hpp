@@ -77,20 +77,20 @@ public:
     }
 private:
     // one-sided versions
-    void insert_Lx (oid_t i, oid_t j) { m_lines.Lx(i,j).one(); }
-    void insert_Rx (oid_t i, oid_t j) { m_lines.Rx(i,j).one(); }
-    void remove_Lx (oid_t i, oid_t j) { m_lines.Lx(i,j).zero(); }
-    void remove_Rx (oid_t i, oid_t j) { m_lines.Rx(i,j).zero(); }
+    void insert_Lx (oid_t i, oid_t j) { m_lines.Lx(i, j).one(); }
+    void insert_Rx (oid_t i, oid_t j) { m_lines.Rx(i, j).one(); }
+    void remove_Lx (oid_t i, oid_t j) { m_lines.Lx(i, j).zero(); }
+    void remove_Rx (oid_t i, oid_t j) { m_lines.Rx(i, j).zero(); }
     void remove_Lx (const dense_set & is, oid_t i);
-    void remove_Rx (oid_t i, const dense_set& js);
+    void remove_Rx (oid_t i, const dense_set & js);
 public:
     // two-sided versions
-    void insert (oid_t i, oid_t j) { insert_Lx(i,j); insert_Rx(i,j); }
-    void remove (oid_t i, oid_t j) { remove_Lx(i,j); remove_Rx(i,j); }
+    void insert (oid_t i, oid_t j) { insert_Lx(i, j); insert_Rx(i, j); }
+    void remove (oid_t i, oid_t j) { remove_Lx(i, j); remove_Rx(i, j); }
     // these return whether there was a change
     inline bool ensure_inserted_Lx (oid_t i, oid_t j);
     inline bool ensure_inserted_Rx (oid_t i, oid_t j);
-    bool ensure_inserted (oid_t i, oid_t j) { return ensure_inserted_Lx(i,j); }
+    bool ensure_inserted (oid_t i, oid_t j) { return ensure_inserted_Lx(i, j); }
     void ensure_inserted (
             oid_t i,
             const dense_set & js,
@@ -127,20 +127,20 @@ public:
 // returns whether there was a change
 inline bool dense_bin_rel::ensure_inserted_Lx (oid_t i, oid_t j)
 {
-    bool_ref contained = m_lines.Lx(i,j);
+    bool_ref contained = m_lines.Lx(i, j);
     if (contained) return false;
     contained.one();
-    insert_Rx(i,j);
+    insert_Rx(i, j);
     return true;
 }
 
 // returns whether there was a change
 inline bool dense_bin_rel::ensure_inserted_Rx (oid_t i, oid_t j)
 {
-    bool_ref contained = m_lines.Rx(i,j);
+    bool_ref contained = m_lines.Rx(i, j);
     if (contained) return false;
     contained.one();
-    insert_Lx(i,j);
+    insert_Lx(i, j);
     return true;
 }
 

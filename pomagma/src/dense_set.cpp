@@ -56,12 +56,12 @@ bool dense_set::empty () const
 // supa-slow, try not to use
 size_t dense_set::count_items () const
 {
-    unsigned result = 0;
+    size_t result = 0;
     for (size_t m = 0, M = m_word_dim; m < M; ++m) {
         // WARNING only unsigned's work with >>
         static_assert(Word(1) >> 1 == 0, "bitshifting Word fails");
-        for (Word word = m_line[m]; word; word>>=1) {
-            result += word & 1;
+        for (Word word = m_line[m]; word; word >>= 1) {
+            result += word & 1u;
         }
     }
     return result;

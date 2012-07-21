@@ -163,7 +163,7 @@ public:
 
     // dereferencing
     size_t operator * () const { POMAGMA_ASSERT_OK return m_i; }
-    const size_t * operator -> () const { POMAGMA_ASSERT_OK return &m_i; }
+    const size_t * operator -> () const { POMAGMA_ASSERT_OK return & m_i; }
 };
 
 inline void dense_set::iterator::begin ()

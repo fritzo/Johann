@@ -3,6 +3,18 @@
 #include <sys/time.h>
 #include <vector>
 
+// for log_stack_trace
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+// for stack_trace_abort
+#include <execinfo.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+
 namespace pomagma
 {
 
@@ -21,11 +33,42 @@ inline int getenv_default(const char * key, int default_val)
     return result ? atoi(result) : default_val;
 }
 
-std::ofstream Log::s_log_file(
-        getenv_default("POMAGMA_LOG_FILE", "pomagma.log"),
-        std::ios_base::app);
+const char * Log::s_log_filename =
+    getenv_default("POMAGMA_LOG_FILE", "pomagma.log");
+std::ofstream Log::s_log_stream(s_log_filename, std::ios_base::app);
 
 const unsigned Log::s_log_level(getenv_default("POMAGMA_LOG_LEVEL", 1));
+
+// from "So you want a stand-alone function that prints a stack trace"
+// http://stackoverflow.com/questions/4636456/stack-trace-for-c-using-gcc/4732119#4732119
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+void Log::stack_trace_abort ()
+{
+    void * array[10];
+    size_t size;
+    char ** strings;
+    size_t i;
+
+    size = backtrace(array, 50);
+    strings = backtrace_symbols(array, size);
+
+    {
+        Log log(0);
+        log << "Stack trace:\n";
+        for (i = 0; i < size; i++) {
+           log << strings[i] << "\n";
+        }
+    }
+
+    free(strings);
+
+    abort();
+}
 
 //----------------------------------------------------------------------------
 // Time

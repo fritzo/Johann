@@ -9,7 +9,7 @@ namespace pomagma
 base_bin_rel::base_bin_rel (size_t item_dim, bool symmetric)
     : m_item_dim(item_dim),
       m_word_dim(dense_set::word_count(m_item_dim)),
-      m_round_item_dim(m_word_dim * BITS_PER_WORD),
+      m_round_item_dim(m_word_dim * BITS_PER_WORD - 1),
       m_round_word_dim(m_word_dim * m_round_item_dim),
       m_Lx_lines(pomagma::alloc_blocks<Word>(m_round_word_dim)),
       m_Rx_lines(symmetric ? m_Lx_lines
@@ -68,7 +68,10 @@ void base_bin_rel::validate() const
                 set.validate();
             } else {
                 round_set.init(m_Lx_lines + m_word_dim * i);
-                POMAGMA_ASSERT(round_set.empty(), "Lx(" << i << ") not empty");
+                round_set.validate();
+                POMAGMA_ASSERT(round_set.empty(),
+                        "unsupported Lx(" << i << ") has " <<
+                        round_set.count_items() << " items");
             }
         }
 
@@ -92,9 +95,15 @@ void base_bin_rel::validate() const
                 set.validate();
             } else {
                 round_set.init(m_Lx_lines + m_word_dim * i);
-                POMAGMA_ASSERT(round_set.empty(), "Lx(" << i << ") not empty");
+                round_set.validate();
+                POMAGMA_ASSERT(round_set.empty(),
+                        "unsupported Lx(" << i << ") has " <<
+                        round_set.count_items() << " items");
                 round_set.init(m_Rx_lines + m_word_dim * i);
-                POMAGMA_ASSERT(round_set.empty(), "Rx(" << i << ") not empty");
+                round_set.validate();
+                POMAGMA_ASSERT(round_set.empty(),
+                        "unsupported Rx(" << i << ") has " <<
+                        round_set.count_items() << " items");
             }
         }
 

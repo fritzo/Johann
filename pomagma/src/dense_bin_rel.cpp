@@ -9,7 +9,7 @@ namespace pomagma
 dense_bin_rel::dense_bin_rel (size_t item_dim, bool is_full)
     : m_item_dim(item_dim),
       m_word_dim(dense_set::word_count(m_item_dim)),
-      m_round_item_dim(m_word_dim * BITS_PER_WORD),
+      m_round_item_dim(m_word_dim * BITS_PER_WORD - 1),
       m_round_word_dim(m_word_dim * m_round_item_dim),
       m_support(m_item_dim),
       m_lines(item_dim, false),
@@ -70,11 +70,9 @@ void dense_bin_rel::move_from (
 // supa-slow, try not to use
 size_t dense_bin_rel::count_pairs () const
 {
-    dense_set set(m_item_dim);
     size_t result = 0;
     for (dense_set::iterator i(m_support); i.ok(); i.next()) {
-        set.init(m_lines.Lx(*i));
-        result += set.count_items();
+        result += get_Lx_set(*i).count_items();
     }
     return result;
 }
@@ -149,7 +147,7 @@ void dense_bin_rel::print_table (size_t n) const
     for (oid_t i = 1; i <= n; ++i) {
         std::cout << '\n';
         for (oid_t j = 1; j <= n; ++j) {
-            std::cout << (contains(i,j) ? 'O' : '.');
+            std::cout << (contains(i, j) ? 'O' : '.');
         }
     }
     std::cout << std::endl;
@@ -253,7 +251,7 @@ void dense_bin_rel::merge (
     dense_set rep(m_item_dim, NULL);
     dense_set dep(m_item_dim, NULL);
 
-    // merge rows (i,_) into (j,_)
+    // merge rows (i, _) into (j, _)
     dep.init(m_lines.Lx(i));
     remove_Rx(i, dep);
     rep.init(m_lines.Lx(j));
@@ -264,7 +262,7 @@ void dense_bin_rel::merge (
         }
     }
 
-    // merge cols (_,i) into (_,j)
+    // merge cols (_, i) into (_, j)
     dep.init(m_lines.Rx(i));
     remove_Lx(dep, i);
     rep.init(m_lines.Rx(j));

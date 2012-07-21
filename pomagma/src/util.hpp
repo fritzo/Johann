@@ -51,6 +51,15 @@ inline bool random_bool (double prob)
     return drand48() < prob;
 }
 
+template<size_t x> struct static_log2i
+{
+    static size_t val () { return 1 + static_log2i<x / 2>::val(); };
+};
+template<> struct static_log2i<1>
+{
+    static size_t val () { return 0; };
+};
+
 // this is used with template specialization
 template <class T> inline const char * nameof () { return "???"; }
 
@@ -83,7 +92,8 @@ const std::string g_log_level_name[4] =
 
 class Log
 {
-    static std::ofstream s_log_file;
+    static const char * s_log_filename;
+    static std::ofstream s_log_stream;
     static const unsigned s_log_level;
 
     std::ostringstream m_message;
@@ -101,7 +111,7 @@ public:
     ~Log ()
     {
        m_message << std::endl;
-       s_log_file << m_message.str() << std::flush;
+       s_log_stream << m_message.str() << std::flush;
        std::cerr << m_message.str() << std::flush; // DEBUG
     }
 
@@ -113,12 +123,14 @@ public:
 
     static void title (std::string name)
     {
-        s_log_file
+        s_log_stream
             << "\e[32m" // green
             << name << " " << get_date()
             << "\e[0;39m"
             << std::endl;
     }
+
+    static void stack_trace_abort();
 };
 
 #define POMAGMA_WARN(message) { if (Log::level() >= 1) { Log(1) << message; } }
@@ -129,7 +141,7 @@ public:
     << message << "\n\t" \
     << __FILE__ << " : " << __LINE__ << "\n\t" \
     << __PRETTY_FUNCTION__ << "\n"; \
-    abort(); }
+    Log::stack_trace_abort(); }
 
 #define POMAGMA_ASSERT(cond, mess) { if (not (cond)) POMAGMA_ERROR(mess) }
 
@@ -167,6 +179,7 @@ const size_t MAX_ITEM_DIM = 0xffffUL;
 typedef uint32_t Word; // TODO switch to uint64_t
 const size_t BITS_PER_WORD = 8 * sizeof(Word);
 const size_t WORD_POS_MASK = BITS_PER_WORD - 1;
+const size_t WORD_POS_SHIFT = static_log2i<BITS_PER_WORD>::val();
 
 class bool_ref
 {
@@ -177,14 +190,13 @@ public:
 
     bool_ref (Word & word, size_t _i)
         : m_word(word),
-          m_mask(1 << _i)
+          m_mask(1u << _i)
     {
         POMAGMA_ASSERT6(_i < BITS_PER_WORD, "out of range: " << _i);
     }
     static bool_ref index (Word * line, size_t i)
     {
-        auto I = div(i, BITS_PER_WORD); // either div_t or ldiv_t
-        return bool_ref(line[I.quot], I.rem);
+        return bool_ref(line[i >> WORD_POS_SHIFT], i & WORD_POS_MASK);
     }
 
     operator bool () const { return m_word & m_mask; } // ATOMIC
