@@ -7,8 +7,7 @@ namespace pomagma
 {
 
 dense_bin_rel::dense_bin_rel (size_t item_dim, bool is_full)
-    : m_lines(item_dim, false),
-      m_temp_line(pomagma::alloc_blocks<Word>(m_lines.word_dim()))
+    : m_lines(item_dim, false)
 {
     POMAGMA_DEBUG("creating dense_bin_rel with " << word_dim() << " lines");
     POMAGMA_ASSERT(round_item_dim() <= MAX_ITEM_DIM,
@@ -20,7 +19,6 @@ dense_bin_rel::dense_bin_rel (size_t item_dim, bool is_full)
 
 dense_bin_rel::~dense_bin_rel ()
 {
-    pomagma::free_blocks(m_temp_line);
 }
 
 void dense_bin_rel::move_from (
@@ -205,7 +203,7 @@ void dense_bin_rel::ensure_inserted (
         const dense_set & js,
         void (*change)(oid_t, oid_t))
 {
-    dense_set diff(item_dim(), m_temp_line);
+    dense_set diff(item_dim());
     dense_set dest(item_dim(), m_lines.Lx(i));
     if (dest.ensure(js, diff)) {
         for (dense_set::iterator k(diff); k.ok(); k.next()) {
@@ -220,7 +218,7 @@ void dense_bin_rel::ensure_inserted (
         oid_t j,
         void (*change)(oid_t, oid_t))
 {
-    dense_set diff(item_dim(), m_temp_line);
+    dense_set diff(item_dim());
     dense_set dest(item_dim(), m_lines.Rx(j));
     if (dest.ensure(is, diff)) {
         for (dense_set::iterator k(diff); k.ok(); k.next()) {
@@ -240,7 +238,7 @@ void dense_bin_rel::merge (
     POMAGMA_ASSERT4(supports(i) and supports(j),
             "dense_bin_rel tried to merge unsupported items");
 
-    dense_set diff(item_dim(), m_temp_line);
+    dense_set diff(item_dim());
     dense_set rep(item_dim(), NULL);
     dense_set dep(item_dim(), NULL);
 

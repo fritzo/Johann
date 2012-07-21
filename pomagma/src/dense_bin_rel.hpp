@@ -30,7 +30,6 @@ class dense_bin_rel : noncopyable
 
     // data
     base_bin_rel m_lines;
-    mutable Word * m_temp_line; // TODO FIXME this is not thread-safe
 
     size_t item_dim () const { return m_lines.item_dim(); }
     size_t word_dim () const { return m_lines.word_dim(); }
@@ -207,7 +206,7 @@ template<bool dir>
 class dense_bin_rel::Iterator : noncopyable
 {
 protected:
-    dense_set m_temp_set;
+    dense_set m_moving_set;
     dense_set::iterator m_moving;
     oid_t m_fixed;
     Pos m_pos;
@@ -217,9 +216,9 @@ public:
 
     // construction
     Iterator (oid_t fixed, const dense_bin_rel * rel)
-        : m_temp_set(rel->item_dim(), dir ? rel->m_lines.Lx(fixed)
-                            : rel->m_lines.Rx(fixed)),
-          m_moving(m_temp_set, false),
+        : m_moving_set(rel->item_dim(), dir ? rel->m_lines.Lx(fixed)
+                                            : rel->m_lines.Rx(fixed)),
+          m_moving(m_moving_set, false),
           m_fixed(fixed),
           m_rel(*rel)
     {
@@ -228,8 +227,8 @@ public:
         begin();
     }
     Iterator (const dense_bin_rel * rel)
-        : m_temp_set(rel->item_dim(), NULL),
-          m_moving(m_temp_set, false),
+        : m_moving_set(rel->item_dim(), NULL),
+          m_moving(m_moving_set, false),
           m_fixed(0),
           m_rel(*rel)
     {}
@@ -249,8 +248,8 @@ public:
     {   POMAGMA_ASSERT2(m_rel.supports(fixed),
                 "br::Iterator's fixed pos is unsupported");
         m_fixed = fixed;
-        m_temp_set.init(dir ? m_rel.m_lines.Lx(fixed)
-                            : m_rel.m_lines.Rx(fixed));
+        m_moving_set.init(dir ? m_rel.m_lines.Lx(fixed)
+                              : m_rel.m_lines.Rx(fixed));
         begin();
     }
     void next ()
