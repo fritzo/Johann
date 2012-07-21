@@ -17,7 +17,7 @@ class dense_set
     // data
     const size_t m_item_dim;
     const size_t m_word_dim;
-    Word * m_line;
+    Word * m_words;
     const bool m_alias;
 
     // bit wrappers
@@ -37,14 +37,14 @@ public:
     dense_set (size_t item_dim, Word * line)
         : m_item_dim(item_dim),
           m_word_dim(word_count(item_dim)),
-          m_line(line),
+          m_words(line),
           m_alias(true)
     {
     }
     dense_set (const dense_set & other)
         : m_item_dim(other.m_item_dim),
           m_word_dim(other.m_word_dim),
-          m_line(other.m_line),
+          m_words(other.m_words),
           m_alias(true)
     {
         POMAGMA_ASSERT(other.m_alias, "copy-constructed a non-alias dense_set");
@@ -52,7 +52,7 @@ public:
     //dense_set (size_t item_dim, AlignedBuffer<Word> & buffer)
     //    : m_item_dim(item_dim),
     //      m_word_dim(word_count(item_dim)),
-    //      m_line(buffer(m_word_dim)),
+    //      m_words(buffer(m_word_dim)),
     //      m_alias(true)
     //{
     //}
@@ -61,7 +61,7 @@ public:
     void init (Word * line)
     {
         POMAGMA_ASSERT4(m_alias, "tried to init() non-alias dense set");
-        m_line = line;
+        m_words = line;
     }
 
     // attributes
@@ -104,12 +104,12 @@ public:
 inline bool_ref dense_set::_bit (size_t i)
 {
     POMAGMA_ASSERT_RANGE_(5, i, m_item_dim);
-    return bool_ref::index(m_line, i);
+    return bool_ref::index(m_words, i);
 }
 inline bool dense_set::_bit (size_t i) const
 {
     POMAGMA_ASSERT_RANGE_(5, i, m_item_dim);
-    return bool_ref::index(m_line, i);
+    return bool_ref::index(m_words, i);
 }
 
 inline void dense_set::insert (size_t i)
@@ -168,7 +168,7 @@ public:
 
 inline void dense_set::iterator::begin ()
 {
-    POMAGMA_ASSERT4(m_set.m_line, "begin with null line");
+    POMAGMA_ASSERT4(m_set.m_words, "begin with null set");
     m_quot = 0;
     --m_quot;
     _next_block();
