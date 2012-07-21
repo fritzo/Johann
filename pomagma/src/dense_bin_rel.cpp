@@ -7,16 +7,12 @@ namespace pomagma
 {
 
 dense_bin_rel::dense_bin_rel (size_t item_dim, bool is_full)
-    : m_item_dim(item_dim),
-      m_word_dim(dense_set::word_count(m_item_dim)),
-      m_round_item_dim(m_word_dim * BITS_PER_WORD - 1),
-      m_round_word_dim(m_word_dim * m_round_item_dim),
-      m_support(m_item_dim),
+    : m_support(item_dim),
       m_lines(item_dim, false),
-      m_temp_line(pomagma::alloc_blocks<Word>(m_word_dim))
+      m_temp_line(pomagma::alloc_blocks<Word>(m_lines.word_dim()))
 {
-    POMAGMA_DEBUG("creating dense_bin_rel with " << m_word_dim << " lines");
-    POMAGMA_ASSERT(m_round_item_dim <= MAX_ITEM_DIM,
+    POMAGMA_DEBUG("creating dense_bin_rel with " << word_dim() << " lines");
+    POMAGMA_ASSERT(round_item_dim() <= MAX_ITEM_DIM,
             "dense_bin_rel is too large");
 
     // fill if necessary
@@ -40,8 +36,8 @@ void dense_bin_rel::move_from (
     m_support.move_from(other.m_support, new2old);
 
     // WARNING: assumes this has been done
-    //bzero(m_lines.Lx(), sizeof(Word) * m_round_word_dim);
-    //bzero(m_lines.Rx(), sizeof(Word) * m_round_word_dim);
+    //bzero(m_lines.Lx(), sizeof(Word) * data_size_words());
+    //bzero(m_lines.Rx(), sizeof(Word) * data_size_words());
 
     if (new2old == NULL) {
         POMAGMA_DEBUG("copying by column and by row");
@@ -49,11 +45,11 @@ void dense_bin_rel::move_from (
     } else {
         POMAGMA_DEBUG("copying and reordering");
         // copy & reorder WIKKIT SLOW
-        for (oid_t i_new = 1; i_new <= m_item_dim; ++i_new) {
+        for (oid_t i_new = 1; i_new <= item_dim(); ++i_new) {
             if (not supports(i_new)) continue;
             oid_t i_old = new2old[i_new];
 
-            for (oid_t j_new = 1; j_new <= m_item_dim; ++j_new) {
+            for (oid_t j_new = 1; j_new <= item_dim(); ++j_new) {
                 if (not supports(j_new)) continue;
                 oid_t j_old = new2old[j_new];
 
@@ -86,13 +82,13 @@ void dense_bin_rel::validate () const
 
     size_t num_pairs = 0;
 
-    dense_set Lx(m_round_item_dim, NULL);
-    dense_set Rx(m_round_item_dim, NULL);
-    for (oid_t i = 1; i <= m_item_dim; ++i) {
+    dense_set Lx(round_item_dim(), NULL);
+    dense_set Rx(round_item_dim(), NULL);
+    for (oid_t i = 1; i <= item_dim(); ++i) {
         bool sup_i = supports(i);
         Lx.init(m_lines.Lx(i));
 
-        for (oid_t j = 1; j <= m_item_dim; ++j) {
+        for (oid_t j = 1; j <= item_dim(); ++j) {
             bool sup_ij = sup_i and supports(j);
             Rx.init(m_lines.Rx(j));
 
@@ -131,8 +127,8 @@ void dense_bin_rel::validate_disjoint (const dense_bin_rel & other) const
             "dense_bin_rel supports differ");
 
     // validate disjointness
-    dense_set this_set(m_item_dim, NULL);
-    dense_set other_set(m_item_dim, NULL);
+    dense_set this_set(item_dim(), NULL);
+    dense_set other_set(item_dim(), NULL);
     for (dense_set::iterator i(m_support); i.ok(); i.next()) {
         this_set.init(m_lines.Lx(*i));
         other_set.init(other.m_lines.Lx(*i));
@@ -143,7 +139,7 @@ void dense_bin_rel::validate_disjoint (const dense_bin_rel & other) const
 
 void dense_bin_rel::print_table (size_t n) const
 {
-    if (n == 0) n = m_item_dim;
+    if (n == 0) n = item_dim();
     for (oid_t i = 1; i <= n; ++i) {
         std::cout << '\n';
         for (oid_t j = 1; j <= n; ++j) {
@@ -168,7 +164,7 @@ void dense_bin_rel::remove_Lx (const dense_set & is, oid_t j)
     size_t offset = j / BITS_PER_WORD;
     Word * lines = m_lines.Lx() + offset;
     for (dense_set::iterator i(is); i.ok(); i.next()) {
-         lines[*i * m_word_dim] &= mask; // ATOMIC
+         lines[*i * word_dim()] &= mask; // ATOMIC
     }
 }
 
@@ -184,7 +180,7 @@ void dense_bin_rel::remove_Rx (oid_t i, const dense_set& js)
     size_t offset = i / BITS_PER_WORD;
     Word * lines = m_lines.Rx() + offset;
     for (dense_set::iterator j(js); j.ok(); j.next()) {
-         lines[*j * m_word_dim] &= mask; // ATOMIC
+         lines[*j * word_dim()] &= mask; // ATOMIC
     }
 }
 
@@ -192,7 +188,7 @@ void dense_bin_rel::remove (oid_t i)
 {
     POMAGMA_ASSERT4(supports(i), "tried to remove unsupported element " << i);
 
-    dense_set set(m_item_dim, NULL);
+    dense_set set(item_dim(), NULL);
 
     // remove column
     set.init(m_lines.Lx(i));
@@ -212,8 +208,8 @@ void dense_bin_rel::ensure_inserted (
         const dense_set & js,
         void (*change)(oid_t, oid_t))
 {
-    dense_set diff(m_item_dim, m_temp_line);
-    dense_set dest(m_item_dim, m_lines.Lx(i));
+    dense_set diff(item_dim(), m_temp_line);
+    dense_set dest(item_dim(), m_lines.Lx(i));
     if (dest.ensure(js, diff)) {
         for (dense_set::iterator k(diff); k.ok(); k.next()) {
             insert_Rx(i, *k);
@@ -227,8 +223,8 @@ void dense_bin_rel::ensure_inserted (
         oid_t j,
         void (*change)(oid_t, oid_t))
 {
-    dense_set diff(m_item_dim, m_temp_line);
-    dense_set dest(m_item_dim, m_lines.Rx(j));
+    dense_set diff(item_dim(), m_temp_line);
+    dense_set dest(item_dim(), m_lines.Rx(j));
     if (dest.ensure(is, diff)) {
         for (dense_set::iterator k(diff); k.ok(); k.next()) {
             insert_Lx(*k, j);
@@ -247,9 +243,9 @@ void dense_bin_rel::merge (
     POMAGMA_ASSERT4(supports(i) and supports(j),
             "dense_bin_rel tried to merge unsupported items");
 
-    dense_set diff(m_item_dim, m_temp_line);
-    dense_set rep(m_item_dim, NULL);
-    dense_set dep(m_item_dim, NULL);
+    dense_set diff(item_dim(), m_temp_line);
+    dense_set rep(item_dim(), NULL);
+    dense_set dep(item_dim(), NULL);
 
     // merge rows (i, _) into (j, _)
     dep.init(m_lines.Lx(i));
@@ -290,18 +286,18 @@ inline void safe_fwrite (const void * ptr, size_t size, size_t count, FILE * fil
 
 oid_t dense_bin_rel::data_size () const
 {
-    return 2 * sizeof(Word) * m_round_word_dim;
+    return 2 * sizeof(Word) * data_size_words();
 }
 void dense_bin_rel::write_to_file (FILE * file)
 {
-    safe_fwrite(m_lines.Lx(), sizeof(Word), m_round_word_dim, file);
-    safe_fwrite(m_lines.Rx(), sizeof(Word), m_round_word_dim, file);
+    safe_fwrite(m_lines.Lx(), sizeof(Word), data_size_words(), file);
+    safe_fwrite(m_lines.Rx(), sizeof(Word), data_size_words(), file);
 }
 void dense_bin_rel::read_from_file (FILE * file)
 {
     // WARNING assumes support is full
-    safe_fread(m_lines.Lx(), sizeof(Word), m_round_word_dim, file);
-    safe_fread(m_lines.Rx(), sizeof(Word), m_round_word_dim, file);
+    safe_fread(m_lines.Lx(), sizeof(Word), data_size_words(), file);
+    safe_fread(m_lines.Rx(), sizeof(Word), data_size_words(), file);
 }
 
 // iteration

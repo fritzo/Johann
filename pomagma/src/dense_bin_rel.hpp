@@ -29,24 +29,25 @@ class dense_bin_rel : noncopyable
     };
 
     // data
-    const size_t m_item_dim; // number of items per slice
-    const size_t m_word_dim;
-    const size_t m_round_item_dim; // = m_word_dim * BITS_PER_WORD
-    const size_t m_round_word_dim; // = m_round_item_dim * BITS_PER_WORD
     dense_set m_support; // TODO move to const dense_set & base_bin_rel::...
     base_bin_rel m_lines;
     mutable Word * m_temp_line; // TODO FIXME this is not thread-safe
+
+    size_t item_dim        () const { return m_lines.item_dim(); }
+    size_t word_dim        () const { return m_lines.word_dim(); }
+    size_t round_item_dim  () const { return m_lines.round_item_dim(); }
+    size_t data_size_words () const { return m_lines.data_size_words(); }
 
 public:
 
     // set wrappers
     dense_set get_Lx_set (oid_t lhs) const
     {
-        return dense_set(m_item_dim, m_lines.Lx(lhs));
+        return dense_set(item_dim(), m_lines.Lx(lhs));
     }
     dense_set get_Rx_set (oid_t rhs) const
     {
-        return dense_set(m_item_dim, m_lines.Rx(rhs));
+        return dense_set(item_dim(), m_lines.Rx(rhs));
     }
 
     // ctors & dtors
@@ -161,7 +162,7 @@ public:
     iterator (const dense_bin_rel * rel)
         : m_lhs(rel->m_support, false),
           m_rhs(m_rhs_set, false),
-          m_rhs_set(rel->m_item_dim, NULL),
+          m_rhs_set(rel->item_dim(), NULL),
           m_rel(*rel)
     {
         begin();
@@ -220,7 +221,7 @@ public:
 
     // construction
     Iterator (oid_t fixed, const dense_bin_rel * rel)
-        : m_temp_set(rel->m_item_dim, dir ? rel->m_lines.Lx(fixed)
+        : m_temp_set(rel->item_dim(), dir ? rel->m_lines.Lx(fixed)
                             : rel->m_lines.Rx(fixed)),
           m_moving(m_temp_set, false),
           m_fixed(fixed),
@@ -231,7 +232,7 @@ public:
         begin();
     }
     Iterator (const dense_bin_rel * rel)
-        : m_temp_set(rel->m_item_dim, NULL),
+        : m_temp_set(rel->item_dim(), NULL),
           m_moving(m_temp_set, false),
           m_fixed(0),
           m_rel(*rel)

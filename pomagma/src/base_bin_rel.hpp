@@ -14,7 +14,7 @@ class base_bin_rel : noncopyable
     const size_t m_item_dim;
     const size_t m_word_dim;
     const size_t m_round_item_dim;
-    const size_t m_round_word_dim;
+    const size_t m_data_size_words;
     Word * const m_Lx_lines;
     Word * const m_Rx_lines;
     //const dense_set & m_support; // TODO add for validation
@@ -26,6 +26,12 @@ public:
     base_bin_rel (size_t item_dim, bool symmetric);
     ~base_bin_rel ();
     void move_from (const base_bin_rel & other); // for growing
+    void validate () const;
+
+    size_t item_dim () const { return m_item_dim; }
+    size_t word_dim () const { return m_word_dim; }
+    size_t round_item_dim () const { return m_round_item_dim; }
+    size_t data_size_words () const { return m_data_size_words; }
 
     // full table
     Word * Lx () const { return m_Lx_lines; }
@@ -64,9 +70,6 @@ public:
         POMAGMA_ASSERT_RANGE_(5, lhs, m_item_dim);
         return bool_ref::index(Rx(rhs), lhs);
     }
-
-    // access
-    void validate () const;
 };
 
 } // namespace pomagma

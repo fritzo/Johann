@@ -10,19 +10,19 @@ base_bin_rel::base_bin_rel (size_t item_dim, bool symmetric)
     : m_item_dim(item_dim),
       m_word_dim(dense_set::word_count(m_item_dim)),
       m_round_item_dim(m_word_dim * BITS_PER_WORD - 1),
-      m_round_word_dim(m_word_dim * m_round_item_dim),
-      m_Lx_lines(pomagma::alloc_blocks<Word>(m_round_word_dim)),
+      m_data_size_words(m_word_dim * m_round_item_dim),
+      m_Lx_lines(pomagma::alloc_blocks<Word>(m_data_size_words)),
       m_Rx_lines(symmetric ? m_Lx_lines
-                           : pomagma::alloc_blocks<Word>(m_round_word_dim))
+                           : pomagma::alloc_blocks<Word>(m_data_size_words))
 {
     POMAGMA_DEBUG("creating base_bin_rel with " << m_word_dim << " lines");
     POMAGMA_ASSERT(m_round_item_dim <= MAX_ITEM_DIM,
             "base_bin_rel is too large");
 
     // initialize to zeros
-    bzero(m_Lx_lines, sizeof(Word) * m_round_word_dim);
+    bzero(m_Lx_lines, sizeof(Word) * m_data_size_words);
     if (not symmetric) {
-        bzero(m_Rx_lines, sizeof(Word) * m_round_word_dim);
+        bzero(m_Rx_lines, sizeof(Word) * m_data_size_words);
     }
 }
 
