@@ -6,17 +6,15 @@ namespace pomagma
 {
 
 dense_bin_fun::dense_bin_fun (size_t item_dim)
-    : m_item_dim(item_dim),
-      m_word_dim(dense_set::word_count(m_item_dim)),
-      m_block_dim((m_item_dim + ITEMS_PER_BLOCK) / ITEMS_PER_BLOCK),
-      m_blocks(pomagma::alloc_blocks<Block4x4>(m_block_dim * m_block_dim)),
-      m_lines(item_dim, false)
+    : m_lines(item_dim, false),
+      m_block_dim((item_dim + ITEMS_PER_BLOCK) / ITEMS_PER_BLOCK),
+      m_blocks(pomagma::alloc_blocks<Block4x4>(m_block_dim * m_block_dim))
 {
     POMAGMA_DEBUG("creating dense_bin_fun with "
             << (m_block_dim * m_block_dim) << " blocks");
 
     // FIXME allow larger
-    POMAGMA_ASSERT(m_item_dim < (1<<15), "dense_bin_fun is too large");
+    POMAGMA_ASSERT(item_dim < (1<<15), "dense_bin_fun is too large");
 
     // initialize to zero
     bzero(m_blocks, m_block_dim * m_block_dim * sizeof(Block4x4));
@@ -48,9 +46,9 @@ void dense_bin_fun::move_from (const dense_bin_fun & other)
 
 size_t dense_bin_fun::count_pairs () const
 {
-    dense_set Lx_set(m_item_dim, NULL);
+    dense_set Lx_set(item_dim(), NULL);
     size_t result = 0;
-    for (size_t i = 1; i <= m_item_dim; ++i) {
+    for (size_t i = 1; i <= item_dim(); ++i) {
         Lx_set.init(m_lines.Lx(i));
         result += Lx_set.count_items();
     }
@@ -72,8 +70,8 @@ void dense_bin_fun::validate () const
         for (size_t _j = 0; _j < ITEMS_PER_BLOCK; ++_j) {
             size_t i = i_ * ITEMS_PER_BLOCK+_i;
             size_t j = j_ * ITEMS_PER_BLOCK+_j;
-            if (i == 0 or m_item_dim < i) continue;
-            if (j == 0 or m_item_dim < j) continue;
+            if (i == 0 or item_dim() < i) continue;
+            if (j == 0 or item_dim() < j) continue;
             oid_t val = _block2value(block, _i, _j);
 
             if (val) {
@@ -94,9 +92,9 @@ void dense_bin_fun::remove(
         const oid_t dep,
         void remove_value(oid_t)) // rem
 {
-    POMAGMA_ASSERT_RANGE_(4, dep, m_item_dim);
+    POMAGMA_ASSERT_RANGE_(4, dep, item_dim());
 
-    dense_set set(m_item_dim, NULL);
+    dense_set set(item_dim(), NULL);
 
     // (lhs, dep)
     for (Iterator<RHS_FIXED> iter(this, dep); iter.ok(); iter.next()) {
@@ -130,12 +128,12 @@ void dense_bin_fun::merge(
         void move_value(oid_t, oid_t, oid_t)) // moved, lhs, rhs
 {
     POMAGMA_ASSERT4(rep != dep, "self merge: " << dep << "," << rep);
-    POMAGMA_ASSERT_RANGE_(4, dep, m_item_dim);
-    POMAGMA_ASSERT_RANGE_(4, rep, m_item_dim);
+    POMAGMA_ASSERT_RANGE_(4, dep, item_dim());
+    POMAGMA_ASSERT_RANGE_(4, rep, item_dim());
 
-    dense_set set(m_item_dim, NULL);
-    dense_set dep_set(m_item_dim, NULL);
-    dense_set rep_set(m_item_dim, NULL);
+    dense_set set(item_dim(), NULL);
+    dense_set dep_set(item_dim(), NULL);
+    dense_set rep_set(item_dim(), NULL);
 
     // Note: the spacial case
     //   (dep, dep) --> (dep, rep) --> (rep, rep)

@@ -13,11 +13,9 @@ namespace pomagma
 // a tight binary function in 4x4 word blocks
 class dense_bin_fun : noncopyable
 {
-    const size_t m_item_dim;
-    const size_t m_word_dim;
+    base_bin_rel m_lines;
     const size_t m_block_dim;
     Block4x4 * const m_blocks;
-    base_bin_rel m_lines;
 
     // block wrappers
     oid_t * _block (size_t i_, size_t j_)
@@ -32,14 +30,8 @@ class dense_bin_fun : noncopyable
 public:
 
     // set wrappers
-    dense_set get_Lx_set (oid_t lhs) const
-    {
-        return dense_set(m_item_dim, m_lines.Lx(lhs));
-    }
-    dense_set get_Rx_set (oid_t rhs) const
-    {
-        return dense_set(m_item_dim, m_lines.Rx(rhs));
-    }
+    dense_set get_Lx_set (oid_t lhs) const { return m_lines.Lx_set(lhs); }
+    dense_set get_Rx_set (oid_t rhs) const { return m_lines.Rx_set(rhs); }
 
     // ctors & dtors
     dense_bin_fun (size_t item_dim);
@@ -54,8 +46,13 @@ public:
     oid_t get_value (oid_t lhs, oid_t rhs) const { return value(lhs, rhs); }
 
     // attributes
+    size_t item_dim () const { return m_lines.item_dim(); }
+private:
+    size_t word_dim () const { return m_lines.word_dim(); }
+    const dense_set & support () const { return m_lines.support(); }
+    dense_set & support () { return m_lines.support(); }
+public:
     size_t count_pairs () const; // slow!
-    size_t item_dim () const { return m_item_dim; }
     void validate () const;
 
     // element operations
@@ -85,8 +82,8 @@ public:
 
 inline oid_t & dense_bin_fun::value (oid_t i, oid_t j)
 {
-    POMAGMA_ASSERT_RANGE_(5, i, m_item_dim);
-    POMAGMA_ASSERT_RANGE_(5, j, m_item_dim);
+    POMAGMA_ASSERT_RANGE_(5, i, item_dim());
+    POMAGMA_ASSERT_RANGE_(5, j, item_dim());
 
     oid_t * block = _block(i / ITEMS_PER_BLOCK, j / ITEMS_PER_BLOCK);
     return _block2value(block, i & BLOCK_POS_MASK, j & BLOCK_POS_MASK);
@@ -94,8 +91,8 @@ inline oid_t & dense_bin_fun::value (oid_t i, oid_t j)
 
 inline oid_t dense_bin_fun::value (oid_t i, oid_t j) const
 {
-    POMAGMA_ASSERT_RANGE_(5, i, m_item_dim);
-    POMAGMA_ASSERT_RANGE_(5, j, m_item_dim);
+    POMAGMA_ASSERT_RANGE_(5, i, item_dim());
+    POMAGMA_ASSERT_RANGE_(5, j, item_dim());
 
     const oid_t * block = _block(i / ITEMS_PER_BLOCK, j / ITEMS_PER_BLOCK);
     return _block2value(block, i & BLOCK_POS_MASK, j & BLOCK_POS_MASK);
@@ -209,7 +206,7 @@ public:
 
     // construction
     Iterator (const dense_bin_fun * fun)
-        : m_set(fun->m_item_dim, NULL),
+        : m_set(fun->item_dim(), NULL),
           m_iter(m_set, false),
           m_fun(*fun),
           m_lhs(0),
@@ -217,7 +214,7 @@ public:
     {
     }
     Iterator (const dense_bin_fun * fun, oid_t fixed)
-        : m_set(fun->m_item_dim,
+        : m_set(fun->item_dim(),
                 idx ? fun->m_lines.Rx(fixed)
                     : fun->m_lines.Lx(fixed)),
           m_iter(m_set, false),
@@ -268,7 +265,7 @@ public:
 
     // construction
     RRxx_Iter (const dense_bin_fun * fun)
-        : m_set(fun->m_item_dim),
+        : m_set(fun->item_dim()),
           m_iter(m_set, false),
           m_fun(*fun)
     {
@@ -318,7 +315,7 @@ public:
 
     // construction
     LRxx_Iter (const dense_bin_fun * fun)
-        : m_set(fun->m_item_dim),
+        : m_set(fun->item_dim()),
           m_iter(m_set, false),
           m_fun(*fun)
     {
@@ -369,7 +366,7 @@ public:
 
     // construction
     LLxx_Iter (const dense_bin_fun * fun)
-        : m_set(fun->m_item_dim),
+        : m_set(fun->item_dim()),
           m_iter(m_set, false),
           m_fun(*fun)
     {

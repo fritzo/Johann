@@ -11,8 +11,7 @@ namespace pomagma
 
 class base_bin_rel : noncopyable
 {
-    const size_t m_item_dim;
-    const size_t m_word_dim;
+    dense_set m_support;
     const size_t m_round_item_dim;
     const size_t m_data_size_words;
     Word * const m_Lx_lines;
@@ -28,10 +27,12 @@ public:
     void move_from (const base_bin_rel & other); // for growing
     void validate () const;
 
-    size_t item_dim () const { return m_item_dim; }
-    size_t word_dim () const { return m_word_dim; }
+    size_t item_dim () const { return m_support.item_dim(); }
+    size_t word_dim () const { return m_support.word_dim(); }
     size_t round_item_dim () const { return m_round_item_dim; }
     size_t data_size_words () const { return m_data_size_words; }
+    dense_set & support () { return m_support; }
+    const dense_set & support () const { return m_support; }
 
     // full table
     Word * Lx () const { return m_Lx_lines; }
@@ -40,36 +41,40 @@ public:
     // single line
     Word * Lx (oid_t lhs) const
     {
-        POMAGMA_ASSERT_RANGE_(5, lhs, m_item_dim);
-        return m_Lx_lines + (lhs * m_word_dim);
+        POMAGMA_ASSERT_RANGE_(5, lhs, item_dim());
+        return m_Lx_lines + (lhs * word_dim());
     }
     Word * Rx (oid_t rhs) const
     {
-        POMAGMA_ASSERT_RANGE_(5, rhs, m_item_dim);
-        return m_Rx_lines + (rhs * m_word_dim);
+        POMAGMA_ASSERT_RANGE_(5, rhs, item_dim());
+        return m_Rx_lines + (rhs * word_dim());
     }
 
     // single element
     bool Lx (oid_t lhs, oid_t rhs) const
     {
-        POMAGMA_ASSERT_RANGE_(5, rhs, m_item_dim);
+        POMAGMA_ASSERT_RANGE_(5, rhs, item_dim());
         return bool_ref::index(Lx(lhs), rhs);
     }
     bool Rx (oid_t lhs, oid_t rhs) const
     {
-        POMAGMA_ASSERT_RANGE_(5, lhs, m_item_dim);
+        POMAGMA_ASSERT_RANGE_(5, lhs, item_dim());
         return bool_ref::index(Rx(rhs), lhs);
     }
     bool_ref Lx (oid_t lhs, oid_t rhs)
     {
-        POMAGMA_ASSERT_RANGE_(5, rhs, m_item_dim);
+        POMAGMA_ASSERT_RANGE_(5, rhs, item_dim());
         return bool_ref::index(Lx(lhs), rhs);
     }
     bool_ref Rx (oid_t lhs, oid_t rhs)
     {
-        POMAGMA_ASSERT_RANGE_(5, lhs, m_item_dim);
+        POMAGMA_ASSERT_RANGE_(5, lhs, item_dim());
         return bool_ref::index(Rx(rhs), lhs);
     }
+
+    // set wrappers
+    dense_set Lx_set (oid_t lhs) const { return dense_set(item_dim(), Lx(lhs)); }
+    dense_set Rx_set (oid_t rhs) const { return dense_set(item_dim(), Rx(rhs)); }
 };
 
 } // namespace pomagma

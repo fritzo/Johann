@@ -29,26 +29,19 @@ class dense_bin_rel : noncopyable
     };
 
     // data
-    dense_set m_support; // TODO move to const dense_set & base_bin_rel::...
     base_bin_rel m_lines;
     mutable Word * m_temp_line; // TODO FIXME this is not thread-safe
 
-    size_t item_dim        () const { return m_lines.item_dim(); }
-    size_t word_dim        () const { return m_lines.word_dim(); }
-    size_t round_item_dim  () const { return m_lines.round_item_dim(); }
+    size_t item_dim () const { return m_lines.item_dim(); }
+    size_t word_dim () const { return m_lines.word_dim(); }
+    size_t round_item_dim () const { return m_lines.round_item_dim(); }
     size_t data_size_words () const { return m_lines.data_size_words(); }
 
 public:
 
     // set wrappers
-    dense_set get_Lx_set (oid_t lhs) const
-    {
-        return dense_set(item_dim(), m_lines.Lx(lhs));
-    }
-    dense_set get_Rx_set (oid_t rhs) const
-    {
-        return dense_set(item_dim(), m_lines.Rx(rhs));
-    }
+    dense_set get_Lx_set (oid_t lhs) const { return m_lines.Lx_set(lhs); }
+    dense_set get_Rx_set (oid_t rhs) const { return m_lines.Rx_set(rhs); }
 
     // ctors & dtors
     dense_bin_rel (size_t item_dim, bool is_full = false);
@@ -56,11 +49,14 @@ public:
     void move_from (const dense_bin_rel & other, const oid_t* new2old=NULL);
 
     // attributes
-    const dense_set & support () const { return m_support; }
+private:
+    dense_set & support () { return m_lines.support(); }
+public:
+    const dense_set & support () const { return m_lines.support(); }
     size_t count_pairs () const; // supa-slow, try not to use
-    size_t count_items_support () const { return m_support.count_items(); }
+    size_t count_items_support () const { return support().count_items(); }
     void validate () const;
-    void validate_disjoint (const dense_bin_rel& other) const;
+    void validate_disjoint (const dense_bin_rel & other) const;
     void print_table (size_t n = 0) const;
 
     // element operations
@@ -102,12 +98,12 @@ public:
             void (*change)(oid_t, oid_t));
 
     // support operations
-    bool supports (oid_t i) const { return m_support.contains(i); }
+    bool supports (oid_t i) const { return support().contains(i); }
     bool supports (oid_t i, oid_t j) const
     {
         return supports(i) and supports(j);
     }
-    void insert   (oid_t i) { m_support.insert(i); }
+    void insert   (oid_t i) { support().insert(i); }
     void remove   (oid_t i);
     void merge    (oid_t dep, oid_t rep, void (*move_to)(oid_t, oid_t));
 
@@ -160,7 +156,7 @@ public:
 
     // construction
     iterator (const dense_bin_rel * rel)
-        : m_lhs(rel->m_support, false),
+        : m_lhs(rel->support(), false),
           m_rhs(m_rhs_set, false),
           m_rhs_set(rel->item_dim(), NULL),
           m_rel(*rel)

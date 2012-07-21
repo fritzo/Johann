@@ -7,18 +7,16 @@ namespace pomagma
 {
 
 dense_sym_fun::dense_sym_fun (size_t item_dim)
-    : m_item_dim(item_dim),
-      m_block_dim((m_item_dim + ITEMS_PER_BLOCK) / ITEMS_PER_BLOCK),
-      m_word_dim(dense_set::word_count(m_item_dim)),
+    : m_lines(item_dim, true),
+      m_block_dim((item_dim + ITEMS_PER_BLOCK) / ITEMS_PER_BLOCK),
       m_blocks(pomagma::alloc_blocks<Block4x4>(
-                  unordered_pair_count(m_block_dim))),
-      m_lines(item_dim, true)
+                  unordered_pair_count(m_block_dim)))
 {
     POMAGMA_DEBUG("creating dense_sym_fun with "
             << unordered_pair_count(m_block_dim) << " blocks");
 
     // FIXME allow larger
-    POMAGMA_ASSERT(m_item_dim < (1 << 15), "dense_sym_fun is too large");
+    POMAGMA_ASSERT(item_dim < (1 << 15), "dense_sym_fun is too large");
 
     // initialize to zero
     bzero(m_blocks, unordered_pair_count(m_block_dim) * sizeof(Block4x4));
@@ -43,8 +41,8 @@ void dense_sym_fun::move_from (const dense_sym_fun & other)
     }
 
     // copy sets
-    unsigned minN = min(m_item_dim, other.m_item_dim);
-    unsigned minL = min(m_word_dim, other.m_word_dim);
+    unsigned minN = min(item_dim(), other.item_dim());
+    unsigned minL = min(word_dim(), other.word_dim());
     for (unsigned i = 1; i <= minN; ++i) {
         memcpy(m_lines.Lx(i), other.m_lines.Lx(i), sizeof(Word) * minL);
     }
@@ -55,10 +53,10 @@ void dense_sym_fun::move_from (const dense_sym_fun & other)
 
 unsigned dense_sym_fun::count_pairs () const
 {
-    dense_set set(m_item_dim, NULL);
+    dense_set set(item_dim(), NULL);
 
     unsigned result = 0;
-    for (unsigned i = 1; i <= m_item_dim; ++i) {
+    for (unsigned i = 1; i <= item_dim(); ++i) {
         set.init(m_lines.Lx(i));
         result += set.count_items();
     }
@@ -80,8 +78,8 @@ void dense_sym_fun::validate () const
         for (unsigned _j = 0; _j < ITEMS_PER_BLOCK; ++_j) {
             unsigned i = i_ * ITEMS_PER_BLOCK + _i;
             unsigned j = j_ * ITEMS_PER_BLOCK + _j;
-            if (i == 0 or m_item_dim < i) continue;
-            if (j < i or m_item_dim < j) continue;
+            if (i == 0 or item_dim() < i) continue;
+            if (j < i or item_dim() < j) continue;
             oid_t val = _block2value(block, _i, _j);
 
             if (val) {
@@ -102,9 +100,9 @@ void dense_sym_fun::remove(
         const oid_t dep,
         void remove_value(oid_t)) // rem
 {
-    POMAGMA_ASSERT_RANGE_(4, dep, m_item_dim);
+    POMAGMA_ASSERT_RANGE_(4, dep, item_dim());
 
-    dense_set set(m_item_dim, NULL);
+    dense_set set(item_dim(), NULL);
 
     for (Iterator iter(this, dep); iter.ok(); iter.next()) {
         oid_t rhs = iter.moving();
@@ -125,12 +123,12 @@ void dense_sym_fun::merge(
         void move_value(oid_t, oid_t, oid_t)) // moved, lhs, rhs
 {
     POMAGMA_ASSERT4(rep != dep, "self merge: " << dep << "," << rep);
-    POMAGMA_ASSERT_RANGE_(4, dep, m_item_dim);
-    POMAGMA_ASSERT_RANGE_(4, rep, m_item_dim);
+    POMAGMA_ASSERT_RANGE_(4, dep, item_dim());
+    POMAGMA_ASSERT_RANGE_(4, rep, item_dim());
 
-    dense_set set(m_item_dim, NULL);
-    dense_set dep_set(m_item_dim, NULL);
-    dense_set rep_set(m_item_dim, NULL);
+    dense_set set(item_dim(), NULL);
+    dense_set dep_set(item_dim(), NULL);
+    dense_set rep_set(item_dim(), NULL);
 
     // (dep, dep) -> (dep, rep)
     if (contains(dep, dep)) {

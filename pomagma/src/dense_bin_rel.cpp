@@ -7,8 +7,7 @@ namespace pomagma
 {
 
 dense_bin_rel::dense_bin_rel (size_t item_dim, bool is_full)
-    : m_support(item_dim),
-      m_lines(item_dim, false),
+    : m_lines(item_dim, false),
       m_temp_line(pomagma::alloc_blocks<Word>(m_lines.word_dim()))
 {
     POMAGMA_DEBUG("creating dense_bin_rel with " << word_dim() << " lines");
@@ -16,7 +15,7 @@ dense_bin_rel::dense_bin_rel (size_t item_dim, bool is_full)
             "dense_bin_rel is too large");
 
     // fill if necessary
-    if (is_full) m_support.insert_all();
+    if (is_full) support().insert_all();
 }
 
 dense_bin_rel::~dense_bin_rel ()
@@ -32,9 +31,6 @@ void dense_bin_rel::move_from (
 
     if (POMAGMA_DEBUG_LEVEL >= 1) other.validate();
 
-    // copy support
-    m_support.move_from(other.m_support, new2old);
-
     // WARNING: assumes this has been done
     //bzero(m_lines.Lx(), sizeof(Word) * data_size_words());
     //bzero(m_lines.Rx(), sizeof(Word) * data_size_words());
@@ -44,6 +40,7 @@ void dense_bin_rel::move_from (
         m_lines.move_from(other.m_lines);
     } else {
         POMAGMA_DEBUG("copying and reordering");
+        support().move_from(other.support(), new2old);
         // copy & reorder WIKKIT SLOW
         for (oid_t i_new = 1; i_new <= item_dim(); ++i_new) {
             if (not supports(i_new)) continue;
@@ -67,7 +64,7 @@ void dense_bin_rel::move_from (
 size_t dense_bin_rel::count_pairs () const
 {
     size_t result = 0;
-    for (dense_set::iterator i(m_support); i.ok(); i.next()) {
+    for (dense_set::iterator i(support()); i.ok(); i.next()) {
         result += get_Lx_set(*i).count_items();
     }
     return result;
@@ -77,7 +74,7 @@ void dense_bin_rel::validate () const
 {
     POMAGMA_DEBUG("Validating dense_bin_rel");
 
-    m_support.validate();
+    support().validate();
     m_lines.validate();
 
     size_t num_pairs = 0;
@@ -119,17 +116,17 @@ void dense_bin_rel::validate_disjoint (const dense_bin_rel & other) const
     POMAGMA_DEBUG("Validating disjoint pair of dense_bin_rels");
 
     // validate supports agree
-    POMAGMA_ASSERT_EQUAL(m_support.item_dim(), other.m_support.item_dim());
+    POMAGMA_ASSERT_EQUAL(support().item_dim(), other.support().item_dim());
     POMAGMA_ASSERT_EQUAL(
-            m_support.count_items(),
-            other.m_support.count_items());
-    POMAGMA_ASSERT(m_support == other.m_support,
+            support().count_items(),
+            other.support().count_items());
+    POMAGMA_ASSERT(support() == other.support(),
             "dense_bin_rel supports differ");
 
     // validate disjointness
     dense_set this_set(item_dim(), NULL);
     dense_set other_set(item_dim(), NULL);
-    for (dense_set::iterator i(m_support); i.ok(); i.next()) {
+    for (dense_set::iterator i(support()); i.ok(); i.next()) {
         this_set.init(m_lines.Lx(*i));
         other_set.init(other.m_lines.Lx(*i));
         POMAGMA_ASSERT(this_set.disjoint(other_set),
@@ -200,7 +197,7 @@ void dense_bin_rel::remove (oid_t i)
     remove_Lx(set, i);
     set.zero();
 
-    m_support.remove(i);
+    support().remove(i);
 }
 
 void dense_bin_rel::ensure_inserted (
@@ -269,7 +266,7 @@ void dense_bin_rel::merge (
         }
     }
 
-    m_support.merge(i, j);
+    support().merge(i, j);
 }
 
 // saving/loading, quicker rather than smaller
