@@ -52,7 +52,7 @@ void test_dense_bin_fun (size_t size)
                         "bad value at " << i << ',' << j);
                 ++line_size_i;
             }
-            POMAGMA_ASSERT_EQUAL(Lx_line_size[i], line_size_i);
+            POMAGMA_ASSERT_EQ(Lx_line_size[i], line_size_i);
         }
     }
 
@@ -69,7 +69,7 @@ void test_dense_bin_fun (size_t size)
                         "bad value at " << i << ',' << j);
                 ++line_size_j;
             }
-            POMAGMA_ASSERT_EQUAL(Rx_line_size[j], line_size_j);
+            POMAGMA_ASSERT_EQ(Rx_line_size[j], line_size_j);
         }
     }
 

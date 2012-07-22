@@ -25,7 +25,7 @@ void inverse_bin_fun::validate (dense_bin_fun & fun)
         for (auto lr : m_Vlr_data[val]) {
             oid_t lhs = lr.first;
             oid_t rhs = lr.second;
-            POMAGMA_ASSERT_EQUAL(fun.get_value(lhs, rhs), val);
+            POMAGMA_ASSERT_EQ(fun.get_value(lhs, rhs), val);
         }
     }
 
@@ -33,7 +33,7 @@ void inverse_bin_fun::validate (dense_bin_fun & fun)
         oid_t val = VL_iter.first.first;
         oid_t lhs = VL_iter.first.second;
         for (oid_t rhs : VL_iter.second) {
-            POMAGMA_ASSERT_EQUAL(fun.get_value(lhs, rhs), val);
+            POMAGMA_ASSERT_EQ(fun.get_value(lhs, rhs), val);
         }
     }
 
@@ -41,7 +41,7 @@ void inverse_bin_fun::validate (dense_bin_fun & fun)
         oid_t val = VR_iter.first.first;
         oid_t rhs = VR_iter.first.second;
         for (oid_t lhs : VR_iter.second) {
-            POMAGMA_ASSERT_EQUAL(fun.get_value(lhs, rhs), val);
+            POMAGMA_ASSERT_EQ(fun.get_value(lhs, rhs), val);
         }
     }
 }

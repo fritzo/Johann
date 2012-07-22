@@ -155,9 +155,15 @@ public:
 #define POMAGMA_ASSERT5(cond, mess) POMAGMA_ASSERT_(5, cond, mess)
 #define POMAGMA_ASSERT6(cond, mess) POMAGMA_ASSERT_(6, cond, mess)
 
-#define POMAGMA_ASSERT_EQUAL(x, y) \
+#define POMAGMA_ASSERT_EQ(x, y) \
     POMAGMA_ASSERT((x) == (y), \
             "expected " #x " == " #y "; actual " << (x) << " vs " << (y))
+#define POMAGMA_ASSERT_LE(x, y) \
+    POMAGMA_ASSERT((x) <= (y), \
+            "expected " #x " <= " #y "; actual " << (x) << " vs " << (y))
+#define POMAGMA_ASSERT_LT(x, y) \
+    POMAGMA_ASSERT((x) <= (y), \
+            "expected " #x " <= " #y "; actual " << (x) << " vs " << (y))
 
 #define POMAGMA_ASSERT_OK \
     POMAGMA_ASSERT5(ok(), "tried to use done iterator")
@@ -171,7 +177,9 @@ public:
 // Data types
 
 typedef uint32_t oid_t; // object id TODO switch to uint16_t
-const size_t MAX_ITEM_DIM = 0xffffUL;
+const size_t MAX_ITEM_DIM = (1UL << (8UL * sizeof(oid_t))) - 1UL;
+
+const size_t BITS_PER_CACHE_LINE = 512;
 
 //----------------------------------------------------------------------------
 // Words of bits

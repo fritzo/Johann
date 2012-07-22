@@ -30,12 +30,11 @@ void dense_bin_fun::move_from (const dense_bin_fun & other)
 {
     POMAGMA_DEBUG("Copying dense_bin_fun");
 
-    // copy data
-    size_t minM = min(m_block_dim, other.m_block_dim);
-    for (size_t j_ = 0; j_ < minM; ++j_) {
+    size_t min_block_dim = min(m_block_dim, other.m_block_dim);
+    for (size_t j_ = 0; j_ < min_block_dim; ++j_) {
         oid_t * destin = _block(0, j_);
         const oid_t * source = other._block(0, j_);
-        memcpy(destin, source, sizeof(Block4x4) * minM);
+        memcpy(destin, source, sizeof(Block4x4) * min_block_dim);
     }
 
     m_lines.move_from(other.m_lines);

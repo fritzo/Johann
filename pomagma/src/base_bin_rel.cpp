@@ -8,13 +8,15 @@ namespace pomagma
 
 base_bin_rel::base_bin_rel (size_t item_dim, bool symmetric)
     : m_support(item_dim),
-      m_round_item_dim(word_dim() * BITS_PER_WORD - 1),
-      m_data_size_words(word_dim() * m_round_item_dim),
+      m_round_item_dim(dense_set::round_item_dim(item_dim)),
+      m_round_word_dim(dense_set::round_word_dim(item_dim)),
+      m_data_size_words((1 + m_round_item_dim) * m_round_word_dim),
       m_Lx_lines(pomagma::alloc_blocks<Word>(m_data_size_words)),
       m_Rx_lines(symmetric ? m_Lx_lines
                            : pomagma::alloc_blocks<Word>(m_data_size_words))
 {
-    POMAGMA_DEBUG("creating base_bin_rel with " << word_dim() << " lines");
+    POMAGMA_DEBUG("creating base_bin_rel with "
+            << m_data_size_words << " words");
     POMAGMA_ASSERT(m_round_item_dim <= MAX_ITEM_DIM,
             "base_bin_rel is too large");
 
@@ -38,20 +40,21 @@ void base_bin_rel::move_from (const base_bin_rel & other)
 {
     POMAGMA_DEBUG("Copying base_bin_rel");
 
-    size_t minN = min(item_dim(), other.item_dim());
-    size_t minL = min(word_dim(), other.word_dim());
+    size_t min_item_dim = min(item_dim(), other.item_dim());
+    size_t min_word_dim = min(word_dim(), other.word_dim());
 
     m_support.move_from(other.m_support);
 
     if (_symmetric()) {
         POMAGMA_ASSERT(other._symmetric(), "symmetry mismatch");
-        for (size_t i = 1; i <= minN; ++i) {
-            memcpy(Lx(i), other.Lx(i), sizeof(Word) * minL);
+        for (size_t i = 1; i <= min_item_dim; ++i) {
+            memcpy(Lx(i), other.Lx(i), sizeof(Word) * min_word_dim);
         }
     } else {
-        for (size_t i = 1; i <= minN; ++i) {
-            memcpy(Lx(i), other.Lx(i), sizeof(Word) * minL);
-            memcpy(Rx(i), other.Rx(i), sizeof(Word) * minL);
+        POMAGMA_ASSERT(not other._symmetric(), "symmetry mismatch");
+        for (size_t i = 1; i <= min_item_dim; ++i) {
+            memcpy(Lx(i), other.Lx(i), sizeof(Word) * min_word_dim);
+            memcpy(Rx(i), other.Rx(i), sizeof(Word) * min_word_dim);
         }
     }
 }
@@ -73,7 +76,7 @@ void base_bin_rel::validate() const
                 set.init(Lx(i));
                 set.validate();
             } else {
-                round_set.init(m_Lx_lines + word_dim() * i);
+                round_set.init(m_Lx_lines + m_round_word_dim * i);
                 round_set.validate();
                 POMAGMA_ASSERT(round_set.empty(),
                         "unsupported Lx(" << i << ") has " <<
@@ -100,12 +103,12 @@ void base_bin_rel::validate() const
                 set.init(Rx(i));
                 set.validate();
             } else {
-                round_set.init(m_Lx_lines + word_dim() * i);
+                round_set.init(m_Lx_lines + m_round_word_dim * i);
                 round_set.validate();
                 POMAGMA_ASSERT(round_set.empty(),
                         "unsupported Lx(" << i << ") has " <<
                         round_set.count_items() << " items");
-                round_set.init(m_Rx_lines + word_dim() * i);
+                round_set.init(m_Rx_lines + m_round_word_dim * i);
                 round_set.validate();
                 POMAGMA_ASSERT(round_set.empty(),
                         "unsupported Rx(" << i << ") has " <<

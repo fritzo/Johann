@@ -45,7 +45,7 @@ void test_dense_sym_fun (oid_t size)
             POMAGMA_ASSERT(gcd(i, j) == k, "bad value at " << i << ',' << j);
             ++line_size_i;
         }
-        POMAGMA_ASSERT_EQUAL(line_size[i], line_size_i);
+        POMAGMA_ASSERT_EQ(line_size[i], line_size_i);
     }
 
     POMAGMA_INFO("Validating");

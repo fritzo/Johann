@@ -5,31 +5,43 @@ using namespace pomagma;
 
 bool is_even (oid_t i, oid_t modulus = 2) { return i % modulus == 0; }
 
+void test_sizes ()
+{
+    POMAGMA_INFO("Testing dense_set sizes");
+
+    for (size_t i = 0; i <= 511; ++i) {
+        POMAGMA_ASSERT_EQ(dense_set::round_item_dim(i), 511);
+    }
+    for (size_t i = 512; i <= 1023; ++i) {
+        POMAGMA_ASSERT_EQ(dense_set::round_item_dim(i), 1023);
+    }
+}
+
 void test_misc (size_t size)
 {
     POMAGMA_INFO("Testing dense_set");
 
     POMAGMA_INFO("creating dense_set of size " << size);
     dense_set set(size);
-    POMAGMA_ASSERT_EQUAL(set.count_items(), 0);
+    POMAGMA_ASSERT_EQ(set.count_items(), 0);
 
     POMAGMA_INFO("testing position insertion");
     for (oid_t i = 1; i <= size; ++i) {
         set.insert(i);
     }
-    POMAGMA_ASSERT_EQUAL(set.count_items(), size);
+    POMAGMA_ASSERT_EQ(set.count_items(), size);
 
     POMAGMA_INFO("testing position removal");
     for (oid_t i = 1; i <= size; ++i) {
         set.remove(i);
     }
-    POMAGMA_ASSERT_EQUAL(set.count_items(), 0);
+    POMAGMA_ASSERT_EQ(set.count_items(), 0);
 
     POMAGMA_INFO("testing iteration");
     for (oid_t i = 1; i <= size / 2; ++i) {
         set.insert(i);
     }
-    POMAGMA_ASSERT_EQUAL(set.count_items(), size / 2);
+    POMAGMA_ASSERT_EQ(set.count_items(), size / 2);
     unsigned item_count = 0;
     for (dense_set::iterator iter(set); iter.ok(); iter.next()) {
         POMAGMA_ASSERT(set.contains(*iter), "iterated over uncontained item");
@@ -37,7 +49,7 @@ void test_misc (size_t size)
     }
     POMAGMA_INFO("found " << item_count << " / " << (size / 2) << " items");
     POMAGMA_ASSERT(item_count <= (size / 2), "iterated over too many items");
-    POMAGMA_ASSERT_EQUAL(item_count, size / 2);
+    POMAGMA_ASSERT_EQ(item_count, size / 2);
 }
 
 void test_even (size_t size)
@@ -99,7 +111,7 @@ void test_iterator(size_t size)
     }
 
     for (oid_t i = 1; i <= size; ++i) {
-        POMAGMA_ASSERT_EQUAL(bool(set(i)), vect[i-1]);
+        POMAGMA_ASSERT_EQ(bool(set(i)), vect[i-1]);
     }
 
     size_t count = 0;
@@ -107,12 +119,14 @@ void test_iterator(size_t size)
         POMAGMA_ASSERT(vect[*i - 1], "unexpected item " << *i);
         ++count;
     }
-    POMAGMA_ASSERT_EQUAL(count, true_count);
+    POMAGMA_ASSERT_EQ(count, true_count);
 }
 
 int main ()
 {
     Log::title("Dense Set Test");
+
+    test_sizes();
 
     for (size_t i = 0; i < 4; ++i) {
         test_misc(i + (1 << 16));

@@ -9,7 +9,8 @@ namespace pomagma
 dense_bin_rel::dense_bin_rel (size_t item_dim, bool is_full)
     : m_lines(item_dim, false)
 {
-    POMAGMA_DEBUG("creating dense_bin_rel with " << word_dim() << " lines");
+    POMAGMA_DEBUG("creating dense_bin_rel with "
+            << round_word_dim() << " words");
     POMAGMA_ASSERT(round_item_dim() <= MAX_ITEM_DIM,
             "dense_bin_rel is too large");
 
@@ -114,8 +115,8 @@ void dense_bin_rel::validate_disjoint (const dense_bin_rel & other) const
     POMAGMA_DEBUG("Validating disjoint pair of dense_bin_rels");
 
     // validate supports agree
-    POMAGMA_ASSERT_EQUAL(support().item_dim(), other.support().item_dim());
-    POMAGMA_ASSERT_EQUAL(
+    POMAGMA_ASSERT_EQ(support().item_dim(), other.support().item_dim());
+    POMAGMA_ASSERT_EQ(
             support().count_items(),
             other.support().count_items());
     POMAGMA_ASSERT(support() == other.support(),
@@ -159,7 +160,7 @@ void dense_bin_rel::remove_Lx (const dense_set & is, oid_t j)
     size_t offset = j / BITS_PER_WORD;
     Word * lines = m_lines.Lx() + offset;
     for (dense_set::iterator i(is); i.ok(); i.next()) {
-         lines[*i * word_dim()] &= mask; // ATOMIC
+         lines[*i * round_word_dim()] &= mask; // ATOMIC
     }
 }
 
@@ -175,7 +176,7 @@ void dense_bin_rel::remove_Rx (oid_t i, const dense_set& js)
     size_t offset = i / BITS_PER_WORD;
     Word * lines = m_lines.Rx() + offset;
     for (dense_set::iterator j(js); j.ok(); j.next()) {
-         lines[*j * word_dim()] &= mask; // ATOMIC
+         lines[*j * round_word_dim()] &= mask; // ATOMIC
     }
 }
 

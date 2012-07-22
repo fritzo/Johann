@@ -34,7 +34,7 @@ void test_dense_bin_rel (
         rel.insert(i);
         ++item_count;
     }
-    POMAGMA_ASSERT_EQUAL(item_count, rel.count_items_support());
+    POMAGMA_ASSERT_EQ(item_count, rel.count_items_support());
 
 
     POMAGMA_INFO("testing pair insertion");
@@ -48,7 +48,7 @@ void test_dense_bin_rel (
     } }
     POMAGMA_INFO("  " << num_pairs << " pairs inserted");
     rel.validate();
-    POMAGMA_ASSERT_EQUAL(num_pairs, rel.count_pairs());
+    POMAGMA_ASSERT_EQ(num_pairs, rel.count_pairs());
 
 
     POMAGMA_INFO("testing pair removal");
@@ -61,7 +61,7 @@ void test_dense_bin_rel (
     } }
     POMAGMA_INFO("  " << num_pairs << " pairs remain");
     rel.validate();
-    POMAGMA_ASSERT_EQUAL(num_pairs, rel.count_pairs());
+    POMAGMA_ASSERT_EQ(num_pairs, rel.count_pairs());
 
 
     POMAGMA_INFO("testing table iterator");
@@ -72,7 +72,7 @@ void test_dense_bin_rel (
     POMAGMA_INFO("  iterated over "
         << num_pairs_seen << " / " << num_pairs << " pairs");
     rel.validate();
-    POMAGMA_ASSERT_EQUAL(num_pairs_seen, num_pairs);
+    POMAGMA_ASSERT_EQ(num_pairs_seen, num_pairs);
 
 
     POMAGMA_INFO("testing pair containment");
@@ -94,7 +94,7 @@ void test_dense_bin_rel (
     } }
     POMAGMA_INFO("  " << num_pairs << " pairs found");
     rel.validate();
-    POMAGMA_ASSERT_EQUAL(num_pairs, rel.count_pairs());
+    POMAGMA_ASSERT_EQ(num_pairs, rel.count_pairs());
 
 
     POMAGMA_INFO("testing position merging");
@@ -109,7 +109,7 @@ void test_dense_bin_rel (
     }
     POMAGMA_INFO("  " << g_num_moved << " pairs moved in merging");
     rel.validate();
-    POMAGMA_ASSERT_EQUAL(item_count, rel.count_items_support());
+    POMAGMA_ASSERT_EQ(item_count, rel.count_items_support());
 
 
     POMAGMA_INFO("testing table iterator again");
@@ -121,7 +121,7 @@ void test_dense_bin_rel (
     POMAGMA_INFO("  iterated over "
         << num_pairs_seen << " / " << num_pairs << " pairs");
     rel.validate();
-    POMAGMA_ASSERT_EQUAL(num_pairs_seen, num_pairs);
+    POMAGMA_ASSERT_EQ(num_pairs_seen, num_pairs);
 
 
     POMAGMA_INFO("testing line Iterator<LHS_FIXED>");
@@ -139,9 +139,9 @@ void test_dense_bin_rel (
     POMAGMA_INFO("  Iterated over " << seen_item_count << " items");
     POMAGMA_INFO("  Iterated over " << num_pairs << " pairs");
     rel.validate();
-    POMAGMA_ASSERT_EQUAL(seen_item_count, item_count);
+    POMAGMA_ASSERT_EQ(seen_item_count, item_count);
     size_t true_size = rel.count_pairs();
-    POMAGMA_ASSERT_EQUAL(num_pairs, true_size);
+    POMAGMA_ASSERT_EQ(num_pairs, true_size);
 
 
     POMAGMA_INFO("testing line Iterator<RHS_FIXED>");
@@ -158,8 +158,8 @@ void test_dense_bin_rel (
     POMAGMA_INFO("  Iterated over " << seen_item_count << " items");
     POMAGMA_INFO("  Iterated over " << num_pairs << " pairs");
     rel.validate();
-    POMAGMA_ASSERT_EQUAL(seen_item_count, item_count);
-    POMAGMA_ASSERT_EQUAL(num_pairs, true_size);
+    POMAGMA_ASSERT_EQ(seen_item_count, item_count);
+    POMAGMA_ASSERT_EQ(num_pairs, true_size);
 }
 
 int main ()

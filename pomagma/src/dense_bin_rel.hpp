@@ -34,6 +34,7 @@ class dense_bin_rel : noncopyable
     size_t item_dim () const { return m_lines.item_dim(); }
     size_t word_dim () const { return m_lines.word_dim(); }
     size_t round_item_dim () const { return m_lines.round_item_dim(); }
+    size_t round_word_dim () const { return m_lines.round_word_dim(); }
     size_t data_size_words () const { return m_lines.data_size_words(); }
 
 public:

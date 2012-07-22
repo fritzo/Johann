@@ -48,7 +48,6 @@ public:
     // attributes
     size_t item_dim () const { return m_lines.item_dim(); }
 private:
-    size_t word_dim () const { return m_lines.word_dim(); }
     const dense_set & support () const { return m_lines.support(); }
     dense_set & support () { return m_lines.support(); }
 public:

@@ -13,6 +13,7 @@ class base_bin_rel : noncopyable
 {
     dense_set m_support;
     const size_t m_round_item_dim;
+    const size_t m_round_word_dim;
     const size_t m_data_size_words;
     Word * const m_Lx_lines;
     Word * const m_Rx_lines;
@@ -30,6 +31,7 @@ public:
     size_t item_dim () const { return m_support.item_dim(); }
     size_t word_dim () const { return m_support.word_dim(); }
     size_t round_item_dim () const { return m_round_item_dim; }
+    size_t round_word_dim () const { return m_round_word_dim; }
     size_t data_size_words () const { return m_data_size_words; }
     dense_set & support () { return m_support; }
     const dense_set & support () const { return m_support; }
@@ -42,12 +44,12 @@ public:
     Word * Lx (oid_t lhs) const
     {
         POMAGMA_ASSERT_RANGE_(5, lhs, item_dim());
-        return m_Lx_lines + (lhs * word_dim());
+        return m_Lx_lines + (lhs * m_round_word_dim);
     }
     Word * Rx (oid_t rhs) const
     {
         POMAGMA_ASSERT_RANGE_(5, rhs, item_dim());
-        return m_Rx_lines + (rhs * word_dim());
+        return m_Rx_lines + (rhs * m_round_word_dim);
     }
 
     // single element

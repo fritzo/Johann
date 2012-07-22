@@ -6,14 +6,14 @@
 namespace pomagma
 {
 
-dense_set::dense_set (size_t num_items)
-    : m_item_dim(num_items),
+dense_set::dense_set (size_t item_dim)
+    : m_item_dim(item_dim),
       m_word_dim(word_count(m_item_dim)),
       m_words(pomagma::alloc_blocks<Word>(m_word_dim)),
       m_alias(false)
 {
     POMAGMA_DEBUG("creating dense_set with " << m_word_dim << " lines");
-    POMAGMA_ASSERT(m_item_dim < (1<<26), "dense_set is too large");
+    POMAGMA_ASSERT_LE(item_dim, MAX_ITEM_DIM);
 
     // initialize to zeros
     bzero(m_words, sizeof(Word) * m_word_dim);
@@ -85,7 +85,8 @@ void dense_set::insert_all ()
     // for (size_t i = 1; i <= m_item_dim; ++i) { insert(i); }
 
     // fast version
-    const Word full = 0xFFFFFFFF;
+    const Word full = ~Word(0);
+    static_assert(~Word(0) + 1 == 0, "full word is wrong");
     for (size_t m = 0; m < m_word_dim; ++m) m_words[m] = full;
     size_t end = (m_item_dim + 1) % BITS_PER_WORD; // bit count in partially-filled block
     if (end) m_words[m_word_dim - 1] = full >> (BITS_PER_WORD - end);

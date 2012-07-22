@@ -32,31 +32,25 @@ void dense_sym_fun::move_from (const dense_sym_fun & other)
 {
     POMAGMA_DEBUG("Copying dense_sym_fun");
 
-    // copy data
-    unsigned minM = min(m_block_dim, other.m_block_dim);
-    for (unsigned j_ = 0; j_ < minM; ++j_) {
+    size_t min_block_dim = min(m_block_dim, other.m_block_dim);
+    for (size_t j_ = 0; j_ < min_block_dim; ++j_) {
         oid_t * destin = _block(0, j_);
         const oid_t * source = other._block(0, j_);
         memcpy(destin, source, sizeof(Block4x4) * (1 + j_));
     }
 
-    // copy sets
-    unsigned minN = min(item_dim(), other.item_dim());
-    unsigned minL = min(word_dim(), other.word_dim());
-    for (unsigned i = 1; i <= minN; ++i) {
-        memcpy(m_lines.Lx(i), other.m_lines.Lx(i), sizeof(Word) * minL);
-    }
+    m_lines.move_from(other.m_lines);
 }
 
 //----------------------------------------------------------------------------
 // Diagnostics
 
-unsigned dense_sym_fun::count_pairs () const
+size_t dense_sym_fun::count_pairs () const
 {
     dense_set set(item_dim(), NULL);
 
-    unsigned result = 0;
-    for (unsigned i = 1; i <= item_dim(); ++i) {
+    size_t result = 0;
+    for (size_t i = 1; i <= item_dim(); ++i) {
         set.init(m_lines.Lx(i));
         result += set.count_items();
     }
@@ -70,14 +64,14 @@ void dense_sym_fun::validate () const
     m_lines.validate();
 
     POMAGMA_DEBUG("validating line-block consistency");
-    for (unsigned i_ = 0; i_ < m_block_dim; ++i_) {
-    for (unsigned j_ = i_; j_ < m_block_dim; ++j_) {
+    for (size_t i_ = 0; i_ < m_block_dim; ++i_) {
+    for (size_t j_ = i_; j_ < m_block_dim; ++j_) {
         const oid_t * block = _block(i_, j_);
 
-        for (unsigned _i = 0; _i < ITEMS_PER_BLOCK; ++_i) {
-        for (unsigned _j = 0; _j < ITEMS_PER_BLOCK; ++_j) {
-            unsigned i = i_ * ITEMS_PER_BLOCK + _i;
-            unsigned j = j_ * ITEMS_PER_BLOCK + _j;
+        for (size_t _i = 0; _i < ITEMS_PER_BLOCK; ++_i) {
+        for (size_t _j = 0; _j < ITEMS_PER_BLOCK; ++_j) {
+            size_t i = i_ * ITEMS_PER_BLOCK + _i;
+            size_t j = j_ * ITEMS_PER_BLOCK + _j;
             if (i == 0 or item_dim() < i) continue;
             if (j < i or item_dim() < j) continue;
             oid_t val = _block2value(block, _i, _j);

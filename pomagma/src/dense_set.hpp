@@ -20,16 +20,24 @@ class dense_set
     Word * m_words;
     const bool m_alias;
 
-    // bit wrappers
-    inline bool_ref _bit (size_t i);
-    inline bool _bit (size_t i) const;
-
 public:
 
     // position 0 is unused, so we count from item 1
     static size_t word_count (size_t item_dim)
     {
         return (item_dim + BITS_PER_WORD) / BITS_PER_WORD;
+    }
+
+    // using round dimensions ensures cache alignenet and autovectorizability
+    static size_t round_item_dim (size_t min_item_dim)
+    {
+        return (min_item_dim + BITS_PER_CACHE_LINE) / BITS_PER_CACHE_LINE
+            * BITS_PER_CACHE_LINE - 1;
+    }
+    static size_t round_word_dim (size_t min_item_dim)
+    {
+        return (min_item_dim + BITS_PER_CACHE_LINE) / BITS_PER_CACHE_LINE
+            * (BITS_PER_CACHE_LINE / BITS_PER_WORD);
     }
 
     // ctors & dtors
@@ -40,6 +48,7 @@ public:
           m_words(line),
           m_alias(true)
     {
+        POMAGMA_ASSERT_LE(item_dim, MAX_ITEM_DIM);
     }
     dense_set (const dense_set & other)
         : m_item_dim(other.m_item_dim),
@@ -73,6 +82,10 @@ public:
     void validate () const;
 
     // element operations
+private:
+    inline bool_ref _bit (size_t i);
+    inline bool _bit (size_t i) const;
+public:
     bool_ref operator() (size_t i) { return _bit(i); }
     bool operator() (size_t i) const { return _bit(i); }
     bool contains (size_t i) const { return _bit(i); }
