@@ -197,6 +197,54 @@ void test_operations (size_t size)
     actual.zero();
     actual.set_insn(x, y);
     POMAGMA_ASSERT(actual == expected, "set_insn is wrong");
+
+    // these are shared for merge(-), merge(-,-) & ensure
+    dense_set expected_rep(size);
+    dense_set expected_dep(size);
+    dense_set expected_diff(size);
+    dense_set actual_rep(size);
+    dense_set actual_dep(size);
+    dense_set actual_diff(size);
+    expected_rep.set_union(x, y);
+    expected_dep.zero();
+    expected_diff.zero();
+    for (oid_t i = 1; i <= size; ++i) {
+        if (y(i) and not x(i)) { expected_diff.insert(i); }
+    }
+
+    POMAGMA_INFO("testing merge(dense_set)");
+    actual_rep.zero();
+    actual_dep.zero();
+    for (oid_t i = 1; i <= size; ++i) {
+        if (x(i)) { actual_rep.insert(i); }
+        if (y(i)) { actual_dep.insert(i); }
+    }
+    actual_rep.merge(actual_dep);
+    POMAGMA_ASSERT(actual_rep == expected_rep, "merge rep is wrong");
+    POMAGMA_ASSERT(actual_dep == expected_dep, "merge dep is wrong");
+
+    POMAGMA_INFO("testing merge(dense_set, dense_set)");
+    actual_diff.zero();
+    actual_rep.zero();
+    actual_dep.zero();
+    for (oid_t i = 1; i <= size; ++i) {
+        if (x(i)) { actual_rep.insert(i); }
+        if (y(i)) { actual_dep.insert(i); }
+    }
+    actual_rep.merge(actual_dep, actual_diff);
+    POMAGMA_ASSERT(actual_rep == expected_rep, "merge rep is wrong");
+    POMAGMA_ASSERT(actual_dep == expected_dep, "merge dep is wrong");
+    POMAGMA_ASSERT(actual_diff == expected_diff, "merge diff is wrong");
+
+    POMAGMA_INFO("testing merge(dense_set, dense_set)");
+    actual_diff.zero();
+    actual_rep.zero();
+    for (oid_t i = 1; i <= size; ++i) {
+        if (x(i)) { actual_rep.insert(i); }
+    }
+    actual_rep.ensure(y, actual_diff);
+    POMAGMA_ASSERT(actual_rep == expected_rep, "merge rep is wrong");
+    POMAGMA_ASSERT(actual_diff == expected_diff, "merge diff is wrong");
 }
 
 int main ()
