@@ -5,7 +5,7 @@ using namespace pomagma;
 
 oid_t gcd (oid_t n, oid_t m) { return m ? gcd(m, n % m) : n; }
 
-void test_dense_sym_fun (oid_t size)
+void test_basic (oid_t size)
 {
     POMAGMA_INFO("Defining function");
     dense_sym_fun fun(size);
@@ -57,11 +57,11 @@ int main ()
     Log::title("Dense Symmetric Function Test");
 
     for (size_t i = 0; i < 4; ++i) {
-        test_dense_sym_fun(i + (1 << 9));
+        test_basic(i + (1 << 9));
     }
 
     for (size_t exponent = 0; exponent < 10; ++exponent) {
-        test_dense_sym_fun(1 << exponent);
+        test_basic(1 << exponent);
     }
 
     return 0;

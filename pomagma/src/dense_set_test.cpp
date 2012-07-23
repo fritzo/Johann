@@ -122,6 +122,71 @@ void test_iterator(size_t size)
     POMAGMA_ASSERT_EQ(count, true_count);
 }
 
+void test_operations (size_t size)
+{
+    POMAGMA_INFO("Testing dense_set operations");
+
+    dense_set x(size);
+    dense_set y(size);
+    dense_set expected(size);
+    dense_set actual(size);
+
+    x.zero();
+    y.zero();
+    for (size_t i = 1; i <= size; ++i) {
+        if (random_bool(0.5)) x.insert(i);
+        if (random_bool(0.5)) y.insert(i);
+    }
+    POMAGMA_ASSERT(not x.empty(), ".empty() is wrong");
+
+    POMAGMA_INFO("testing insert_all");
+    expected.zero();
+    actual.zero();
+    for (oid_t i = 1; i <= size; ++i) {
+        expected.insert(i);
+    }
+    actual.insert_all();
+    POMAGMA_ASSERT(actual == expected, "insert_all is wrong");
+
+    POMAGMA_INFO("testing union");
+    expected.zero();
+    actual.zero();
+    for (oid_t i = 1; i <= size; ++i) {
+        if (x(i) or y(i)) { expected.insert(i); }
+        if (x(i)) { actual.insert(i); }
+    }
+    actual += y;
+    POMAGMA_ASSERT(actual == expected, "operator += is wrong");
+    actual.set_union(x, y);
+    POMAGMA_ASSERT(actual == expected, "set_union is wrong");
+    actual.zero();
+    actual.set_union(x, y);
+    POMAGMA_ASSERT(actual == expected, "set_union is wrong");
+
+    POMAGMA_INFO("testing intersection");
+    expected.zero();
+    actual.zero();
+    for (oid_t i = 1; i <= size; ++i) {
+        if (x(i) and y(i)) { expected.insert(i); }
+        if (x(i)) { actual.insert(i); }
+    }
+    actual *= y;
+    POMAGMA_ASSERT(actual == expected, "operator *= is wrong");
+    actual.set_insn(x, y);
+    POMAGMA_ASSERT(actual == expected, "set_insn is wrong");
+    actual.zero();
+    actual.set_insn(x, y);
+    POMAGMA_ASSERT(actual == expected, "set_insn is wrong");
+
+    POMAGMA_INFO("testing difference");
+    expected.zero();
+    for (oid_t i = 1; i <= size; ++i) {
+        if (x(i) ^ y(i)) { expected.insert(i); }
+    }
+    actual.set_diff(x, y);
+    POMAGMA_ASSERT(actual == expected, "set_diff is wrong");
+}
+
 int main ()
 {
     Log::title("Dense Set Test");

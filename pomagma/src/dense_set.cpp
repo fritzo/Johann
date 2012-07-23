@@ -24,6 +24,15 @@ dense_set::~dense_set ()
   if (not m_alias) pomagma::free_blocks(m_words);
 }
 
+// intentionally undefined
+//void dense_set::operator= (const dense_set & other)
+//{
+//    POMAGMA_ASSERT_EQ(m_item_dim, other.m_item_dim);
+//    if (m_words != other.m_words) {
+//        memcpy(m_words, other.m_words, sizeof(Word) * m_word_dim);
+//    }
+//}
+
 void dense_set::move_from (const dense_set & other, const oid_t * new2old)
 {
     POMAGMA_DEBUG("Copying dense_set");
@@ -61,7 +70,7 @@ size_t dense_set::count_items () const
         // WARNING only unsigned's work with >>
         static_assert(Word(1) >> 1 == 0, "bitshifting Word fails");
         for (Word word = m_words[m]; word; word >>= 1) {
-            result += word & 1u;
+            result += word & 1U;
         }
     }
     return result;
@@ -71,7 +80,9 @@ void dense_set::validate () const
 {
     // make sure padding bits are zero
     POMAGMA_ASSERT(not (m_words[0] & 1), "dense set contains null item");
-    size_t end = (m_item_dim + 1) % BITS_PER_WORD; // bit count in partially-filled block
+
+    // deal with partially-filled final block
+    size_t end = (m_item_dim + 1) % BITS_PER_WORD;
     if (end == 0) return;
     POMAGMA_ASSERT(not (m_words[m_word_dim - 1] >> end),
             "dense set's end bits are used: " << m_words[m_word_dim - 1]);
@@ -87,9 +98,16 @@ void dense_set::insert_all ()
     // fast version
     const Word full = ~Word(0);
     static_assert(~Word(0) + 1 == 0, "full word is wrong");
-    for (size_t m = 0; m < m_word_dim; ++m) m_words[m] = full;
-    size_t end = (m_item_dim + 1) % BITS_PER_WORD; // bit count in partially-filled block
-    if (end) m_words[m_word_dim - 1] = full >> (BITS_PER_WORD - end);
+    for (size_t m = 0; m < m_word_dim; ++m) {
+        m_words[m] = full;
+    }
+
+    // deal with partially-filled final block
+    size_t end = (m_item_dim + 1) % BITS_PER_WORD;
+    if (end) {
+        m_words[m_word_dim - 1] = full >> (BITS_PER_WORD - end);
+    }
+
     m_words[0] ^= 1; // remove zero element
 }
 
@@ -196,20 +214,6 @@ void dense_set::set_insn (const dense_set & lhs, const dense_set & rhs)
 
     for (size_t m = 0, M = m_word_dim; m < M; ++m) {
         u[m] = s[m] & t[m];
-    }
-}
-
-void dense_set::set_nor (const dense_set & lhs, const dense_set & rhs)
-{
-    POMAGMA_ASSERT1(item_dim() == lhs.item_dim(), "lhs.item_dim mismatch");
-    POMAGMA_ASSERT1(item_dim() == rhs.item_dim(), "rhs.item_dim mismatch");
-
-    const Word * restrict s = lhs.m_words;
-    const Word * restrict t = rhs.m_words;
-    Word * restrict u = m_words;
-
-    for (size_t m = 0, M = m_word_dim; m < M; ++m) {
-        u[m] = ~ (s[m] | t[m]);
     }
 }
 

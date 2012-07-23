@@ -69,9 +69,10 @@ void Carrier::validate () const
 {
     m_support.validate();
     m_unsupport.validate();
+
     dense_set all(item_dim());
-    all.insert_all();
     dense_set diff(item_dim());
+    all.insert_all();
     diff.set_diff(m_support, m_unsupport);
     POMAGMA_ASSERT(diff == all, "support, unsupport are not complementary");
 

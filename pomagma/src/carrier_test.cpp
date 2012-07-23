@@ -9,8 +9,8 @@ void test_random (size_t size)
 
     for (size_t i = 1; i <= size; ++i) {
         POMAGMA_ASSERT_EQ(carrier.insert(), i);
+        carrier.validate();
     }
-    carrier.validate();
 }
 
 int main ()
