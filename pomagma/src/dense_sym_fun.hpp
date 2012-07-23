@@ -15,7 +15,7 @@ inline size_t unordered_pair_count (size_t i) { return (i * (i + 1)) / 2; }
 // a tight symmetric binary function in 4x4 word blocks
 class dense_sym_fun : noncopyable
 {
-    base_bin_rel m_lines;
+    base_sym_rel m_lines;
     const size_t m_block_dim;
     Block4x4 * const m_blocks;
 
@@ -37,7 +37,7 @@ public:
     dense_set get_Lx_set (oid_t lhs) const { return m_lines.Lx_set(lhs); }
 
     // ctors & dtors
-    dense_sym_fun (size_t item_dim);
+    dense_sym_fun (const dense_set & support);
     ~dense_sym_fun ();
     void move_from (const dense_sym_fun & other); // for growing
 
@@ -52,15 +52,20 @@ public:
     size_t item_dim () const { return m_lines.item_dim(); }
 private:
     const dense_set & support () const { return m_lines.support(); }
-    dense_set & support () { return m_lines.support(); }
 public:
     size_t count_pairs () const; // slow!
     void validate () const;
 
     // element operations
+    // TODO add a replace method for merging
     void insert (oid_t lhs, oid_t rhs, oid_t val);
     void remove (oid_t lhs, oid_t rhs);
-    bool contains (oid_t lhs, oid_t rhs) const { return m_lines.Lx(lhs, rhs); }
+    bool contains (oid_t lhs, oid_t rhs) const
+    {
+        POMAGMA_ASSERT5(support().contains(lhs), "unsupported lhs: " << lhs);
+        POMAGMA_ASSERT5(support().contains(rhs), "unsupported rhs: " << rhs);
+        return m_lines.Lx(lhs, rhs);
+    }
 
     // support operations
     void remove (
@@ -101,6 +106,10 @@ inline oid_t dense_sym_fun::value (oid_t i, oid_t j) const
 
 inline void dense_sym_fun::insert (oid_t lhs, oid_t rhs, oid_t val)
 {
+    POMAGMA_ASSERT5(support().contains(lhs), "unsupported lhs: " << lhs);
+    POMAGMA_ASSERT5(support().contains(rhs), "unsupported rhs: " << rhs);
+    POMAGMA_ASSERT5(val, "tried to set val to zero at " << lhs << "," << rhs);
+
     oid_t & old_val = value(lhs, rhs);
     POMAGMA_ASSERT2(not old_val, "double insertion: " << lhs << "," << rhs);
     old_val = val;
@@ -118,6 +127,9 @@ inline void dense_sym_fun::insert (oid_t lhs, oid_t rhs, oid_t val)
 
 inline void dense_sym_fun::remove (oid_t lhs, oid_t rhs)
 {
+    POMAGMA_ASSERT5(support().contains(lhs), "unsupported lhs: " << lhs);
+    POMAGMA_ASSERT5(support().contains(rhs), "unsupported rhs: " << rhs);
+
     oid_t & old_val = value(lhs, rhs);
     POMAGMA_ASSERT2(old_val, "double removal: " << lhs << "," << rhs);
     old_val = 0;

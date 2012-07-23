@@ -44,17 +44,13 @@ public:
     dense_set get_Rx_set (oid_t rhs) const { return m_lines.Rx_set(rhs); }
 
     // ctors & dtors
-    dense_bin_rel (size_t item_dim, bool is_full = false);
+    dense_bin_rel (const dense_set & support);
     ~dense_bin_rel ();
     void move_from (const dense_bin_rel & other, const oid_t* new2old=NULL);
 
     // attributes
-private:
-    dense_set & support () { return m_lines.support(); }
-public:
     const dense_set & support () const { return m_lines.support(); }
     size_t count_pairs () const; // supa-slow, try not to use
-    size_t count_items_support () const { return support().count_items(); }
     void validate () const;
     void validate_disjoint (const dense_bin_rel & other) const;
     void print_table (size_t n = 0) const;
@@ -103,9 +99,8 @@ public:
     {
         return supports(i) and supports(j);
     }
-    void insert   (oid_t i) { support().insert(i); }
-    void remove   (oid_t i);
-    void merge    (oid_t dep, oid_t rep, void (*move_to)(oid_t, oid_t));
+    void remove (oid_t i);
+    void merge (oid_t dep, oid_t rep, void (*move_to)(oid_t, oid_t));
 
     // saving/loading of block data
     oid_t data_size () const;

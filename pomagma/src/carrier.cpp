@@ -11,7 +11,6 @@ Carrier::Carrier (size_t item_dim)
       m_reps(alloc_blocks<oid_t>(1 + item_dim))
 {
     POMAGMA_DEBUG("creating Carrier with " << item_dim << " items");
-    m_support.zero();
     bzero(m_reps, sizeof(oid_t) * (1 + item_dim));
 }
 

@@ -18,7 +18,7 @@ class Carrier
     dense_set m_support;
     size_t m_item_count;
     size_t m_rep_count;
-    mutable oid_t * m_reps;
+    oid_t * const m_reps;
 
 public:
 

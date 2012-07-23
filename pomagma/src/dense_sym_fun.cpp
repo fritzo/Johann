@@ -6,19 +6,15 @@
 namespace pomagma
 {
 
-dense_sym_fun::dense_sym_fun (size_t item_dim)
-    : m_lines(item_dim, true),
-      m_block_dim((item_dim + ITEMS_PER_BLOCK) / ITEMS_PER_BLOCK),
+dense_sym_fun::dense_sym_fun (const dense_set & support)
+    : m_lines(support),
+      m_block_dim((item_dim() + ITEMS_PER_BLOCK) / ITEMS_PER_BLOCK),
       m_blocks(pomagma::alloc_blocks<Block4x4>(
                   unordered_pair_count(m_block_dim)))
 {
     POMAGMA_DEBUG("creating dense_sym_fun with "
             << unordered_pair_count(m_block_dim) << " blocks");
 
-    // FIXME allow larger
-    POMAGMA_ASSERT(item_dim < (1 << 15), "dense_sym_fun is too large");
-
-    // initialize to zero
     bzero(m_blocks, unordered_pair_count(m_block_dim) * sizeof(Block4x4));
 }
 
@@ -76,12 +72,15 @@ void dense_sym_fun::validate () const
             if (j < i or item_dim() < j) continue;
             oid_t val = _block2value(block, _i, _j);
 
-            if (val) {
-                POMAGMA_ASSERT(contains(i,j),
-                        "found unsupported value: "<<i<<','<<j);
+            if (not (support().contains(i) and support().contains(j))) {
+                POMAGMA_ASSERT(not val,
+                        "found unsupported val: " << i << ',' << j);
+            } else if (val) {
+                POMAGMA_ASSERT(contains(i, j),
+                        "found unsupported value: " << i << ',' << j);
             } else {
-                POMAGMA_ASSERT(not contains(i,j),
-                        "found supported null value: "<<i<<','<<j);
+                POMAGMA_ASSERT(not contains(i, j),
+                        "found supported null value: " << i << ',' << j);
             }
         }}
     }}

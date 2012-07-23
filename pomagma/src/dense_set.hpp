@@ -56,12 +56,19 @@ public:
         : m_item_dim(other.m_item_dim),
           m_word_dim(other.m_word_dim),
           m_words(other.m_words),
+          m_alias(other.m_alias)
+    {
+        POMAGMA_ASSERT(m_alias, "copy-constructed a non-alias dense_set");
+    }
+    dense_set (const dense_set & other, verify_copy_construction)
+        : m_item_dim(other.m_item_dim),
+          m_word_dim(other.m_word_dim),
+          m_words(other.m_words),
           m_alias(true)
     {
-        POMAGMA_ASSERT(other.m_alias, "copy-constructed a non-alias dense_set");
     }
 private:
-    void operator= (const dense_set & other);
+    void operator= (const dense_set & other); // intentionally undefined
 public:
     //dense_set (size_t item_dim, AlignedBuffer<Word> & buffer)
     //    : m_item_dim(item_dim),

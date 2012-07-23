@@ -15,7 +15,6 @@ dense_set::dense_set (size_t item_dim)
     POMAGMA_DEBUG("creating dense_set with " << m_word_dim << " lines");
     POMAGMA_ASSERT_LE(item_dim, MAX_ITEM_DIM);
 
-    // initialize to zeros
     bzero(m_words, sizeof(Word) * m_word_dim);
 }
 

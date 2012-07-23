@@ -17,11 +17,10 @@ void test_sizes ()
     }
 }
 
-void test_misc (size_t size)
+void test_basic (size_t size)
 {
     POMAGMA_INFO("Testing dense_set");
 
-    POMAGMA_INFO("creating dense_set of size " << size);
     dense_set set(size);
     POMAGMA_ASSERT_EQ(set.count_items(), 0);
 
@@ -59,7 +58,6 @@ void test_even (size_t size)
         e = new dense_set(size);
     }
 
-    POMAGMA_INFO("Defining sets");
     for (oid_t i = 1; i <= 6; ++i) {
         for (oid_t j = 1; j < 1 + size; ++j) {
             if (is_even(j, i)) { evens[i]->insert(j); }
@@ -96,8 +94,9 @@ void test_even (size_t size)
     }
 }
 
-void test_iterator(size_t size)
+void test_iterator (size_t size)
 {
+    POMAGMA_INFO("Testing dense_set iterator");
     dense_set set(size);
     std::vector<bool> vect(size, false);
     size_t true_count = 0;
@@ -131,8 +130,6 @@ void test_operations (size_t size)
     dense_set expected(size);
     dense_set actual(size);
 
-    x.zero();
-    y.zero();
     for (size_t i = 1; i <= size; ++i) {
         if (random_bool(0.5)) x.insert(i);
         if (random_bool(0.5)) y.insert(i);
@@ -206,8 +203,6 @@ void test_operations (size_t size)
     dense_set actual_dep(size);
     dense_set actual_diff(size);
     expected_rep.set_union(x, y);
-    expected_dep.zero();
-    expected_diff.zero();
     for (oid_t i = 1; i <= size; ++i) {
         if (y(i) and not x(i)) { expected_diff.insert(i); }
     }
@@ -254,7 +249,7 @@ int main ()
     test_sizes();
 
     for (size_t i = 0; i < 4; ++i) {
-        test_misc(i + (1 << 16));
+        test_basic(i + (1 << 16));
     }
 
     for (size_t size = 0; size < 100; ++size) {

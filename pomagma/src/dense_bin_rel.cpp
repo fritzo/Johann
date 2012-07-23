@@ -1,4 +1,3 @@
-
 #include "dense_bin_rel.hpp"
 #include "aligned_alloc.hpp"
 #include <cstring>
@@ -6,16 +5,11 @@
 namespace pomagma
 {
 
-dense_bin_rel::dense_bin_rel (size_t item_dim, bool is_full)
-    : m_lines(item_dim, false)
+dense_bin_rel::dense_bin_rel (const dense_set & support)
+    : m_lines(support)
 {
     POMAGMA_DEBUG("creating dense_bin_rel with "
             << round_word_dim() << " words");
-    POMAGMA_ASSERT(round_item_dim() <= MAX_ITEM_DIM,
-            "dense_bin_rel is too large");
-
-    // fill if necessary
-    if (is_full) support().insert_all();
 }
 
 dense_bin_rel::~dense_bin_rel ()
@@ -39,7 +33,6 @@ void dense_bin_rel::move_from (
         m_lines.move_from(other.m_lines);
     } else {
         POMAGMA_DEBUG("copying and reordering");
-        support().move_from(other.support(), new2old);
         // copy & reorder WIKKIT SLOW
         for (oid_t i_new = 1; i_new <= item_dim(); ++i_new) {
             if (not supports(i_new)) continue;
@@ -182,8 +175,6 @@ void dense_bin_rel::remove_Rx (oid_t i, const dense_set& js)
 
 void dense_bin_rel::remove (oid_t i)
 {
-    POMAGMA_ASSERT4(supports(i), "tried to remove unsupported element " << i);
-
     dense_set set(item_dim(), NULL);
 
     // remove column
@@ -195,8 +186,6 @@ void dense_bin_rel::remove (oid_t i)
     set.init(m_lines.Rx(i));
     remove_Lx(set, i);
     set.zero();
-
-    support().remove(i);
 }
 
 void dense_bin_rel::ensure_inserted (
@@ -236,8 +225,6 @@ void dense_bin_rel::merge (
         void (*move_to)(oid_t, oid_t)) // typically enforce_
 {
     POMAGMA_ASSERT4(j != i, "dense_bin_rel tried to merge item with self");
-    POMAGMA_ASSERT4(supports(i) and supports(j),
-            "dense_bin_rel tried to merge unsupported items");
 
     dense_set diff(item_dim());
     dense_set rep(item_dim(), NULL);
@@ -264,8 +251,6 @@ void dense_bin_rel::merge (
             move_to(*k, j);
         }
     }
-
-    support().merge(i, j);
 }
 
 // saving/loading, quicker rather than smaller

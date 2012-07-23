@@ -34,7 +34,7 @@ public:
     dense_set get_Rx_set (oid_t rhs) const { return m_lines.Rx_set(rhs); }
 
     // ctors & dtors
-    dense_bin_fun (size_t item_dim);
+    dense_bin_fun (const dense_set & support);
     ~dense_bin_fun ();
     void move_from (const dense_bin_fun & other); // for growing
 
@@ -49,7 +49,6 @@ public:
     size_t item_dim () const { return m_lines.item_dim(); }
 private:
     const dense_set & support () const { return m_lines.support(); }
-    dense_set & support () { return m_lines.support(); }
 public:
     size_t count_pairs () const; // slow!
     void validate () const;
@@ -58,7 +57,12 @@ public:
     // TODO add a replace method for merging
     void insert (oid_t lhs, oid_t rhs, oid_t val);
     void remove (oid_t lhs, oid_t rhs);
-    bool contains (oid_t lhs, oid_t rhs) const { return m_lines.Lx(lhs, rhs); }
+    bool contains (oid_t lhs, oid_t rhs) const
+    {
+        POMAGMA_ASSERT5(support().contains(lhs), "unsupported lhs: " << lhs);
+        POMAGMA_ASSERT5(support().contains(rhs), "unsupported rhs: " << rhs);
+        return m_lines.Lx(lhs, rhs);
+    }
 
     // support operations
     void remove (
@@ -99,6 +103,10 @@ inline oid_t dense_bin_fun::value (oid_t i, oid_t j) const
 
 inline void dense_bin_fun::insert (oid_t lhs, oid_t rhs, oid_t val)
 {
+    POMAGMA_ASSERT5(support().contains(lhs), "unsupported lhs: " << lhs);
+    POMAGMA_ASSERT5(support().contains(rhs), "unsupported rhs: " << rhs);
+    POMAGMA_ASSERT5(val, "tried to set val to zero at " << lhs << "," << rhs);
+
     oid_t & old_val = value(lhs, rhs);
     POMAGMA_ASSERT2(not old_val, "double insertion: " << lhs << "," << rhs);
     old_val = val;
@@ -114,6 +122,9 @@ inline void dense_bin_fun::insert (oid_t lhs, oid_t rhs, oid_t val)
 
 inline void dense_bin_fun::remove (oid_t lhs, oid_t rhs)
 {
+    POMAGMA_ASSERT5(support().contains(lhs), "unsupported lhs: " << lhs);
+    POMAGMA_ASSERT5(support().contains(rhs), "unsupported rhs: " << rhs);
+
     oid_t & old_val = value(lhs, rhs);
     POMAGMA_ASSERT2(old_val, "double removal: " << lhs << "," << rhs);
     old_val = 0;

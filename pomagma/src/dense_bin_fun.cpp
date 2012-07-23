@@ -5,18 +5,14 @@
 namespace pomagma
 {
 
-dense_bin_fun::dense_bin_fun (size_t item_dim)
-    : m_lines(item_dim, false),
-      m_block_dim((item_dim + ITEMS_PER_BLOCK) / ITEMS_PER_BLOCK),
+dense_bin_fun::dense_bin_fun (const dense_set & support)
+    : m_lines(support),
+      m_block_dim((item_dim() + ITEMS_PER_BLOCK) / ITEMS_PER_BLOCK),
       m_blocks(pomagma::alloc_blocks<Block4x4>(m_block_dim * m_block_dim))
 {
     POMAGMA_DEBUG("creating dense_bin_fun with "
             << (m_block_dim * m_block_dim) << " blocks");
 
-    // FIXME allow larger
-    POMAGMA_ASSERT(item_dim < (1<<15), "dense_bin_fun is too large");
-
-    // initialize to zero
     bzero(m_blocks, m_block_dim * m_block_dim * sizeof(Block4x4));
 }
 
@@ -67,13 +63,16 @@ void dense_bin_fun::validate () const
 
         for (size_t _i = 0; _i < ITEMS_PER_BLOCK; ++_i) {
         for (size_t _j = 0; _j < ITEMS_PER_BLOCK; ++_j) {
-            size_t i = i_ * ITEMS_PER_BLOCK+_i;
-            size_t j = j_ * ITEMS_PER_BLOCK+_j;
+            size_t i = i_ * ITEMS_PER_BLOCK + _i;
+            size_t j = j_ * ITEMS_PER_BLOCK + _j;
             if (i == 0 or item_dim() < i) continue;
             if (j == 0 or item_dim() < j) continue;
             oid_t val = _block2value(block, _i, _j);
 
-            if (val) {
+            if (not (support().contains(i) and support().contains(j))) {
+                POMAGMA_ASSERT(not val,
+                        "found unsupported val: " << i << ',' << j);
+            } else if (val) {
                 POMAGMA_ASSERT(contains(i, j),
                         "found unsupported value: " << i << ',' << j);
             } else {

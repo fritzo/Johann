@@ -21,7 +21,7 @@ void inverse_bin_fun::validate (dense_bin_fun & fun)
         POMAGMA_ASSERT_CONTAINS(m_VRl_data, val, rhs, lhs);
     }
 
-    for (oid_t val = 1; val <= m_item_dim; ++val) {
+    for (oid_t val = 1; val <= item_dim(); ++val) {
         for (auto lr : m_Vlr_data[val]) {
             oid_t lhs = lr.first;
             oid_t rhs = lr.second;
