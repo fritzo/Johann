@@ -98,6 +98,7 @@ public:
     inline void remove (size_t i);
     inline void merge  (size_t i, size_t j);
     void insert_all ();
+    oid_t insert_one ();
 
     // entire operations
     void zero ();
@@ -107,7 +108,6 @@ public:
     void operator += (const dense_set & other);
     void operator *= (const dense_set & other);
     void set_union   (const dense_set & lhs, const dense_set & rhs);
-    void set_diff    (const dense_set & lhs, const dense_set & rhs);
     void set_insn    (const dense_set & lhs, const dense_set & rhs);
     void merge       (dense_set & dep);
     bool merge       (dense_set & dep, dense_set & diff);

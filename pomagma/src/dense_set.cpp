@@ -89,26 +89,48 @@ void dense_set::validate () const
 }
 
 
-// insertion
+//----------------------------------------------------------------------------
+// Insertion
+
 void dense_set::insert_all ()
 {
     // slow version
     // for (size_t i = 1; i <= m_item_dim; ++i) { insert(i); }
 
     // fast version
-    const Word full = ~Word(0);
-    static_assert(~Word(0) + 1 == 0, "full word is wrong");
     for (size_t m = 0; m < m_word_dim; ++m) {
-        m_words[m] = full;
+        m_words[m] = FULL_WORD;
     }
 
     // deal with partially-filled final block
     size_t end = (m_item_dim + 1) % BITS_PER_WORD;
     if (end) {
-        m_words[m_word_dim - 1] = full >> (BITS_PER_WORD - end);
+        m_words[m_word_dim - 1] = FULL_WORD >> (BITS_PER_WORD - end);
     }
 
     m_words[0] ^= 1; // remove zero element
+}
+
+oid_t dense_set::insert_one () // WARNING not thread safe
+{
+    m_words[0] ^= Word(1); // simplifies code
+
+    Word * restrict word = m_words;
+    while (! ~ * word) {
+        ++word;
+    }
+    oid_t oid = BITS_PER_WORD * (word - m_words);
+
+    const Word free = ~ * word;
+    Word mask = 1;
+    while (not (mask & free)) {
+        mask <<= 1u;
+        ++oid;
+    }
+    *word |= mask;
+
+    m_words[0] ^= Word(1); // simplifies code
+    return oid;
 }
 
 //----------------------------------------------------------------------------
@@ -186,20 +208,6 @@ void dense_set::set_union (const dense_set & lhs, const dense_set & rhs)
 
     for (size_t m = 0, M = m_word_dim; m < M; ++m) {
         u[m] = s[m] | t[m];
-    }
-}
-
-void dense_set::set_diff (const dense_set & lhs, const dense_set & rhs)
-{
-    POMAGMA_ASSERT1(item_dim() == lhs.item_dim(), "lhs.item_dim mismatch");
-    POMAGMA_ASSERT1(item_dim() == rhs.item_dim(), "rhs.item_dim mismatch");
-
-    const Word * restrict s = lhs.m_words;
-    const Word * restrict t = rhs.m_words;
-    Word * restrict u = m_words;
-
-    for (size_t m = 0, M = m_word_dim; m < M; ++m) {
-        u[m] = s[m] & ~t[m];
     }
 }
 

@@ -18,14 +18,6 @@ template<class T> T * alloc_blocks (size_t block_count)
 
 void  free_blocks (void * base);
 
-void  clear_block (void * base, size_t block_size);
-
-void copy_blocks (
-        void * destin_base,
-        const void * source_base,
-        size_t block_size,
-        size_t block_count);
-
 template<class T>
 class AlignedBuffer : noncopyable
 {

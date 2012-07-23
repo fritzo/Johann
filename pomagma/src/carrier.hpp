@@ -16,7 +16,6 @@ namespace pomagma
 class Carrier
 {
     dense_set m_support;
-    dense_set m_unsupport;
     size_t m_item_count;
     size_t m_rep_count;
     mutable oid_t * m_reps;
@@ -50,7 +49,6 @@ public:
         POMAGMA_ASSERT1(not m_reps[oid], "double insertion: " << oid);
 
         m_support.insert(oid);
-        m_unsupport.remove(oid);
         m_reps[oid] = oid;
     }
 

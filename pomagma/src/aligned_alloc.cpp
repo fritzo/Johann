@@ -36,24 +36,4 @@ void free_blocks (void * base)
     free(base);
 }
 
-// sets data to zero, wraps memset
-void clear_block (void * base, size_t block_size)
-{
-    LOG_DEBUG1("Clearing block of size " << block_size << 'B')
-
-    bzero(base, block_size);
-}
-
-// justs wraps memcpy
-void copy_blocks (
-        void * destin_base,
-        const void * source_base,
-        size_t block_size,
-        size_t block_count)
-{
-    LOG_DEBUG1("Copying blocks")
-
-    memcpy(destin_base, source_base, block_size * block_count);
-}
-
 } // namespace pomagma

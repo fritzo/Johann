@@ -137,7 +137,8 @@ void test_operations (size_t size)
         if (random_bool(0.5)) x.insert(i);
         if (random_bool(0.5)) y.insert(i);
     }
-    POMAGMA_ASSERT(not x.empty(), ".empty() is wrong");
+    POMAGMA_ASSERT(bool(x.count_items()) ^ x.empty(), ".empty() is wrong");
+    POMAGMA_ASSERT(bool(y.count_items()) ^ y.empty(), ".empty() is wrong");
 
     POMAGMA_INFO("testing insert_all");
     expected.zero();
@@ -147,6 +148,25 @@ void test_operations (size_t size)
     }
     actual.insert_all();
     POMAGMA_ASSERT(actual == expected, "insert_all is wrong");
+
+    POMAGMA_INFO("testing insert_one");
+    expected.zero();
+    actual.zero();
+    std::vector<oid_t> free_list;
+    for (oid_t i = 1; i <= size; ++i) {
+        if (x(1)) {
+            expected.insert(i);
+            actual.insert(i);
+        } else {
+            free_list.push_back(i);
+        }
+    }
+    for (oid_t i : free_list) {
+        expected.insert(i);
+        oid_t j = actual.insert_one();
+        POMAGMA_ASSERT(i == j, "wrong insert_one " << j << " vs " << i);
+        POMAGMA_ASSERT(actual == expected, "insert_one is wrong");
+    }
 
     POMAGMA_INFO("testing union");
     expected.zero();
@@ -177,14 +197,6 @@ void test_operations (size_t size)
     actual.zero();
     actual.set_insn(x, y);
     POMAGMA_ASSERT(actual == expected, "set_insn is wrong");
-
-    POMAGMA_INFO("testing difference");
-    expected.zero();
-    for (oid_t i = 1; i <= size; ++i) {
-        if (x(i) ^ y(i)) { expected.insert(i); }
-    }
-    actual.set_diff(x, y);
-    POMAGMA_ASSERT(actual == expected, "set_diff is wrong");
 }
 
 int main ()
@@ -200,6 +212,7 @@ int main ()
     for (size_t size = 0; size < 100; ++size) {
         test_even(size);
         test_iterator(size);
+        test_operations(size);
     }
 
     return 0;

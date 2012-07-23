@@ -188,6 +188,8 @@ typedef uint32_t Word; // TODO switch to uint64_t
 const size_t BITS_PER_WORD = 8 * sizeof(Word);
 const size_t WORD_POS_MASK = BITS_PER_WORD - 1;
 const size_t WORD_POS_SHIFT = static_log2i<BITS_PER_WORD>::val();
+const Word FULL_WORD = ~Word(0);
+static_assert(FULL_WORD + Word(1) == 0, "FULL_WORD is bad");
 
 class bool_ref
 {
