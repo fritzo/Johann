@@ -1,115 +1,131 @@
+import re
 import itertools
-from pomagma.util import TODO, union
+from pomagma.util import TODO, union, set_with, set_without
 
 #-----------------------------------------------------------------------------
 # Syntax
 
-class Symbol(object):
+class Expression:
+    def __init__(self, _repr):
+        self._repr = _repr
+        self._hash = hash(_repr)
+
+    def __repr__(self):
+        return self._repr
+
+    def __hash__(self):
+        return self._hash
+
+    def __eq__(self, other):
+        return self._repr == other._repr
+
+
+class Variable(Expression):
     def __init__(self, name):
-        self.name = name
-
-    def __str__(self):
-        return self.name
-
-
-class Variable(Symbol):
-    pass
-
-
-class Constant(Symbol):
-    arities = ['nullary', 'unary', 'binary', 'symmetric']
-
-    def __init__(self, name, arity='nullary'):
-        assert arity in Constant.arities
-        Symbol.__init__(self, name)
-        self.arity = arity
-
-    def __call__(self, *args):
-        return AST(self, args)
-
-
-class Relation(Symbol):
-    arities = ['unary', 'binary', 'symmetric']
-
-    def __init__(self, name, arity):
-        assert arity in Relation.arities
-        Symbol.__init__(self, name)
-        self.arity = arity
-
-    def __call__(self, *args):
-        return AST(self, args)
-
-
-EQUAL = Relation('EQUAL', 'symmetric')
-LESS = Relation('LESS', 'binary')
-NLESS = Relation('NLESS', 'binary')
-
-
-class AST(object):
-
-    def __init__(self, root, children=[]):
-        self.root = root
-        self.children = []
-        for child in children:
-            if isinstance(child, Variable):
-                self.children.append(AST(child))
-            else:
-                assert isinstance(child, AST)
-                self.children.append(child)
-
-    def __str__(self):
-        if isinstance(self.root, Variable):
-            return str(self.root)
+        if isinstance(name, str):
+            assert not re.match('[A-Z]', name[-1])
         else:
-            return '{}({})'.format(self.root, ', '.join(map(str, self.children)))
+            name = re.sub('[(), ]+', '_', repr(name))
+        self.name = name
+        Expression.__init__(self, name)
 
-    def get_free(self):
-        result = union([child.get_free() for child in self.children])
-        if isinstance(self.root, Variable):
-            result.add(self.root)
+    def get_vars(self):
+        return set([self])
+
+    def get_constants(self):
+        return set()
+
+    def get_tests(self):
+        return set()
+
+
+class Compound(Expression):
+    def __init__(self, name, *children):
+        assert re.match('[A-Z]', name[-1])
+        self.name = name
+        self.children = list(children)
+        Expression.__init__(self, ' '.join([name] + map(repr, children)))
+
+    def get_vars(self):
+        return union([child.get_vars() for child in self.children])
+
+    def get_constants(self):
+        if self.children:
+            return union([c.get_constants() for c in self.children])
+        else:
+            assert isinstance(self, Function)
+            return set([self])
+
+    def get_atom(self):
+        return self.__class__(self.name, *map(Variable, self.children))
+
+    def get_tests(self):
+        result = set([self.get_atom()])
+        for c in self.children:
+            result |= c.get_tests()
         return result
 
 
-    def nodes(self):
-        return [self] + sum([child.nodes() for child in self.children], [])
+class Function(Compound):
+    pass
 
-    def internal_nodes(self):
-        if self.children:
-            return [self] + sum([
-                child.internal_nodes() for child in self.children], [])
-        else:
-            return []
+
+class Relation(Compound):
+    pass
+
+
+APP = lambda x, y: Function('APP', x, y)
+EQUAL = lambda x, y: Relation('EQUAL', x, y)
+LESS = lambda x, y: Relation('LESS', x, y)
+NLESS = lambda x, y: Relation('NLESS', x, y)
+
 
 #-----------------------------------------------------------------------------
 # Strategies
 
 class Iter(object):
     def __init__(self, var):
+        assert isinstance(var, Variable)
         self.var = var
 
     def __repr__(self):
         return 'for({})'.format(self.var)
 
-
-class Test(object):
-    def __init__(self, ast):
-        assert isinstance(ast, AST)
-        self.ast = ast
-
-    def get_free(self):
-        return self.ast.get_free()
-
+class Let(object):
+    def __init__(self, expr):
+        assert isinstance(expr, Function)
+        self.var = Variable(expr)
+        self.expr = expr
 
     def __repr__(self):
-        return 'if({})'.format(self.ast)
+        return 'let({})'.format(self.var)
+
+
+class Test(object):
+    def __init__(self, expr):
+        assert isinstance(expr, Expression)
+        self.expr = expr
+
+    def __repr__(self):
+        return 'if({})'.format(self.expr)
+
+
+class Ensure(object):
+    def __init__(self, expr):
+        assert isinstance(expr, Compound)
+        self.expr = expr
+
+    def __repr__(self):
+        return 'ensure({})'.format(self.expr)
 
 
 class Strategy(object):
-    def __init__(self, sequence):
+    def __init__(self, sequence, succedent):
         self.sequence = list(sequence)  # TODO generalize to trees
+        self.succedent = Ensure(succedent)
 
     def __repr__(self):
-        return ' '.join(map(str, self.sequence))
+        return ' '.join(map(str, self.sequence + [self.succedent]))
 
     def optimized(self):
         '''
@@ -123,12 +139,10 @@ class Strategy(object):
 
 class Sequent(object):
     def __init__(self, antecedents, succedents):
-        for ast in antecedents:
-            if not isinstance(ast.root, Relation):
-                raise ValueError('bad antecedent: {}'.format(ast))
-        for ast in succedents:
-            if not isinstance(ast.root, Relation):
-                raise ValueError('bad succedent: {}'.format(ast))
+        antecedents = set(antecedents)
+        succedents = set(succedents)
+        for expr in antecedents | succedents:
+            assert isinstance(expr, Compound)
         self.antecedents = antecedents
         self.succedents = succedents
 
@@ -137,85 +151,165 @@ class Sequent(object):
             ', '.join(map(str, self.antecedents)),
             ', '.join(map(str, self.succedents)))
 
-    def get_free(self):
-        asts = self.antecedents + self.succedents
-        vars = list(union([ast.get_free() for ast in asts]))
-        vars.sort(key=(lambda v: v.name))
-        return vars
+    def get_vars(self):
+        return union([e.get_vars() for e in self.antecedents | self.succedents])
 
-    def normalized(self):
-        if len(self.succedents) == 1:
-            return [self]
-        elif self.succedents:
-            TODO('allow empty succedents')
-        else:
-            TODO('allow multiple succedents')
+    def get_constants(self):
+        return union([e.get_constants()
+                      for e in self.antecedents | self.succedents])
 
-    def get_tests(self):
+    def _is_normal(self):
+        '''
+        A sequent is normalized if it has a single consequent of the form
+            Relation Variable Variable
+        and each antecedent is of one of the minimal forms
+            Function Variable Variable  (which abbreviates Var = Fun Var Var)
+            Relation Variable Variable
+        '''
         if len(self.succedents) != 1:
-            raise NotImplementedError('only one succedent is allowed')
-        succedent = self.succedents[0]
-        asts = sum(map(AST.internal_nodes,
-            self.antecedents + succedent.children), [])
-        #asts = list(union(asts))  # TODO this requires equality comparison
-        return map(Test, asts)
+            return False
+        for node in self.antecedents | self.succedents:
+            for child in node.children:
+                if isinstance(child, Compound):
+                    return False
+        return True
 
-    def compile_ranked(self):
-        # TODO keep track of which internal AST nodes have been locally named
-        # (e.g. let(APP_S_x = APP(S, x)) ...),
-        # and normalize tests to those local variables.
-        # Then implement a compiler for incremental strategies
-        # that specifies one of the internal nodes at the outset
-        # (e.g. given(APP_S_x = APP(s, x)) if(s == S) ...)
-        all_vars = self.get_free()
-        all_tests = self.get_tests()
-        strategies = []
-        for ordered_vars in itertools.permutations(all_vars):
-            iters = [Iter(var) for var in ordered_vars]
-            bound_tests = [[] for var in ordered_vars]
-            bound_vars = set()
-            remaining_tests = all_tests[:]
-            for iter, tests in zip(iters, bound_tests):
-                bound_vars.add(iter.var)
-                for test in remaining_tests:
-                    if set(test.get_free()) <= bound_vars:
-                        remaining_tests.remove(test)
-                        tests.append(test)
-            ordered_tests = itertools.product(
-                    *map(itertools.permutations, bound_tests))
-            for tests in ordered_tests:
-                strategies.append(Strategy(
-                    sum([[i] + list(ts) for i, ts in zip(iters, tests)], [])))
-        return strategies
+    def _normalized(self):
+        '''
+        Return a list of normalized sequents.
+        '''
+        if not self.succedents:
+            TODO('allow multiple succedents')
+        elif len(self.succedents) > 1:
+            TODO('allow empty succedents')
+        succedent = self.succedents.copy().pop()
+        succedents = set([succedent.get_atom()])
+        antecedents = union([r.get_tests() for r in self.antecedents] +
+                            [e.get_tests() for e in succedent.children])
+        return [Sequent(antecedents, succedents)]
 
-    '''
-    def _iter_compiled(self, bound=[], free_vars=set(), free_asts=set()):
-        ast_was_bound = False
-        for ast in free_asts:
-            children = free_asts
-            if ast.get_free() <= free_vars and all(
-                    [c in bound for c in ast.children]):
-                new_bound = bound[:]
-                new_bound.append(ast)
-                new_free_asts = free_asts.copy()
-                new_free_asts.remove(ast)
-                if new_free_asts or free_vars:
-                    self._iter_compiled(new_bound, free_vars, new_free_asts)
-                else:
-                    yield bound
-                ast_was_bound = True
-        if not ast_was_bound:
-            for var in free_vars:
-                new_bound = bound[:]
-    '''
+    # TODO deal with EQUAL succedent where one side need not exist
+    def compile(self):
+        free = self.get_vars()
+
+        # HEURISTIC test for constants first
+        constants = self.get_constants()
+        pre = map(Let, constants)
+        context = set(constants)
+        bound = set(map(Variable, constants))
+
+        results = []
+        for part in self._normalized():
+            result = []
+            for v in free:
+                pre_v = pre + [Iter(v)]
+                bound_v = set_with(bound, v)
+                result += list(part._compile(pre_v, context, bound_v))
+            results.append(result)
+        return results
+
+    def compile_given(self, atom):
+        assert isinstance(atom, Compound)
+        context = set([atom])
+        bound = atom.get_vars()
+        if isinstance(atom, Function):
+            bound.add(Variable(atom))
+
+        # HEURISTIC test for constants first
+        constants = self.get_constants()
+        pre = map(Test, constants)
+        context |= set(constants)
+        bound |= set(map(Variable, constants))
+
+        results = []
+        for part in self._normalized():
+            if atom in part.antecedents:
+                results.append(list(part._compile(pre, context, bound)))
+        return results
+
+    def _compile(self, pre, context, bound):
+        assert self._is_normal()
+        free = self.get_vars() - bound
+        antecedents = self.antecedents - context
+        succedent = self.succedents.copy().pop()
+        for s in iter_compiled(antecedents, bound, free):
+            yield Strategy(pre + s, succedent)
+
+
+def iter_compiled(antecedents, bound, free):
+    #print 'DEBUG', list(antecedents), list(bound), list(free)
+    assert bound
+    if not (free or antecedents):
+        yield []
+        return
+
+    # HEURISTIC test eagerly
+    testable = False
+    for a in antecedents:
+        if isinstance(a, Relation):
+            if a.get_vars() <= bound:
+                antecedents_a = set_without(antecedents, a)
+                pre = [Test(a)]
+                for s in iter_compiled(antecedents_a, bound, free):
+                    yield pre + s
+                testable = True
+        elif isinstance(a, Function):
+            if a.get_vars() <= bound and Variable(a) in bound:
+                antecedents_a = set_without(antecedents, a)
+                pre = [Test(a)]
+                for s in iter_compiled(antecedents_a, bound, free):
+                    yield pre + s
+                testable = True
+    if testable:
+        return
+
+    # HEURISTIC bind eagerly
+    bindable = False
+    for a in antecedents:
+        if isinstance(a, Function):
+            if a.get_vars() <= bound:
+                var_a = Variable(a)
+                assert var_a not in bound
+                antecedents_a = set_without(antecedents, a)
+                bound_a = set_with(bound, var_a)
+                free_a = set_without(free, var_a)
+                pre = [Let(a)]
+                for s in iter_compiled(antecedents_a, bound_a, free_a):
+                    yield pre + s
+                bindable = True
+    if bindable:
+        return
+
+    # HEURISTIC iterate forward eagerly
+    forward_iterable = False
+    for a in antecedents:
+        if isinstance(a, Function):
+            if a.get_vars() & bound:
+                for v in a.get_vars() - bound:
+                    free_v = set_without(free, v)
+                    bound_v = set_with(bound, v)
+                    pre = [Iter(v)]
+                    for s in iter_compiled(antecedents, bound_v, free_v):
+                        yield pre + s
+                    forward_iterable = True
+    if forward_iterable:
+        return
+
+    # iterate backward
+    for a in antecedents:
+        if isinstance(a, Function):
+            if Variable(a) in bound:
+                for v in a.get_vars() - bound:
+                    free_v = set_without(free, v)
+                    bound_v = set_with(bound, v)
+                    pre = [Iter(v)]
+                    for s in iter_compiled(antecedents, bound_v, free_v):
+                        yield pre + s
 
 
 class Theory(object):
     def __init__(self, sequents):
         self.sequents = sequents
 
-    def normalize(self):
-        '''
-        Transform self so that every sequent has a single succedent
-        '''
-        self.sequents = sum([s.normalized() for s in self.sequents], [])
+    def compile(self):
+        TODO()
