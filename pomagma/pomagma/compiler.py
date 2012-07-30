@@ -51,20 +51,17 @@ class AST(object):
         self.root = root
         self.children = []
         for child in children:
-            if isinstance(child, AST):
-                self.children.append(child)
-            elif isinstance(child, Variable):
-                self.children.append(AST(child))
-            elif isinstance(child, Constant) and child.arity == 'nullary':
+            if isinstance(child, Variable):
                 self.children.append(AST(child))
             else:
-                raise ValueError('Bad syntax tree: {}'.format(child))
+                assert isinstance(child, AST)
+                self.children.append(child)
 
     def __str__(self):
-        if self.children:
-            return '{}({})'.format(self.root, ', '.join(map(str, self.children)))
-        else:
+        if isinstance(self.root, Variable):
             return str(self.root)
+        else:
+            return '{}({})'.format(self.root, ', '.join(map(str, self.children)))
 
     def get_free(self):
         result = union([child.get_free() for child in self.children])
@@ -190,6 +187,27 @@ class Sequent(object):
                 strategies.append(Strategy(
                     sum([[i] + list(ts) for i, ts in zip(iters, tests)], [])))
         return strategies
+
+    '''
+    def _iter_compiled(self, bound=[], free_vars=set(), free_asts=set()):
+        ast_was_bound = False
+        for ast in free_asts:
+            children = free_asts
+            if ast.get_free() <= free_vars and all(
+                    [c in bound for c in ast.children]):
+                new_bound = bound[:]
+                new_bound.append(ast)
+                new_free_asts = free_asts.copy()
+                new_free_asts.remove(ast)
+                if new_free_asts or free_vars:
+                    self._iter_compiled(new_bound, free_vars, new_free_asts)
+                else:
+                    yield bound
+                ast_was_bound = True
+        if not ast_was_bound:
+            for var in free_vars:
+                new_bound = bound[:]
+    '''
 
 
 class Theory(object):
