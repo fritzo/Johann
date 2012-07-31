@@ -268,6 +268,9 @@ class Sequent(object):
                             [e.get_tests() for e in succedent.children])
         return [Sequent(antecedents, succedents)]
 
+    def get_events(self):
+        return union([s.antecedents for s in self._normalized()])
+
     # TODO deal with EQUAL succedent where one side need not exist
     def compile(self):
         free = self.get_vars()

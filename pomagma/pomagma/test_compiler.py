@@ -7,12 +7,20 @@ x = Variable('x')
 y = Variable('y')
 z = Variable('z')
 
-def _test_sequent(sequent):
-    print 'Compiling: {}'.format(sequent)
-    for cost, strategy in sequent.compile():
+def print_compiles(compiles):
+    for cost, strategy in compiles:
         print '# cost = {}'.format(cost)
         print re.sub(': ', '\n', repr(strategy))
         print
+
+def _test_sequent(sequent):
+    print '-' * 78
+    print 'Compiling full search: {}'.format(sequent)
+    print_compiles(sequent.compile())
+
+    for event in sequent.get_events():
+        print 'Compiling incremental search given: {}'.format(event)
+        print_compiles(sequent.compile_given(event))
 
 def test_compile_I():
     I = Function('I')

@@ -1,3 +1,4 @@
+from math import log, exp
 
 
 def TODO(message=''):
@@ -21,3 +22,8 @@ def set_without(set_, element):
     result = set_.copy()
     result.remove(element)
     return result
+
+
+def log_sum_exp(*args):
+    shift = max(args)
+    return log(sum(exp(arg - shift) for arg in args)) + shift
