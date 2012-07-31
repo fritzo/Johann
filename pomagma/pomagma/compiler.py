@@ -75,9 +75,6 @@ class Relation(Compound):
     pass
 
 
-APP = lambda x, y: Function('APP', x, y)
-COMP = lambda x, y: Function('COMP', x, y)
-JOIN = lambda x, y: Function('JOIN', x, y)
 EQUAL = lambda x, y: Relation('EQUAL', x, y)
 LESS = lambda x, y: Relation('LESS', x, y)
 NLESS = lambda x, y: Relation('NLESS', x, y)
@@ -163,7 +160,6 @@ class Ensure(object):
 
 class Strategy(object):
     def __init__(self, sequence, succedent):
-        assert sequence, succedent
         self.sequence = list(sequence)  # TODO generalize to trees
         self.succedent = Ensure(succedent)
         self._str = ' '.join(map(str, self.sequence))
@@ -183,7 +179,7 @@ class Strategy(object):
         return self._repr
 
     def cost(self):
-        cost = 0.0
+        cost = 1.0
         for op in reversed(self.sequence):
             cost = op.cost(cost)
         return math.log(cost) / math.log(OBJECT_COUNT)
