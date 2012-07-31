@@ -1,7 +1,7 @@
 import re
 import math
 import itertools
-from pomagma.util import TODO, union, set_with, set_without
+from pomagma.util import TODO, union, set_with, set_without, log_sum_exp
 
 #-----------------------------------------------------------------------------
 # Syntax
@@ -85,6 +85,12 @@ NLESS = lambda x, y: Relation('NLESS', x, y)
 
 OBJECT_COUNT = 1e4
 LOGIC_COST = OBJECT_COUNT / 256.0
+LOG_OBJECT_COUNT = math.log(OBJECT_COUNT)
+
+
+def add_costs(*args):
+    return log_sum_exp(*[LOG_OBJECT_COUNT * a for a in args]) / LOG_OBJECT_COUNT
+
 
 class Iter(object):
     def __init__(self, var, tests=None, lets=None):
