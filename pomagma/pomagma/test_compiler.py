@@ -1,5 +1,6 @@
 import re
-from pomagma.compiler import Variable, Function, Sequent, APP, EQUAL, LESS
+from pomagma.compiler import Variable, Function, Sequent
+from pomagma.compiler import APP, COMP, JOIN, EQUAL, LESS, NLESS
 
 f = Variable('f')
 g = Variable('g')
@@ -77,3 +78,13 @@ def test_compile_mu():
     _test_sequent(Sequent(
         [LESS(x, y)],
         [LESS(APP(f, x), APP(f, y))]))
+
+def test_compile_join_idem():
+    _test_sequent(Sequent(
+        [],
+        [EQUAL(JOIN(x, x), x)]))
+
+def test_compile_join_less():
+    _test_sequent(Sequent(
+        [],
+        [LESS(x, JOIN(x, y))]))
