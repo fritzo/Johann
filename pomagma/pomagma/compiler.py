@@ -1,4 +1,5 @@
 import re
+import math
 import itertools
 from pomagma.util import TODO, union, set_with, set_without
 
@@ -83,13 +84,31 @@ NLESS = lambda x, y: Relation('NLESS', x, y)
 #-----------------------------------------------------------------------------
 # Strategies
 
+OBJECT_COUNT = 1e4
+LOGIC_COST = OBJECT_COUNT / 256.0
+
 class Iter(object):
-    def __init__(self, var):
+    def __init__(self, var, *tests):
         assert isinstance(var, Variable)
+        for test in tests:
+            assert isinstance(test, Test)
         self.var = var
+        self.tests = list(tests)
+
+    def copy(self):
+        return Iter(self.var, *self.tests)
+
+    def add_test(self, test):
+        assert isinstance(test, Test)
+        self.tests.append(test)
 
     def __repr__(self):
-        return 'for({})'.format(self.var)
+        tests = [str(t.expr) for t in self.tests]
+        return 'for {}:'.format(' if '.join([str(self.var)] + tests))
+
+    def cost(self, callback):
+        return OBJECT_COUNT * callback + LOGIC_COST * len(self.tests)
+
 
 class Let(object):
     def __init__(self, expr):
@@ -98,7 +117,10 @@ class Let(object):
         self.expr = expr
 
     def __repr__(self):
-        return 'let({})'.format(self.var)
+        return 'let {}:'.format(self.var)
+
+    def cost(self, callback):
+        return 1.0 + callback
 
 
 class Test(object):
@@ -107,7 +129,10 @@ class Test(object):
         self.expr = expr
 
     def __repr__(self):
-        return 'if({})'.format(self.expr)
+        return 'if {}:'.format(self.expr)
+
+    def cost(self, callback):
+        return 1.0 + callback
 
 
 class Ensure(object):
@@ -116,25 +141,65 @@ class Ensure(object):
         self.expr = expr
 
     def __repr__(self):
-        return 'ensure({})'.format(self.expr)
+        return 'ensure {}'.format(self.expr)
+
+    def cost(self, callback):
+        return 1.0 + callback
 
 
 class Strategy(object):
     def __init__(self, sequence, succedent):
         self.sequence = list(sequence)  # TODO generalize to trees
         self.succedent = Ensure(succedent)
+        self._str = ' '.join(map(str, self.sequence))
+        self._repr = ' '.join(map(str, self.sequence + [self.succedent]))
+        self._hash = hash(self._repr)
+
+    def __eq__(self, other):
+        return self._repr == other._repr
+
+    def __hash__(self):
+        return self._hash
+
+    def __str__(self):
+        return self._str
 
     def __repr__(self):
-        return ' '.join(map(str, self.sequence + [self.succedent]))
+        return self._repr
+
+    def cost(self):
+        cost = 0.0
+        for op in reversed(self.sequence):
+            cost = op.cost(cost)
+        return math.log(cost)
 
     def optimized(self):
         '''
         Pull tests into preceding iterators
         '''
-        TODO()
+        last_iter = None
+        sequence = []
+        bound = set()
+        for op in self.sequence:
+            if isinstance(op, Iter):
+                last_iter = op.copy()
+                sequence.append(last_iter)
+                bound.add(op.var)
+            elif isinstance(op, Test):
+                if last_iter and last_iter.var in op.expr.get_vars():
+                    last_iter.add_test(op)
+                else:
+                    sequence.append(op)
+            else:
+                assert isinstance(op, Let)
+                self.last_iter = None
+                sequence.append(op)
+                bound.add(op.var)
+        return Strategy(sequence, self.succedent.expr)
 
-    def get_cost(self):
-        TODO()
+
+#-----------------------------------------------------------------------------
+# Sequents
 
 
 class Sequent(object):
@@ -205,6 +270,7 @@ class Sequent(object):
                 pre_v = pre + [Iter(v)]
                 bound_v = set_with(bound, v)
                 result += list(part._compile(pre_v, context, bound_v))
+            result.sort()
             results.append(result)
         return results
 
@@ -224,7 +290,9 @@ class Sequent(object):
         results = []
         for part in self._normalized():
             if atom in part.antecedents:
-                results.append(list(part._compile(pre, context, bound)))
+                result = list(part._compile(pre, context, bound))
+                result.sort()
+                results.append(result)
         return results
 
     def _compile(self, pre, context, bound):
@@ -233,7 +301,8 @@ class Sequent(object):
         antecedents = self.antecedents - context
         succedent = self.succedents.copy().pop()
         for s in iter_compiled(antecedents, bound, free):
-            yield Strategy(pre + s, succedent)
+            strategy = Strategy(pre + s, succedent).optimized()
+            yield (strategy.cost(), strategy)
 
 
 def iter_compiled(antecedents, bound, free):
@@ -244,7 +313,6 @@ def iter_compiled(antecedents, bound, free):
         return
 
     # HEURISTIC test eagerly
-    testable = False
     for a in antecedents:
         if isinstance(a, Relation):
             if a.get_vars() <= bound:
@@ -252,19 +320,16 @@ def iter_compiled(antecedents, bound, free):
                 pre = [Test(a)]
                 for s in iter_compiled(antecedents_a, bound, free):
                     yield pre + s
-                testable = True
+                return  # ignore order
         elif isinstance(a, Function):
             if a.get_vars() <= bound and Variable(a) in bound:
                 antecedents_a = set_without(antecedents, a)
                 pre = [Test(a)]
                 for s in iter_compiled(antecedents_a, bound, free):
                     yield pre + s
-                testable = True
-    if testable:
-        return
+                return  # ignore order
 
     # HEURISTIC bind eagerly
-    bindable = False
     for a in antecedents:
         if isinstance(a, Function):
             if a.get_vars() <= bound:
@@ -276,9 +341,7 @@ def iter_compiled(antecedents, bound, free):
                 pre = [Let(a)]
                 for s in iter_compiled(antecedents_a, bound_a, free_a):
                     yield pre + s
-                bindable = True
-    if bindable:
-        return
+                return  # ignore order
 
     # HEURISTIC iterate forward eagerly
     forward_iterable = False
