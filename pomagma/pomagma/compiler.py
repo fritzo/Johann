@@ -88,26 +88,38 @@ OBJECT_COUNT = 1e4
 LOGIC_COST = OBJECT_COUNT / 256.0
 
 class Iter(object):
-    def __init__(self, var, *tests):
+    def __init__(self, var, tests=None, lets=None):
+        tests = tests or []
+        lets = lets or []
         assert isinstance(var, Variable)
-        for test in tests:
-            assert isinstance(test, Test)
+        assert all(isinstance(t, Test) for t in tests)
+        assert all(isinstance(l, Let) for l in lets)
         self.var = var
-        self.tests = list(tests)
+        self.tests = tests
+        self.lets = lets
 
     def copy(self):
-        return Iter(self.var, *self.tests)
+        return Iter(self.var, self.tests, self.lets)
 
     def add_test(self, test):
         assert isinstance(test, Test)
         self.tests.append(test)
 
+    def add_let(self, let):
+        assert isinstance(let, Let)
+        self.lets.append(let)
+
     def __repr__(self):
-        tests = [str(t.expr) for t in self.tests]
-        return 'for {}:'.format(' if '.join([str(self.var)] + tests))
+        tests = ['if {}'.format(t.expr) for t in self.tests]
+        lets = ['let {}'.format(l.var) for l in self.lets]
+        return 'for {}:'.format(' '.join([str(self.var)] + tests + lets))
 
     def cost(self, callback):
-        return OBJECT_COUNT * callback + LOGIC_COST * len(self.tests)
+        test_count = len(self.tests) + len(self.lets)
+        logic_cost = LOGIC_COST * test_count
+        object_count = OBJECT_COUNT * 0.5 ** test_count
+        let_cost = len(self.lets)
+        return logic_cost + object_count * (let_cost + callback)
 
 
 class Let(object):
@@ -120,7 +132,7 @@ class Let(object):
         return 'let {}:'.format(self.var)
 
     def cost(self, callback):
-        return 1.0 + callback
+        return 1.0 + 0.5 * callback
 
 
 class Test(object):
@@ -171,7 +183,7 @@ class Strategy(object):
         cost = 0.0
         for op in reversed(self.sequence):
             cost = op.cost(cost)
-        return math.log(cost)
+        return math.log(cost) / math.log(OBJECT_COUNT)
 
     def optimized(self):
         '''
@@ -192,8 +204,11 @@ class Strategy(object):
                     sequence.append(op)
             else:
                 assert isinstance(op, Let)
-                self.last_iter = None
-                sequence.append(op)
+                if last_iter and last_iter.var in op.expr.get_vars():
+                    last_iter.add_let(op)
+                else:
+                    self.last_iter = None
+                    sequence.append(op)
                 bound.add(op.var)
         return Strategy(sequence, self.succedent.expr)
 
@@ -265,13 +280,13 @@ class Sequent(object):
 
         results = []
         for part in self._normalized():
-            result = []
+            ranked = []
             for v in free:
                 pre_v = pre + [Iter(v)]
                 bound_v = set_with(bound, v)
-                result += list(part._compile(pre_v, context, bound_v))
-            result.sort()
-            results.append(result)
+                ranked += list(part._compile(pre_v, context, bound_v))
+            #ranked.sort()
+            results.append(min(ranked))
         return results
 
     def compile_given(self, atom):
@@ -290,9 +305,9 @@ class Sequent(object):
         results = []
         for part in self._normalized():
             if atom in part.antecedents:
-                result = list(part._compile(pre, context, bound))
-                result.sort()
-                results.append(result)
+                ranked = list(part._compile(pre, context, bound))
+                #ranked.sort()
+                results.append(min(ranked))
         return results
 
     def _compile(self, pre, context, bound):
@@ -321,7 +336,8 @@ def iter_compiled(antecedents, bound, free):
                 for s in iter_compiled(antecedents_a, bound, free):
                     yield pre + s
                 return  # ignore order
-        elif isinstance(a, Function):
+        else:
+            assert isinstance(a, Function)
             if a.get_vars() <= bound and Variable(a) in bound:
                 antecedents_a = set_without(antecedents, a)
                 pre = [Test(a)]
@@ -346,15 +362,15 @@ def iter_compiled(antecedents, bound, free):
     # HEURISTIC iterate forward eagerly
     forward_iterable = False
     for a in antecedents:
-        if isinstance(a, Function):
-            if a.get_vars() & bound:
-                for v in a.get_vars() - bound:
-                    free_v = set_without(free, v)
-                    bound_v = set_with(bound, v)
-                    pre = [Iter(v)]
-                    for s in iter_compiled(antecedents, bound_v, free_v):
-                        yield pre + s
-                    forward_iterable = True
+        # works for both Relation and Function antecedents
+        if a.get_vars() & bound:
+            for v in a.get_vars() - bound:
+                free_v = set_without(free, v)
+                bound_v = set_with(bound, v)
+                pre = [Iter(v)]
+                for s in iter_compiled(antecedents, bound_v, free_v):
+                    yield pre + s
+                forward_iterable = True
     if forward_iterable:
         return
 
