@@ -19,7 +19,7 @@ figs: extensions.eps FORCE
 	$(MAKE) -C skrj figs
 	$(MAKE) -C algorithms figs
 main.dvi: main.text figs FORCE
-	jtext2latex -C memoir,fullpage -b -i main
+	../jtext/jtext2latex -C memoir,fullpage -b -i main
 main.pdf: main.dvi
 	dvipdf main.dvi
 view: main.dvi
@@ -27,15 +27,15 @@ view: main.dvi
 
 #nightly pdf posting via crontab
 post: FORCE
-	~/johann/jtext/jtext2latex -C memoir,fullpage -b -i main
-	~/johann/jtext/jtext2latex -C memoir,fullpage -b -i main
-	~/johann/jtext/jtext2latex -C memoir,fullpage -b -i main
+	../jtext/jtext2latex -C memoir,fullpage -b -i main
+	../jtext/jtext2latex -C memoir,fullpage -b -i main
+	../jtext/jtext2latex -C memoir,fullpage -b -i main
 	dvipdf main.dvi
 	cp main.pdf fritz-thesis-draft.pdf
 	scp fritz-thesis-draft.pdf fho@qwe2.math.cmu.edu:html/
 
 abstract.dvi: abstract.text
-	jtext2latex -C article,fullpage abstract
+	../jtext/jtext2latex -C article,fullpage abstract
 abstract.pdf: abstract.dvi
 	dvipdf abstract.dvi
 
