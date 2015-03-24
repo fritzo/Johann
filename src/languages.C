@@ -383,7 +383,8 @@ void Langauge::load_from_file (FILE* file, Int Nwords, Int Nrules)
     safe_fread(data, sizeof(IntWMass), W, file);
     m_basis.clear();
     for (Int i=0; i<W; ++i) {
-        m_basis.push_back(std::make_pair(Ob(data[i].first), data[i].second));
+        m_basis.push_back(
+            std::make_pair(ObHdl(Ob(data[i].first)), data[i].second));
     }
     delete[] data;
 

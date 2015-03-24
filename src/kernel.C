@@ -19,6 +19,7 @@
 #include <cstdlib> //for atoi
 #include <deque>
 #include <pthread.h>
+#include <unistd.h>
 
 //from console.y
 extern void* start_parser (void* init_script);

@@ -32,7 +32,7 @@ private: // Splay tree operations
     //search tree position operations
     static inline void set_L    (Pos u, Pos l) { L(u) = l; if (l) U(l) = u; }
     static inline void set_R    (Pos u, Pos r) { R(u) = r; if (r) U(r) = u; }
-    static inline void set_root (Pos p) { root(p) = p; U(p) = Pos(0); }
+    static inline void set_root (Pos p) { X::root(p) = p; U(p) = Pos(0); }
     static inline void clear    (Pos p) { R(p) = L(p) = U(p) = Pos(0); }
 
     static inline Pos UU (Pos p) { while (Pos next = U(p)) p = next; return p; }
@@ -42,7 +42,7 @@ private: // Splay tree operations
     //node ordering = lexicographic key-value
     typedef oid_t Rank;
     static inline Rank rank (oid_t key, oid_t val) { return (key << 16) | val; }
-    static inline Rank rank (Pos p) { return rank(get_key(p), get_val(p)); }
+    static inline Rank rank (Pos p) { return rank(X::get_key(p), X::get_val(p)); }
 
     //tree manupulation
     static inline bool is_left_of (Pos x, Pos y)
@@ -115,7 +115,7 @@ template<class X> void splay_forest<X>::splay (Pos x)
 
     Pos y = U(x);
     if (!y) { //quit if x is root
-        POMAGMA_ASSERT5(root(x) == x, "parentless x is not root after splaying");
+        POMAGMA_ASSERT5(X::root(x) == x, "parentless x is not root after splaying");
         return;
     }
     bool x_y = is_left_of(x,y); //get initial direction
@@ -182,7 +182,7 @@ template<class X> void splay_forest<X>::splay (Pos x)
 template<class X> typename X::Pos splay_forest<X>::find_pair (
         Ob root_ob, Ob key, Ob val, bool do_splay)
 {
-    Pos p = root(root_ob); if (not p) return Pos(0);
+    Pos p = X::root(root_ob); if (not p) return Pos(0);
     Rank here = rank(p);
     Rank destin = rank(key, val);
 
@@ -200,13 +200,13 @@ template<class X> typename X::Pos splay_forest<X>::find_pair (
 template<class X> typename X::Pos splay_forest<X>::find_key (Ob root_ob, Ob key)
 {//finds arbitrary pos in key range
     //find any key
-    Pos p = root(root_ob); if (not p) return Pos(0);
-    oid_t here = get_key(p);
+    Pos p = X::root(root_ob); if (not p) return Pos(0);
+    oid_t here = X::get_key(p);
     if (here == key) return p; //p is already root
     do {
         p = (key < here) ? L(p) : R(p);
         if (not p) return Pos(0);
-    } while ((here = get_key(p)) != key);
+    } while ((here = X::get_key(p)) != key);
 
     //splay
     splay(p);
@@ -216,7 +216,7 @@ template<class X> void splay_forest<X>::insert (Pos p)
 {
     POMAGMA_ASSERT5(not is_inserted(p), "pos is inserted before it should be");
 
-    Pos& root_pos = root(p);
+    Pos& root_pos = X::root(p);
 
     //if tree is empty, insert as root
     if (not root_pos) {
@@ -249,8 +249,8 @@ template<class X> void splay_forest<X>::join (Pos* d, Pos u, Pos l, Pos r)
 
     while (true) {
 
-        POMAGMA_ASSERT5(get_root(l) == get_root(r), "L,R keys disagree");
-        POMAGMA_ASSERT5((!u) or get_root(r) == get_root(u), "R,U keys disagree");
+        POMAGMA_ASSERT5(X::get_root(l) == X::get_root(r), "L,R keys disagree");
+        POMAGMA_ASSERT5((!u) or X::get_root(r) == X::get_root(u), "R,U keys disagree");
         POMAGMA_ASSERT5(rank(l) < rank(r), "L,R in wrong order");
 
         //look for space below l
@@ -283,7 +283,7 @@ template<class X> void splay_forest<X>::remove (Pos p)
     Pos u = U(p);
     Pos& d = u ? (is_left_of(p,u) ? L(u)
                                      : R(u))
-               : root(p);
+               : X::root(p);
 
     if (Pos l = L(p)) {
         if (Pos r = R(p)) {     //   u      u
@@ -305,7 +305,7 @@ template<class X> void splay_forest<X>::remove (Pos p)
 }
 template<class X> bool splay_forest<X>::is_inserted (Pos p)
 {
-    Pos found = find_pair(get_root(p), get_key(p), get_val(p), false);
+    Pos found = find_pair(X::get_root(p), X::get_key(p), X::get_val(p), false);
     POMAGMA_ASSERT5((!found) or (found==p), "two identical pos's have been inserted")
     return found;
 }
@@ -313,7 +313,7 @@ template<class X> bool splay_forest<X>::is_inserted (Pos p)
 //iteration
 template<class X> void splay_forest<X>::Iterator::begin ()
 {//inorder first
-    Pos root_pos = root(m_root);
+    Pos root_pos = X::root(m_root);
     m_pos = root_pos ? LL(root_pos) : Pos(0);
 }
 template<class X> void splay_forest<X>::Iterator::next ()
@@ -335,12 +335,12 @@ template<class X> void splay_forest<X>::RangeIterator::begin(
     Base::m_root = root_ob;
     m_key = key;
     Pos& p = Base::m_pos;
-    p = root(Base::m_root);
+    p = X::root(Base::m_root);
     if (not p) return;
 
     //find any key
     oid_t here;
-    while ((here = get_key(p)) != key) {
+    while ((here = X::get_key(p)) != key) {
         p = (key < here) ? L(p) : R(p);
         if (not p) return;
     }
@@ -349,13 +349,13 @@ template<class X> void splay_forest<X>::RangeIterator::begin(
     while (true) {
         Pos l = L(p);
         if (not l) { splay(p); return; }
-        if (get_key(l) == key) { p = l; continue; }
+        if (X::get_key(l) == key) { p = l; continue; }
 
         //descend right
         while (true) {
             Pos r = R(l);
             if (not r) { splay(l); return; }
-            if (get_key(r) != key) { l = r; continue; }
+            if (X::get_key(r) != key) { l = r; continue; }
 
             p = r; break;
         }
@@ -364,7 +364,7 @@ template<class X> void splay_forest<X>::RangeIterator::begin(
 template<class X> void splay_forest<X>::RangeIterator::next ()
 {//for iteration through multimaps
     Base::next();
-    if (Base::m_pos and get_key(Base::m_pos) != m_key) {
+    if (Base::m_pos and X::get_key(Base::m_pos) != m_key) {
         splay(Base::m_pos);
         Base::m_pos = Pos(0);
     }
@@ -374,32 +374,32 @@ template<class X> void splay_forest<X>::RangeIterator::next ()
 template<class X> void splay_forest<X>::test_find (Pos eqn)
 {
     //test find_pair
-    Pos pos = find_pair(get_root(eqn), get_key(eqn), get_val(eqn));
+    Pos pos = find_pair(X::get_root(eqn), X::get_key(eqn), X::get_val(eqn));
     POMAGMA_ASSERT(pos, "invalid: eqn not found in own " << nameof<X>() << " tree");
     POMAGMA_ASSERT(pos == eqn,
             "invalid: wrong eqn found in own " << nameof<X>() << " tree");
 
     //test find_key
-    pos = find_key(get_root(eqn), get_key(eqn));
+    pos = find_key(X::get_root(eqn), X::get_key(eqn));
     POMAGMA_ASSERT(pos, "invalid: key not found in own " << nameof<X>() << " tree");
-    POMAGMA_ASSERT(get_key(pos) == get_key(eqn),
+    POMAGMA_ASSERT(X::get_key(pos) == X::get_key(eqn),
             "invalid: wrong key found in own " << nameof<X>() << " tree");
 }
 template<class X> void splay_forest<X>::test_contains (Pos eqn)
 {
-    for (Iterator iter(get_root(eqn)); iter.ok(); iter.next()) {
+    for (Iterator iter(X::get_root(eqn)); iter.ok(); iter.next()) {
         if (*iter == eqn) return;
     }
     Iterator iter;
-    for (iter.begin(get_root(eqn)); iter.ok(); iter.next()) {
+    for (iter.begin(X::get_root(eqn)); iter.ok(); iter.next()) {
         if (*iter == eqn) return;
     }
     POMAGMA_ERROR("invalid: eqn not contained in own " << nameof<X>() << " tree");
 }
 template<class X> void splay_forest<X>::test_range_contains (Pos eqn)
 {
-    Ob my_root = get_root(eqn);
-    Ob my_key = get_key(eqn);
+    Ob my_root = X::get_root(eqn);
+    Ob my_key = X::get_key(eqn);
     for (RangeIterator iter(my_root, my_key); iter.ok(); iter.next()) {
         if (*iter == eqn) return;
     }
@@ -437,7 +437,7 @@ template<class X> void splay_forest<X>::validate_forest ()
                 POMAGMA_ASSERT(R(u) == eqn, "invalid: neglected R-child");
             }
         } else {
-            POMAGMA_ASSERT(root(eqn) == eqn, "invalid: root mismatch");
+            POMAGMA_ASSERT(X::root(eqn) == eqn, "invalid: root mismatch");
         }
     }
 }

@@ -2,6 +2,7 @@
 #include "animator.h"
 #include <cmath>
 #include <pthread.h>
+#include <unistd.h>
 
 #if defined(__APPLE__) && defined(__MACH__)
 #include <GLUT/glut.h>

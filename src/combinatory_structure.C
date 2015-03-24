@@ -18,6 +18,7 @@
 #include <sstream>
 #include <fstream>
 #include <utility> //for greater, pair
+#include <unistd.h>
 
 #ifdef __GNUG__
     #include <unordered_map>

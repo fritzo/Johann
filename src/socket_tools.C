@@ -6,6 +6,7 @@
 #include <cstring>
 #include <sys/stat.h>
 #include <bzlib.h>
+#include <unistd.h>
 
 #define BACKLOG 10
 
